@@ -29,11 +29,11 @@ class ConfigReader(object):
     def __init__(self, **kwargs):
         """Creates a new instance of ConfigReader."""
         self._configPath        = ArgsUtils.get('configPath', ConfigReader.DEFAULT_CONFIG_PATH, kwargs)
-        self._generalFilename   = None
+        self._generalFilename   = ArgsUtils.getFrom('files', 'general', None, kwargs)
         self._general           = ArgsUtils.get('general', None, kwargs)
-        self._skeletonFilename  = None
+        self._skeletonFilename  = ArgsUtils.getFrom('files', 'skeleton', None, kwargs)
         self._skeleton          = ArgsUtils.get('skeleton', None, kwargs)
-        self._gaitFilename      = None
+        self._gaitFilename      = ArgsUtils.getFrom('files', 'gait', None, kwargs)
         self._gait              = ArgsUtils.get('gait', None, kwargs)
 
         configs = (
@@ -106,6 +106,24 @@ class ConfigReader(object):
 #___________________________________________________________________________________________________ getGaitValue
     def getGaitValue(self, group, key):
         return self._getValue(ConfigReader.GAIT_CONFIG_ID, group, key)
+
+#___________________________________________________________________________________________________ toDict
+    def toDict(self):
+        return {
+            'general':self._general,
+            'skeleton':self._skeleton,
+            'gait':self._gait,
+            'files':{
+                'general':self._generalFilename,
+                'skeleton':self._skeletonFilename,
+                'gait':self._gaitFilename
+            }
+        }
+
+#___________________________________________________________________________________________________ fromDict
+    @classmethod
+    def fromDict(cls, src):
+        return ConfigReader(**src)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

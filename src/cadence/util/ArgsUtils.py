@@ -12,9 +12,20 @@ class ArgsUtils(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ getFrom
+    @classmethod
+    def getFrom(cls, name, key, defaultValue =None, kwargs =None, args =None, index =None):
+        src = cls.get(name, None, kwargs, args, index)
+        if not src:
+            return defaultValue
+        if isinstance(src, dict):
+            return src.get(key, defaultValue)
+
+        return getattr(src, key, defaultValue)
+
 #___________________________________________________________________________________________________ get
-    @staticmethod
-    def get(name, defaultValue =None, kwargs =None, args =None, index =None):
+    @classmethod
+    def get(cls, name, defaultValue =None, kwargs =None, args =None, index =None):
         if args and not index is None and (index < 0 or index < len(args)):
             return args[index]
 
@@ -32,8 +43,8 @@ class ArgsUtils(object):
         return defaultValue
 
 #___________________________________________________________________________________________________ getAsList
-    @staticmethod
-    def getAsList(name, kwargs =None, args =None, index =None, defaultValue =None):
+    @classmethod
+    def getAsList(cls, name, kwargs =None, args =None, index =None, defaultValue =None):
         res = ArgsUtils.get(name, None, kwargs, args, index)
         if res is None:
             return defaultValue if defaultValue else []
@@ -44,8 +55,8 @@ class ArgsUtils(object):
         return res
 
 #___________________________________________________________________________________________________ extract
-    @staticmethod
-    def extract(name, defaultValue, kwargs, args =None, index =None):
+    @classmethod
+    def extract(cls, name, defaultValue, kwargs, args =None, index =None):
         """Returns the value if one was specified and if the argument was in the kwargs dictionary
         deletes it."""
         value = ArgsUtils.get(name, defaultValue, kwargs, args, index)
