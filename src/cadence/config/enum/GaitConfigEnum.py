@@ -11,6 +11,6 @@ class GaitConfigEnum(object):
 
     PHASE             = 'gait_general_phase'
 
-    DUTY_FACTOR_HIND  = 'gait_general_dutyFactorHind'
+    DUTY_FACTOR_HIND  = 'gait_general_dutyfactorhind'
 
-    DUTY_FACTOR_FORE  = 'gait_general_dutyFactorFore'
+    DUTY_FACTOR_FORE  = 'gait_general_dutyfactorfore'

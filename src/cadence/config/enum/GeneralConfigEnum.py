@@ -11,6 +11,6 @@ class GeneralConfigEnum(object):
 
     STEPS           = 'general_solver_steps'
 
-    START_TIME      = 'general_solver_startTime'
+    START_TIME      = 'general_solver_starttime'
 
-    STOP_TIME       = 'general_solver_stopTime'
+    STOP_TIME       = 'general_solver_stoptime'

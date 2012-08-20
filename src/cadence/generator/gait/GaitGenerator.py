@@ -2,6 +2,8 @@
 # (C)2012 http://GaitGenerator.threeaddone.com
 # Scott Ernst
 
+import os
+
 import numpy as np
 
 from cadence.config.ConfigReader import ConfigReader
@@ -23,7 +25,7 @@ class GaitGenerator(object):
     def __init__(self, **kwargs):
         """Creates a new instance of GaitGenerator."""
 
-        self._config  = ConfigReader(configs={
+        self._configs  = ConfigReader(filenames={
             'general':ArgsUtils.get('generalConfig', 'general/default.cfg', kwargs),
             'gait':ArgsUtils.get('gaitConfig', 'gait/default.cfg', kwargs)
         })
@@ -36,17 +38,17 @@ class GaitGenerator(object):
         self._leftFore  = dict()
         self._rightFore = dict()
 
-        self._dutyFactorFore = 0.01*float(self._config.get(GaitConfigEnum.DUTY_FACTOR_FORE, 5))
-        self._dutyFactorHind = 0.01*float(self._config.get(GaitConfigEnum.DUTY_FACTOR_HIND, 5))
-        self._phase          = 0.01*float(self._config.get(GaitConfigEnum.PHASE))
+        self._dutyFactorFore = 0.01*float(self._configs.get(GaitConfigEnum.DUTY_FACTOR_FORE, 50))
+        self._dutyFactorHind = 0.01*float(self._configs.get(GaitConfigEnum.DUTY_FACTOR_HIND, 50))
+        self._phase          = 0.01*float(self._configs.get(GaitConfigEnum.PHASE))
 
 #===================================================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: config
+#___________________________________________________________________________________________________ GS: configs
     @property
-    def config(self):
-        return self._config
+    def configs(self):
+        return self._configs
 
 #___________________________________________________________________________________________________ GS: name
     @property
@@ -54,6 +56,11 @@ class GaitGenerator(object):
         return 'p%s_f%s_h%s' % (
             str(self._phase), str(self._dutyFactorFore), str(self._dutyFactorHind)
         )
+
+#___________________________________________________________________________________________________ GS: dataFilename
+    @property
+    def dataFilename(self):
+        return self.__class__.__name__ + os.sep + self.name + CadenceData.EXTENSION
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -63,7 +70,7 @@ class GaitGenerator(object):
         if self._time is None:
             self.run()
 
-        cd = CadenceData(name=self.name, configs=self.config)
+        cd = CadenceData(name=self.name, configs=self.configs)
 
         cd.addChannel(
             'leftHind_grounded', {
@@ -103,13 +110,15 @@ class GaitGenerator(object):
 
         cd.write(self.__class__.__name__, name=filename if filename else self.name)
 
+        return True
+
 #___________________________________________________________________________________________________ run
     def run(self):
         """Doc..."""
 
-        steps          = self._config.get(GeneralConfigEnum.STEPS)
-        startTime      = float(self._config.get(GeneralConfigEnum.START_TIME))
-        stopTime       = float(self._config.get(GeneralConfigEnum.STOP_TIME))
+        steps          = self._configs.get(GeneralConfigEnum.STEPS)
+        startTime      = float(self._configs.get(GeneralConfigEnum.START_TIME))
+        stopTime       = float(self._configs.get(GeneralConfigEnum.STOP_TIME))
 
         leftHind  = np.zeros(int(steps))
         leftFore  = np.zeros(int(steps))
@@ -129,3 +138,5 @@ class GaitGenerator(object):
         self._rightFore['grounded'] = list(rightFore)
 
         self._time = list(np.linspace(startTime, stopTime, steps))
+
+        return True

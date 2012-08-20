@@ -17,6 +17,7 @@ class CadenceData(object):
 #                                                                                       C L A S S
 
     VERSION         = 1
+    EXTENSION       = '.cadence'
 
     _CONFIGS_KEY    = 'configs'
     _NAME_KEY       = 'name'
@@ -32,8 +33,8 @@ class CadenceData(object):
         """
 
         self._name     = ArgsUtils.get('name', None, kwargs)
-        self._config   = ArgsUtils.get('config', None, kwargs)
-        self._channels = ArgsUtils.get('channels', dict(), kwargs)
+        self._configs  = ArgsUtils.get('configs', None, kwargs)
+        self._channels = ArgsUtils.get('channels', [], kwargs)
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -47,14 +48,14 @@ class CadenceData(object):
     def name(self, value):
         self._name = value
 
-#___________________________________________________________________________________________________ GS: config
+#___________________________________________________________________________________________________ GS: configs
     @property
-    def config(self):
-        """The Cadence config object associated with the data."""
-        return self._config
-    @config.setter
-    def config(self, value):
-        self._config = value
+    def configs(self):
+        """The Cadence configs object associated with the data."""
+        return self._configs
+    @configs.setter
+    def configs(self, value):
+        self._configs = value
 
 #___________________________________________________________________________________________________ GS: channels
     @property
@@ -65,12 +66,38 @@ class CadenceData(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ getChannelByName
+    def getChannelByName(self, name):
+        for c in self._channels:
+            if c.name == name:
+                return c
+
+        return None
+
+#___________________________________________________________________________________________________ getChannelsByKind
+    def getChannelsByKind(self, kind):
+        out = []
+        for c in self._channels:
+            if c.kind == kind:
+                out.append(c)
+
+        return out if out else None
+
+#___________________________________________________________________________________________________ getChannelsByTarget
+    def getChannelsByTarget(self, target):
+        out = []
+        for c in self._channels:
+            if c.target == target:
+                out.append(c)
+
+        return out if out else None
+
 #___________________________________________________________________________________________________ addChannel
     def addChannel(self, name, channelData):
         if isinstance(channelData, DataChannel):
-            self._channels[name] = channelData
+            self._channels.append(channelData)
         else:
-            self._channels[name] = DataChannel(name=name, **channelData)
+            self._channels.append(DataChannel(name=name, **channelData))
 
 #___________________________________________________________________________________________________ loadFile
     def loadFile(self, path):
@@ -84,8 +111,18 @@ class CadenceData(object):
                 True if the load was successful, False otherwise.
         """
 
+        sourcePath = path
+        if not sourcePath.endswith(CadenceData.EXTENSION):
+            sourcePath += CadenceData.EXTENSION
+
+        if not os.path.exists(sourcePath):
+            sourcePath = os.path.join(CadenceData._DATA_PATH, path)
+            if not os.path.exists(sourcePath):
+                print 'FAILED: Unable to load Cadence data from missing file ' + path
+                return False
+
         try:
-            f    = open(path, 'r')
+            f    = open(sourcePath, 'r')
             data = f.read()
             f.close()
         except Exception, err:
@@ -117,12 +154,11 @@ class CadenceData(object):
             self._name = data.get(CadenceData._NAME_KEY)
 
         if CadenceData._CONFIGS_KEY in data:
-            self._config = ConfigReader.fromDict(data.get(CadenceData._CONFIGS_KEY))
+            self._configs = ConfigReader.fromDict(data.get(CadenceData._CONFIGS_KEY))
 
         if CadenceData._CHANNELS_KEY in data:
-            channels = []
-            for c in data.get(CadenceData._CHANNELS_KEY, []):
-                channels.append(DataChannel.fromDict(c))
+            for c in data.get(CadenceData._CHANNELS_KEY, dict()):
+                self._channels.append(DataChannel.fromDict(c))
 
         return True
 
@@ -142,16 +178,16 @@ class CadenceData(object):
         """
 
         data = {'version':CadenceData.VERSION}
-        if self._config:
-            data[CadenceData._CONFIGS_KEY] = self._config.toDict()
+        if self._configs:
+            data[CadenceData._CONFIGS_KEY] = self._configs.toDict()
 
         if self._name:
             data['name'] = self._name
 
         if self._channels:
-            channels = dict()
-            for n,v in self._channels.iteritems():
-                channels[n] = v.toDict()
+            channels = []
+            for c in self._channels:
+                channels.append(c.toDict())
             data['channels'] = channels
 
         try:
@@ -162,8 +198,8 @@ class CadenceData(object):
 
         if folder:
             name = name if name else (self._name if self._name else 'data')
-            if not name.endswith('.cadence'):
-                name += '.cadence'
+            if not name.endswith(CadenceData.EXTENSION):
+                name += CadenceData.EXTENSION
             path = os.path.join(CadenceData._DATA_PATH, folder, name)
             outDir = os.path.dirname(path)
 

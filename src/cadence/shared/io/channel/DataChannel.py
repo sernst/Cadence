@@ -28,6 +28,8 @@ class DataChannel(object):
         if not self._keys:
             self.addKeysFromLists(**kwargs)
 
+        self._clearCache()
+
 #===================================================================================================
 #                                                                                   G E T / S E T
 
@@ -64,11 +66,61 @@ class DataChannel(object):
         """Data keyframes in the created/loaded dataset."""
         return self._keys
 
+#___________________________________________________________________________________________________ GS: times
+    @property
+    def times(self):
+        """Data keyframes in the created/loaded dataset."""
+        if self._times is None:
+            out = []
+            for k in self._keys:
+                out.append(k.time)
+            self._times = out
+
+        return self._times
+
+#___________________________________________________________________________________________________ GS: values
+    @property
+    def values(self):
+        """Data keyframes in the created/loaded dataset."""
+        if self._values is None:
+            out = []
+            for k in self._keys:
+                out.append(k.value)
+            self._values = out
+
+        return self._values
+
+#___________________________________________________________________________________________________ GS: inTangents
+    @property
+    def inTangents(self):
+        """Data keyframes in the created/loaded dataset."""
+        if self._inTangents is None:
+            out = []
+            for k in self._keys:
+                out.append(k.inTangent)
+            self._inTangents = out
+
+        return self._inTangents
+
+#___________________________________________________________________________________________________ GS: outTangents
+    @property
+    def outTangents(self):
+        """Data keyframes in the created/loaded dataset."""
+        if self._outTangents is None:
+            out = []
+            for k in self._keys:
+                out.append(k.outTangent)
+            self._outTangents = out
+
+        return self._outTangents
+
 #===================================================================================================
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ addKeysFromLists
     def addKeysFromLists(self, **kwargs):
+        self._clearCache()
+
         x = ArgsUtils.get('times', None, kwargs)
         if not x:
             return
@@ -97,6 +149,8 @@ class DataChannel(object):
 
 #___________________________________________________________________________________________________ addKeyframe
     def addKeyframe(self, keyframe):
+        self._clearCache()
+
         if isinstance(keyframe, DataChannelKey):
             self._keys.append(keyframe)
         else:
@@ -122,7 +176,32 @@ class DataChannel(object):
         return DataChannel(**src)
 
 #===================================================================================================
+#                                                                               I N T R I N S I C
+
+#___________________________________________________________________________________________________ __repr__
+    def __repr__(self):
+        return self.__str__()
+
+#___________________________________________________________________________________________________ __unicode__
+    def __unicode__(self):
+        return unicode(self.__str__())
+
+#___________________________________________________________________________________________________ __str__
+    def __str__(self):
+        return '<%s::%s[%s] K:%s T:%s>' % (
+            self.__class__.__name__, str(self.name), str(len(self.keys)), str(self.kind),
+            str(self.target)
+        )
+
+#===================================================================================================
 #                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _clearCache
+    def _clearCache(self):
+        self._times         = None
+        self._values        = None
+        self._inTangents    = None
+        self._outTangents   = None
 
 #___________________________________________________________________________________________________ _createKeys
     def _createKeys(self, src):

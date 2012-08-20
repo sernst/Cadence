@@ -32,24 +32,31 @@ class DataChannelKey(object):
 #___________________________________________________________________________________________________ toDict
     def toDict(self):
         d = {
-            'time':self.time,
-            'value':self.value,
-            'inTangent':self.inTangent,
-            'outTangent':self.outTangent
+            'x':self.time,
+            'y':self.value,
+            'it':self.inTangent,
+            'ot':self.outTangent
         }
 
         if self.name:
-            d['name'] = self.name
+            d['n'] = self.name
 
         if self.event:
-            d['event'] = self.event
+            d['e'] = self.event
 
         return d
 
 #___________________________________________________________________________________________________ fromDict
     @classmethod
     def fromDict(cls, src):
-        return DataChannelKey(**src)
+        return DataChannelKey(
+            name=ArgsUtils.get(['n', 'name'], None, src),
+            event=ArgsUtils.get(['e', 'event'], None, src),
+            time=ArgsUtils.get(['x', 'time'], None, src),
+            value=ArgsUtils.get(['y', 'value'], None, src),
+            inTangent=ArgsUtils.get(['it', 'inTangent'], 'lin', src),
+            outTangent=ArgsUtils.get(['ot', 'outTangent'], 'lin', src)
+        )
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
