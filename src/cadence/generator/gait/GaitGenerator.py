@@ -108,7 +108,7 @@ class GaitGenerator(object):
         cd.addChannel(
             'rightFore_grounded', {
                 'kind':ChannelsEnum.GAIT_PHASE,
-                'target':TargetsEnum.RIGHT_HIND,
+                'target':TargetsEnum.RIGHT_FORE,
                 'times':self._time,
                 'values':self._rightFore[ChannelsEnum.GAIT_PHASE]
             }
