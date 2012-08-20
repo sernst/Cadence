@@ -3,7 +3,7 @@ import sys
 from cadence.config.enum.GeneralConfigEnum import GeneralConfigEnum
 from cadence.shared.io.CadenceData import CadenceData
 
-filename = 'GaitGenerator/p0.0_f0.5_h0.5.cadence'
+filename = 'GaitGenerator/PH-20_F-70_H-70.cadence'
 
 cd = CadenceData()
 if cd.loadFile(filename):
@@ -34,7 +34,8 @@ channel = cd.channels[0]
 
 print '\n',100*'-'
 print 'CHANNEL TESTS:'
-print 'TEST [channel.times]:', channel.times
-print 'TEST [channel.values]:', channel.values
+for c in cd.channels:
+    print 'TEST [channel.times]:', c.times
+    print 'TEST [channel.values]:', c.values
 
 print 'Test complete.'

@@ -9,12 +9,12 @@ class TargetsEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    LEFT_HIND       = 'leftHind'
+    LEFT_HIND       = 'left_hind'
 
-    RIGHT_HIND      = 'rightHind'
+    RIGHT_HIND      = 'right_hind'
 
-    LEFT_FORE       = 'leftFore'
+    LEFT_FORE       = 'left_fore'
 
-    RIGHT_FORE      = 'rightFore'
+    RIGHT_FORE      = 'right_fore'
 
-    CENTER_OF_MASS  = 'centerOfMass'
+    CENTER_OF_MASS  = 'center_of_mass'

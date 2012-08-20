@@ -9,8 +9,6 @@ class SkeletonConfigEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    START_POSITION_GROUPLESS    = 'skeleton_#GROUP#_neutralposition'
-
     MANUS_STEP_HEIGHT           = 'skeleton_manus_stepheight'
 
     PES_STEP_HEIGHT             = 'skeleton_pes_stepheight'

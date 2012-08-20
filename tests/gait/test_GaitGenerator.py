@@ -3,7 +3,7 @@ import sys
 from cadence.generator.gait.GaitGenerator import GaitGenerator
 from cadence.shared.io.CadenceData import CadenceData
 
-g = GaitGenerator()
+g = GaitGenerator(gaitConfig='gait/PH-20_DF-70_OFF-50.cfg')
 if g.run():
     print 'SUCCESS: GaitGenerator.run()'
 else:

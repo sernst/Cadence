@@ -9,8 +9,14 @@ class GaitConfigEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    PHASE             = 'gait_general_phase'
+    CYCLES            = 'gait_general_cycles'
+
+    CYCLE_OFFSET      = 'gait_general_cycleoffset'
+
+    DUTY_FACTOR_FORE  = 'gait_general_dutyfactorfore'
 
     DUTY_FACTOR_HIND  = 'gait_general_dutyfactorhind'
 
-    DUTY_FACTOR_FORE  = 'gait_general_dutyfactorfore'
+    PHASE             = 'gait_general_phase'
+
+

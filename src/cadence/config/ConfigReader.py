@@ -24,6 +24,8 @@ class ConfigReader(object):
     DEFAULT_GAIT_CONFIG     = 'gaits/default.cfg'
     DEFAULT_CONFIG_PATH     = os.path.dirname(os.path.abspath(__file__)) + '/../../../config/'
 
+    _VECTOR_PREFIX = '@VECTOR::'
+    _JSON_PREFIX   = '@JSON::'
     _NUMERIC_REGEX = re.compile('^[-\.0-9]+$')
 
 #___________________________________________________________________________________________________ __init__
@@ -61,18 +63,32 @@ class ConfigReader(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ set
+    def set(self, propertyID, value):
+        parts = propertyID.split('_')
+
+        if parts[0] not in self._configPath:
+            raise Exception, 'No %s config exists. Unable to set property %s on unknown config.' % \
+                             (parts[0], propertyID)
+
+        return self._setValue(*parts, value=value)
+
+#___________________________________________________________________________________________________ setOverrides
+    def setOverrides(self, overrides):
+        if not overrides:
+            return False
+
+        for n,v in overrides.iteritems():
+            self.set(n, v)
+        return True
+
 #___________________________________________________________________________________________________ get
-    def get(self, propertyID, default =None, reps =None):
+    def get(self, propertyID, default =None):
         parts = propertyID.split('_')
 
         if parts[0] not in self._configs:
             raise Exception, 'No %s config exists. Unable to access property %s' % \
                              (parts[0], propertyID)
-
-        if reps:
-            for n,v in reps.iteritems():
-                for i in range(0, len(parts)):
-                    parts[i] = parts[i].replace(n, v)
 
         return self._getValue(*parts, defaultValue=default)
 
@@ -127,6 +143,24 @@ class ConfigReader(object):
             g = config.get(group)
             if not g:
                 return defaultValue
-            return g.get(key)
+            if key in g:
+                return g.get(key)
+            else:
+                return defaultValue
         except Exception, err:
             return defaultValue
+
+#___________________________________________________________________________________________________ _setValue
+    def _setValue(self, configID, group, key, value):
+        config = self._configs.get(configID)
+        if not config:
+            return False
+
+        try:
+            g = config.get(group)
+            if not g:
+                g = dict()
+                config[group] = g
+            g[key] = value
+        except Exception, err:
+            return False

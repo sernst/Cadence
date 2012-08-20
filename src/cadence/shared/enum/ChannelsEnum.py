@@ -9,4 +9,4 @@ class ChannelsEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    GROUNDED        = 'grounded'
+    GAIT_PHASE        = 'gait_phase'

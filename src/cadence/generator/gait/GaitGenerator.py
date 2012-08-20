@@ -3,6 +3,7 @@
 # Scott Ernst
 
 import os
+import math
 
 import numpy as np
 
@@ -29,6 +30,7 @@ class GaitGenerator(object):
             'general':ArgsUtils.get('generalConfig', 'general/default.cfg', kwargs),
             'gait':ArgsUtils.get('gaitConfig', 'gait/default.cfg', kwargs)
         })
+        self._configs.setOverrides(ArgsUtils.get('overrides', None, kwargs))
 
         self._time = None
 
@@ -38,6 +40,8 @@ class GaitGenerator(object):
         self._leftFore  = dict()
         self._rightFore = dict()
 
+        self._cycles         = int(self._configs.get(GaitConfigEnum.CYCLES, 1))
+        self._cycleOffset    = 0.01*float(self._configs.get(GaitConfigEnum.CYCLE_OFFSET, 0.0))
         self._dutyFactorFore = 0.01*float(self._configs.get(GaitConfigEnum.DUTY_FACTOR_FORE, 50))
         self._dutyFactorHind = 0.01*float(self._configs.get(GaitConfigEnum.DUTY_FACTOR_HIND, 50))
         self._phase          = 0.01*float(self._configs.get(GaitConfigEnum.PHASE))
@@ -53,8 +57,10 @@ class GaitGenerator(object):
 #___________________________________________________________________________________________________ GS: name
     @property
     def name(self):
-        return 'p%s_f%s_h%s' % (
-            str(self._phase), str(self._dutyFactorFore), str(self._dutyFactorHind)
+        return 'PH-%s_F-%s_H-%s' % (
+            str(int(100*self._phase)),
+            str(int(100*self._dutyFactorFore)),
+            str(int(100*self._dutyFactorHind))
         )
 
 #___________________________________________________________________________________________________ GS: dataFilename
@@ -74,37 +80,37 @@ class GaitGenerator(object):
 
         cd.addChannel(
             'leftHind_grounded', {
-                'kind':ChannelsEnum.GROUNDED,
+                'kind':ChannelsEnum.GAIT_PHASE,
                 'target':TargetsEnum.LEFT_HIND,
                 'times':self._time,
-                'values':self._leftHind['grounded']
+                'values':self._leftHind[ChannelsEnum.GAIT_PHASE]
             }
         )
 
         cd.addChannel(
             'leftFore_grounded', {
-                'kind':ChannelsEnum.GROUNDED,
+                'kind':ChannelsEnum.GAIT_PHASE,
                 'target':TargetsEnum.LEFT_FORE,
                 'times':self._time,
-                'values':self._leftFore['grounded']
+                'values':self._leftFore[ChannelsEnum.GAIT_PHASE]
             }
         )
 
         cd.addChannel(
             'rightHind_grounded', {
-                'kind':ChannelsEnum.GROUNDED,
+                'kind':ChannelsEnum.GAIT_PHASE,
                 'target':TargetsEnum.RIGHT_HIND,
                 'times':self._time,
-                'values':self._rightHind['grounded']
+                'values':self._rightHind[ChannelsEnum.GAIT_PHASE]
             }
         )
 
         cd.addChannel(
             'rightFore_grounded', {
-                'kind':ChannelsEnum.GROUNDED,
+                'kind':ChannelsEnum.GAIT_PHASE,
                 'target':TargetsEnum.RIGHT_HIND,
                 'times':self._time,
-                'values':self._rightFore['grounded']
+                'values':self._rightFore[ChannelsEnum.GAIT_PHASE]
             }
         )
 
@@ -124,7 +130,7 @@ class GaitGenerator(object):
         leftFore  = np.zeros(int(steps))
 
         for i in range(0, int(steps)):
-            cyclePhase   = float(i)/float(steps)
+            cyclePhase   = math.modf(float(i)*float(self._cycles)/float(steps))[0]
             leftHind[i]  = int(cyclePhase < self._dutyFactorHind)
             leftFore[i]  = int(cyclePhase < self._dutyFactorFore)
 
@@ -132,10 +138,17 @@ class GaitGenerator(object):
         rightFore = np.roll(leftFore, int(round(float(steps)*(0.75 + self._phase))))
         leftFore  = np.roll(leftFore, int(round(float(steps)*(0.25 + self._phase))))
 
-        self._leftHind['grounded']  = list(leftHind)
-        self._leftFore['grounded']  = list(leftFore)
-        self._rightHind['grounded'] = list(rightHind)
-        self._rightFore['grounded'] = list(rightFore)
+        if self._cycleOffset:
+            offset = int(round(self._cycleOffset*float(steps)/float(self._cycles)))
+            leftHind  = np.roll(leftHind, offset)
+            rightHind = np.roll(rightHind, offset)
+            leftFore  = np.roll(leftFore, offset)
+            rightFore = np.roll(rightFore, offset)
+
+        self._leftHind[ChannelsEnum.GAIT_PHASE]  = list(leftHind)
+        self._leftFore[ChannelsEnum.GAIT_PHASE]  = list(leftFore)
+        self._rightHind[ChannelsEnum.GAIT_PHASE] = list(rightHind)
+        self._rightFore[ChannelsEnum.GAIT_PHASE] = list(rightFore)
 
         self._time = list(np.linspace(startTime, stopTime, steps))
 
