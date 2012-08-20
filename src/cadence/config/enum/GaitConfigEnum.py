@@ -9,8 +9,8 @@ class GaitConfigEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    STRIDE_SCALE    = 'gait_general_stridescale'
+    PHASE             = 'gait_general_phase'
 
-    PHASE           = 'gait_general_phase'
+    DUTY_FACTOR_HIND  = 'gait_general_dutyFactorHind'
 
-    DUTY_CYCLE      = 'gait_general_dutycycle'
+    DUTY_FACTOR_FORE  = 'gait_general_dutyFactorFore'

@@ -57,8 +57,9 @@ class ArgsUtils(object):
 #___________________________________________________________________________________________________ extract
     @classmethod
     def extract(cls, name, defaultValue, kwargs, args =None, index =None):
-        """Returns the value if one was specified and if the argument was in the kwargs dictionary
-        deletes it."""
+        """ Returns the value if one was specified and if the argument was in the kwargs dictionary
+            deletes it.
+        """
         value = ArgsUtils.get(name, defaultValue, kwargs, args, index)
         if name in kwargs:
             del(kwargs[name])

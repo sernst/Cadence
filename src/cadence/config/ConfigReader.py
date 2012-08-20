@@ -3,7 +3,6 @@
 # Scott Ernst
 
 import os
-import sys
 import ConfigParser
 
 from cadence.util.ArgsUtils import ArgsUtils
@@ -22,41 +21,28 @@ class ConfigReader(object):
     DEFAULT_GENERAL_CONFIG  = 'general/default.cfg'
     DEFAULT_SKELETON_CONFIG = 'skeleton/default.cfg'
     DEFAULT_GAIT_CONFIG     = 'gaits/default.cfg'
-    DEFAULT_CONFIG_PATH     = sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
-                                               '/../../../../config/')
+    DEFAULT_CONFIG_PATH     = os.path.dirname(os.path.abspath(__file__)) + '/../../../config/'
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
         """Creates a new instance of ConfigReader."""
-        self._configPath        = ArgsUtils.get('configPath', ConfigReader.DEFAULT_CONFIG_PATH, kwargs)
-        self._generalFilename   = ArgsUtils.getFrom('files', 'general', None, kwargs)
-        self._general           = ArgsUtils.get('general', None, kwargs)
-        self._skeletonFilename  = ArgsUtils.getFrom('files', 'skeleton', None, kwargs)
-        self._skeleton          = ArgsUtils.get('skeleton', None, kwargs)
-        self._gaitFilename      = ArgsUtils.getFrom('files', 'gait', None, kwargs)
-        self._gait              = ArgsUtils.get('gait', None, kwargs)
+        self._generalFilename   = ArgsUtils.get('configs', dict(), kwargs)
+        self._configPath        = ArgsUtils.get('rootConfigPath', ConfigReader.DEFAULT_CONFIG_PATH,
+                                                kwargs)
 
-        configs = (
-            ('general', ConfigReader.DEFAULT_GENERAL_CONFIG),
-            ('skeleton', ConfigReader.DEFAULT_SKELETON_CONFIG),
-            ('gait', ConfigReader.DEFAULT_GAIT_CONFIG),
-        )
+        self._configs = dict()
+        for n,v in self._generalFilename.iteritems():
+            path     = os.path.join(self._configPath, v)
+            if not path.endswith('.cfg'):
+                path += '.cfg'
 
-        for cfg in configs:
-            # Allows for overriding the loading of configs through constructor arguments.
-            if getattr(self, '_' + cfg[0]) is not None:
-                continue
-
-            filename = kwargs.get(cfg[0] + 'File', cfg[1])
-            parser   = ConfigParser.ConfigParser()
-            if os.path.exists(filename):
-                parser.read(filename)
+            parser = ConfigParser.ConfigParser()
+            if os.path.exists(path):
+                parser.read(path)
             else:
-                raise Exception, cfg[0] + ' config file does not exist!'
+                raise Exception, path + ' config file does not exist!'
 
-            setattr(self, '_' + cfg[0] + 'Filename', filename)
-            setattr(self, '_' + cfg[0], parser)
-
+            self._configs[n] = parser
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -69,24 +55,16 @@ class ConfigReader(object):
     def configPath(self, value):
         self._configPath = value
 
-#___________________________________________________________________________________________________ GS: skeletonFilename
-    @property
-    def skeletonFilename(self):
-        return self._skeletonFilename if self._skeletonFilename.startswith('/') else \
-            os.path.join(self.configPath, self.skeletonFilename)
-
-#___________________________________________________________________________________________________ GS: generalFile
-    @property
-    def generalFilename(self):
-        return self._generalFilename if self._generalFilename.startswith('/') else \
-            os.path.join(self._configPath, self._generalFilename)
-
 #===================================================================================================
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ get
-    def get(self, propertyID, reps =None):
+    def get(self, propertyID, default =None, reps =None):
         parts = propertyID.split('_')
+
+        if parts[0] not in self._configs:
+            raise Exception, 'No %s config exists. Unable to access property %s' % \
+                             (parts[0], propertyID)
 
         if reps:
             for n,v in reps.iteritems():
@@ -95,30 +73,9 @@ class ConfigReader(object):
 
         return self._getValue(*parts)
 
-#___________________________________________________________________________________________________ getGeneralValue
-    def getGeneralValue(self, group, key):
-        return self._getValue(ConfigReader.GENERAL_CONFIG_ID, group, key)
-
-#___________________________________________________________________________________________________ getSkeletonValue
-    def getSkeletonValue(self, group, key):
-        return self._getValue(ConfigReader.SKELETON_CONFIG_ID, group, key)
-
-#___________________________________________________________________________________________________ getGaitValue
-    def getGaitValue(self, group, key):
-        return self._getValue(ConfigReader.GAIT_CONFIG_ID, group, key)
-
 #___________________________________________________________________________________________________ toDict
     def toDict(self):
-        return {
-            'general':self._general,
-            'skeleton':self._skeleton,
-            'gait':self._gait,
-            'files':{
-                'general':self._generalFilename,
-                'skeleton':self._skeletonFilename,
-                'gait':self._gaitFilename
-            }
-        }
+        return self._configs
 
 #___________________________________________________________________________________________________ fromDict
     @classmethod
@@ -130,12 +87,7 @@ class ConfigReader(object):
 
 #___________________________________________________________________________________________________ _getValue
     def _getValue(self, configID, group, key):
-        if configID == ConfigReader.SKELETON_CONFIG_ID:
-            config = self._skeleton
-        elif configID == ConfigReader.GAIT_CONFIG_ID:
-            config = self._gait
-        else:
-            config = self._general
+        config = self._configs.get(configID)
 
         try:
             return config.get(group, key)

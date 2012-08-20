@@ -6,7 +6,7 @@ import os
 import json
 
 from cadence.config.ConfigReader import ConfigReader
-from cadence.shared.io.channels.DataChannel import DataChannel
+from cadence.shared.io.channel.DataChannel import DataChannel
 from cadence.util.ArgsUtils import ArgsUtils
 
 #___________________________________________________________________________________________________ CadenceData
@@ -15,6 +15,8 @@ class CadenceData(object):
 
 #===================================================================================================
 #                                                                                       C L A S S
+
+    VERSION         = 1
 
     _CONFIGS_KEY    = 'configs'
     _NAME_KEY       = 'name'
@@ -30,8 +32,8 @@ class CadenceData(object):
         """
 
         self._name     = ArgsUtils.get('name', None, kwargs)
-        self._configs  = ArgsUtils.get('configs', dict(), kwargs)
-        self._channels = ArgsUtils.get('tracks', dict(), kwargs)
+        self._config   = ArgsUtils.get('config', None, kwargs)
+        self._channels = ArgsUtils.get('channels', dict(), kwargs)
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -45,14 +47,14 @@ class CadenceData(object):
     def name(self, value):
         self._name = value
 
-#___________________________________________________________________________________________________ GS: configs
+#___________________________________________________________________________________________________ GS: config
     @property
-    def configs(self):
-        """The Cadence configs object associated with the data."""
-        return self._configs
-    @configs.setter
-    def configs(self, value):
-        self._configs = value
+    def config(self):
+        """The Cadence config object associated with the data."""
+        return self._config
+    @config.setter
+    def config(self, value):
+        self._config = value
 
 #___________________________________________________________________________________________________ GS: channels
     @property
@@ -115,7 +117,7 @@ class CadenceData(object):
             self._name = data.get(CadenceData._NAME_KEY)
 
         if CadenceData._CONFIGS_KEY in data:
-            self._configs = ConfigReader.fromDict(data.get(CadenceData._CONFIGS_KEY))
+            self._config = ConfigReader.fromDict(data.get(CadenceData._CONFIGS_KEY))
 
         if CadenceData._CHANNELS_KEY in data:
             channels = []
@@ -139,9 +141,9 @@ class CadenceData(object):
                 file to be written.
         """
 
-        data = dict()
-        if self._configs:
-            data[CadenceData._CONFIGS_KEY] = self._configs.toDict()
+        data = {'version':CadenceData.VERSION}
+        if self._config:
+            data[CadenceData._CONFIGS_KEY] = self._config.toDict()
 
         if self._name:
             data['name'] = self._name
@@ -163,6 +165,15 @@ class CadenceData(object):
             if not name.endswith('.cadence'):
                 name += '.cadence'
             path = os.path.join(CadenceData._DATA_PATH, folder, name)
+            outDir = os.path.dirname(path)
+
+            try:
+                if not os.path.exists(outDir):
+                    os.makedirs(outDir)
+            except Exception, err:
+                print 'FAILED: Unable to create output directory: ' + str(outDir)
+                return None
+
             try:
                 f = open(path, 'w')
                 f.write(data)
@@ -171,8 +182,3 @@ class CadenceData(object):
                 print 'FAILED: Writing Cadence file.', err
 
         return data
-
-#===================================================================================================
-#                                                                               P R O T E C T E D
-
-#___________________________________________________________________________________________________
