@@ -29,45 +29,19 @@ class GaitPlot(object):
         self._lineWidth = 10
 
 
+#===================================================================================================
+#                                                                                   G E T / S E T
+
+
+
+#===================================================================================================
+#                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ loadData
+
     def loadData(self, fileName ="GaitGenerator/PH-0_F-50_H-50.cadence"):
         self._cd = CadenceData()
         self._cd.loadFile(fileName)
-        return True
-
-
-    def mapValueToColor(self, v):
-        return 'sandybrown' if v else 'lightslategray'
-
-    def plotChannel(self, channel, y, lineWidth):
-        prevKey = channel.keys[0]
-
-        for key in channel.keys[1:]:
-            self._ax1.plot([prevKey.time, key.time], [y, y], linewidth=lineWidth, color=self.mapValueToColor(key.value))
-            prevKey = key
-
-    def labelChannels(self):
-        positions = [GaitPlot.LH, GaitPlot.LF, GaitPlot.RF, GaitPlot.RH]
-        labels    = ('Left Hind', 'Left Fore', 'Right Fore','Right Hind')
-        plt.yticks(positions, labels)
-
-    def testOverlayCurve(self):
-        t = []
-        for key in self.channel_LH.keys:
-            t.append(key.time)
-        print plt.sin(plt.pi*2*t[3])
-
-        #s = plt.sin(2*plt.pi*t) WHY DOESN'T THIS COMPILE???  AS A WORKAROUND, I DID EXPLICIT ITERATION:
-        s = []
-        for time in t:
-            s.append(0.5 + 0.5*plt.sin(2*plt.pi*time/100))
-
-
-        self._ax1.plot(t, s, linewidth=1.0, color='white')
-
-
-    def plotData(self):
-        plt.figure(self._name)
-        plt.axes(self._ax1)
         channel_s = self._cd.getChannelsByKind(ChannelsEnum.GAIT_PHASE) # get the four gait phase channel_s
         for c in channel_s:
             if   c.target == TargetsEnum.LEFT_HIND:  self.channel_LH = c
@@ -76,8 +50,54 @@ class GaitPlot(object):
             elif c.target == TargetsEnum.RIGHT_HIND: self.channel_RH = c
             else:
                 raise Exception, "Unknown Channel_ Target:  " + str(c.target)
+        return True
 
-        # this method presumes that all channels have the same start and stop times, so we use LF channel_ as representative
+#___________________________________________________________________________________________________ mapValueToColor
+
+    def mapValueToColor(self, v):
+        return 'sandybrown' if v else 'lightslategray'
+
+#___________________________________________________________________________________________________ plotChannel
+    def plotChannel(self, channel, y, lineWidth):
+        prevKey = channel.keys[0]
+
+        for key in channel.keys[1:]:
+            self._ax1.plot([prevKey.time, key.time], [y, y], linewidth=lineWidth, color=self.mapValueToColor(key.value))
+            prevKey = key
+
+#___________________________________________________________________________________________________ labelChannels
+
+    def labelChannels(self):
+        positions = [GaitPlot.LH, GaitPlot.LF, GaitPlot.RF, GaitPlot.RH]
+        labels    = ('Left Hind', 'Left Fore', 'Right Fore','Right Hind')
+        plt.yticks(positions, labels)
+
+#___________________________________________________________________________________________________ testOverlayCurve
+
+    def testOverlayCurve(self, color, amplitude=0.5):
+        t = []
+        for key in self.channel_LH.keys:
+            t.append(key.time)
+        print plt.sin(plt.pi*2*t[3])
+
+        #s = plt.sin(2*plt.pi*t) WHY DOESN'T THIS COMPILE???  AS A WORKAROUND, I DID EXPLICIT ITERATION:
+        s = []
+        for time in t:
+            s.append(0.5 + amplitude*plt.sin(2*plt.pi*time/100))
+
+        plt.figure(self._name)
+        plt.axes(self._ax1)
+        self._ax1.plot(t, s, linewidth=1.0, color=color)
+        return True
+
+
+#___________________________________________________________________________________________________ plotData
+
+    def plotData(self):
+        plt.figure(self._name)
+        plt.axes(self._ax1)
+
+        # this method presumes that all channels have the same start and stop times; using LF channel_ as representative
         self._startTime = self.channel_LF.keys[ 0].time
         self._stopTime  = self.channel_LF.keys[-1].time
 
@@ -92,6 +112,10 @@ class GaitPlot(object):
         plt.xlim([self._startTime, self._stopTime])
         plt.ylim(0, 1)
         self.labelChannels()
-        self.testOverlayCurve()
+        return True
+
+#___________________________________________________________________________________________________ show
+    def show(self):
+        plt.figure(self._name)
         plt.show()
         return True
