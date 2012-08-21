@@ -19,10 +19,11 @@ class CadenceData(object):
     VERSION         = 1
     EXTENSION       = '.cadence'
 
+    ROOT_DATA_PATH  = os.path.abspath(os.path.dirname(__file__)).split('src')[0] + 'data' + os.sep
+
     _CONFIGS_KEY    = 'configs'
     _NAME_KEY       = 'name'
     _CHANNELS_KEY   = 'channels'
-    _DATA_PATH      = os.path.abspath(os.path.dirname(__file__)).split('src')[0] + 'data' + os.sep
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
@@ -116,7 +117,7 @@ class CadenceData(object):
             sourcePath += CadenceData.EXTENSION
 
         if not os.path.exists(sourcePath):
-            sourcePath = os.path.join(CadenceData._DATA_PATH, path)
+            sourcePath = os.path.join(CadenceData.ROOT_DATA_PATH, path)
             if not os.path.exists(sourcePath):
                 print 'FAILED: Unable to load Cadence data from missing file ' + path
                 return False
@@ -200,7 +201,7 @@ class CadenceData(object):
             name = name if name else (self._name if self._name else 'data')
             if not name.endswith(CadenceData.EXTENSION):
                 name += CadenceData.EXTENSION
-            path = os.path.join(CadenceData._DATA_PATH, folder, name)
+            path = os.path.join(CadenceData.ROOT_DATA_PATH, folder, name)
             outDir = os.path.dirname(path)
 
             try:

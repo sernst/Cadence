@@ -24,13 +24,22 @@ class GaitGenerator(object):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
-        """Creates a new instance of GaitGenerator."""
+        """ Creates a new instance of GaitGenerator.
+            @@@param generalConfig:string
+                Relative path to the general configuration file within the Cadence/config directory.
 
-        self._configs  = ConfigReader(filenames={
-            'general':ArgsUtils.get('generalConfig', 'general/default.cfg', kwargs),
-            'gait':ArgsUtils.get('gaitConfig', 'gait/default.cfg', kwargs)
-        })
-        self._configs.setOverrides(ArgsUtils.get('overrides', None, kwargs))
+            @@@param gaitConfig:string
+                Relative path to the gait configuration file within the Cadence/config directory.
+        """
+
+        self._configs  = ConfigReader(
+            filenames={
+                'general':ArgsUtils.get('generalConfig', 'general/default.cfg', kwargs),
+                'gait':ArgsUtils.get('gaitConfig', 'gait/default.cfg', kwargs),
+                'skeleton':ArgsUtils.get('skeletonConfig', None, kwargs)
+            },
+            overrides=ArgsUtils.get('overrides', None, kwargs)
+        )
 
         self._time = None
 
@@ -122,24 +131,24 @@ class GaitGenerator(object):
     def run(self):
         """Doc..."""
 
-        steps          = self._configs.get(GeneralConfigEnum.STEPS)
-        startTime      = float(self._configs.get(GeneralConfigEnum.START_TIME))
-        stopTime       = float(self._configs.get(GeneralConfigEnum.STOP_TIME))
+        steps     = self._configs.get(GeneralConfigEnum.STEPS)
+        startTime = float(self._configs.get(GeneralConfigEnum.START_TIME))
+        stopTime  = float(self._configs.get(GeneralConfigEnum.STOP_TIME))
 
         leftHind  = np.zeros(int(steps))
         leftFore  = np.zeros(int(steps))
 
         for i in range(0, int(steps)):
             cyclePhase   = math.modf(float(i)*float(self._cycles)/float(steps))[0]
-            leftHind[i]  = int(cyclePhase < self._dutyFactorHind)
-            leftFore[i]  = int(cyclePhase < self._dutyFactorFore)
+            leftHind[i]  = int(cyclePhase <= self._dutyFactorHind)
+            leftFore[i]  = int(cyclePhase <= self._dutyFactorFore)
 
         rightHind = np.roll(leftHind, int(round(0.5*float(steps))))
         rightFore = np.roll(leftFore, int(round(float(steps)*(0.75 + self._phase))))
         leftFore  = np.roll(leftFore, int(round(float(steps)*(0.25 + self._phase))))
 
         if self._cycleOffset:
-            offset = int(round(self._cycleOffset*float(steps)/float(self._cycles)))
+            offset    = int(round(self._cycleOffset*float(steps)/float(self._cycles)))
             leftHind  = np.roll(leftHind, offset)
             rightHind = np.roll(rightHind, offset)
             leftFore  = np.roll(leftFore, offset)

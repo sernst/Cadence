@@ -1,9 +1,27 @@
+import os
 import sys
+import random
 
+from cadence.config.ConfigReader import ConfigReader
 from cadence.generator.gait.GaitGenerator import GaitGenerator
 from cadence.shared.io.CadenceData import CadenceData
 
-g = GaitGenerator()
+#---------------------------------------------------------------------------------------------------
+# GET CONFIG FILE
+configPath = os.path.join(ConfigReader.DEFAULT_CONFIG_PATH, 'gait')
+cfgs       = []
+for f in os.listdir(configPath):
+    path = os.path.join(configPath, f)
+    if not os.path.isfile(path) or not f.endswith(ConfigReader.EXTENSION):
+        continue
+    cfgs.append(os.path.join('gait', f))
+
+configFile = str(cfgs[random.randint(0,len(cfgs) - 1)])
+print 'INITIALIZING Config file: ' + configFile
+
+#---------------------------------------------------------------------------------------------------
+# GET CONFIG FILE
+g = GaitGenerator(gaitConfig=configFile)
 if g.run():
     print 'SUCCESS: GaitGenerator.run()'
 else:

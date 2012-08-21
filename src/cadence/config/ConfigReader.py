@@ -15,14 +15,8 @@ class ConfigReader(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    GENERAL_CONFIG_ID        = 'general'
-    SKELETON_CONFIG_ID       = 'skeleton'
-    GAIT_CONFIG_ID           = 'gait'
-
-    DEFAULT_GENERAL_CONFIG  = 'general/default.cfg'
-    DEFAULT_SKELETON_CONFIG = 'skeleton/default.cfg'
-    DEFAULT_GAIT_CONFIG     = 'gaits/default.cfg'
-    DEFAULT_CONFIG_PATH     = os.path.dirname(os.path.abspath(__file__)) + '/../../../config/'
+    EXTENSION           = '.cfg'
+    DEFAULT_CONFIG_PATH = os.path.dirname(os.path.abspath(__file__)) + '/../../../config/'
 
     _VECTOR_PREFIX = '@VECTOR::'
     _JSON_PREFIX   = '@JSON::'
@@ -37,7 +31,10 @@ class ConfigReader(object):
 
         if self._filenames:
             for n,v in self._filenames.iteritems():
-                path     = os.path.join(self._configPath, v)
+                if not v:
+                    continue
+
+                path = os.path.join(self._configPath, v)
                 if not path.endswith('.cfg'):
                     path += '.cfg'
 
@@ -48,6 +45,8 @@ class ConfigReader(object):
                     raise Exception, path + ' config file does not exist!'
 
                 self._configs[n] = self._configParserToDict(parser)
+
+        self.setOverrides(ArgsUtils.get('overrides', None, kwargs))
 
 #===================================================================================================
 #                                                                                   G E T / S E T
