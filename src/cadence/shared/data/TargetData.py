@@ -8,6 +8,7 @@ import numpy as np
 
 from cadence.config.enum.SkeletonConfigEnum import SkeletonConfigEnum
 from cadence.shared.enum.ChannelsEnum import ChannelsEnum
+from cadence.shared.enum.TangentsEnum import TangentsEnum
 from cadence.shared.enum.TargetsEnum import TargetsEnum
 from cadence.util.ArgsUtils import ArgsUtils
 from cadence.util.math3D.Vector3D import Vector3D
@@ -198,11 +199,11 @@ class TargetData(object):
             dc.addKeyframe({
                 'time':time,
                 'value':Vector3D(
-                    positionOffset.x*(-1.0 if self.isLeft else 1.0),
+                    positionOffset.x*(1.0 if self.isLeft else -1.0),
                     0.0,
                     position),
-                'inTangent':'flt',
-                'outTangent':'flt',
+                'inTangent':TangentsEnum.FLAT,
+                'outTangent':TangentsEnum.FLAT,
                 'event':('land' if landed else 'lift')
             })
 
@@ -214,14 +215,14 @@ class TargetData(object):
                 continue
 
             dc.addKeyframe({
-                'time':prev.time + round(0.5*(key.time - prev.time)),
+                'time':prev.time + 0.5*(key.time - prev.time),
                 'value':Vector3D(
                     prev.value.x + 0.5*(key.value.x - prev.value.x),
                     0.5*strideWidth,
                     prev.value.z + 0.5*(key.value.z - prev.value.z)
                 ),
-                'inTangent':'flt',
-                'outTangent':'flt',
+                'inTangent':TangentsEnum.FLAT,
+                'outTangent':TangentsEnum.FLAT,
                 'event':'aerial'
             })
             prev = key

@@ -75,6 +75,24 @@ class CadenceData(object):
 
         return None
 
+#___________________________________________________________________________________________________ getChannels
+    def getChannels(self, kind =None, target =None):
+        if not kind and not target:
+            return self.channels
+
+        if not kind:
+            return self.getChannelsByTarget(target)
+
+        if not target:
+            return self.getChannelsByKind(kind)
+
+        out = []
+        for c in self._channels:
+            if c.kind == kind and c.target == target:
+                out.append(c)
+
+        return out
+
 #___________________________________________________________________________________________________ getChannelsByKind
     def getChannelsByKind(self, kind):
         out = []

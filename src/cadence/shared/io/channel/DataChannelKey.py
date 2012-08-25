@@ -3,6 +3,8 @@
 # Scott Ernst
 
 from cadence.shared.enum.DataTypeEnum import DataTypeEnum
+from cadence.shared.enum.MayaTangentsEnum import MayaTangentsEnum
+from cadence.shared.enum.TangentsEnum import TangentsEnum
 from cadence.util.ArgsUtils import ArgsUtils
 from cadence.util.math3D.Vector3D import Vector3D
 
@@ -33,8 +35,21 @@ class DataChannelKey(object):
             self.value = cls._formatValueFromDataType(self.value, self.dataType)
 
         self.event         = ArgsUtils.get('event', None, kwargs)
-        self.inTangent     = ArgsUtils.get('inTangent', 'lin', kwargs)
-        self.outTangent    = ArgsUtils.get('outTangent', 'lin', kwargs)
+        self.inTangent     = cls._getTangentEnum(ArgsUtils.get('inTangent', None, kwargs))
+        self.outTangent    = cls._getTangentEnum(ArgsUtils.get('outTangent', None, kwargs))
+
+#===================================================================================================
+#                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: inTangentMaya
+    @property
+    def inTangentMaya(self):
+        return self.__class__._getTangentEnum(self.inTangent, maya=True)
+
+#___________________________________________________________________________________________________ GS: outTangentMaya
+    @property
+    def outTangentMaya(self):
+        return self.__class__._getTangentEnum(self.outTangent, maya=True)
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -87,11 +102,11 @@ class DataChannelKey(object):
     @classmethod
     def fromDict(cls, src):
         dataType = ArgsUtils.get(['dt', 'dataType'], None, src)
-        value    = ArgsUtils.get(['y', 'value'], 0.0, src)
+        value    = ArgsUtils.get(['v', 'value'], 0.0, src)
         return DataChannelKey(
             name=ArgsUtils.get(['n', 'name'], None, src),
             event=ArgsUtils.get(['e', 'event'], None, src),
-            time=ArgsUtils.get(['x', 'time'], 0.0, src),
+            time=ArgsUtils.get(['t', 'time'], 0.0, src),
             value=value,
             dataType=dataType,
             inTangent=ArgsUtils.get(['it', 'inTangent'], 'lin', src),
@@ -100,6 +115,38 @@ class DataChannelKey(object):
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _getTangentEnum
+    @classmethod
+    def _getTangentEnum(cls, source, maya =False):
+        enums = MayaTangentsEnum if maya else TangentsEnum
+        if not source:
+            return enums.LINEAR
+
+        t = source.strip().lower().replace('_', '')
+
+        if t in [TangentsEnum.SPLINE, MayaTangentsEnum.SPLINE]:
+            return enums.SPLINE
+        elif t in [TangentsEnum.LINEAR, MayaTangentsEnum.LINEAR]:
+            return enums.LINEAR
+        elif t in [TangentsEnum.FAST, MayaTangentsEnum.FAST]:
+            return enums.FAST
+        elif t in [TangentsEnum.SLOW, MayaTangentsEnum.SLOW]:
+            return enums.SLOW
+        elif t in [TangentsEnum.FLAT, MayaTangentsEnum.FLAT]:
+            return enums.FLAT
+        elif t in [TangentsEnum.STEPPED, MayaTangentsEnum.STEPPED]:
+            return enums.STEPPED
+        elif t in [TangentsEnum.STEPPED_NEXT, 'stepnext', MayaTangentsEnum.STEPPED_NEXT]:
+            return enums.STEPPED_NEXT
+        elif t in [TangentsEnum.FIXED, MayaTangentsEnum.FIXED]:
+            return enums.FIXED
+        elif t in [TangentsEnum.CLAMPED, MayaTangentsEnum.CLAMPED]:
+            return enums.CLAMPED
+        elif t in [TangentsEnum.PLATEAU, MayaTangentsEnum.PLATEAU]:
+            return enums.PLATEAU
+
+        return enums.LINEAR
 
 #___________________________________________________________________________________________________ _getSerializedValue
     @classmethod
