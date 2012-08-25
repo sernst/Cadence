@@ -20,8 +20,8 @@ class ConfigReader(object):
     EXTENSION           = '.cfg'
     DEFAULT_CONFIG_PATH = os.path.dirname(os.path.abspath(__file__)) + '/../../../config/'
 
-    _VECTOR_PREFIX = '@VECTOR::'
-    _JSON_PREFIX   = '@JSON::'
+    _VECTOR_PREFIX = 'VECTOR('
+    _JSON_PREFIX   = 'JSON:'
     _NUMERIC_REGEX = re.compile('^[-\.0-9]+$')
 
 #___________________________________________________________________________________________________ __init__
@@ -95,15 +95,43 @@ class ConfigReader(object):
 
 #___________________________________________________________________________________________________ toDict
     def toDict(self):
-        return self._configs
+        return self.__class__._toSerializedDict(self._configs)
 
 #___________________________________________________________________________________________________ fromDict
     @classmethod
     def fromDict(cls, src):
-        return ConfigReader(configs=src)
+        return ConfigReader(configs=cls._fromSerializedDict(src))
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _fromSerializedDict
+    @classmethod
+    def _fromSerializedDict(cls, src):
+        out = dict()
+        for n,v in src.iteritems():
+            if isinstance(v, dict):
+                if 'objectType' in v:
+                    if v['objectType'] == Vector3D.__name__:
+                        v = Vector3D.fromSerialDict(v)
+                else:
+                    v = cls._fromSerializedDict(v)
+            out[n] = v
+
+        return out
+
+#___________________________________________________________________________________________________ _toSerializedDict
+    @classmethod
+    def _toSerializedDict(cls, src):
+        out = dict()
+        for n,v in src.iteritems():
+            if isinstance(v, Vector3D):
+                v = v.toSerialDict()
+            elif isinstance(v, dict):
+                v = cls._toSerializedDict(v)
+            out[n] = v
+
+        return out
 
 #___________________________________________________________________________________________________ _configParserToDict
     def _configParserToDict(self, parser):
@@ -117,11 +145,11 @@ class ConfigReader(object):
                 if test.startswith('"') and test.endswith('"'):
                     value = value[1:-1]
 
-                elif value.startswith('@VECTOR::'):
-                    value = Vector3D(*json.loads(value[9:]))
+                elif value.startswith(ConfigReader._VECTOR_PREFIX):
+                    value = Vector3D.fromConfig(value[len(ConfigReader._VECTOR_PREFIX):-1])
 
-                elif value.startswith('@JSON::'):
-                    value = json.loads(value[7:])
+                elif value.startswith(ConfigReader._JSON_PREFIX):
+                    value = json.loads(value[len(ConfigReader._JSON_PREFIX):])
 
                 elif isinstance(value, basestring) and (value in ['None', 'none', '']):
                     value = None

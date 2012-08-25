@@ -24,6 +24,7 @@ print 'INITIALIZING Config file: ' + configFile
 g = GaitGenerator(gaitConfig=configFile)
 if g.run():
     print 'SUCCESS: GaitGenerator.run()'
+    g.echo()
 else:
     print 'FAILED: GaitGenerator.run()'
     sys.exit(1)

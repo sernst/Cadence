@@ -11,6 +11,8 @@ class DataTypeEnum(object):
 
     ARBITRARY   = 'a'
 
+    ENUM        = 'e'
+
     SCALAR      = 's'
 
     VECTOR      = 'v'

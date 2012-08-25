@@ -8,6 +8,7 @@ import numpy as np
 
 from cadence.config.enum.SkeletonConfigEnum import SkeletonConfigEnum
 from cadence.shared.enum.ChannelsEnum import ChannelsEnum
+from cadence.shared.enum.TargetsEnum import TargetsEnum
 from cadence.util.ArgsUtils import ArgsUtils
 from cadence.util.math3D.Vector3D import Vector3D
 from cadence.shared.io.channel.DataChannel import DataChannel
@@ -19,6 +20,16 @@ class TargetData(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    _FORE_TARGETS = [
+        TargetsEnum.LEFT_FORE,
+        TargetsEnum.RIGHT_FORE
+    ]
+
+    _LEFT_TARGETS = [
+        TargetsEnum.LEFT_HIND,
+        TargetsEnum.LEFT_FORE
+    ]
+
 #___________________________________________________________________________________________________ __init__
     def __init__(self, target, **kwargs):
         """Creates a new instance of TargetData."""
@@ -29,6 +40,16 @@ class TargetData(object):
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: isHind
+    @property
+    def isHind(self):
+        return self._target not in TargetData._FORE_TARGETS
+
+#___________________________________________________________________________________________________ GS: isLeft
+    @property
+    def isLeft(self):
+        return self._target in TargetData._LEFT_TARGETS
 
 #___________________________________________________________________________________________________ GS: channels
     @property
@@ -43,6 +64,15 @@ class TargetData(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ echo
+    def echo(self):
+        print 'TARGET:',self.target
+        print 'GAIT PHASE OFFSET:',self._phaseOffset
+        print 'DUTY FACTOR:',self._dutyFactor
+        print 'CHANNELS:'
+        for n,v in self._channels.iteritems():
+            print v.toString()
+
 #___________________________________________________________________________________________________ createChannel
     def createChannel(self, kind, values =None, times =None):
         dc = DataChannel(
@@ -55,9 +85,9 @@ class TargetData(object):
         return dc
 
 #___________________________________________________________________________________________________ addChannel
-    def addChannel(self, kind, channel):
+    def addChannel(self, channel):
         """Doc..."""
-        self._channels[kind] = channel
+        self._channels[channel.kind] = channel
         return True
 
 #___________________________________________________________________________________________________ getChannel
@@ -104,7 +134,7 @@ class TargetData(object):
 
         # Find lift and lands within the step range
         index = 0
-        prev  = values[0]
+        prev  = values[-1]
         while index < steps:
             v = values[index]
             if v - prev < 0:
@@ -117,40 +147,86 @@ class TargetData(object):
 
         # Pre-lift or Pre-land
         if lifts[-1] > lands[-1]:
-            lifts.insert(0, -lifts[-1])
+            pre = (-lifts[-1], None)
         else:
-            lands.insert(0, -lands[-1])
+            pre = (None, -lands[-1])
 
         # Post-lift or Post-land
         if lifts[0] < lands[0]:
-            lifts.append(lifts[0] + steps - 1)
+            post = (lifts[0] + steps - 1, None)
         else:
-            lands.append(lands[0] + steps - 1)
+            post = (None, lands[0] + steps - 1)
 
-        dc           = self.createChannel(kind=ChannelsEnum.POSITION)
-        strideLength = float(settings.configs.get(SkeletonConfigEnum.STRIDE_LENGTH, 50.0))
-        position     = 0.0
-        while lifts and lands:
-            landed = lifts[0] > lands[0]
+        if pre[0] is  None:
+            lands.insert(0, pre[1])
+        else:
+            lifts.insert(0, pre[0])
+
+        if post[0] is None:
+            lands.append(post[1])
+        else:
+            lifts.append(post[0])
+
+        dc             = self.createChannel(kind=ChannelsEnum.POSITION)
+        strideLength   = float(settings.configs.get(SkeletonConfigEnum.STRIDE_LENGTH, 50.0))
+        strideWidth    = float(settings.configs.get(SkeletonConfigEnum.STRIDE_WIDTH, 50.0))
+        positionOffset = settings.configs.get(
+            SkeletonConfigEnum.FORE_OFFSET if not self.isHind else SkeletonConfigEnum.HIND_OFFSET,
+            Vector3D(0.5*strideWidth, 2*strideLength, 0.0 if self.isHind else 3*strideLength)
+        ).clone()
+
+        position = positionOffset.z
+        while lifts or lands:
+            if not lifts:
+                landed = True
+            elif not lands:
+                landed = False
+            else:
+                landed = (lifts[0] > lands[0])
+
             index  = lands.pop(0) if landed else lifts.pop(0)
             if landed and index > 0:
                 position += strideLength
 
             if index < 0:
                 time = times[index] - settings.stopTime
-            elif index > steps:
+            elif index >= steps:
                 time = times[index - steps] + settings.stopTime
             else:
                 time = times[index]
 
             dc.addKeyframe({
                 'time':time,
-                'value':Vector3D(0.0, 0.0, position),
+                'value':Vector3D(
+                    positionOffset.x*(-1.0 if self.isLeft else 1.0),
+                    0.0,
+                    position),
                 'inTangent':'flt',
-                'outTangent':'flt'
+                'outTangent':'flt',
+                'event':('land' if landed else 'lift')
             })
 
-        self.addChannel(ChannelsEnum.POSITION, dc)
+        # Add intermediate aerial keyframes
+        prev = dc.keys[0]
+        for key in dc.keys[1:]:
+            if prev.value.z == key.value.z:
+                prev = key
+                continue
+
+            dc.addKeyframe({
+                'time':prev.time + round(0.5*(key.time - prev.time)),
+                'value':Vector3D(
+                    prev.value.x + 0.5*(key.value.x - prev.value.x),
+                    0.5*strideWidth,
+                    prev.value.z + 0.5*(key.value.z - prev.value.z)
+                ),
+                'inTangent':'flt',
+                'outTangent':'flt',
+                'event':'aerial'
+            })
+            prev = key
+
+        self.addChannel(dc)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

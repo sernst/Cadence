@@ -33,7 +33,7 @@ class GaitGenerator(object):
             filenames={
                 'general':ArgsUtils.get('generalConfig', 'general/default.cfg', kwargs),
                 'gait':ArgsUtils.get('gaitConfig', 'gait/default.cfg', kwargs),
-                'skeleton':ArgsUtils.get('skeletonConfig', None, kwargs)
+                'skeleton':ArgsUtils.get('skeletonConfig', 'skeleton/default.cfg', kwargs)
             },
             overrides=ArgsUtils.get('overrides', None, kwargs)
         )
@@ -121,6 +121,18 @@ class GaitGenerator(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ echo
+    def echo(self):
+        print '\n', 100*'=','GAIT GENERATION RESULTS:'
+        print 100*'-', 'LEFT HIND:'
+        print self._leftHind.echo()
+        print 100*'-', 'LEFT FORE:'
+        print self._leftFore.echo()
+        print 100*'-', 'RIGHT FORE:'
+        print self._rightFore.echo()
+        print 100*'-', 'RIGHT HIND:'
+        print self._rightHind.echo()
+
 #___________________________________________________________________________________________________ saveToFile
     def saveToFile(self, filename =None):
         cd = CadenceData(name=self.name, configs=self.configs)
@@ -139,6 +151,11 @@ class GaitGenerator(object):
         if not self._generateGaitPhases():
             return False
 
+        if not self._generatePositions():
+            return False
+
+        return True
+
 #___________________________________________________________________________________________________ _generateGaitPhases
     def _generateGaitPhases(self):
         self._leftHind.createGaitPhaseChannel(self)
@@ -149,4 +166,8 @@ class GaitGenerator(object):
 
 #___________________________________________________________________________________________________ _generatePositions
     def _generatePositions(self):
-        pass
+        self._leftHind.createPositionChannel(self)
+        self._leftFore.createPositionChannel(self)
+        self._rightHind.createPositionChannel(self)
+        self._rightFore.createPositionChannel(self)
+        return True

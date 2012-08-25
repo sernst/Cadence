@@ -79,9 +79,30 @@ class Vector3D(object):
     def toList(self):
         return [self.x, self.y, self.z]
 
+#___________________________________________________________________________________________________ toSerialDict
+    def toSerialDict(self):
+        return {
+            'objectType':self.__class__.__name__,
+            'args':self.toList()
+        }
+
 #___________________________________________________________________________________________________ clone
     def clone(self):
         return Vector3D(self)
+
+#___________________________________________________________________________________________________ fromSerialDict
+    @classmethod
+    def fromSerialDict(cls, value):
+        return Vector3D(*value['args'])
+
+#___________________________________________________________________________________________________ fromConfig
+    @classmethod
+    def fromConfig(cls, source):
+        source = str(source).strip().split(',')
+        out    = []
+        for coordinate in source:
+            out.append(float(coordinate.strip()))
+        return Vector3D(*out)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

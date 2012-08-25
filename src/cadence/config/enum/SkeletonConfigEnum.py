@@ -9,4 +9,10 @@ class SkeletonConfigEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    STRIDE_LENGTH           = 'skeleton_general_stridelength'
+    FORE_OFFSET         = 'skeleton_general_foreoffset'
+
+    HIND_OFFSET         = 'skeleton_general_hindoffset'
+
+    STRIDE_LENGTH       = 'skeleton_general_stridelength'
+
+    STRIDE_WIDTH        = 'skeleton_general_stridewidth'

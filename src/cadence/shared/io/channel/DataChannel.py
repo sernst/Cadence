@@ -64,7 +64,7 @@ class DataChannel(object):
     @property
     def keys(self):
         """Data keyframes in the created/loaded dataset."""
-        return self._keys
+        return self._keys if self._keys is not None else []
 
 #___________________________________________________________________________________________________ GS: times
     @property
@@ -151,12 +151,37 @@ class DataChannel(object):
     def addKeyframe(self, keyframe):
         self._clearCache()
 
-        if isinstance(keyframe, DataChannelKey):
-            self._keys.append(keyframe)
-        else:
-            self._keys.append(DataChannelKey.fromDict(keyframe))
+        if not isinstance(keyframe, DataChannelKey):
+            keyframe = DataChannelKey.fromDict(keyframe)
 
+        if not self._keys:
+            self._keys.append(keyframe)
+            return True
+
+        index = 0
+        for k in self._keys:
+            if k.time <= keyframe.time:
+                index += 1
+                continue
+
+            self._keys.insert(index, keyframe)
+            return True
+
+        self._keys.append(keyframe)
         return True
+
+#___________________________________________________________________________________________________ toString
+    def toString(self):
+        s = 'CHANNEL [%s] [%s]%s:\n' % (
+            str(self.target),
+            str(self.kind),
+            (' ' +str(self.name)) if self.name else ''
+        )
+        out = []
+        for k in self._keys:
+             out.append(k.toString())
+        s += ', '.join(out)
+        return s
 
 #___________________________________________________________________________________________________ toDict
     def toDict(self):
@@ -180,7 +205,7 @@ class DataChannel(object):
 
 #___________________________________________________________________________________________________ __len__
     def __len__(self):
-        return len(self._times) if self._times else 0
+        return len(self._keys) if self._keys else 0
 
 #___________________________________________________________________________________________________ __repr__
     def __repr__(self):
