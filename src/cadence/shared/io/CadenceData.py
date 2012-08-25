@@ -93,12 +93,22 @@ class CadenceData(object):
 
         return out if out else None
 
+#___________________________________________________________________________________________________ createChannel
+    def createChannel(self, name, channelData):
+        self._channels.append(DataChannel(name=name, **channelData))
+
 #___________________________________________________________________________________________________ addChannel
-    def addChannel(self, name, channelData):
-        if isinstance(channelData, DataChannel):
-            self._channels.append(channelData)
-        else:
-            self._channels.append(DataChannel(name=name, **channelData))
+    def addChannel(self, channelData):
+        self._channels.append(channelData)
+
+#___________________________________________________________________________________________________ addChannels
+    def addChannels(self, channels):
+        if isinstance(channels, list):
+            for v in channels:
+                self.addChannel(v)
+        elif isinstance(channels, dict):
+            for n,v in channels.iteritems():
+                self.addChannel(v)
 
 #___________________________________________________________________________________________________ loadFile
     def loadFile(self, path):

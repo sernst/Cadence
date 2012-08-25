@@ -1,16 +1,16 @@
-# ChannelsEnum.py
+# DataTypeEnum.py
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
-#___________________________________________________________________________________________________ ChannelsEnum
-class ChannelsEnum(object):
+#___________________________________________________________________________________________________ DataTypeEnum
+class DataTypeEnum(object):
     """A class for..."""
 
 #===================================================================================================
 #                                                                                       C L A S S
 
-    ANNOTATION        = 'annotation'
+    ARBITRARY   = 'a'
 
-    GAIT_PHASE        = 'gait_phase'
+    SCALAR      = 's'
 
-    POSITION          = 'position'
+    VECTOR      = 'v'

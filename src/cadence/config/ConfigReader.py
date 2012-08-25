@@ -4,9 +4,11 @@
 
 import re
 import os
+import json
 import ConfigParser
 
 from cadence.util.ArgsUtils import ArgsUtils
+from cadence.util.math3D.Vector3D import Vector3D
 
 #___________________________________________________________________________________________________ ConfigReader
 class ConfigReader(object):
@@ -109,15 +111,22 @@ class ConfigReader(object):
         for section in parser.sections():
             s = dict()
             for opt in parser.options(section):
-                value = parser.get(section, opt)
-                test = str(value).lower()
+                value = str(parser.get(section, opt))
+                test  = value.lower()
+
                 if test.startswith('"') and test.endswith('"'):
                     value = value[1:-1]
 
-                if isinstance(value, basestring) and (value in ['None', 'none', '']):
+                elif value.startswith('@VECTOR::'):
+                    value = Vector3D(*json.loads(value[9:]))
+
+                elif value.startswith('@JSON::'):
+                    value = json.loads(value[7:])
+
+                elif isinstance(value, basestring) and (value in ['None', 'none', '']):
                     value = None
 
-                if test in ['on', 'true', 'yes']:
+                elif test in ['on', 'true', 'yes']:
                     value = True
                 elif test in ['off', 'false', 'no']:
                     value = False

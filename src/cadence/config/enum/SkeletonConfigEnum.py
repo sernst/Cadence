@@ -9,8 +9,4 @@ class SkeletonConfigEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    MANUS_STEP_HEIGHT           = 'skeleton_manus_stepheight'
-
-    PES_STEP_HEIGHT             = 'skeleton_pes_stepheight'
-
-    MAX_STRIDE_LENGTH           = 'skeleton_general_maxstridelength'
+    STRIDE_LENGTH           = 'skeleton_general_stridelength'

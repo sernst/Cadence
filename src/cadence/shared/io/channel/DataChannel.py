@@ -37,7 +37,7 @@ class DataChannel(object):
     @property
     def name(self):
         """The name identifying the DataChannel instance."""
-        return self._name
+        return self._name if self._name else (self._target + '_' + self._kind)
     @name.setter
     def name(self, value):
         self._name = value
@@ -177,6 +177,10 @@ class DataChannel(object):
 
 #===================================================================================================
 #                                                                               I N T R I N S I C
+
+#___________________________________________________________________________________________________ __len__
+    def __len__(self):
+        return len(self._times) if self._times else 0
 
 #___________________________________________________________________________________________________ __repr__
     def __repr__(self):

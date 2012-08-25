@@ -2,6 +2,7 @@
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
+from cadence.shared.enum.DataTypeEnum import DataTypeEnum
 from cadence.util.ArgsUtils import ArgsUtils
 
 #___________________________________________________________________________________________________ DataChannelKey
@@ -22,6 +23,7 @@ class DataChannelKey(object):
         self.name          = ArgsUtils.get('name', None, kwargs)
         self.time          = ArgsUtils.get('time', 0.0, kwargs)
         self.value         = ArgsUtils.get('value', 0.0, kwargs)
+        self.dataType      = ArgsUtils.get('dataType', DataTypeEnum.SCALAR, kwargs)
         self.event         = ArgsUtils.get('event', None, kwargs)
         self.inTangent     = ArgsUtils.get('inTangent', 'lin', kwargs)
         self.outTangent    = ArgsUtils.get('outTangent', 'lin', kwargs)
@@ -32,8 +34,8 @@ class DataChannelKey(object):
 #___________________________________________________________________________________________________ toDict
     def toDict(self):
         d = {
-            'x':self.time,
-            'y':self.value,
+            't':self.time,
+            'v':self.value,
             'it':self.inTangent,
             'ot':self.outTangent
         }
@@ -44,6 +46,9 @@ class DataChannelKey(object):
         if self.event:
             d['e'] = self.event
 
+        if self.dataType != DataTypeEnum.SCALAR:
+            d['dt'] = self.dataType
+
         return d
 
 #___________________________________________________________________________________________________ fromDict
@@ -52,8 +57,9 @@ class DataChannelKey(object):
         return DataChannelKey(
             name=ArgsUtils.get(['n', 'name'], None, src),
             event=ArgsUtils.get(['e', 'event'], None, src),
-            time=ArgsUtils.get(['x', 'time'], None, src),
-            value=ArgsUtils.get(['y', 'value'], None, src),
+            time=ArgsUtils.get(['x', 'time'], 0.0, src),
+            value=ArgsUtils.get(['y', 'value'], 0.0, src),
+            dataType=ArgsUtils.get(['dt', 'dataType'], DataTypeEnum.SCALAR, src),
             inTangent=ArgsUtils.get(['it', 'inTangent'], 'lin', src),
             outTangent=ArgsUtils.get(['ot', 'outTangent'], 'lin', src)
         )
