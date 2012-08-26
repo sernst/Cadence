@@ -111,7 +111,8 @@ class TargetData(object):
             d[i]       = int(cyclePhase <= self._dutyFactor)
 
         if self._phaseOffset:
-            d = np.roll(d, int(round(self._phaseOffset*float(steps))))
+            offset = int(round(self._phaseOffset*float(steps)/float(settings.cycles)))
+            d      = np.roll(d, offset)
 
         if settings.cycleOffset:
             offset = int(round(settings.cycleOffset*float(steps)/float(settings.cycles)))
@@ -221,8 +222,8 @@ class TargetData(object):
                     0.5*strideWidth,
                     prev.value.z + 0.5*(key.value.z - prev.value.z)
                 ),
-                'inTangent':TangentsEnum.FLAT,
-                'outTangent':TangentsEnum.FLAT,
+                'inTangent':[TangentsEnum.LINEAR, TangentsEnum.FLAT, TangentsEnum.SPLINE],
+                'outTangent':[TangentsEnum.LINEAR, TangentsEnum.FLAT, TangentsEnum.SPLINE],
                 'event':'aerial'
             })
             prev = key

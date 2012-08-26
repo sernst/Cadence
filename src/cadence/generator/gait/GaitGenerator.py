@@ -40,9 +40,9 @@ class GaitGenerator(object):
 
         self._cycles         = int(self._configs.get(GaitConfigEnum.CYCLES, 1))
         self._cycleOffset    = 0.01*float(self._configs.get(GaitConfigEnum.CYCLE_OFFSET, 0.0))
-        self._steps          = int(self._configs.get(GeneralConfigEnum.STEPS))
+        self._steps          = self._cycles*int(self._configs.get(GeneralConfigEnum.STEPS))
         self._startTime      = float(self._configs.get(GeneralConfigEnum.START_TIME))
-        self._stopTime       = float(self._configs.get(GeneralConfigEnum.STOP_TIME))
+        self._stopTime       = float(self._cycles)*float(self._configs.get(GeneralConfigEnum.STOP_TIME))
 
         self._dutyFactorFore = 0.01*float(self._configs.get(GaitConfigEnum.DUTY_FACTOR_FORE, 50))
         self._dutyFactorHind = 0.01*float(self._configs.get(GaitConfigEnum.DUTY_FACTOR_HIND, 50))

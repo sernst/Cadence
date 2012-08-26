@@ -172,6 +172,9 @@ class CadenceData(object):
                 True if successful, False if the load process failed because of invalid data.
         """
 
+        if not data:
+            return False
+
         if isinstance(data, basestring):
             try:
                 data = json.loads(data)

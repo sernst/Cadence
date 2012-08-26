@@ -21,5 +21,5 @@ for f in os.listdir(dataPath):
 dataFile = str(items[random.randint(0,len(items) - 1)])
 print 'LOADING data file: ' + dataFile
 
-gv = GaitVisualizer(dataFile)
+gv = GaitVisualizer(filename=dataFile)
 gv.buildScene()

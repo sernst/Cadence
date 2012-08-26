@@ -34,22 +34,37 @@ class DataChannelKey(object):
         else:
             self.value = cls._formatValueFromDataType(self.value, self.dataType)
 
-        self.event         = ArgsUtils.get('event', None, kwargs)
-        self.inTangent     = cls._getTangentEnum(ArgsUtils.get('inTangent', None, kwargs))
-        self.outTangent    = cls._getTangentEnum(ArgsUtils.get('outTangent', None, kwargs))
+        self.event = ArgsUtils.get('event', None, kwargs)
+
+        self._inTangent = cls._getTangentEnum(
+            ArgsUtils.get('inTangent', None, kwargs), self.dataType
+        )
+        self._outTangent = cls._getTangentEnum(
+            ArgsUtils.get('outTangent', None, kwargs), self.dataType
+        )
 
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+#___________________________________________________________________________________________________ GS: inTangent
+    @property
+    def inTangent(self):
+        return self.__class__._getTangentEnum(self._inTangent, self.dataType, maya=False)
+
 #___________________________________________________________________________________________________ GS: inTangentMaya
     @property
     def inTangentMaya(self):
-        return self.__class__._getTangentEnum(self.inTangent, maya=True)
+        return self.__class__._getTangentEnum(self.inTangent, self.dataType, maya=True)
+
+#___________________________________________________________________________________________________ GS: outTangent
+    @property
+    def outTangent(self):
+        return self.__class__._getTangentEnum(self._outTangent, self.dataType, maya=False)
 
 #___________________________________________________________________________________________________ GS: outTangentMaya
     @property
     def outTangentMaya(self):
-        return self.__class__._getTangentEnum(self.outTangent, maya=True)
+        return self.__class__._getTangentEnum(self.outTangent,  self.dataType, maya=True)
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -80,11 +95,25 @@ class DataChannelKey(object):
 
 #___________________________________________________________________________________________________ toDict
     def toDict(self):
+        if self.dataType == DataTypeEnum.VECTOR:
+            inTangent = self.inTangent
+            if inTangent[0] == inTangent[1] and inTangent[1] == inTangent[2]:
+                inTangent = inTangent[0]
+        else:
+            inTangent = self.inTangent
+
+        if self.dataType == DataTypeEnum.VECTOR:
+            outTangent = self.outTangent
+            if outTangent[0] == outTangent[1] and outTangent[1] == outTangent[2]:
+                outTangent = outTangent[0]
+        else:
+            outTangent = self.outTangent
+
         d = {
             't':self.time,
             'v':self.__class__._getSerializedValue(self.value, self.dataType),
-            'it':self.inTangent,
-            'ot':self.outTangent
+            'it':inTangent,
+            'ot':outTangent
         }
 
         if self.name:
@@ -109,8 +138,8 @@ class DataChannelKey(object):
             time=ArgsUtils.get(['t', 'time'], 0.0, src),
             value=value,
             dataType=dataType,
-            inTangent=ArgsUtils.get(['it', 'inTangent'], 'lin', src),
-            outTangent=ArgsUtils.get(['ot', 'outTangent'], 'lin', src)
+            inTangent=ArgsUtils.get(['it', 'inTangent'], TangentsEnum.LINEAR, src),
+            outTangent=ArgsUtils.get(['ot', 'outTangent'], TangentsEnum.LINEAR, src)
         )
 
 #===================================================================================================
@@ -118,7 +147,22 @@ class DataChannelKey(object):
 
 #___________________________________________________________________________________________________ _getTangentEnum
     @classmethod
-    def _getTangentEnum(cls, source, maya =False):
+    def _getTangentEnum(cls, source, dataType, maya =False):
+        if dataType == DataTypeEnum.VECTOR:
+            if isinstance(source, list):
+                out = []
+                for src in source:
+                    out.append(cls._getTangentEnumValue(src, maya))
+                return out
+            else:
+                value = cls._getTangentEnumValue(source, maya)
+                return [value, value, value]
+        else:
+            return cls._getTangentEnumValue(source, maya)
+
+#___________________________________________________________________________________________________ _getTangentEnumValue
+    @classmethod
+    def _getTangentEnumValue(cls, source, maya =False):
         enums = MayaTangentsEnum if maya else TangentsEnum
         if not source:
             return enums.LINEAR
