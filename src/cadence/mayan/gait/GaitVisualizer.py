@@ -26,7 +26,11 @@ class GaitVisualizer(object):
         if self._filename:
             self._data.loadFile(self._filename)
         else:
-            self._data.load(ArgsUtils.get('data', None, kwargs))
+            data = ArgsUtils.get('data', None, kwargs)
+            if isinstance(data, CadenceData):
+                self._data = data
+            else:
+                self._data.load(data)
 
 #===================================================================================================
 #                                                                                   G E T / S E T

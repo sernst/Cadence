@@ -7,6 +7,7 @@ import os
 import json
 import ConfigParser
 
+from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.util.ArgsUtils import ArgsUtils
 from cadence.util.math3D.Vector3D import Vector3D
 
@@ -17,8 +18,7 @@ class ConfigReader(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    EXTENSION           = '.cfg'
-    DEFAULT_CONFIG_PATH = os.path.dirname(os.path.abspath(__file__)) + '/../../../config/'
+    EXTENSION = '.cfg'
 
     _VECTOR_PREFIX = 'VECTOR('
     _JSON_PREFIX   = 'JSON:'
@@ -29,7 +29,11 @@ class ConfigReader(object):
         """Creates a new instance of ConfigReader."""
         self._configs     = ArgsUtils.get('configs', dict(), kwargs)
         self._filenames   = ArgsUtils.get('filenames', None, kwargs)
-        self._configPath  = ArgsUtils.get('rootConfigPath', ConfigReader.DEFAULT_CONFIG_PATH, kwargs)
+        self._configPath  = ArgsUtils.get(
+            'rootConfigPath',
+            CadenceEnvironment.getConfigPath(),
+            kwargs
+        )
 
         if self._filenames:
             for n,v in self._filenames.iteritems():
@@ -68,7 +72,7 @@ class ConfigReader(object):
     def set(self, propertyID, value):
         parts = propertyID.split('_')
 
-        if parts[0] not in self._configPath:
+        if parts[0] not in self._configs:
             raise Exception, 'No %s config exists. Unable to set property %s on unknown config.' % \
                              (parts[0], propertyID)
 

@@ -62,13 +62,13 @@ class GaitGenerator(object):
         self._leftFore  = TargetData(
             TargetsEnum.LEFT_FORE,
             dutyFactor=self._dutyFactorFore,
-            phaseOffset=0.25 + self._phase
+            phaseOffset=0.5 + self._phase
         )
 
         self._rightFore = TargetData(
             TargetsEnum.RIGHT_FORE,
             dutyFactor=self._dutyFactorFore,
-            phaseOffset=0.75 + self._phase
+            phaseOffset=self._phase
         )
 
 #===================================================================================================
@@ -133,16 +133,19 @@ class GaitGenerator(object):
         print 100*'-', 'RIGHT HIND:'
         print self._rightHind.echo()
 
-#___________________________________________________________________________________________________ saveToFile
-    def saveToFile(self, filename =None):
+#___________________________________________________________________________________________________ toCadenceData
+    def toCadenceData(self):
         cd = CadenceData(name=self.name, configs=self.configs)
         cd.addChannels(self._leftHind.channels)
         cd.addChannels(self._leftFore.channels)
         cd.addChannels(self._rightHind.channels)
         cd.addChannels(self._rightFore.channels)
+        return cd
 
+#___________________________________________________________________________________________________ saveToFile
+    def saveToFile(self, filename =None):
+        cd = self.toCadenceData()
         cd.write(self.__class__.__name__, name=filename if filename else self.name)
-
         return True
 
 #___________________________________________________________________________________________________ run

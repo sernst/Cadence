@@ -2,13 +2,14 @@ import os
 import sys
 import random
 
+from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.config.ConfigReader import ConfigReader
 from cadence.generator.gait.GaitGenerator import GaitGenerator
 from cadence.shared.io.CadenceData import CadenceData
 
 #---------------------------------------------------------------------------------------------------
 # GET CONFIG FILE
-configPath = os.path.join(ConfigReader.DEFAULT_CONFIG_PATH, 'gait')
+configPath = CadenceEnvironment.getConfigPath('gait')
 cfgs       = []
 for f in os.listdir(configPath):
     path = os.path.join(configPath, f)
