@@ -178,6 +178,9 @@ class TargetData(object):
         ).clone()
 
         position = positionOffset.z
+        if self.isHind and not self.isLeft:
+            position -= 0.5*strideLength
+
         while lifts or lands:
             if not lifts:
                 landed = True

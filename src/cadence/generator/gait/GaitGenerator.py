@@ -62,13 +62,13 @@ class GaitGenerator(object):
         self._leftFore  = TargetData(
             TargetsEnum.LEFT_FORE,
             dutyFactor=self._dutyFactorFore,
-            phaseOffset=0.25 + self._phase
+            phaseOffset=self._phase
         )
 
         self._rightFore = TargetData(
             TargetsEnum.RIGHT_FORE,
             dutyFactor=self._dutyFactorFore,
-            phaseOffset=0.75 + self._phase
+            phaseOffset=0.5 + self._phase
         )
 
 #===================================================================================================
