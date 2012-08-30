@@ -3,11 +3,13 @@
 # Scott Ernst
 
 import math
+from collections import namedtuple
 
 import numpy as np
 
 from cadence.config.enum.SkeletonConfigEnum import SkeletonConfigEnum
 from cadence.shared.enum.ChannelsEnum import ChannelsEnum
+from cadence.shared.enum.KeyEventEnum import KeyEventEnum
 from cadence.shared.enum.TangentsEnum import TangentsEnum
 from cadence.shared.enum.TargetsEnum import TargetsEnum
 from cadence.util.ArgsUtils import ArgsUtils
@@ -30,6 +32,8 @@ class TargetData(object):
         TargetsEnum.LEFT_HIND,
         TargetsEnum.LEFT_FORE
     ]
+
+    _EXTRAPOLATED_KEY_NTUPLE = namedtuple('ExtrapolatedKey', ['event', 'index'])
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, target, **kwargs):
@@ -126,58 +130,19 @@ class TargetData(object):
 
 #___________________________________________________________________________________________________ createPositionChannel
     def createPositionChannel(self, settings):
+        cls  = self.__class__
         gait = self.getChannel(ChannelsEnum.GAIT_PHASE)
         if not gait:
             return False
 
-        times  = gait.times
-        values = gait.values
-        steps  = int(settings.steps)
-        lifts  = []
-        lands  = []
-
-        # Find lift and lands within the step range
-        index = 0
-        prev  = values[-1]
-        while index < steps:
-            v = values[index]
-            if v - prev < 0:
-                lifts.append(index)
-            elif v - prev > 0:
-                lands.append(index)
-
-            index += 1
-            prev   = v
-
-        # Pre-lift or Pre-land
-        if lifts[0] > lands[0]:
-            if len(lifts) == 1:
-                preLift = -lifts[-1]
-            else:
-                preLift = lifts[0] - (lifts[1] - lifts[0])
-            pre = (preLift, None)
-        else:
-            if len(lands) == 1:
-                preLand = -lands[-1]
-            else:
-                preLand = lands[0] - (lands[1] - lands[0])
-            pre = (None, preLand)
-
-        # Post-lift or Post-land
-        if lifts[-1] < lands[-1]:
-            if len(lifts) == 1:
-                postLift = lifts[0] + steps - 1
-            else:
-                postLift = lifts[-1] + (lifts[-1] - lifts[-2])
-            post = (postLift, None)
-        else:
-            if len(lands) == 1:
-                postLand = lands[0] + steps - 1
-            else:
-                postLand = lands[-1] + (lands[-1] - lands[-2])
-            post = (None, postLand)
-
+        #-------------------------------------------------------------------------------------------
+        # INITIALIZATION
         dc             = self.createChannel(kind=ChannelsEnum.POSITION)
+        times          = gait.times
+        values         = gait.values
+        steps          = int(settings.steps)
+        lifts          = []
+        lands          = []
         strideLength   = float(settings.configs.get(SkeletonConfigEnum.STRIDE_LENGTH, 50.0))
         strideWidth    = float(settings.configs.get(SkeletonConfigEnum.STRIDE_WIDTH, 50.0))
         hindOffset     = settings.configs.get(
@@ -195,17 +160,52 @@ class TargetData(object):
         if not self.isHind:
             position += backLength
 
-        if pre[0] is  None:
-            lands.insert(0, pre[1])
+        #-------------------------------------------------------------------------------------------
+        # FIND POSITION KEYFRAMES
+        #       Find lift and lands within the step range by finding changes in the gait-phase
+        #       channel.
+        index = 0
+        prev  = values[-1]
+        while index < steps:
+            v = values[index]
+            if v - prev < 0:
+                lifts.append(index)
+            elif v - prev > 0:
+                lands.append(index)
+
+            index += 1
+            prev   = v
+
+        # PRE KEY
+        preEvent = KeyEventEnum.LIFT if lifts[0] > lands[0] else KeyEventEnum.LAND
+        src      = lifts if preEvent == KeyEventEnum.LIFT else lands
+        pre      = cls._EXTRAPOLATED_KEY_NTUPLE(
+            event=preEvent,
+            index=-src[-1] if len(src) == 1 else (src[0] - (src[1] - src[0]))
+        )
+
+        # POST KEY
+        postEvent = KeyEventEnum.LIFT if lifts[-1] < lands[-1] else KeyEventEnum.LAND
+        src       = lifts if preEvent == KeyEventEnum.LIFT else lands
+        post      = cls._EXTRAPOLATED_KEY_NTUPLE(
+            event=postEvent,
+            index=(src[0] + steps - 1) if len(src) == 1 else (src[-1] + (src[-1] - src[-2]))
+        )
+
+        if pre.event == KeyEventEnum.LAND:
+            lands.insert(0, pre.index)
             position -= strideLength
         else:
-            lifts.insert(0, pre[0])
+            lifts.insert(0, pre.index)
 
-        if post[0] is None:
-            lands.append(post[1])
+        if post.event == KeyEventEnum.LAND:
+            lands.append(post.index)
         else:
-            lifts.append(post[0])
+            lifts.append(post.index)
 
+        #-------------------------------------------------------------------------------------------
+        # CREATE KEYFRAMES
+        #       From parsed gait-phase channel, create lift and land keyframes.
         while lifts or lands:
             if not lifts:
                 landed = True
@@ -237,10 +237,12 @@ class TargetData(object):
                     position),
                 'inTangent':TangentsEnum.FLAT,
                 'outTangent':TangentsEnum.FLAT,
-                'event':('land' if landed else 'lift')
+                'event':(KeyEventEnum.LAND if landed else KeyEventEnum.LIFT)
             })
 
-        # Add intermediate aerial keyframes
+        #-------------------------------------------------------------------------------------------
+        # AERIAL KEYS
+        #       Inserts intermediate aerial keyframes between lift and land keyframes.
         prev = dc.keys[0]
         for key in dc.keys[1:]:
             if prev.value.z == key.value.z:
@@ -256,11 +258,14 @@ class TargetData(object):
                 ),
                 'inTangent':[TangentsEnum.LINEAR, TangentsEnum.FLAT, TangentsEnum.SPLINE],
                 'outTangent':[TangentsEnum.LINEAR, TangentsEnum.FLAT, TangentsEnum.SPLINE],
-                'event':'aerial'
+                'event':KeyEventEnum.AERIAL
             })
             prev = key
 
-        # Handles the case where the first keyframe should be an aerial
+        #-------------------------------------------------------------------------------------------
+        # AERIAL PRE-KEY
+        #       Handles the case where the first keyframe should be an aerial to ensure correct
+        #       display at startTime.
         key = dc.keys[0]
         if key.event == 'land' and key.time > settings.startTime:
             time = 0.5*(1.0 - self._dutyFactor)*(settings.stopTime - settings.startTime)
@@ -273,12 +278,10 @@ class TargetData(object):
                 ),
                 'inTangent':[TangentsEnum.LINEAR, TangentsEnum.FLAT, TangentsEnum.SPLINE],
                 'outTangent':[TangentsEnum.LINEAR, TangentsEnum.FLAT, TangentsEnum.SPLINE],
-                'event':'aerial'
+                'event':KeyEventEnum.AERIAL
             })
-        print self.target, dc
-        for k in dc.keys:
-            k.echo()
 
+        dc.echo()
         self.addChannel(dc)
 
 #===================================================================================================
