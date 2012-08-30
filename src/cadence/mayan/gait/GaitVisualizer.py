@@ -3,6 +3,7 @@
 # Scott Ernst
 
 from cadence.config.enum.GaitConfigEnum import GaitConfigEnum
+from cadence.config.enum.SkeletonConfigEnum import SkeletonConfigEnum
 from cadence.shared.enum.ChannelsEnum import ChannelsEnum
 from cadence.shared.enum.TargetsEnum import TargetsEnum
 from cadence.shared.io.CadenceData import CadenceData
@@ -53,12 +54,19 @@ class GaitVisualizer(object):
         """Doc..."""
 
         groupItems = []
+        hinds      = []
+        fores      = []
 
         for c in self._data.getChannelsByKind(ChannelsEnum.POSITION):
             isHind = c.target in [TargetsEnum.LEFT_HIND, TargetsEnum.RIGHT_HIND]
             radius = 20 if isHind else 15
             res    = cmds.polySphere(radius=radius, name=c.target)
             groupItems.append(res[0])
+            if isHind:
+                hinds.append(res[0])
+            else:
+                fores.append(res[0])
+
             for k in c.keys:
                 frames = [
                     ['translateX', k.value.x, k.inTangentMaya[0], k.outTangentMaya[0]],
@@ -87,6 +95,30 @@ class GaitVisualizer(object):
         name = 'cycle_phase' + str(self._data.configs.get(GaitConfigEnum.PHASE)) + \
                '_hind' + str(self._data.configs.get(GaitConfigEnum.DUTY_FACTOR_HIND)) + \
                '_fore' + str(self._data.configs.get(GaitConfigEnum.DUTY_FACTOR_FORE))
+
+        cube = cmds.polyCube(name='pelvis', width=20, height=20, depth=20)
+        groupItems.append(cube[0])
+        cmds.move(0, 100, 0, cube[0])
+
+        backLength = self._data.configs.get(SkeletonConfigEnum.FORE_OFFSET).z - \
+                     self._data.configs.get(SkeletonConfigEnum.HIND_OFFSET).z
+
+        cube2 = cmds.polyCube(name='pectoral_locator', width=15, height=15, depth=15)
+        cmds.move(0, 115, backLength, cube2[0])
+        cmds.parent(cube2[0], cube[0], absolute=True)
+
+        cmds.expression(
+            string="%s.translateZ = 0.5*abs(%s.translateZ - %s.translateZ) + min(%s.translateZ, %s.translateZ)" %
+            (cube[0], hinds[0], hinds[1], hinds[0], hinds[1])
+        )
+
+        cube = cmds.polyCube(name='pectoral', width=15, height=15, depth=15)
+        groupItems.append(cube[0])
+        cmds.move(0, 100, 0, cube[0])
+        cmds.expression(
+            string="%s.translateZ = 0.5*abs(%s.translateZ - %s.translateZ) + min(%s.translateZ, %s.translateZ)" %
+            (cube[0], fores[0], fores[1], fores[0], fores[1])
+        )
 
         cmds.group(*groupItems, world=True, name=name)
 

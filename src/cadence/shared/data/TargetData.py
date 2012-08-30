@@ -39,6 +39,8 @@ class TargetData(object):
         self._dutyFactor    = ArgsUtils.get('dutyFactor', 0.5, kwargs)
         self._phaseOffset   = float(ArgsUtils.get('phaseOffset', 0.0, kwargs))
 
+        print self.target, self._phaseOffset
+
 #===================================================================================================
 #                                                                                   G E T / S E T
 
@@ -148,19 +150,54 @@ class TargetData(object):
             prev   = v
 
         # Pre-lift or Pre-land
-        if lifts[-1] > lands[-1]:
-            pre = (-lifts[-1], None)
+        if lifts[0] > lands[0]:
+            if len(lifts) == 1:
+                preLift = -lifts[-1]
+            else:
+                preLift = lifts[0] - (lifts[1] - lifts[0])
+            pre = (preLift, None)
         else:
-            pre = (None, -lands[-1])
+            if len(lands) == 1:
+                preLand = -lands[-1]
+            else:
+                preLand = lands[0] - (lands[1] - lands[0])
+            pre = (None, preLand)
 
         # Post-lift or Post-land
-        if lifts[0] < lands[0]:
-            post = (lifts[0] + steps - 1, None)
+        if lifts[-1] < lands[-1]:
+            if len(lifts) == 1:
+                postLift = lifts[0] + steps - 1
+            else:
+                postLift = lifts[-1] + (lifts[-1] - lifts[-2])
+            post = (postLift, None)
         else:
-            post = (None, lands[0] + steps - 1)
+            if len(lands) == 1:
+                postLand = lands[0] + steps - 1
+            else:
+                postLand = lands[-1] + (lands[-1] - lands[-2])
+            post = (None, postLand)
+
+        dc             = self.createChannel(kind=ChannelsEnum.POSITION)
+        strideLength   = float(settings.configs.get(SkeletonConfigEnum.STRIDE_LENGTH, 50.0))
+        strideWidth    = float(settings.configs.get(SkeletonConfigEnum.STRIDE_WIDTH, 50.0))
+        hindOffset     = settings.configs.get(
+            SkeletonConfigEnum.HIND_OFFSET,
+            Vector3D(0.5*strideWidth, 2.0*strideLength, 0.0)
+        ).clone()
+        foreOffset     = settings.configs.get(
+            SkeletonConfigEnum.FORE_OFFSET,
+            Vector3D(0.5*strideWidth, 2.0*strideLength, 3.0*strideLength)
+        ).clone()
+        backLength     = foreOffset.z - hindOffset.z
+        positionOffset = hindOffset if self.isHind else foreOffset
+
+        position = math.modf(self._phaseOffset)[0]*strideLength
+        if not self.isHind:
+            position += backLength
 
         if pre[0] is  None:
             lands.insert(0, pre[1])
+            position -= strideLength
         else:
             lifts.insert(0, pre[0])
 
@@ -168,18 +205,6 @@ class TargetData(object):
             lands.append(post[1])
         else:
             lifts.append(post[0])
-
-        dc             = self.createChannel(kind=ChannelsEnum.POSITION)
-        strideLength   = float(settings.configs.get(SkeletonConfigEnum.STRIDE_LENGTH, 50.0))
-        strideWidth    = float(settings.configs.get(SkeletonConfigEnum.STRIDE_WIDTH, 50.0))
-        positionOffset = settings.configs.get(
-            SkeletonConfigEnum.FORE_OFFSET if not self.isHind else SkeletonConfigEnum.HIND_OFFSET,
-            Vector3D(0.5*strideWidth, 2*strideLength, 0.0 if self.isHind else 3*strideLength)
-        ).clone()
-
-        position = positionOffset.z
-        if self.isHind and not self.isLeft:
-            position -= 0.5*strideLength
 
         while lifts or lands:
             if not lifts:
@@ -190,8 +215,12 @@ class TargetData(object):
                 landed = (lifts[0] > lands[0])
 
             index  = lands.pop(0) if landed else lifts.pop(0)
-            if landed and index > 0:
-                position += strideLength
+            if landed:
+                if len(dc.keys) > 0:
+                    position += strideLength
+            else:
+                if index < 0:
+                    position -= strideLength
 
             if index < 0:
                 time = times[index] - settings.stopTime
@@ -230,6 +259,25 @@ class TargetData(object):
                 'event':'aerial'
             })
             prev = key
+
+        # Handles the case where the first keyframe should be an aerial
+        key = dc.keys[0]
+        if key.event == 'land' and key.time > settings.startTime:
+            time = 0.5*(1.0 - self._dutyFactor)*(settings.stopTime - settings.startTime)
+            dc.addKeyframe({
+                'time':key.time - time,
+                'value':Vector3D(
+                    key.value.x,
+                    0.5*strideWidth,
+                    key.value.z - strideLength
+                ),
+                'inTangent':[TangentsEnum.LINEAR, TangentsEnum.FLAT, TangentsEnum.SPLINE],
+                'outTangent':[TangentsEnum.LINEAR, TangentsEnum.FLAT, TangentsEnum.SPLINE],
+                'event':'aerial'
+            })
+        print self.target, dc
+        for k in dc.keys:
+            k.echo()
 
         self.addChannel(dc)
 

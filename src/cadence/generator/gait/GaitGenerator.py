@@ -62,13 +62,13 @@ class GaitGenerator(object):
         self._leftFore  = TargetData(
             TargetsEnum.LEFT_FORE,
             dutyFactor=self._dutyFactorFore,
-            phaseOffset=0.5 + self._phase
+            phaseOffset=self._phase
         )
 
         self._rightFore = TargetData(
             TargetsEnum.RIGHT_FORE,
             dutyFactor=self._dutyFactorFore,
-            phaseOffset=self._phase
+            phaseOffset=0.5 + self._phase
         )
 
 #===================================================================================================
@@ -98,6 +98,11 @@ class GaitGenerator(object):
     @property
     def stopTime(self):
         return self._stopTime
+
+#___________________________________________________________________________________________________ GS: phase
+    @property
+    def phase(self):
+        return self._phase
 
 #___________________________________________________________________________________________________ GS: configs
     @property
