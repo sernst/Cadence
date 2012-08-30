@@ -76,8 +76,32 @@ class DataChannelKey(object):
 #___________________________________________________________________________________________________ toString
     def toString(self,  prefix =''):
         tangents = ''
-        if self.inTangent != 'lin' or self.outTangent != 'lin':
-            tangents = ' (%s, %s)' % (str(self.inTangent), str(self.outTangent))
+        if self.inTangent == 'lin' and self.outTangent == 'lin':
+            tangents = ''
+        else:
+            inTans = ''
+            if isinstance(self.inTangent, list):
+                tanValue = self.inTangent[0]
+                for v in self.inTangent[1:]:
+                    if tanValue != v:
+                        inTans = str(self.inTangent)
+                if not inTans:
+                    inTans = tanValue
+            else:
+                inTans = self.inTangent
+
+            outTans = ''
+            if isinstance(self.outTangent, list):
+                tanValue = self.outTangent[0]
+                for v in self.outTangent[1:]:
+                    if tanValue != v:
+                        outTans = str(self.outTangent)
+                if not outTans:
+                    outTans = tanValue
+            else:
+                outTans = self.outTangent
+
+            tangents = ' (%s, %s)' % (str(inTans), str(outTans))
 
         info = ''
         if self.event:

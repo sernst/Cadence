@@ -170,6 +170,10 @@ class DataChannel(object):
         self._keys.append(keyframe)
         return True
 
+#___________________________________________________________________________________________________ echo
+    def echo(self):
+        print self.toString()
+
 #___________________________________________________________________________________________________ toString
     def toString(self):
         s = 'CHANNEL [%s] [%s]%s:\n' % (

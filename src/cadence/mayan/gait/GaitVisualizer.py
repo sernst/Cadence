@@ -30,8 +30,18 @@ class GaitVisualizer(object):
             data = ArgsUtils.get('data', None, kwargs)
             if isinstance(data, CadenceData):
                 self._data = data
-            else:
+            elif data:
                 self._data.load(data)
+            else:
+                self._data = None
+
+        self._group     = None
+        self._leftHind  = None
+        self._rightHind = None
+        self._leftFore  = None
+        self._rightFore = None
+        self._hips      = None
+        self._pecs      = None
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -45,6 +55,41 @@ class GaitVisualizer(object):
     @property
     def data(self):
         return self._data
+
+#___________________________________________________________________________________________________ GS: group
+    @property
+    def group(self):
+        return self._group
+
+#___________________________________________________________________________________________________ GS: leftHind
+    @property
+    def leftHind(self):
+        return self._leftHind if not self.group else (self.group + u'|' + self._leftHind)
+
+#___________________________________________________________________________________________________ GS: rightHind
+    @property
+    def rightHind(self):
+        return self._rightHind if not self.group else (self.group + u'|' + self._rightHind)
+
+#___________________________________________________________________________________________________ GS: leftFore
+    @property
+    def leftFore(self):
+        return self._leftFore if not self.group else (self.group + u'|' + self._leftFore)
+
+#___________________________________________________________________________________________________ GS: rightFore
+    @property
+    def rightFore(self):
+        return self._rightFore if not self.group else (self.group + u'|' + self._rightFore)
+
+#___________________________________________________________________________________________________ GS: hips
+    @property
+    def hips(self):
+        return self._hips if not self.group else (self.group + u'|' + self._hips)
+
+#___________________________________________________________________________________________________ GS: pecs
+    @property
+    def pecs(self):
+        return self._pecs if not self.group else (self.group + u'|' + self._pecs)
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -66,6 +111,15 @@ class GaitVisualizer(object):
                 hinds.append(res[0])
             else:
                 fores.append(res[0])
+
+            if c.target == TargetsEnum.LEFT_HIND:
+                self._leftHind = res[0]
+            elif c.target == TargetsEnum.RIGHT_HIND:
+                self._rightHind = res[0]
+            elif c.target == TargetsEnum.RIGHT_FORE:
+                self._rightFore = res[0]
+            elif c.target == TargetsEnum.LEFT_FORE:
+                self._leftFore = res[0]
 
             for k in c.keys:
                 frames = [
@@ -96,14 +150,15 @@ class GaitVisualizer(object):
                '_hind' + str(self._data.configs.get(GaitConfigEnum.DUTY_FACTOR_HIND)) + \
                '_fore' + str(self._data.configs.get(GaitConfigEnum.DUTY_FACTOR_FORE))
 
-        cube = cmds.polyCube(name='pelvis', width=20, height=20, depth=20)
+        cube        = cmds.polyCube(name='pelvic_reference', width=20, height=20, depth=20)
+        self._hips  = cube[0]
         groupItems.append(cube[0])
         cmds.move(0, 100, 0, cube[0])
 
         backLength = self._data.configs.get(SkeletonConfigEnum.FORE_OFFSET).z - \
                      self._data.configs.get(SkeletonConfigEnum.HIND_OFFSET).z
 
-        cube2 = cmds.polyCube(name='pectoral_locator', width=15, height=15, depth=15)
+        cube2 = cmds.polyCube(name='pectoral_comparator', width=15, height=15, depth=15)
         cmds.move(0, 115, backLength, cube2[0])
         cmds.parent(cube2[0], cube[0], absolute=True)
 
@@ -112,7 +167,8 @@ class GaitVisualizer(object):
             (cube[0], hinds[0], hinds[1], hinds[0], hinds[1])
         )
 
-        cube = cmds.polyCube(name='pectoral', width=15, height=15, depth=15)
+        cube = cmds.polyCube(name='pectoral_reference', width=15, height=15, depth=15)
+        self._pecs = cube[0]
         groupItems.append(cube[0])
         cmds.move(0, 100, 0, cube[0])
         cmds.expression(
@@ -120,7 +176,95 @@ class GaitVisualizer(object):
             (cube[0], fores[0], fores[1], fores[0], fores[1])
         )
 
-        cmds.group(*groupItems, world=True, name=name)
+        self._group = cmds.group(*groupItems, world=True, name=name)
+        self.createShaders()
+        self.createRenderEnvironment()
+
+#===================================================================================================
+#                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ createShaders
+    def createShaders(self):
+        shader, shaderEngine = self.createShader('HindPrint_Blinn')
+        cmds.setAttr(shader + '.color', 0.618, 0.551421, 0.368328, type='double3')
+        cmds.select(
+            cmds.ls(self.group + '|left_hind_*', objectsOnly=True, exactType='transform', long=True)
+        )
+        cmds.sets(forceElement=shaderEngine)
+
+        cmds.select(
+            cmds.ls(self.group + '|right_hind_*', objectsOnly=True, exactType='transform', long=True)
+        )
+        cmds.sets(forceElement=shaderEngine)
+
+        shader, shaderEngine = self.createShader('ForePrint_Blinn')
+        cmds.setAttr(shader + '.color', 0.309, 0.8618, 1.0, type='double3')
+        cmds.select(
+            cmds.ls(self.group + '|left_fore_*', objectsOnly=True, exactType='transform', long=True)
+        )
+        cmds.sets(forceElement=shaderEngine)
+
+        cmds.select(
+            cmds.ls(self.group + '|right_fore_*', objectsOnly=True, exactType='transform', long=True)
+        )
+        cmds.sets(forceElement=shaderEngine)
+
+        shader, shaderEngine = self.createShader('HindFoot_Blinn')
+        cmds.setAttr(shader + '.color', 0.792, 0.383566, 0.338184, type='double3')
+        cmds.select([self.leftHind, self.rightHind])
+        cmds.sets(forceElement=shaderEngine)
+
+        shader, shaderEngine = self.createShader('ForeFoot_Blinn')
+        cmds.setAttr(shader + '.color', 0.287, 0.762333, 1.0, type='double3')
+        cmds.select([self.leftFore, self.rightFore])
+        cmds.sets(forceElement=shaderEngine)
+
+        shader, shaderEngine = self.createShader('Hips_Blinn')
+        cmds.setAttr(shader + '.color', 1.0, 0.376, 0.376, type='double3')
+        cmds.select([self.hips])
+        cmds.sets(forceElement=shaderEngine)
+
+        shader, shaderEngine = self.createShader('Pecs_Blinn')
+        cmds.setAttr(shader + '.color', 0.629483, 1.0, 0.483, type='double3')
+        cmds.select([self.pecs])
+        cmds.sets(forceElement=shaderEngine)
+
+#___________________________________________________________________________________________________ createShader
+    def createShader(self, shaderName, shaderType ='blinn'):
+        shaderEngine = None
+        if not cmds.objExists(shaderName):
+            shader       = cmds.shadingNode(shaderType, asShader=True)
+            shader       = cmds.rename(shader, shaderName)
+            shaderEngine = cmds.sets(renderable=True, empty=True, noSurfaceShader=True, name=shader + '_SG')
+            cmds.connectAttr(shader + '.outColor', shaderEngine + '.surfaceShader')
+        else:
+            shader  = shaderName
+            engines = cmds.listConnections(shader + '.outColor')
+            if engines:
+                shaderEngine = engines[0]
+
+        return shader, shaderEngine
+
+    def createRenderEnvironment(self):
+        lightName = 'scenic_light1'
+        if not cmds.objExists(lightName):
+            lightName = cmds.directionalLight(name=lightName, intensity=0.5)
+            cmds.move(0, 2500, 0, lightName)
+            cmds.rotate('-45deg', '-45deg', 0, lightName)
+
+        lightName = 'scenic_light2'
+        if not cmds.objExists(lightName):
+            lightName = cmds.directionalLight(name=lightName, intensity=0.5)
+            cmds.move(0, 2500, 0, lightName)
+            cmds.rotate('-45deg', '135deg', 0, lightName)
+
+        floorName = 'floor'
+        if not cmds.objExists(floorName):
+            floorName = cmds.polyPlane(width=10000, height=10000, name=floorName)[0]
+        shader, shaderEngine = self.createShader('Whiteout_Surface', 'surfaceShader')
+        cmds.setAttr(shader + '.outColor', 1.0, 1.0, 1.0, type='double3')
+        cmds.select([floorName])
+        cmds.sets(forceElement=shaderEngine)
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

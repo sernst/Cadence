@@ -186,7 +186,7 @@ class TargetData(object):
 
         # POST KEY
         postEvent = KeyEventEnum.LIFT if lifts[-1] < lands[-1] else KeyEventEnum.LAND
-        src       = lifts if preEvent == KeyEventEnum.LIFT else lands
+        src       = lifts if postEvent == KeyEventEnum.LIFT else lands
         post      = cls._EXTRAPOLATED_KEY_NTUPLE(
             event=postEvent,
             index=(src[0] + steps - 1) if len(src) == 1 else (src[-1] + (src[-1] - src[-2]))
