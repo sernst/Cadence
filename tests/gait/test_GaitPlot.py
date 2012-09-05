@@ -10,8 +10,9 @@ from cadence.plot.gait.GaitPlot import GaitPlot
 gp = GaitPlot(3, 8, 8)
 
 #___________________________________________________________________________________________________ loadData test
-if gp.loadGait("GaitGenerator/PH-50_F-50_H-50.cadence"):
-#if gp.loadGait("GaitGenerator/PH-0_F-50_H-50.cadence"):
+#if gp.loadGait("GaitGenerator/PH-50_F-50_H-50.cadence"):
+if gp.loadGait("GaitGenerator/PH-0_F-50_H-50.cadence"):
+#if gp.loadGait("GaitGenerator/PH-20_F-70_H-70.cadence"):
     print 'SUCCESS: GaitPlot.loadData()'
 else:
     print 'FAILED: GaitPlot.loadData()'
