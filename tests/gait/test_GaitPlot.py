@@ -25,7 +25,7 @@ gp.setColorMap('gray') # choose a monochrome color map
 gp.setPlotInterval(0.0, 24.0)
 #___________________________________________________________________________________________________ plotGait test
 
-
+# plotGait creates a gait plot without colorizing for support; use plotGait2 to show colors
 if gp.plotGait2(1):
     print 'SUCCESS: GaitPlot.plotGait()'
 else:

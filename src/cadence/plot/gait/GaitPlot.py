@@ -151,7 +151,6 @@ class GaitPlot(object):
 
         for key in channel.keys[1:]:
             if key.time >= self._plotStartTime and key.time <= self._plotStopTime:
-                print "key from time = %f to %f" % (prevKey.time, key.time)
                 graph.plot([prevKey.time, key.time],
                            [y, y],
                            linewidth=lineWidth,
@@ -203,27 +202,6 @@ class GaitPlot(object):
             values.append(self.value(channel, t))
         return values
 
-#___________________________________________________________________________________________________ channelValue
-
-    def plotValues(self, times, values, graph, y, lineWidth=10):
-        """ for a given list of times, corresponding values color mapped on a given graph at a given y"""
-
-        for value in values:
-            print value
-
-        plt.axes(graph)
-        prevTime = times[0]
-
-        for i in range(len(times)):
-            time  = times[i]
-            value = values[i]
-            if time >= self._plotStartTime and time <= self._plotStopTime:
-                graph.plot([prevTime, time],
-                [y, y],
-                linewidth=lineWidth,
-                color=self.mapValueToColor(value))
-            prevTime = time
-
 #___________________________________________________________________________________________________ plotGait_v2
 
     def plotGait2(self, graphNumber=1, background='gray', lineWidth=10):
@@ -239,8 +217,6 @@ class GaitPlot(object):
         start = self._cd.configs.get(GeneralConfigEnum.START_TIME)
         steps = self._cd.configs.get(GeneralConfigEnum.STEPS)
         delta = (stop - start)/steps
-
-        print "delta = %f" % delta
 
         times  = plt.arange(self._plotStartTime, self._plotStopTime, delta)
         valuesRH = self.values(self._channel_RH, times)
@@ -262,8 +238,6 @@ class GaitPlot(object):
             elif lf and rf:                                support = 0.2
             elif (lh and lf) or (rf and rh):               support = 0.1
             else:                                          support = 0.0
-            if time == 5:
-                print lh, lf, rf, rh, support
             if support > 0.0:
                 plt.axvspan(time - 2.0*delta, time, fc=self.mapValueToColor(support), ec='none')
 
@@ -274,8 +248,6 @@ class GaitPlot(object):
         self.plotChannel(self._channel_RH, graph, y_RH, lineWidth)
 
         plt.xlim([self._plotStartTime, self._plotStopTime - 1])
-        print "plotting from plotStarTime %s to plotStopTime %s" % (self._plotStartTime, self._plotStopTime)
-
 
         plt.ylim(0, 1)
         positions = (y_RH, y_RF, y_LF, y_LH)
