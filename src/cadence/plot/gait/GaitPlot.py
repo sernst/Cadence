@@ -4,10 +4,11 @@
 
 import pylab as plt
 
-from cadence.shared.io.CadenceData    import CadenceData
+from cadence.shared.io.CadenceData import CadenceData
 from cadence.shared.enum.ChannelsEnum import ChannelsEnum
-from cadence.shared.enum.TargetsEnum  import TargetsEnum
-from cadence.config.ConfigReader      import ConfigReader
+from cadence.shared.enum.TargetsEnum import TargetsEnum
+from cadence.config.enum.GeneralConfigEnum import GeneralConfigEnum
+
 
 #___________________________________________________________________________________________________ GaitPlot
 class GaitPlot(object):
@@ -40,6 +41,7 @@ class GaitPlot(object):
 #___________________________________________________________________________________________________ __init__
 
     def __init__(self, rows=1, width=8, height=4):
+        self._cd         = None
         self._channel_LH = None
         self._channel_LF = None
         self._channel_RF = None
@@ -233,9 +235,14 @@ class GaitPlot(object):
 
         y_RH, y_RF, y_LF, y_LH = 0.2, 0.4, 0.6, 0.8
 
-        print c
+        stop  = self._cd.configs.get(GeneralConfigEnum.STOP_TIME)
+        start = self._cd.configs.get(GeneralConfigEnum.START_TIME)
+        steps = self._cd.configs.get(GeneralConfigEnum.STEPS)
+        delta = (stop - start)/steps
 
-        times  = plt.arange(self._plotStartTime, self._plotStopTime, 1.0)
+        print "delta = %f" % delta
+
+        times  = plt.arange(self._plotStartTime, self._plotStopTime, delta)
         valuesRH = self.values(self._channel_RH, times)
         valuesRF = self.values(self._channel_RF, times)
         valuesLF = self.values(self._channel_LF, times)
@@ -258,7 +265,7 @@ class GaitPlot(object):
             if time == 5:
                 print lh, lf, rf, rh, support
             if support > 0.0:
-                plt.axvspan(time - 1.0, time, facecolor=self.mapValueToColor(support))
+                plt.axvspan(time - 2.0*delta, time, fc=self.mapValueToColor(support), ec='none')
 
         self.setColorMap('gray')
         self.plotChannel(self._channel_LH, graph, y_LH, lineWidth)
