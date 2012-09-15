@@ -146,9 +146,11 @@ class GaitVisualizer(object):
                     cmds.move(k.value.x, k.value.y, k.value.z, printResult[0])
                     groupItems.append(printResult[0])
 
-        name = 'cycle_phase' + str(self._data.configs.get(GaitConfigEnum.PHASE)) + \
-               '_hind' + str(self._data.configs.get(GaitConfigEnum.DUTY_FACTOR_HIND)) + \
-               '_fore' + str(self._data.configs.get(GaitConfigEnum.DUTY_FACTOR_FORE))
+        cfg = self._data.configs
+        name = 'cyc' + str(int(cfg.get(GaitConfigEnum.CYCLES))) + \
+               '_ph' + str(int(cfg.get(GaitConfigEnum.PHASE))) + \
+               '_gad' + str(int(cfg.get(SkeletonConfigEnum.FORE_OFFSET).z)) + \
+               '_step' + str(int(cfg.get(SkeletonConfigEnum.STRIDE_LENGTH)))
 
         cube        = cmds.polyCube(name='pelvic_reference', width=20, height=20, depth=20)
         self._hips  = cube[0]
@@ -177,6 +179,26 @@ class GaitVisualizer(object):
         )
 
         self._group = cmds.group(*groupItems, world=True, name=name)
+
+        cfg = self._data.configs
+        info = 'Gait Phase: ' + \
+                str(cfg.get(GaitConfigEnum.PHASE)) + \
+                '\nGleno-Acetabular Distance (GAD): ' + \
+                str(cfg.get(SkeletonConfigEnum.FORE_OFFSET).z) + \
+                '\nStep Length: ' + \
+                str(cfg.get(SkeletonConfigEnum.STRIDE_LENGTH)) + \
+                '\nHind Duty Factor: ' + \
+                str(cfg.get(GaitConfigEnum.DUTY_FACTOR_HIND)) + \
+                '\nFore Duty Factor: ' + \
+                str(cfg.get(GaitConfigEnum.DUTY_FACTOR_FORE)) + \
+                '\nCycles: ' + \
+                str(cfg.get(GaitConfigEnum.CYCLES))
+
+        cmds.select(self._group)
+        if not cmds.attributeQuery('notes', node=self._group, exists=True):
+            cmds.addAttr(longName='notes', dataType='string')
+            cmds.setAttr(self._group + '.notes', info, type='string')
+
         self.createShaders()
         self.createRenderEnvironment()
 

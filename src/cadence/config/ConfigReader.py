@@ -52,6 +52,7 @@ class ConfigReader(object):
 
                 self._configs[n] = self._configParserToDict(parser)
 
+        self._overrides = dict()
         self.setOverrides(ArgsUtils.get('overrides', None, kwargs))
 
 #===================================================================================================
@@ -84,7 +85,21 @@ class ConfigReader(object):
             return False
 
         for n,v in overrides.iteritems():
-            self.set(n, v)
+            currentValue = self.get(n)
+
+            # Vector assignment override case
+            if currentValue and isinstance(currentValue, Vector3D):
+                currentValue = currentValue.clone()
+                if isinstance(v, Vector3D):
+                    currentValue.updateValues(*v.toList())
+                elif v is not None:
+                    currentValue.updateValues(x=v, y=v, z=v)
+                self.set(n, currentValue)
+                self._overrides[n] = currentValue
+            else:
+                self.set(n, v)
+                self._overrides[n] = v
+
         return True
 
 #___________________________________________________________________________________________________ get
@@ -96,6 +111,14 @@ class ConfigReader(object):
                              (parts[0], propertyID)
 
         return self._getValue(*parts, defaultValue=default)
+
+#___________________________________________________________________________________________________ getOverrides
+    def getOverrides(self):
+        out = dict()
+        for n,v in self._overrides.iteritems():
+            out[n] = v
+
+        return out
 
 #___________________________________________________________________________________________________ toDict
     def toDict(self):

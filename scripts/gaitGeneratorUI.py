@@ -13,6 +13,7 @@ from cadence.config.enum.GaitConfigEnum import GaitConfigEnum
 from cadence.config.enum.SkeletonConfigEnum import SkeletonConfigEnum
 from cadence.generator.gait.GaitGenerator import GaitGenerator
 from cadence.mayan.gait.GaitVisualizer import GaitVisualizer
+from cadence.util.math3D.Vector3D import Vector3D
 
 #___________________________________________________________________________________________________ Viewer
 class Viewer(QWidget):
@@ -42,11 +43,14 @@ class Viewer(QWidget):
         w             = myWidget
         self.myWidget = myWidget
 
+        w.gadLengthLabel.setText(unicode(w.gadLengthSlider.value()))
+        QObject.connect(w.gadLengthSlider, SIGNAL("valueChanged(int)"), w.gadLengthLabel.setNum)
+
         w.gaitPhaseLabel.setText(unicode(w.gaitPhaseSlider.value()))
         QObject.connect(w.gaitPhaseSlider, SIGNAL("valueChanged(int)"), w.gaitPhaseLabel.setNum)
 
-        w.strideLengthLabel.setText(unicode(w.strideLengthSlider.value()))
-        QObject.connect(w.strideLengthSlider, SIGNAL("valueChanged(int)"), w.strideLengthLabel.setNum)
+        w.stepLengthLabel.setText(unicode(w.stepLengthSlider.value()))
+        QObject.connect(w.stepLengthSlider, SIGNAL("valueChanged(int)"), w.stepLengthLabel.setNum)
 
         w.dutyFactorHindLabel.setText(unicode(w.dutyFactorHindSlider.value()))
         QObject.connect(w.dutyFactorHindSlider, SIGNAL("valueChanged(int)"), w.dutyFactorHindLabel.setNum)
@@ -59,18 +63,29 @@ class Viewer(QWidget):
 
         w.runButton.clicked.connect(self._runGaitGeneration)
 
+        self.adjustSize()
+
+#___________________________________________________________________________________________________ sizeHint
+    def sizeHint(self, *args, **kwargs):
+        size = QWidget.sizeHint(self)
+        size.setWidth(self.myWidget.baseSize().width())
+        size.setHeight(self.myWidget.baseSize().height())
+        return size
+
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
 #___________________________________________________________________________________________________ _runGaitGeneration
     def _runGaitGeneration(self):
+        w = self.myWidget
         gg = GaitGenerator(
             overrides = {
-                GaitConfigEnum.CYCLES:self.myWidget.cyclesSlider.value(),
-                GaitConfigEnum.DUTY_FACTOR_HIND:self.myWidget.dutyFactorHindSlider.value(),
-                GaitConfigEnum.DUTY_FACTOR_FORE:self.myWidget.dutyFactorForeSlider.value(),
-                GaitConfigEnum.PHASE:self.myWidget.gaitPhaseSlider.value(),
-                SkeletonConfigEnum.STRIDE_LENGTH:self.myWidget.strideLengthSlider.value()
+                GaitConfigEnum.CYCLES:w.cyclesSlider.value(),
+                GaitConfigEnum.DUTY_FACTOR_HIND:w.dutyFactorHindSlider.value(),
+                GaitConfigEnum.DUTY_FACTOR_FORE:w.dutyFactorForeSlider.value(),
+                GaitConfigEnum.PHASE:w.gaitPhaseSlider.value(),
+                SkeletonConfigEnum.STRIDE_LENGTH:w.stepLengthSlider.value(),
+                SkeletonConfigEnum.FORE_OFFSET:Vector3D(None, None, float(w.gadLengthSlider.value()))
             }
         )
         gg.run()

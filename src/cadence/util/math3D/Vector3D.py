@@ -71,6 +71,22 @@ class Vector3D(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ updateValues
+    def updateValues(self, *args, **kwargs):
+        x = ArgsUtils.get('x', None, kwargs, args, 0)
+        if x is not None:
+            self.x = x
+
+        y = ArgsUtils.get('y', None, kwargs, args, 1)
+        if y is not None:
+            self.y = y
+
+        z = ArgsUtils.get('z', None, kwargs, args, 2)
+        if z is not None:
+            self.z = z
+
+        return True
+
 #___________________________________________________________________________________________________ normalize
     def normalize(self, length =1.0):
         pass
