@@ -3,6 +3,7 @@
 # Scott Ernst
 
 from cadence.config.enum.GaitConfigEnum import GaitConfigEnum
+from cadence.config.enum.GeneralConfigEnum import GeneralConfigEnum
 from cadence.config.enum.SkeletonConfigEnum import SkeletonConfigEnum
 from cadence.shared.enum.ChannelsEnum import ChannelsEnum
 from cadence.shared.enum.TargetsEnum import TargetsEnum
@@ -201,6 +202,22 @@ class GaitVisualizer(object):
 
         self.createShaders()
         self.createRenderEnvironment()
+
+        minTime = min(0, int(cmds.playbackOptions(query=True, minTime=True)))
+
+        deltaTime = cfg.get(GeneralConfigEnum.STOP_TIME) - cfg.get(GeneralConfigEnum.START_TIME)
+        maxTime = max(
+            int(float(cfg.get(GaitConfigEnum.CYCLES))*float(deltaTime)),
+            int(cmds.playbackOptions(query=True, maxTime=True))
+        )
+
+        cmds.playbackOptions(
+            minTime=minTime, animationStartTime=minTime, maxTime= maxTime, animationEndTime=maxTime
+        )
+
+        cmds.currentTime(0, update=True)
+
+        cmds.select(self._group)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
