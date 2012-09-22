@@ -67,6 +67,17 @@ class CadenceData(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ toString
+    def echo(self):
+        print self.toString()
+
+#___________________________________________________________________________________________________ toString
+    def toString(self):
+        out = []
+        for ch in self.channels:
+            out.append(ch.toString())
+        return u'\n'.join(out)
+
 #___________________________________________________________________________________________________ getChannelByName
     def getChannelByName(self, name):
         for c in self._channels:
