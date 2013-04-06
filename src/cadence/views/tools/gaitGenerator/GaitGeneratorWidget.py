@@ -1,14 +1,14 @@
-# gaitGeneratorUI.py
-# (C)2012 http://cadence.threeaddone.com
+# GaitGeneratorWidget.py
+# (C)2012 http://cadence.ThreeAddOne.com
 # Scott Ernst
 
 import sys
 
 from PySide.QtCore import *
 from PySide.QtGui import *
-from PySide.QtUiTools import QUiLoader
 
-from cadence.CadenceEnvironment import CadenceEnvironment
+from pyglass.widgets.PyGlassWidget import PyGlassWidget
+
 from cadence.config.enum.GaitConfigEnum import GaitConfigEnum
 from cadence.config.enum.SkeletonConfigEnum import SkeletonConfigEnum
 from cadence.generator.gait.GaitGenerator import GaitGenerator
@@ -16,33 +16,18 @@ from cadence.mayan.gait.GaitVisualizer import GaitVisualizer
 from cadence.util.math3D.Vector3D import Vector3D
 
 #___________________________________________________________________________________________________ Viewer
-class Viewer(QWidget):
+class GaitGeneratorWidget(PyGlassWidget):
 
 #===================================================================================================
 #                                                                                       C L A S S
 
+    RESOURCE_FOLDER_PREFIX = ['tools']
+
 #___________________________________________________________________________________________________ __init__
-    def __init__(self):
-        QWidget.__init__(self)
-        l = QUiLoader()
-        file = QFile(CadenceEnvironment.getResourcePath('gui', 'GaitGeneratorUI.ui'))
-        file.open(QFile.ReadOnly)
-        myWidget = l.load(file, self)
-        file.close()
+    def __init__(self, parent, **kwargs):
+        super(GaitGeneratorWidget, self).__init__(parent, **kwargs)
 
-        layout = QVBoxLayout()
-        layout.addWidget(myWidget)
-        self.setLayout(layout)
-
-        self.widgets = []
-        for item in dir(myWidget):
-            item = getattr(myWidget, item)
-            if isinstance(item, QWidget):
-                self.widgets.append(item)
-
-        w             = myWidget
-        self.myWidget = myWidget
-
+        w = self
         w.gadLengthLabel.setText(unicode(w.gadLengthSlider.value()))
         QObject.connect(w.gadLengthSlider, SIGNAL("valueChanged(int)"), w.gadLengthLabel.setNum)
 
@@ -63,21 +48,12 @@ class Viewer(QWidget):
 
         w.runButton.clicked.connect(self._runGaitGeneration)
 
-        self.adjustSize()
-
-#___________________________________________________________________________________________________ sizeHint
-    def sizeHint(self, *args, **kwargs):
-        size = QWidget.sizeHint(self)
-        size.setWidth(self.myWidget.baseSize().width())
-        size.setHeight(self.myWidget.baseSize().height())
-        return size
-
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
 #___________________________________________________________________________________________________ _runGaitGeneration
     def _runGaitGeneration(self):
-        w = self.myWidget
+        w = self
         gg = GaitGenerator(
             overrides = {
                 GaitConfigEnum.CYCLES:w.cyclesSlider.value(),
@@ -93,12 +69,3 @@ class Viewer(QWidget):
         gv = GaitVisualizer(data=gg.toCadenceData())
         gv.buildScene()
 
-#===================================================================================================
-#                                                                                     M O D U L E
-
-app = QApplication(sys.argv)
-win = Viewer()
-win.show()
-
-app.exec_()
-sys.exit()

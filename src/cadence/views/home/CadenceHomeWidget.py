@@ -10,6 +10,7 @@ from pyaid.json.JSON import JSON
 
 from pyglass.gui.scrollArea.SimpleScrollArea import SimpleScrollArea
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
+from pyglass.widgets.LineSeparatorWidget import LineSeparatorWidget
 
 #___________________________________________________________________________________________________ CadenceHomeWidget
 class CadenceHomeWidget(PyGlassWidget):
@@ -32,6 +33,8 @@ class CadenceHomeWidget(PyGlassWidget):
         self._toolBox = self._toolScroller.containerWidget
         self._getLayout(self._toolBox, QtGui.QVBoxLayout)
 
+        self._statusBox, statusLayout = self._createElementWidget(self, QtGui.QVBoxLayout, True)
+
         self._populateTools()
 
 #===================================================================================================
@@ -40,9 +43,13 @@ class CadenceHomeWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _addTool
     def _addTool(self, definition):
         widget, layout = self._createElementWidget(self._toolBox, QtGui.QVBoxLayout, True)
+        layout.setContentsMargins(0, 0, 0, 6)
         layout.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         widget.id = 'toolItem'
         data = dict()
+
+        layout.addWidget(LineSeparatorWidget(widget))
+        layout.addSpacing(6)
 
         w, l = self._createWidget(widget, QtGui.QHBoxLayout, True)
         l.setAlignment(QtCore.Qt.AlignBottom)
@@ -87,6 +94,8 @@ class CadenceHomeWidget(PyGlassWidget):
 
         for tool in ArgsUtils.getAsList('tools', definition):
             self._addTool(tool)
+
+        self._toolBox.layout().addStretch()
 
 #===================================================================================================
 #                                                                                 H A N D L E R S

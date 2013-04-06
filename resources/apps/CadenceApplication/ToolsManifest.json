@@ -1,5 +1,11 @@
 {
     "tools":[
+        {   "id":"gaitGenerator",
+            "module":"cadence.views.tools.gaitGenerator.GaitGeneratorWidget",
+            "name":"Gait Generator",
+            "description":"Generates quadrupedal gaits for visualization in Maya."
+        },
+
         {   "id":"trackwayManager",
             "module":"cadence.views.tools.trackwayManager.TrackwayManagerWidget",
             "name":"Trackway Manager",

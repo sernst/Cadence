@@ -1,9 +1,4 @@
-Trackway Manager
-================
-
 Constructs and manages transform node based trackways representation in Maya.
-
----
 
 Building Trackways
 ------------------
