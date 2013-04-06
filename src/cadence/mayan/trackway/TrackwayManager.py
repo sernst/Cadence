@@ -1,5 +1,5 @@
 # trackwayBuilder.py
-# (C)2012 http://cadence.ThreeAddOne.com
+# (C)2012-2013 http://cadence.ThreeAddOne.com
 # Scott Ernst
 
 from nimble import cmds
