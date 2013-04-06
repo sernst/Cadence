@@ -1,4 +1,4 @@
-Constructs and manages transform node based trackways representation in Maya.
+Constructs and manages transform node based trackway representations in Maya.
 
 Building Trackways
 ------------------
