@@ -7,12 +7,13 @@ from collections import namedtuple
 
 import numpy as np
 
+from pyaid.ArgsUtils import ArgsUtils
+
 from cadence.config.enum.SkeletonConfigEnum import SkeletonConfigEnum
 from cadence.shared.enum.ChannelsEnum import ChannelsEnum
 from cadence.shared.enum.KeyEventEnum import KeyEventEnum
 from cadence.shared.enum.TangentsEnum import TangentsEnum
 from cadence.shared.enum.TargetsEnum import TargetsEnum
-from cadence.util.ArgsUtils import ArgsUtils
 from cadence.util.math3D.Vector3D import Vector3D
 from cadence.shared.io.channel.DataChannel import DataChannel
 

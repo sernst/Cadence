@@ -2,10 +2,11 @@
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
+from pyaid.ArgsUtils import ArgsUtils
+
 from cadence.shared.enum.DataTypeEnum import DataTypeEnum
 from cadence.shared.enum.MayaTangentsEnum import MayaTangentsEnum
 from cadence.shared.enum.TangentsEnum import TangentsEnum
-from cadence.util.ArgsUtils import ArgsUtils
 from cadence.util.math3D.Vector3D import Vector3D
 
 #___________________________________________________________________________________________________ DataChannelKey

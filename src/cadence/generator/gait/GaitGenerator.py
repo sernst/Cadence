@@ -4,13 +4,14 @@
 
 import os
 
+from pyaid.ArgsUtils import ArgsUtils
+
 from cadence.config.ConfigReader import ConfigReader
 from cadence.config.enum.GaitConfigEnum import GaitConfigEnum
 from cadence.config.enum.GeneralConfigEnum import GeneralConfigEnum
 from cadence.shared.data.TargetData import TargetData
 from cadence.shared.enum.TargetsEnum import TargetsEnum
 from cadence.shared.io.CadenceData import CadenceData
-from cadence.util.ArgsUtils import ArgsUtils
 
 #___________________________________________________________________________________________________ GaitGenerator
 class GaitGenerator(object):

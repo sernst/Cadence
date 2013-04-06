@@ -2,8 +2,9 @@
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
+from pyaid.ArgsUtils import ArgsUtils
+
 from cadence.shared.io.channel.DataChannelKey import DataChannelKey
-from cadence.util.ArgsUtils import ArgsUtils
 
 #___________________________________________________________________________________________________ DataChannel
 class DataChannel(object):

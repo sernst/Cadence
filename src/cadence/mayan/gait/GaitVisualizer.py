@@ -2,14 +2,16 @@
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
+from nimble import cmds
+
+from pyaid.ArgsUtils import ArgsUtils
+
 from cadence.config.enum.GaitConfigEnum import GaitConfigEnum
 from cadence.config.enum.GeneralConfigEnum import GeneralConfigEnum
 from cadence.config.enum.SkeletonConfigEnum import SkeletonConfigEnum
 from cadence.shared.enum.ChannelsEnum import ChannelsEnum
 from cadence.shared.enum.TargetsEnum import TargetsEnum
 from cadence.shared.io.CadenceData import CadenceData
-from cadence.util.ArgsUtils import ArgsUtils
-from nimble import cmds
 
 #___________________________________________________________________________________________________ GaitVisualizer
 class GaitVisualizer(object):

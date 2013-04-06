@@ -4,9 +4,7 @@
 
 import math
 
-import scipy
-
-from cadence.util.ArgsUtils import ArgsUtils
+from pyaid.ArgsUtils import ArgsUtils
 
 #___________________________________________________________________________________________________ Vector3D
 class Vector3D(object):

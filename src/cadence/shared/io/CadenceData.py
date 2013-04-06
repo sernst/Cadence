@@ -5,9 +5,10 @@
 import os
 import json
 
+from pyaid.ArgsUtils import ArgsUtils
+
 from cadence.config.ConfigReader import ConfigReader
 from cadence.shared.io.channel.DataChannel import DataChannel
-from cadence.util.ArgsUtils import ArgsUtils
 
 #___________________________________________________________________________________________________ CadenceData
 class CadenceData(object):

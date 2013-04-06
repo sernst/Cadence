@@ -7,8 +7,9 @@ import os
 import json
 import ConfigParser
 
+from pyaid.ArgsUtils import ArgsUtils
+
 from cadence.CadenceEnvironment import CadenceEnvironment
-from cadence.util.ArgsUtils import ArgsUtils
 from cadence.util.math3D.Vector3D import Vector3D
 
 #___________________________________________________________________________________________________ ConfigReader
