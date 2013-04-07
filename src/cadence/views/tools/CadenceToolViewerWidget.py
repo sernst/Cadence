@@ -10,7 +10,7 @@ from PySide import QtGui
 from pyaid.ClassUtils import ClassUtils
 
 from pyglass.gui.scrollArea.SimpleScrollArea import SimpleScrollArea
-from pyglass.gui.web.PyGlassWebView import PyGlassWebView
+from pyglass.web.PyGlassWebView import PyGlassWebView
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from pyglass.widgets.LineSeparatorWidget import LineSeparatorWidget
 

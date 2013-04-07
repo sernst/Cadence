@@ -7,7 +7,7 @@ import markdown
 
 from PySide import QtCore
 
-from pyglass.gui.web.PyGlassCommunicator import PyGlassCommunicator
+from pyglass.web.PyGlassCommunicator import PyGlassCommunicator
 
 #___________________________________________________________________________________________________ ToolsHelpCommunicator
 class ToolsHelpCommunicator(PyGlassCommunicator):
