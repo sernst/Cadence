@@ -12,6 +12,8 @@ from pyglass.gui.scrollArea.SimpleScrollArea import SimpleScrollArea
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from pyglass.widgets.LineSeparatorWidget import LineSeparatorWidget
 
+from cadence.views.home.CadenceNimbleStatusElement import CadenceNimbleStatusElement
+
 #___________________________________________________________________________________________________ CadenceHomeWidget
 class CadenceHomeWidget(PyGlassWidget):
     """A class for..."""
@@ -34,6 +36,10 @@ class CadenceHomeWidget(PyGlassWidget):
         self._getLayout(self._toolBox, QtGui.QVBoxLayout)
 
         self._statusBox, statusLayout = self._createElementWidget(self, QtGui.QVBoxLayout, True)
+        statusLayout.addStretch()
+
+        nimbleStatus = CadenceNimbleStatusElement(self._statusBox)
+        statusLayout.addWidget(nimbleStatus)
 
         self._populateTools()
 
