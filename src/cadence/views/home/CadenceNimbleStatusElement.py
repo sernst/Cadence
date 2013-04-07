@@ -36,6 +36,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
         self._status      = False
         self._timer       = None
         self._activeCheck = False
+        self._canceled    = False
 
         mainLayout = self._getLayout(self, QtGui.QVBoxLayout)
         self.setContentsMargins(6, 6, 6, 6)
@@ -53,6 +54,12 @@ class CadenceNimbleStatusElement(PyGlassElement):
 
         btn = QtGui.QPushButton(self._buttonBox)
         btn.setText(u'Retry')
+        btn.clicked.connect(self._handleRetryClick)
+        buttonLayout.addWidget(btn)
+
+        btn = QtGui.QPushButton(self._buttonBox)
+        btn.setText(u'Cancel')
+        btn.clicked.connect(self._handleCancelClick)
         buttonLayout.addWidget(btn)
 
         self.refresh()
@@ -70,7 +77,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
 
 #___________________________________________________________________________________________________ refresh
     def refresh(self):
-        if self._activeCheck:
+        if self._activeCheck or self._canceled:
             return
         self._activeCheck = True
 
@@ -100,11 +107,23 @@ class CadenceNimbleStatusElement(PyGlassElement):
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ refresh
+#___________________________________________________________________________________________________ _handleTimer
     @QtCore.Slot()
     def _handleTimer(self, *args, **kwargs):
+        if self._canceled:
+            return
+
         if not self.isOnDisplay:
             QtCore.QTimer.singleShot(20000, self._handleTimer)
         else:
             print 'TESTING CONNECTION...'
             self.refresh()
+
+#___________________________________________________________________________________________________ _handleRetryClick
+    def _handleRetryClick(self):
+        self.refresh()
+
+#___________________________________________________________________________________________________ _handleCancelClick
+    def _handleCancelClick(self):
+        self._canceled = True
+        self.setVisible(False)
