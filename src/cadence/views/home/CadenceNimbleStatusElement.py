@@ -116,7 +116,6 @@ class CadenceNimbleStatusElement(PyGlassElement):
         if not self.isOnDisplay:
             QtCore.QTimer.singleShot(20000, self._handleTimer)
         else:
-            print 'TESTING CONNECTION...'
             self.refresh()
 
 #___________________________________________________________________________________________________ _handleRetryClick
