@@ -192,7 +192,7 @@ class DataChannelKey(object):
         if not source:
             return enums.LINEAR
 
-        t = source.strip().lower().replace('_', '')
+        t = source.strip().lower().replace('_', '')h
 
         if t in [TangentsEnum.SPLINE, MayaTangentsEnum.SPLINE]:
             return enums.SPLINE

@@ -38,14 +38,21 @@
      <item>
       <widget class="QPushButton" name="addBtn">
        <property name="text">
-        <string>Add</string>
+        <string>Add Track(s)</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="removeBtn">
        <property name="text">
-        <string>Remove</string>
+        <string>Remove Track(s)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="newBtn">
+       <property name="text">
+        <string>New Track</string>
        </property>
       </widget>
      </item>

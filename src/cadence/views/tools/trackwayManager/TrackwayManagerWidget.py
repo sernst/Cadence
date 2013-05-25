@@ -25,6 +25,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.prevBtn.clicked.connect(self._goToPrevious)
         self.nextBtn.clicked.connect(self._goToNext)
         self.updateBtn.clicked.connect(self._updateInfo)
+        self.newBtn.clicked.connect(self._newTrack)
 
         self.adjustSize()
         self._updateInfo()
@@ -84,4 +85,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.previousLabel.setText(prev)
         self.currentLabel.setText(target)
         self.nextLabel.setText(next)
+
+#___________________________________________________________________________________________________ _addTrack
+    def _newTrack(self):
+        TrackwayManager.addTrack()
+
+
 

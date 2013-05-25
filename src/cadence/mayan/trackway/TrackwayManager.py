@@ -64,6 +64,7 @@ class TrackwayManager(object):
 
         return True
 
+
 #___________________________________________________________________________________________________ findPrevious
     @classmethod
     def findPrevious(cls, start=False):
@@ -194,3 +195,8 @@ class TrackwayManager(object):
 
         return out
 
+#___________________________________________________________________________________________________ addTrack
+    @classmethod
+    def addTrack(cls):
+        print "in TrackwayManager, adding track"
+        cmds.sphere(radius=1.0)
