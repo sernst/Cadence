@@ -9,74 +9,73 @@ class TrackwayManager(object):
 
     _PREVIOUS_PRINT_ATTR = 'previousPrint'
 
-#___________________________________________________________________________________________________ build
+#___________________________________________________________________________________________________ addToSeries
     @classmethod
-    def build(cls):
-        prints = cls.getTargets(2)
-        if not prints or len(prints) < 2:
+    def addToSeries(cls):
+        tracks = cls.getTargets(2)
+        if not tracks or len(tracks) < 2:
             return False
 
-        prev = prints[0]
-        for p in prints[1:]:
-            if not cmds.attributeQuery(cls._PREVIOUS_PRINT_ATTR, node=p, exists=True):
+        prevTrack = tracks[0]
+        for track in tracks[1:]:
+            if not cmds.attributeQuery(cls._PREVIOUS_PRINT_ATTR, node=track, exists=True):
                 cmds.addAttr(longName=cls._PREVIOUS_PRINT_ATTR, attributeType='message')
 
-            prevs = cls.getPrevious(p)
-            if not prevs or prev not in prevs:
-                cmds.connectAttr(prev + '.message', p + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
+            prevTracks = cls.getPreviousTracks(track)
+            if not prevTracks or prevTrack not in prevTracks:
+                cmds.connectAttr(prevTrack + '.message', track + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
 
-            prev = p
+            prevTrack = track
 
         return True
 
-#___________________________________________________________________________________________________ remove
+#___________________________________________________________________________________________________ removeFromSeries
     @classmethod
-    def remove(cls):
-        prints = cls.getTargets(1)
-        if not prints:
+    def removeFromSeries(cls):
+        tracks = cls.getTargets(1)
+        if not tracks:
             return False
 
-        for p in prints:
-            if not cmds.attributeQuery(cls._PREVIOUS_PRINT_ATTR, node=p, exists=True):
-                print 'UNRECOGNIZED ITEM: "%s" is not a valid footprint and has been skipped.' % p
+        for track in tracks:
+            if not cmds.attributeQuery(cls._PREVIOUS_PRINT_ATTR, node=track, exists=True):
+                print 'UNRECOGNIZED ITEM: "%s" is not a valid footprint and has been skipped.' % track
                 continue
 
-            nexts = cls.getNext(p)
-            for c in nexts:
-                cmds.disconnectAttr(p + '.message', c + '.' + cls._PREVIOUS_PRINT_ATTR)
+            nextTracks = cls.getNextTracks(track)
+            for t in nextTracks:
+                cmds.disconnectAttr(track + '.message', t + '.' + cls._PREVIOUS_PRINT_ATTR)
 
-            prevs = cls.getPrevious(p)
-            for c in prevs:
+            previousTracks = cls.getPreviousTracks(track)
+            for t in previousTracks:
                 try:
-                    cmds.disconnectAttr(c + '.message', p + '.' + cls._PREVIOUS_PRINT_ATTR)
+                    cmds.disconnectAttr(t + '.message', track + '.' + cls._PREVIOUS_PRINT_ATTR)
                 except Exception, err:
                     print 'DISCONNECT FAILURE | Unable to disconnect'
-                    print '\tTarget:', str(p) + '.' + cls._PREVIOUS_PRINT_ATTR
-                    print '\tSource:', str(c) + '.message'
+                    print '\tTarget:', str(track) + '.' + cls._PREVIOUS_PRINT_ATTR
+                    print '\tSource:', str(t) + '.message'
                     raise
 
-            cmds.deleteAttr(p + '.' + cls._PREVIOUS_PRINT_ATTR)
+            cmds.deleteAttr(track + '.' + cls._PREVIOUS_PRINT_ATTR)
             cmds.connectAttr(
-                prevs[0] + '.message',
-                nexts[0] + '.' + cls._PREVIOUS_PRINT_ATTR,
+                previousTracks[0] + '.message',
+                nextTracks[0] + '.' + cls._PREVIOUS_PRINT_ATTR,
                 force=True
             )
 
         return True
 
-
 #___________________________________________________________________________________________________ findPrevious
     @classmethod
     def findPrevious(cls, start=False):
-        prints = cls.getTargets(1)
-        if not prints:
+        tracks = cls.getTargets(1)
+        if not tracks:
             return False
 
         selection = []
-        for p in prints:
-            prev = p
+        for track in tracks:
+            prev = track
             while True:
-                prevs = cls.getPrevious(target=prev)
+                prevs = cls.getPreviousTracks(target=prev)
                 if not prevs:
                     break
                 prev = prevs[0]
@@ -92,40 +91,40 @@ class TrackwayManager(object):
 
 #___________________________________________________________________________________________________ findNext
     @classmethod
-    def findNext(cls, end =False):
-        prints = cls.getTargets(1)
-        if not prints:
+    def findNext(cls, end=False):
+        tracks = cls.getTargets(1)
+        if not tracks:
             return False
 
         selection = []
-        for p in prints:
-            next = p
+        for track in tracks:
+            nextTrack = track
             while True:
-                nexts = cls.getNext(next)
+                nexts = cls.getNextTracks(nextTrack)
                 if not nexts:
                     break
-                next = nexts[0]
+                nextTrack = nexts[0]
 
-                # Breaks on the first find if the next was selected
+                # Breaks on the first find if the nextTrack was selected
                 if not end:
                     break
 
-            if next not in selection:
-                selection.append(next)
+            if nextTrack not in selection:
+                selection.append(nextTrack)
 
         cmds.select(selection)
 
-#___________________________________________________________________________________________________ isFootprint
+#___________________________________________________________________________________________________ isTrack
     @classmethod
-    def isFootprint(cls, target):
+    def isTrack(cls, target):
         return cmds.attributeQuery(cls._PREVIOUS_PRINT_ATTR, node=target, exists=True)
 
 #___________________________________________________________________________________________________ getTargets
     @classmethod
-    def getTargets(cls, minCount =0):
+    def getTargets(cls, minCount=0):
         targets = cmds.ls(selection=True, exactType='transform')
         if minCount and len(targets) < minCount:
-            print 'INVALID SELECTION: You must select at least %s footprint%s.' \
+            print 'INVALID SELECTION: You must select at least %s track%s.' \
                   % (str(minCount), 's' if minCount > 1 else '')
             return []
 
@@ -134,9 +133,9 @@ class TrackwayManager(object):
 
         return targets
 
-#___________________________________________________________________________________________________ getPrevious
+#___________________________________________________________________________________________________ getPreviousTracks
     @classmethod
-    def getPrevious(cls, target=None):
+    def getPreviousTracks(cls, target=None):
         if not target:
             target = cls.getTargets(1)[0]
 
@@ -157,46 +156,121 @@ class TrackwayManager(object):
 
         return []
 
-#___________________________________________________________________________________________________ getNext
+#___________________________________________________________________________________________________ getNextTracks
     @classmethod
-    def getNext(cls, target=None):
+    def getNextTracks(cls, target=None):
         if not target:
             target = cmds.ls(selection=True, exactType='transform')[0]
 
-        conns = cmds.listConnections(
+        connections = cmds.listConnections(
             target + '.message',
             destination=True,
             plugs=True
         )
         nexts = []
-        if conns:
-            for c in conns:
+        if connections:
+            for c in connections:
                 if c.endswith('.' + cls._PREVIOUS_PRINT_ATTR):
                     nexts.append(c.split('.')[0])
             return nexts
 
         return []
 
-#___________________________________________________________________________________________________ getFootPrintsInfo
+#___________________________________________________________________________________________________ getTrackInfo
     @classmethod
-    def getFootPrintsInfo(cls):
-        prints = cls.getTargets(1)
-        if not prints:
+    def getTrackInfo(cls):
+        tracks = cls.getTargets(1)
+        if not tracks:
             return False
 
         out = []
-        for p in prints:
-            conns = cmds.listConnection
+        for track in tracks:
             out.append({
-                'source':p,
-                'previous':cls.getPrevious(target=p),
-                'next':cls.getNext(target=p)
+                'source':track,
+                'previous':cls.getPreviousTracks(target=track),
+                'next':cls.getNextTracks(target=track)
             })
 
         return out
 
-#___________________________________________________________________________________________________ addTrack
+#___________________________________________________________________________________________________ initialTrack
     @classmethod
-    def addTrack(cls):
-        print "in TrackwayManager, adding track"
-        cmds.sphere(radius=1.0)
+    def initializeTrackway(cls):
+        cmds.file('data/pesTokenL.obj', i=True, type='OBJ', renameAll=True, mergeNamespacesOnClash=True,
+                  namespace='Cadence', options='mo=1', preserveReferences=True, loadReferenceDepth='all')
+        cmds.file('data/pesTokenR.obj', i=True, type='OBJ', renameAll=True, mergeNamespacesOnClash=True,
+                  namespace='Cadence', options='mo=1', preserveReferences=True, loadReferenceDepth='all')
+        cmds.file('data/manusTokenL.obj', i=True, type='OBJ', renameAll=True, mergeNamespacesOnClash=True,
+                  namespace='Cadence', options='mo=1', preserveReferences=True, loadReferenceDepth='all')
+        cmds.file('data/manusTokenR.obj', i=True, type='OBJ', renameAll=True, mergeNamespacesOnClash=True,
+                  namespace='Cadence', options='mo=1', preserveReferences=True, loadReferenceDepth='all')
+        cmds.rename('Cadence:pesTokenL', 'pesTokenLMaster')
+        cmds.rename('Cadence:pesTokenR', 'pesTokenRMaster')
+        cmds.rename('Cadence:manusTokenL', 'manusTokenLMaster')
+        cmds.rename('Cadence:manusTokenR', 'manusTokenRMaster')
+
+        cmds.duplicate('pesTokenLMaster', name='PL1')
+        cmds.duplicate('pesTokenRMaster', name='PR1')
+        cmds.duplicate('manusTokenLMaster', name='ML1')
+        cmds.duplicate('manusTokenRMaster', name='MR1')
+
+        cmds.setAttr('pesTokenLMaster.visibility', 0)
+        cmds.setAttr('pesTokenRMaster.visibility', 0)
+        cmds.setAttr('manusTokenLMaster.visibility', 0)
+        cmds.setAttr('manusTokenRMaster.visibility', 0)
+
+        cmds.move(200.0, 0.0, 100.0, 'PL1' )
+        cmds.move(100.0, 0.0, 100.0, 'PR1' )
+        cmds.move(200.0, 0.0, 200.0, 'ML1' )
+        cmds.move(100.0, 0.0, 200.0, 'MR1' )
+
+        cmds.duplicate('PL1', name='PL2')
+        cmds.duplicate('PR1', name='PR2')
+        cmds.duplicate('ML1', name='ML2')
+        cmds.duplicate('MR1', name='MR2')
+
+        cmds.move(200.0, 0.0, 400.0, 'PL2' )
+        cmds.move(100.0, 0.0, 400.0, 'PR2' )
+        cmds.move(200.0, 0.0, 500.0, 'ML2' )
+        cmds.move(100.0, 0.0, 500.0, 'MR2' )
+
+        cmds.select('PL2')
+        cmds.addAttr(longName=cls._PREVIOUS_PRINT_ATTR, attributeType='message')
+        cmds.connectAttr('PL1' + '.message', 'PL2' + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
+
+        cmds.select('PR2')
+        cmds.addAttr(longName=cls._PREVIOUS_PRINT_ATTR, attributeType='message')
+        cmds.connectAttr('PR1' + '.message', 'PR2' + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
+
+        cmds.select('ML2')
+        cmds.addAttr(longName=cls._PREVIOUS_PRINT_ATTR, attributeType='message')
+        cmds.connectAttr('ML1' + '.message', 'ML2' + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
+
+        cmds.select('MR2')
+        cmds.addAttr(longName=cls._PREVIOUS_PRINT_ATTR, attributeType='message')
+        cmds.connectAttr('MR1' + '.message', 'MR2' + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
+
+#___________________________________________________________________________________________________ newTrack
+    @classmethod
+    def newTrack(cls):
+        tracks = cls.getTargets(1)
+        if not tracks or len(tracks) != 1:
+            return False
+
+        lastTrack = tracks[0]
+        prevTracks = cls.getPreviousTracks(lastTrack)
+        if not prevTracks:
+            return False
+
+        prevTrack = prevTracks[0]
+        posPrev = cmds.xform(prevTrack, query=True, translation=True)
+        posLast = cmds.xform(lastTrack, query=True, translation=True)
+        rotLast = cmds.xform(lastTrack, query=True, rotation=True)
+        thisTrack = cmds.duplicate(lastTrack)[0]
+        dx = posLast[0] - posPrev[0]
+        dy = posLast[1] - posPrev[1]
+        dz = posLast[2] - posPrev[2]
+        cmds.move(dx, dy, dz, relative=True)
+        cmds.rotate(rotLast[0], rotLast[1], rotLast[2])
+        cmds.connectAttr(lastTrack + '.message', thisTrack + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
+        return True
