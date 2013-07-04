@@ -22,3 +22,9 @@ class MayaUtils(object):
     def getSelectedTransforms(cls):
         """Gets the list of selected transforms."""
         return cls.getSelection(exactType=u'transform')
+
+#___________________________________________________________________________________________________ seSelection
+    @classmethod
+    def setSelection(cls, selection, add =False, **kwargs):
+        """Modifies Maya's current selection state to the specified selection list."""
+        cmds.select(selection, add=add, **kwargs)
