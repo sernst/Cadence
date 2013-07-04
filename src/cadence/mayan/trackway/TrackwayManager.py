@@ -1,276 +1,478 @@
 # TrackwayManager.py
 # (C)2012-2013 http://cadence.ThreeAddOne.com
-# Scott Ernst
+# Scott Ernst and Kent A. Stevens
 
 from nimble import cmds
+from math import sqrt
+import sys
+
+from pyaid.debug.Logger import Logger
 
 #___________________________________________________________________________________________________ TrackwayManager
+
 class TrackwayManager(object):
 
-    _PREVIOUS_PRINT_ATTR = 'previousPrint'
+    _PREV_ATTR     = 'prevTrack'
+    _SITE_ATTR     = 'site'
+    _LEVEL_ATTR    = 'level'
+    _TRACKWAY_ATTR = 'trackway'
+    _NAME_ATTR     = 'name'
+    _NOTE_ATTR     = 'note'
+    _SNAPSHOT_ATTR = 'snapshot'
 
-#___________________________________________________________________________________________________ addToSeries
+    _log = Logger('TrackwayManager')
+
+#============================================================================ TRACK SERIES TRAVERSAL
+#___________________________________________________________________________________________________ goTo
     @classmethod
-    def addToSeries(cls):
-        tracks = cls.getTargets(2)
-        if not tracks or len(tracks) < 2:
-            return False
-
-        prevTrack = tracks[0]
-        for track in tracks[1:]:
-            if not cmds.attributeQuery(cls._PREVIOUS_PRINT_ATTR, node=track, exists=True):
-                cmds.addAttr(longName=cls._PREVIOUS_PRINT_ATTR, attributeType='message')
-
-            prevTracks = cls.getPreviousTracks(track)
-            if not prevTracks or prevTrack not in prevTracks:
-                cmds.connectAttr(prevTrack + '.message', track + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
-
-            prevTrack = track
-
-        return True
-
-#___________________________________________________________________________________________________ removeFromSeries
+    def goTo(cls, track):
+        cmds.select(track)
+#___________________________________________________________________________________________________ goToFirstTrack
     @classmethod
-    def removeFromSeries(cls):
-        tracks = cls.getTargets(1)
-        if not tracks:
-            return False
-
-        for track in tracks:
-            if not cmds.attributeQuery(cls._PREVIOUS_PRINT_ATTR, node=track, exists=True):
-                print 'UNRECOGNIZED ITEM: "%s" is not a valid footprint and has been skipped.' % track
-                continue
-
-            nextTracks = cls.getNextTracks(track)
-            for t in nextTracks:
-                cmds.disconnectAttr(track + '.message', t + '.' + cls._PREVIOUS_PRINT_ATTR)
-
-            previousTracks = cls.getPreviousTracks(track)
-            for t in previousTracks:
-                try:
-                    cmds.disconnectAttr(t + '.message', track + '.' + cls._PREVIOUS_PRINT_ATTR)
-                except Exception, err:
-                    print 'DISCONNECT FAILURE | Unable to disconnect'
-                    print '\tTarget:', str(track) + '.' + cls._PREVIOUS_PRINT_ATTR
-                    print '\tSource:', str(t) + '.message'
-                    raise
-
-            cmds.deleteAttr(track + '.' + cls._PREVIOUS_PRINT_ATTR)
-            cmds.connectAttr(
-                previousTracks[0] + '.message',
-                nextTracks[0] + '.' + cls._PREVIOUS_PRINT_ATTR,
-                force=True
-            )
-
-        return True
-
-#___________________________________________________________________________________________________ findPrevious
+    def goToFirstTrack(cls):
+        cls.goTo(cls.getFirstTrack())
+#___________________________________________________________________________________________________ goToLastTrack
     @classmethod
-    def findPrevious(cls, start=False):
-        tracks = cls.getTargets(1)
-        if not tracks:
-            return False
-
-        selection = []
-        for track in tracks:
-            prev = track
-            while True:
-                prevs = cls.getPreviousTracks(target=prev)
-                if not prevs:
-                    break
-                prev = prevs[0]
-
-                # Breaks on the first find if the previous was selected
-                if not start:
-                    break
-
-            if prev not in selection:
-                selection.append(prev)
-
-        cmds.select(selection)
-
-#___________________________________________________________________________________________________ findNext
+    def goToLastTrack(cls):
+        cls.goTo(cls.getLastTrack())
+#___________________________________________________________________________________________________ goToPreviousTrack
     @classmethod
-    def findNext(cls, end=False):
-        tracks = cls.getTargets(1)
-        if not tracks:
-            return False
+    def goToPreviousTrack(cls):
+        t = cls.getFirstTrackInSegment(cls.getSelectedTracks())
+        p = cls.getPrev(t)
+        if p:
+            cls.goTo(p)
+        else:
+            cls.goTo(t)
+#___________________________________________________________________________________________________ goToNextTrack
+    @classmethod
+    def goToNextTrack(cls):
+        t = cls.getLastTrackInSegment(cls.getSelectedTracks())
+        n = cls.getNext(t)
+        if n:
+            cls.goTo(n)
+        else:
+            cls.goTo(t)
 
-        selection = []
-        for track in tracks:
-            nextTrack = track
-            while True:
-                nexts = cls.getNextTracks(nextTrack)
-                if not nexts:
-                    break
-                nextTrack = nexts[0]
-
-                # Breaks on the first find if the nextTrack was selected
-                if not end:
-                    break
-
-            if nextTrack not in selection:
-                selection.append(nextTrack)
-
-        cmds.select(selection)
-
+#===================================================================================================
+#___________________________________________________________________________________________________ getFirstTrack
+    @classmethod
+    def getFirstTrack(cls):
+        selected = cls.getSelectedTracks()
+        if not selected:
+            return None
+        t = selected[0]
+        while cls.getPrev(t):
+            t = cls.getPrev(t)
+        return t
+#___________________________________________________________________________________________________ getLastTrack
+    @classmethod
+    def getLastTrack(cls):
+        selected = cls.getSelectedTracks()
+        if not selected:
+            return None
+        t = selected[-1]
+        while cls.getNext(t):
+            t = cls.getNext(t)
+        return t
+#___________________________________________________________________________________________________ getSelectedObjects
+    @classmethod
+    def getSelectedObjects(cls):
+        return cmds.ls(selection=True, exactType='transform')
 #___________________________________________________________________________________________________ isTrack
     @classmethod
     def isTrack(cls, target):
-        return cmds.attributeQuery(cls._PREVIOUS_PRINT_ATTR, node=target, exists=True)
-
-#___________________________________________________________________________________________________ getTargets
+        return cmds.attributeQuery(cls._NAME_ATTR, node=target, exists=True)
+#___________________________________________________________________________________________________ getSelectedTracks
     @classmethod
-    def getTargets(cls, minCount=0):
-        targets = cmds.ls(selection=True, exactType='transform')
-        if minCount and len(targets) < minCount:
-            print 'INVALID SELECTION: You must select at least %s track%s.' \
-                  % (str(minCount), 's' if minCount > 1 else '')
-            return []
-
-        if not targets:
-            return []
-
-        return targets
-
-#___________________________________________________________________________________________________ getPreviousTracks
+    def getSelectedTracks(cls):
+        selected = cls.getSelectedObjects()
+        tracks = []
+        for s in selected:
+            if cls.isTrack(s):
+                tracks.append(s)
+        return tracks
+#___________________________________________________________________________________________________ getFirstTrackInSegment
     @classmethod
-    def getPreviousTracks(cls, target=None):
-        if not target:
-            target = cls.getTargets(1)[0]
+    def getFirstTrackInSegment(cls, segment):
+        if not segment:
+            return None
 
-        if not cmds.attributeQuery(cls._PREVIOUS_PRINT_ATTR, node=target, exists=True):
-            return []
-
-        conns = cmds.listConnections(
-            target + '.' + cls._PREVIOUS_PRINT_ATTR,
-            source=True,
-            plugs=True
-        )
-        prevs = []
-        if conns:
-            for c in conns:
-                if c.endswith('.message'):
-                    prevs.append(c.split('.')[0])
-            return prevs
-
-        return []
-
-#___________________________________________________________________________________________________ getNextTracks
+        s = segment[0]
+        while cls.getPrev(s) in segment:
+            s = cls.getPrev(s)
+        return s
+#___________________________________________________________________________________________________ getLastTrackInSegment
     @classmethod
-    def getNextTracks(cls, target=None):
-        if not target:
-            target = cmds.ls(selection=True, exactType='transform')[0]
+    def getLastTrackInSegment(cls, segment):
+        if not segment:
+            return None
 
-        connections = cmds.listConnections(
-            target + '.message',
-            destination=True,
-            plugs=True
-        )
-        nexts = []
+        s = segment[-1]
+        while cls.getNext(s) in segment:
+            s = cls.getNext(s)
+        return s
+
+#===================================================================================================
+#___________________________________________________________________________________________________ getPrev, getNext
+    @classmethod
+    def getPrev(cls, track):
+        connections = cmds.listConnections(track + '.' + cls._PREV_ATTR, source=True, plugs=True)
         if connections:
             for c in connections:
-                if c.endswith('.' + cls._PREVIOUS_PRINT_ATTR):
-                    nexts.append(c.split('.')[0])
-            return nexts
+                if c.endswith('.message'):
+                    return c.split('.')[0]
+        return None
 
-        return []
-
-#___________________________________________________________________________________________________ getTrackInfo
     @classmethod
-    def getTrackInfo(cls):
-        tracks = cls.getTargets(1)
-        if not tracks:
-            return False
+    def getNext(cls, track):
+        connections = cmds.listConnections(track + '.message', destination=True, plugs=True)
+        if connections:
+            for c in connections:
+                if c.endswith('.' + cls._PREV_ATTR):
+                    return c.split('.')[0]
+        return None
 
-        out = []
-        for track in tracks:
-            out.append({
-                'source':track,
-                'previous':cls.getPreviousTracks(target=track),
-                'next':cls.getNextTracks(target=track)
-            })
+#=================================================================================================== SET / GET
+#___________________________________________________________________________________________________ site
+    @classmethod
+    def setSite(cls, track, site):
+        cmds.setAttr(track + '.' + cls._SITE_ATTR, site, type='string')
 
-        return out
+    @classmethod
+    def getSite(cls, track):
+        return cmds.getAttr(track + '.' + cls._SITE_ATTR)
+#___________________________________________________________________________________________________ level
+    @classmethod
+    def setLevel(cls, track, level):
+        cmds.setAttr(track + '.' + cls._LEVEL_ATTR, level, type='string')
 
+    @classmethod
+    def getLevel(cls, track):
+        return cmds.getAttr(track + '.' + cls._LEVEL_ATTR)
+#___________________________________________________________________________________________________ trackway
+    @classmethod
+    def setTrackway(cls, track, trackway):
+        cmds.setAttr(track + '.' + cls._TRACKWAY_ATTR, trackway, type='string')
+
+    @classmethod
+    def getTrackway(cls, track):
+        return cmds.getAttr(track + '.' + cls._TRACKWAY_ATTR)
+#___________________________________________________________________________________________________ name
+    @classmethod
+    def setName(cls, track, name):
+        cmds.setAttr(track + '.' + cls._NAME_ATTR, name, type='string')
+
+        site     = cls.getSite(track)
+        level    = cls.getLevel(track)
+        trackway = cls.getTrackway(track)
+        cmds.rename(track, site + '_' + level + '_' + trackway + '_' + name)
+
+    @classmethod
+    def getName(cls, track):
+        return cmds.getAttr(track + '.' + cls._NAME_ATTR)
+#___________________________________________________________________________________________________ note
+    @classmethod
+    def setNote(cls, track, note):
+        cmds.setAttr(track + '.' + cls._NOTE_ATTR, note, type='string')
+
+    @classmethod
+    def getNote(cls, track):
+        return cmds.getAttr(track + '.' + cls._NOTE_ATTR)
+#___________________________________________________________________________________________________ snapshot
+    @classmethod
+    def setSnapshot(cls, track, snapshot):
+        cmds.setAttr(track + '.' + cls._SNAPSHOT_ATTR, snapshot, type='string')
+
+    @classmethod
+    def getSnapshot(cls, track):
+        return cmds.getAttr(track + '.' + cls._SNAPSHOT_ATTR)
+#___________________________________________________________________________________________________ metadata
+    @classmethod
+    def setMetadata(cls, track, site, level, trackway, note):
+        cls.setSite(track, site)
+        cls.setLevel(track, level)
+        cls.setTrackway(track, trackway)
+        cls.setNote(track, note)
+
+    @classmethod
+    def getMetadata(cls, track):
+        return [cls.getSite(track), cls.getLevel(track), cls.getTrackway(track), cls.getNote(track)]
+#___________________________________________________________________________________________________ isPes / isManus
+    @classmethod
+    def isPes(cls, track):
+        return cls.getName(track)[0] is 'P'
+
+    @classmethod
+    def isManus(cls, track):
+        return cls.getName(track)[0] is 'M'
+#___________________________________________________________________________________________________ isRight / isLeft
+    @classmethod
+    def isRight(cls, track):
+        return cls.getName(track)[1] is 'R'
+
+    @classmethod
+    def isLeft(cls, track):
+        return cls.getName(track)[1] is 'L'
+#___________________________________________________________________________________________________ set/get position
+    @classmethod
+    def setPosition(cls, track, position):
+       cmds.move(position[0], position[1], position[2], track, absolute=True)
+
+    @classmethod
+    def getPosition(cls, track):
+       return cmds.xform(track, query=True, translation=True)
+#___________________________________________________________________________________________________ moveRelative
+    @classmethod
+    def moveRelative(cls, track, dx, dy, dz):
+       cmds.move(dx, dy, dz, track, relative=True)
+#___________________________________________________________________________________________________ set/get orientation
+    @classmethod
+    def setOrientation(cls, track, rotation):
+        cmds.setAttr(track + '.ry', rotation)
+
+    @classmethod
+    def getOrientation(cls, track):
+        return cmds.getAttr(track + '.rotateY')
+#___________________________________________________________________________________________________ set/get dimensions
+    @classmethod
+    def setDimensions(cls, track, width, length):
+        cmds.scale(width, 1.0, length, track)
+
+    @classmethod
+    def getDimensions(cls, track):
+        width  = cmds.getAttr(track + '.scaleX')
+        length = cmds.getAttr(track + '.scaleZ')
+        return [width, length]
+
+#===================================================================================================
+#___________________________________________________________________________________________________ incrementName
+    @classmethod
+    def incrementName(cls, name):
+        prefix = name[:2]
+        number = int(name[2:])
+        return prefix + str(number + 1)
+#___________________________________________________________________________________________________ duplicateTrack
+    @classmethod
+    def duplicateTrack(cls):
+        lastTrack = cls.getLastTrack()
+        prevTrack = cls.getPrev(lastTrack)
+        nextTrack = cmds.duplicate(lastTrack)[0]
+
+        cls.setName(nextTrack, cls.incrementName(cls.getName(lastTrack)))
+
+        p1 = cls.getPosition(prevTrack)
+        p2 = cls.getPosition(lastTrack)
+        dx = p2[0] - p1[0]
+        dy = p2[1] - p1[1]
+        dz = p2[2] - p1[2]
+        cls.moveRelative(nextTrack, dx, dy, dz)
+        cls.link(lastTrack, nextTrack)
+#___________________________________________________________________________________________________ createTrack
+    @classmethod
+    def createTrack(cls, name, site, level, trackway, note):
+        r = 50
+        a = 2.0*r
+        y = (0, 1, 0)
+        c = cmds.polyCylinder(r=r, h=5, sx=40, sy=1, sz=1, ax=y, rcp=0, cuv=2, ch=1, n=name)[0]
+
+        cmds.addAttr(longName=cls._PREV_ATTR,     attributeType='message')
+        cmds.addAttr(longName=cls._NAME_ATTR,     dataType='string')
+        cmds.addAttr(longName=cls._SITE_ATTR,     dataType='string')
+        cmds.addAttr(longName=cls._LEVEL_ATTR,    dataType='string')
+        cmds.addAttr(longName=cls._TRACKWAY_ATTR, dataType='string')
+        cmds.addAttr(longName=cls._NOTE_ATTR,     dataType='string')
+        cmds.addAttr(longName=cls._SNAPSHOT_ATTR, dataType='string')
+
+        cmds.setAttr(name + '.' + cls._NAME_ATTR, name, type='string')
+
+        p = cmds.polyPrism(l=4, w=a, ns=3, sh=1, sc=0, ax=y, cuv=3, ch=1, n='pointer')[0]
+        cmds.rotate(0.0, -90.0, 0.0)
+        cmds.scale(1.0/sqrt(3.0), 1.0, 1.0)
+        cmds.move(0, 5, a/6.0)
+
+        cmds.setAttr(p + '.overrideEnabled', 1)
+        cmds.setAttr(p + '.overrideDisplayType', 2)
+
+        cmds.parent(p, name)
+        cls.setMetadata(c, site, level, trackway, note)
+        cmds.select(c)
+        cmds.setAttr(c + '.translateY', lock=1)
+        return cmds.rename(c, site + '_' + level + '_' + trackway + '_' + name)
 #___________________________________________________________________________________________________ initialTrack
     @classmethod
-    def initializeTrackway(cls):
-        cmds.file('data/pesTokenL.obj', i=True, type='OBJ', renameAll=True, mergeNamespacesOnClash=True,
-                  namespace='Cadence', options='mo=1', preserveReferences=True, loadReferenceDepth='all')
-        cmds.file('data/pesTokenR.obj', i=True, type='OBJ', renameAll=True, mergeNamespacesOnClash=True,
-                  namespace='Cadence', options='mo=1', preserveReferences=True, loadReferenceDepth='all')
-        cmds.file('data/manusTokenL.obj', i=True, type='OBJ', renameAll=True, mergeNamespacesOnClash=True,
-                  namespace='Cadence', options='mo=1', preserveReferences=True, loadReferenceDepth='all')
-        cmds.file('data/manusTokenR.obj', i=True, type='OBJ', renameAll=True, mergeNamespacesOnClash=True,
-                  namespace='Cadence', options='mo=1', preserveReferences=True, loadReferenceDepth='all')
-        cmds.rename('Cadence:pesTokenL', 'pesTokenLMaster')
-        cmds.rename('Cadence:pesTokenR', 'pesTokenRMaster')
-        cmds.rename('Cadence:manusTokenL', 'manusTokenLMaster')
-        cmds.rename('Cadence:manusTokenR', 'manusTokenRMaster')
+    def initialize(cls, site, level, trackway, note):
+        pl1 = cls.createTrack('PL1', site, level, trackway, note)
+        pr1 = cls.createTrack('PR1', site, level, trackway, note)
+        ml1 = cls.createTrack('ML1', site, level, trackway, note)
+        mr1 = cls.createTrack('MR1', site, level, trackway, note)
+        pl2 = cls.createTrack('PL2', site, level, trackway, note)
+        pr2 = cls.createTrack('PR2', site, level, trackway, note)
+        ml2 = cls.createTrack('ML2', site, level, trackway, note)
+        mr2 = cls.createTrack('MR2', site, level, trackway, note)
 
-        cmds.duplicate('pesTokenLMaster', name='PL1')
-        cmds.duplicate('pesTokenRMaster', name='PR1')
-        cmds.duplicate('manusTokenLMaster', name='ML1')
-        cmds.duplicate('manusTokenRMaster', name='MR1')
+        cls.setPosition(pl1, (200.0, 0.0, 100.0))
+        cls.setPosition(pr1, (100.0, 0.0, 100.0))
+        cls.setPosition(ml1, (200.0, 0.0, 200.0))
+        cls.setPosition(mr1, (100.0, 0.0, 200.0))
+        cls.setPosition(pl2, (200.0, 0.0, 400.0))
+        cls.setPosition(pr2, (100.0, 0.0, 400.0))
+        cls.setPosition(ml2, (200.0, 0.0, 500.0))
+        cls.setPosition(mr2, (100.0, 0.0, 500.0))
 
-        cmds.setAttr('pesTokenLMaster.visibility', 0)
-        cmds.setAttr('pesTokenRMaster.visibility', 0)
-        cmds.setAttr('manusTokenLMaster.visibility', 0)
-        cmds.setAttr('manusTokenRMaster.visibility', 0)
+        cls.link(pl1, pl2)
+        cls.link(pr1, pr2)
+        cls.link(ml1, ml2)
+        cls.link(mr1, mr2)
 
-        cmds.move(200.0, 0.0, 100.0, 'PL1' )
-        cmds.move(100.0, 0.0, 100.0, 'PR1' )
-        cmds.move(200.0, 0.0, 200.0, 'ML1' )
-        cmds.move(100.0, 0.0, 200.0, 'MR1' )
-
-        cmds.duplicate('PL1', name='PL2')
-        cmds.duplicate('PR1', name='PR2')
-        cmds.duplicate('ML1', name='ML2')
-        cmds.duplicate('MR1', name='MR2')
-
-        cmds.move(200.0, 0.0, 400.0, 'PL2' )
-        cmds.move(100.0, 0.0, 400.0, 'PR2' )
-        cmds.move(200.0, 0.0, 500.0, 'ML2' )
-        cmds.move(100.0, 0.0, 500.0, 'MR2' )
-
-        cmds.select('PL2')
-        cmds.addAttr(longName=cls._PREVIOUS_PRINT_ATTR, attributeType='message')
-        cmds.connectAttr('PL1' + '.message', 'PL2' + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
-
-        cmds.select('PR2')
-        cmds.addAttr(longName=cls._PREVIOUS_PRINT_ATTR, attributeType='message')
-        cmds.connectAttr('PR1' + '.message', 'PR2' + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
-
-        cmds.select('ML2')
-        cmds.addAttr(longName=cls._PREVIOUS_PRINT_ATTR, attributeType='message')
-        cmds.connectAttr('ML1' + '.message', 'ML2' + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
-
-        cmds.select('MR2')
-        cmds.addAttr(longName=cls._PREVIOUS_PRINT_ATTR, attributeType='message')
-        cmds.connectAttr('MR1' + '.message', 'MR2' + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
-
-#___________________________________________________________________________________________________ newTrack
+#===================================================================================================
+#___________________________________________________________________________________________________ link
     @classmethod
-    def newTrack(cls):
-        tracks = cls.getTargets(1)
-        if not tracks or len(tracks) != 1:
-            return False
+    def link(cls, prevTrack, nextTrack):
+        p = cls.getPrev(nextTrack)
+        if p:
+            cls.unlink(p, nextTrack)
+        cmds.connectAttr(prevTrack + '.message', nextTrack + '.' + cls._PREV_ATTR, force=True)
+#___________________________________________________________________________________________________ unlink
+    @classmethod
+    def unlink(cls, prevTrack, nextTrack):
+        cmds.disconnectAttr(prevTrack + '.message', nextTrack + '.' + cls._PREV_ATTR)
 
-        lastTrack = tracks[0]
-        prevTracks = cls.getPreviousTracks(lastTrack)
-        if not prevTracks:
-            return False
+#___________________________________________________________________________________________________ linkTracks
+    @classmethod
+    def linkTracks(cls):
+        selected = cls.getSelectedTracks()
+        if not selected:
+            print "select two or more tracks to link"
+            return
+        i = 0
+        while i < len(selected) - 1:
+            cls.link(selected[i], selected[i + 1])
+            i += 1
 
-        prevTrack = prevTracks[0]
-        posPrev = cmds.xform(prevTrack, query=True, translation=True)
-        posLast = cmds.xform(lastTrack, query=True, translation=True)
-        rotLast = cmds.xform(lastTrack, query=True, rotation=True)
-        thisTrack = cmds.duplicate(lastTrack)[0]
-        dx = posLast[0] - posPrev[0]
-        dy = posLast[1] - posPrev[1]
-        dz = posLast[2] - posPrev[2]
-        cmds.move(dx, dy, dz, relative=True)
-        cmds.rotate(rotLast[0], rotLast[1], rotLast[2])
-        cmds.connectAttr(lastTrack + '.message', thisTrack + '.' + cls._PREVIOUS_PRINT_ATTR, force=True)
-        return True
+#___________________________________________________________________________________________________ unlinkTracks
+    @classmethod
+    def unlinkTracks(cls):
+        selected = cls.getSelectedTracks()
+        if not selected:
+            print "No tracks were selected to unlink"
+            return
+
+        s1 = cls.getFirstTrackInSegment(selected)
+        s2 = cls.getLastTrackInSegment(selected)
+        p = cls.getPrev(s1)
+        n = cls.getNext(s2)
+
+        if p and n:            # track(s) to be unlinked do not include either last or first track
+            cls.unlink(p, s1)  # disconnect previous track from first selected track
+            cls.unlink(s2, n)  # disconnect last selected track from next track
+            cls.link(p, n)     # connect previous to next, bypassing the selected track(s)
+            cmds.select(p)     # select the track just prior to the removed track(s)
+        elif n and not p:      # selection includes the first track
+            cls.unlink(s2, n)
+            cmds.select(n)     # and select the track just after the selection
+        elif p and not n:      # selection includes the last track
+            cls.unlink(p, s1)
+            cmds.select(p)     # and bump selection back to the previous track
+        for s in selected[0:-1]:
+            cls.unlink(s, cls.getNext(s))
+
+
+#___________________________________________________________________________________________________ cloneTracks
+    @classmethod
+    def cloneTracks(cls, name, metadata):
+        selection = cls.getSelectedObjects()
+        if not selection:
+            print 'cloneTracks:  enter metadata and the name of first track, then select targets'
+            return
+        s0 = selection[0]
+        track = cls.createTrack(name, *metadata)
+        cls.setDimensions(track, *cls.getDimensions(s0))
+        cls.setOrientation(track, cls.getOrientation(s0))
+        cls.setPosition(track, cls.getPosition(s0))
+        source = selection[1:]
+        for s in source:
+            nextName  = cls.incrementName(cls.getName(track))
+            nextTrack = cls.createTrack(nextName, *metadata)
+            cls.setDimensions(nextTrack, *cls.getDimensions(s))
+            cls.setOrientation(nextTrack, cls.getOrientation(s))
+            cls.setPosition(nextTrack, cls.getPosition(s))
+            cls.link(track, nextTrack)
+            track = nextTrack
+
+
+#===================================================================================================
+
+#___________________________________________________________________________________________________ createShaders
+    def createShaders(self):
+        shader, shaderEngine = self.createShader('Right Pointer Green Lambert')
+        cmds.setAttr(shader + '.color', 0.618, 0.551421, 0.368328, type='double3')
+        cmds.select(
+            cmds.ls(self.group + '|left_hind_*', objectsOnly=True, exactType='transform', long=True)
+        )
+        cmds.sets(forceElement=shaderEngine)
+
+        cmds.select(
+            cmds.ls(self.group + '|right_hind_*', objectsOnly=True, exactType='transform', long=True)
+        )
+        cmds.sets(forceElement=shaderEngine)
+
+        shader, shaderEngine = self.createShader('ForePrint_Blinn')
+        cmds.setAttr(shader + '.color', 0.309, 0.8618, 1.0, type='double3')
+        cmds.select(
+            cmds.ls(self.group + '|left_fore_*', objectsOnly=True, exactType='transform', long=True)
+        )
+        cmds.sets(forceElement=shaderEngine)
+
+        cmds.select(
+            cmds.ls(self.group + '|right_fore_*', objectsOnly=True, exactType='transform', long=True)
+        )
+        cmds.sets(forceElement=shaderEngine)
+
+        shader, shaderEngine = self.createShader('HindFoot_Blinn')
+        cmds.setAttr(shader + '.color', 0.792, 0.383566, 0.338184, type='double3')
+        cmds.select([self.leftHind, self.rightHind])
+        cmds.sets(forceElement=shaderEngine)
+
+        shader, shaderEngine = self.createShader('ForeFoot_Blinn')
+        cmds.setAttr(shader + '.color', 0.287, 0.762333, 1.0, type='double3')
+        cmds.select([self.leftFore, self.rightFore])
+        cmds.sets(forceElement=shaderEngine)
+
+
+#___________________________________________________________________________________________________ createShader
+    def createShader(self, shaderName, shaderType ='blinn'):
+        shaderEngine = None
+        if not cmds.objExists(shaderName):
+            shader       = cmds.shadingNode(shaderType, asShader=True)
+            shader       = cmds.rename(shader, shaderName)
+            shaderEngine = cmds.sets(renderable=True, empty=True, noSurfaceShader=True, name=shader + '_SG')
+            cmds.connectAttr(shader + '.outColor', shaderEngine + '.surfaceShader')
+        else:
+            shader  = shaderName
+            engines = cmds.listConnections(shader + '.outColor')
+            if engines:
+                shaderEngine = engines[0]
+
+        return shader, shaderEngine
+
+    def createRenderEnvironment(self):
+        lightName = 'scenic_light1'
+        if not cmds.objExists(lightName):
+            lightName = cmds.directionalLight(name=lightName, intensity=0.5)
+            cmds.move(0, 2500, 0, lightName)
+            cmds.rotate('-45deg', '-45deg', 0, lightName)
+
+        lightName = 'scenic_light2'
+        if not cmds.objExists(lightName):
+            lightName = cmds.directionalLight(name=lightName, intensity=0.5)
+            cmds.move(0, 2500, 0, lightName)
+            cmds.rotate('-45deg', '135deg', 0, lightName)
+
+        floorName = 'floor'
+        if not cmds.objExists(floorName):
+            floorName = cmds.polyPlane(width=10000, height=10000, name=floorName)[0]
+        shader, shaderEngine = self.createShader('Whiteout_Surface', 'surfaceShader')
+        cmds.setAttr(shader + '.outColor', 1.0, 1.0, 1.0, type='double3')
+        cmds.select([floorName])
+        cmds.sets(forceElement=shaderEngine)

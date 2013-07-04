@@ -1,7 +1,6 @@
 # TrackwayManagerWidget.py
 # (C)2012-2013
-# Scott Ernst
-
+# Scott Ernst and Kent A. Stevens
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
 from cadence.mayan.trackway.TrackwayManager import TrackwayManager
@@ -10,89 +9,110 @@ from cadence.mayan.trackway.TrackwayManager import TrackwayManager
 class TrackwayManagerWidget(PyGlassWidget):
 
 #===================================================================================================
-#                                                                                       C L A S S
-
+#                                                                                                    C L A S S
     RESOURCE_FOLDER_PREFIX = ['tools']
 
+    _BLANK = ' -- '
 #___________________________________________________________________________________________________ __init__
     def __init__(self, parent, **kwargs):
         super(TrackwayManagerWidget, self).__init__(parent, **kwargs)
-
-        self.addBtn.clicked.connect(self._addToSeries)
-        self.removeBtn.clicked.connect(self._removeFromSeries)
-        self.startBtn.clicked.connect(self._goToStart)
-        self.endBtn.clicked.connect(self._goToEnd)
-        self.prevBtn.clicked.connect(self._goToPrevious)
-        self.nextBtn.clicked.connect(self._goToNext)
-        self.updateBtn.clicked.connect(self._updateInfo)
-        self.initialBtn.clicked.connect(self._initializeSeries)
-        self.newBtn.clicked.connect(self._newTrack)
-
+        self.initButton.clicked.connect(self._initializeTrackway)
+        self.linkButton.clicked.connect(self._linkTracks)
+        self.unlinkButton.clicked.connect(self._unlinkTracks)
+        self.cloneButton.clicked.connect(self._cloneTracks)
+        self.firstButton.clicked.connect(self._goToFirstTrack)
+        self.prevButton.clicked.connect(self._goToPreviousTrack)
+        self.nextButton.clicked.connect(self._goToNextTrack)
+        self.lastButton.clicked.connect(self._goToLastTrack)
+        self.newButton.clicked.connect(self._newTrack)
+        self.refreshButton.clicked.connect(self._refresh)
+        self.setButton.clicked.connect(self._setMetadata)
+        self.testButton.clicked.connect(self._test)
         self.adjustSize()
-        self._updateInfo()
+        self._refresh()
 
 #===================================================================================================
-#                                                                               P R O T E C T E D
-
-#___________________________________________________________________________________________________ _addToSeries
-    def _addToSeries(self):
-        TrackwayManager.addToSeries()
-        self._updateInfo()
-
-#___________________________________________________________________________________________________ _removeFromSeries
-    def _removeFromSeries(self):
-        TrackwayManager.removeFromSeries()
-        self._updateInfo()
-
-#___________________________________________________________________________________________________ _goToStart
-    def _goToStart(self):
-        TrackwayManager.findPrevious(start=True)
-        self._updateInfo()
-
-#___________________________________________________________________________________________________ _goToEnd
-    def _goToEnd(self):
-        TrackwayManager.findNext(end=True)
-        self._updateInfo()
-
-#___________________________________________________________________________________________________ _goToStart
-    def _goToPrevious(self):
-        TrackwayManager.findPrevious()
-        self._updateInfo()
-
-#___________________________________________________________________________________________________ _goToNext
-    def _goToNext(self):
-        TrackwayManager.findNext()
-        self._updateInfo()
-
-#___________________________________________________________________________________________________ _updateInfo
-    def _updateInfo(self):
-        target = TrackwayManager.getTargets()
-        if target:
-            target = target[0]
-            if not TrackwayManager.isTrack(target):
-                prevTrack   = 'Not Applicable'
-                target      = 'Invalid Selection'
-                nextTrack   = 'Not Applicable'
-            else:
-                prevTracks  = TrackwayManager.getPreviousTracks(target)
-                prevTrack   = prevTracks[0] if prevTracks else 'None'
-                nextTracks  = TrackwayManager.getNextTracks(target)
-                nextTrack   = nextTracks[0] if nextTracks else 'None'
-        else:
-            prevTrack = 'Unknown'
-            nextTrack = 'Unknown'
-            target    = 'None Found'
-
-        self.previousLabel.setText(prevTrack)
-        self.currentLabel.setText(target)
-        self.nextLabel.setText(nextTrack)
-#___________________________________________________________________________________________________ _initialize Track
-    def _initializeSeries(self):
-        TrackwayManager.initializeTrackway()
-
-#___________________________________________________________________________________________________ _addTrack
+#                                                                                                     P R O T E C T E D
+#
+#___________________________________________________________________________________________________ _cloneTracks
+    def _cloneTracks(self):
+        name = self.nameLineEdit.text()
+        if name == self._BLANK:
+            print 'CLONE: Must specify initial track name (e.g., LP1 or RM1)'
+            return
+        metadata = self._getMetadata()
+        TrackwayManager.cloneTracks(name, metadata)
+        self._refresh()
+#___________________________________________________________________________________________________ _linkTracks
+    def _linkTracks(self):
+        TrackwayManager.linkTracks()
+ #___________________________________________________________________________________________________ _unlinkTracks
+    def _unlinkTracks(self):
+        TrackwayManager.unlinkTracks()
+        self._refresh()
+#___________________________________________________________________________________________________ _goToFirstTrack
+    def _goToFirstTrack(self):
+        TrackwayManager.goToFirstTrack()
+        self._refresh()
+#___________________________________________________________________________________________________ _goToPreviousTrack
+    def _goToPreviousTrack(self):
+        TrackwayManager.goToPreviousTrack()
+        self._refresh()
+#___________________________________________________________________________________________________ _goToNextTrack
+    def _goToNextTrack(self):
+        TrackwayManager.goToNextTrack()
+        self._refresh()
+#___________________________________________________________________________________________________ _goToLastTrack
+    def _goToLastTrack(self):
+        TrackwayManager.goToLastTrack()
+        self._refresh()
+#___________________________________________________________________________________________________ _initializeTrackway
+    def _initializeTrackway(self):
+        metadata = self._getMetadata()
+        TrackwayManager.initialize(*metadata)
+#___________________________________________________________________________________________________ _newTrack
     def _newTrack(self):
-        TrackwayManager.newTrack()
+        TrackwayManager.duplicateTrack()
+        self._refresh()
+#___________________________________________________________________________________________________ _getMetadata
+    def _getMetadata(self):
+        site     = self.siteLineEdit.text()
+        level    = self.levelLineEdit.text()
+        trackway = self.trackwayLineEdit.text()
+        note     = self.noteTextEdit.toPlainText()
+        return [site, level, trackway, note]
+#___________________________________________________________________________________________________ _setMetadata
+    def _setMetadata(self):
+        metadata = self._getMetadata()
+        selected = TrackwayManager.getSelectedTracks()
+        if not selected:
+            return
+        for s in selected:
+            TrackwayManager.setMetadata(s, *metadata)
+        if len(selected) == 1:
+            TrackwayManager.setName(selected[0], self.nameLineEdit.text())
+#___________________________________________________________________________________________________ _refresh
+    def _refresh(self):
+        selected = TrackwayManager.getSelectedTracks()
+        if len(selected) == 1:
+            s = selected[0]
+            self.siteLineEdit.setText(TrackwayManager.getSite(s))
+            self.levelLineEdit.setText(TrackwayManager.getLevel(s))
+            self.trackwayLineEdit.setText(TrackwayManager.getTrackway(s))
+            self.noteTextEdit.setText(TrackwayManager.getNote(s))
+            self.nameLineEdit.setText(TrackwayManager.getName(s))
+        else:
+            self.siteLineEdit.setText('BSY')
+            self.levelLineEdit.setText('1040')
+            self.trackwayLineEdit.setText('S18')
+            self.noteTextEdit.setText('An example of a remarkable trackway')
+            # self.siteLineEdit.setText(self._BLANK)
+            # self.levelLineEdit.setText(self._BLANK)
+            # self.trackwayLineEdit.setText(self._BLANK)
+            # self.noteTextEdit.setText(self._BLANK)
+            self.nameLineEdit.setText(self._BLANK)
 
-
+#___________________________________________________________________________________________________ _test
+    def _test(self):
+        self._initializeTrackway()
 

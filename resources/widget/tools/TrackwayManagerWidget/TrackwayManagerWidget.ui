@@ -6,265 +6,265 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>724</width>
-    <height>345</height>
+    <width>536</width>
+    <height>168</height>
    </rect>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>330</width>
-    <height>215</height>
-   </size>
   </property>
   <property name="windowTitle">
    <string>Trackway Manager</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QLabel" name="label">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Trackway Modifiers:</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QPushButton" name="addBtn">
-       <property name="text">
-        <string>Add Track(s)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="removeBtn">
-       <property name="text">
-        <string>Remove Track(s)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="initialBtn">
-       <property name="text">
-        <string>Initialize</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="newBtn">
-       <property name="text">
-        <string>New Track</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QLabel" name="label_2">
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QWidget" name="widget" native="true">
      <property name="enabled">
       <bool>true</bool>
      </property>
-     <property name="minimumSize">
-      <size>
-       <width>568</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Trackway Navigation:</string>
-     </property>
+     <widget class="QPushButton" name="lastButton">
+      <property name="geometry">
+       <rect>
+        <x>470</x>
+        <y>30</y>
+        <width>40</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Last</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>../../../../../../Desktop/end.png</normaloff>../../../../../../Desktop/end.png</iconset>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="firstButton">
+      <property name="geometry">
+       <rect>
+        <x>350</x>
+        <y>30</y>
+        <width>40</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>First</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>../../../../../../Desktop/start.png</normaloff>../../../../../../Desktop/start.png</iconset>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="nextButton">
+      <property name="geometry">
+       <rect>
+        <x>430</x>
+        <y>30</y>
+        <width>40</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Next</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>../../../../../../Desktop/next.png</normaloff>../../../../../../Desktop/next.png</iconset>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="setButton">
+      <property name="geometry">
+       <rect>
+        <x>480</x>
+        <y>0</y>
+        <width>30</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>set</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="initButton">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>80</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Initialize</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="prevButton">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>30</y>
+        <width>40</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Prev</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>../../../../../../Desktop/previous.png</normaloff>../../../../../../Desktop/previous.png</iconset>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="newButton">
+      <property name="geometry">
+       <rect>
+        <x>470</x>
+        <y>70</y>
+        <width>40</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>New</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="linkButton">
+      <property name="geometry">
+       <rect>
+        <x>410</x>
+        <y>70</y>
+        <width>50</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Link</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="cloneButton">
+      <property name="geometry">
+       <rect>
+        <x>470</x>
+        <y>90</y>
+        <width>40</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Clone</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="refreshButton">
+      <property name="geometry">
+       <rect>
+        <x>270</x>
+        <y>0</y>
+        <width>51</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>refresh</string>
+      </property>
+      <property name="checkable">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="levelLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>360</x>
+        <y>0</y>
+        <width>40</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="siteLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>320</x>
+        <y>0</y>
+        <width>40</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="trackwayLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>400</x>
+        <y>0</y>
+        <width>40</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="nameLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>440</x>
+        <y>0</y>
+        <width>40</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="testButton">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>0</y>
+        <width>40</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Test</string>
+      </property>
+     </widget>
+     <widget class="QTextEdit" name="noteTextEdit">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>30</y>
+        <width>231</width>
+        <height>71</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="unlinkButton">
+      <property name="geometry">
+       <rect>
+        <x>410</x>
+        <y>90</y>
+        <width>50</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Unlink</string>
+      </property>
+     </widget>
     </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <item>
-      <widget class="QPushButton" name="startBtn">
-       <property name="text">
-        <string>Start</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="prevBtn">
-       <property name="text">
-        <string>Previous</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="nextBtn">
-       <property name="text">
-        <string>Next</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="endBtn">
-       <property name="text">
-        <string>End</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="Line" name="line">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Footprint Info:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="updateBtn">
-       <property name="text">
-        <string>Update</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QFormLayout" name="formLayout">
-     <property name="fieldGrowthPolicy">
-      <enum>QFormLayout::FieldsStayAtSizeHint</enum>
-     </property>
-     <item row="0" column="0">
-      <widget class="QLabel" name="previousLabel_2">
-       <property name="text">
-        <string>Previous:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLabel" name="previousLabel">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Unknown</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="currentLabel">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Unknown</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="nextLabel_2">
-       <property name="text">
-        <string>Next:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QLabel" name="nextLabel">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Unknown</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="currentLabel_2">
-       <property name="text">
-        <string>Current:</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>21</height>
-      </size>
-     </property>
-    </spacer>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>siteLineEdit</tabstop>
+  <tabstop>levelLineEdit</tabstop>
+  <tabstop>trackwayLineEdit</tabstop>
+  <tabstop>nameLineEdit</tabstop>
+  <tabstop>setButton</tabstop>
+  <tabstop>linkButton</tabstop>
+  <tabstop>cloneButton</tabstop>
+  <tabstop>firstButton</tabstop>
+  <tabstop>prevButton</tabstop>
+  <tabstop>nextButton</tabstop>
+  <tabstop>lastButton</tabstop>
+  <tabstop>newButton</tabstop>
+  <tabstop>refreshButton</tabstop>
+  <tabstop>testButton</tabstop>
+  <tabstop>initButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
