@@ -33,7 +33,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../../Desktop/end.png</normaloff>../../../../../../Desktop/end.png</iconset>
+        <normaloff>../../../../../../../../../../../Desktop/end.png</normaloff>../../../../../../../../../../../Desktop/end.png</iconset>
       </property>
      </widget>
      <widget class="QPushButton" name="firstButton">
@@ -50,7 +50,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../../Desktop/start.png</normaloff>../../../../../../Desktop/start.png</iconset>
+        <normaloff>../../../../../../../../../../../Desktop/start.png</normaloff>../../../../../../../../../../../Desktop/start.png</iconset>
       </property>
      </widget>
      <widget class="QPushButton" name="nextButton">
@@ -67,7 +67,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../../Desktop/next.png</normaloff>../../../../../../Desktop/next.png</iconset>
+        <normaloff>../../../../../../../../../../../Desktop/next.png</normaloff>../../../../../../../../../../../Desktop/next.png</iconset>
       </property>
      </widget>
      <widget class="QPushButton" name="setButton">
@@ -110,7 +110,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../../Desktop/previous.png</normaloff>../../../../../../Desktop/previous.png</iconset>
+        <normaloff>../../../../../../../../../../../Desktop/previous.png</normaloff>../../../../../../../../../../../Desktop/previous.png</iconset>
       </property>
      </widget>
      <widget class="QPushButton" name="newButton">
@@ -227,7 +227,7 @@
         <x>0</x>
         <y>30</y>
         <width>231</width>
-        <height>71</height>
+        <height>101</height>
        </rect>
       </property>
      </widget>
@@ -244,6 +244,70 @@
        <string>Unlink</string>
       </property>
      </widget>
+     <widget class="QPushButton" name="deleteButton">
+      <property name="geometry">
+       <rect>
+        <x>410</x>
+        <y>110</y>
+        <width>50</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Delete</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="selectPriorButton">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>90</y>
+        <width>85</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Precursors</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>../../../../../../../../../../../Desktop/start.png</normaloff>../../../../../../../../../../../Desktop/start.png</iconset>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="selectLaterButton">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>110</y>
+        <width>85</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Successors</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>../../../../../../../../../../../Desktop/start.png</normaloff>../../../../../../../../../../../Desktop/start.png</iconset>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="selectAllButton">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>70</y>
+        <width>85</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Series</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>../../../../../../../../../../../Desktop/start.png</normaloff>../../../../../../../../../../../Desktop/start.png</iconset>
+      </property>
+     </widget>
     </widget>
    </item>
   </layout>
@@ -254,16 +318,22 @@
   <tabstop>trackwayLineEdit</tabstop>
   <tabstop>nameLineEdit</tabstop>
   <tabstop>setButton</tabstop>
-  <tabstop>linkButton</tabstop>
-  <tabstop>cloneButton</tabstop>
   <tabstop>firstButton</tabstop>
   <tabstop>prevButton</tabstop>
   <tabstop>nextButton</tabstop>
   <tabstop>lastButton</tabstop>
+  <tabstop>linkButton</tabstop>
+  <tabstop>unlinkButton</tabstop>
+  <tabstop>deleteButton</tabstop>
+  <tabstop>selectAllButton</tabstop>
+  <tabstop>selectPriorButton</tabstop>
+  <tabstop>selectLaterButton</tabstop>
   <tabstop>newButton</tabstop>
-  <tabstop>refreshButton</tabstop>
-  <tabstop>testButton</tabstop>
+  <tabstop>cloneButton</tabstop>
   <tabstop>initButton</tabstop>
+  <tabstop>testButton</tabstop>
+  <tabstop>refreshButton</tabstop>
+  <tabstop>noteTextEdit</tabstop>
  </tabstops>
  <resources/>
  <connections/>

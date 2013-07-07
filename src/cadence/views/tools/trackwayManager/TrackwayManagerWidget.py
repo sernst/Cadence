@@ -16,18 +16,23 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, parent, **kwargs):
         super(TrackwayManagerWidget, self).__init__(parent, **kwargs)
-        self.initButton.clicked.connect(self._initializeTrackway)
-        self.linkButton.clicked.connect(self._linkTracks)
-        self.unlinkButton.clicked.connect(self._unlinkTracks)
+
         self.cloneButton.clicked.connect(self._cloneTracks)
+        self.deleteButton.clicked.connect(self._deleteTracks)
         self.firstButton.clicked.connect(self._goToFirstTrack)
-        self.prevButton.clicked.connect(self._goToPreviousTrack)
-        self.nextButton.clicked.connect(self._goToNextTrack)
+        self.initButton.clicked.connect(self._initializeTrackway)
         self.lastButton.clicked.connect(self._goToLastTrack)
+        self.linkButton.clicked.connect(self._linkTracks)
         self.newButton.clicked.connect(self._newTrack)
+        self.nextButton.clicked.connect(self._goToNextTrack)
+        self.prevButton.clicked.connect(self._goToPreviousTrack)
         self.refreshButton.clicked.connect(self._refresh)
+        self.selectAllButton.clicked.connect(self._selectAll)
+        self.selectLaterButton.clicked.connect(self._selectSuccessors)
+        self.selectPriorButton.clicked.connect(self._selectPrecursors)
         self.setButton.clicked.connect(self._setMetadata)
         self.testButton.clicked.connect(self._test)
+        self.unlinkButton.clicked.connect(self._unlinkTracks)
         self.adjustSize()
         self._refresh()
 
@@ -91,6 +96,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             TrackwayManager.setMetadata(s, *metadata)
         if len(selected) == 1:
             TrackwayManager.setName(selected[0], self.nameLineEdit.text())
+
 #___________________________________________________________________________________________________ _refresh
     def _refresh(self):
         selected = TrackwayManager.getSelectedTracks()
@@ -116,3 +122,15 @@ class TrackwayManagerWidget(PyGlassWidget):
     def _test(self):
         self._initializeTrackway()
 
+#___________________________________________________________________________________________________
+    def _selectSuccessors(self):
+        TrackwayManager.selectSuccessors()
+#___________________________________________________________________________________________________
+    def _selectPrecursors(self):
+        TrackwayManager.selectPrecursors()
+#___________________________________________________________________________________________________
+    def _selectAll(self):
+        TrackwayManager.selectAll()
+#___________________________________________________________________________________________________
+    def _deleteTracks(self):
+        TrackwayManager.deleteSelected()

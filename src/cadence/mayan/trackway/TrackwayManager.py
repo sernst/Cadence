@@ -2,11 +2,14 @@
 # (C)2012-2013 http://cadence.ThreeAddOne.com
 # Scott Ernst and Kent A. Stevens
 
-from nimble import cmds
-from math import sqrt
-import sys
+import math
 
 from pyaid.debug.Logger import Logger
+
+from nimble import cmds
+
+from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
+from cadence.util.shading.ShadingUtils import ShadingUtils
 
 #___________________________________________________________________________________________________ TrackwayManager
 
@@ -275,7 +278,10 @@ class TrackwayManager(object):
         a = 2.0*r
         y = (0, 1, 0)
         c = cmds.polyCylinder(r=r, h=5, sx=40, sy=1, sz=1, ax=y, rcp=0, cuv=2, ch=1, n=name)[0]
-
+        if name[0] == 'M':
+            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, c)
+        else:
+            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, c)
         cmds.addAttr(longName=cls._PREV_ATTR,     attributeType='message')
         cmds.addAttr(longName=cls._NAME_ATTR,     dataType='string')
         cmds.addAttr(longName=cls._SITE_ATTR,     dataType='string')
@@ -288,8 +294,14 @@ class TrackwayManager(object):
 
         p = cmds.polyPrism(l=4, w=a, ns=3, sh=1, sc=0, ax=y, cuv=3, ch=1, n='pointer')[0]
         cmds.rotate(0.0, -90.0, 0.0)
-        cmds.scale(1.0/sqrt(3.0), 1.0, 1.0)
+        cmds.scale(1.0/math.sqrt(3.0), 1.0, 1.0)
         cmds.move(0, 5, a/6.0)
+        if name[1] == 'R':
+            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, p)
+        else:
+            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, p)
+
+
 
         cmds.setAttr(p + '.overrideEnabled', 1)
         cmds.setAttr(p + '.overrideDisplayType', 2)
@@ -349,6 +361,7 @@ class TrackwayManager(object):
         while i < len(selected) - 1:
             cls.link(selected[i], selected[i + 1])
             i += 1
+        cmds.select(selected[-1])
 
 #___________________________________________________________________________________________________ unlinkTracks
     @classmethod
@@ -400,79 +413,60 @@ class TrackwayManager(object):
             cls.link(track, nextTrack)
             track = nextTrack
 
+#___________________________________________________________________________________________________ getSeries
+    @classmethod
+    def getSeries(cls):
+        selection = cls.getSelectedTracks()
+        if not selection:
+            return
+        first = cls.getFirstTrack()
+        series = []
+        t = first
+        while t:
+            series.append(t)
+            t = cls.getNext(t)
+        return series
 
-#===================================================================================================
+#___________________________________________________________________________________________________ selectAll
+    @classmethod
+    def selectAll(cls):
+        series = cls.getSeries()
+        cmds.select(series)
 
-#___________________________________________________________________________________________________ createShaders
-    def createShaders(self):
-        shader, shaderEngine = self.createShader('Right Pointer Green Lambert')
-        cmds.setAttr(shader + '.color', 0.618, 0.551421, 0.368328, type='double3')
-        cmds.select(
-            cmds.ls(self.group + '|left_hind_*', objectsOnly=True, exactType='transform', long=True)
-        )
-        cmds.sets(forceElement=shaderEngine)
+#___________________________________________________________________________________________________ selectPrecursors
+    @classmethod
+    def selectPrecursors(cls):
+        selected = cls.getSelectedTracks()
+        if not selected:
+            print 'Select at least one track'
+            return
+        series = cls.getSeries()
+        precursors = []
+        for s in series:
+            if s in selected:
+                break
+            precursors.append(s)
+        cmds.select(precursors)
 
-        cmds.select(
-            cmds.ls(self.group + '|right_hind_*', objectsOnly=True, exactType='transform', long=True)
-        )
-        cmds.sets(forceElement=shaderEngine)
+#___________________________________________________________________________________________________ selectSuccessors
+    @classmethod
+    def selectSuccessors(cls):
+        selected = cls.getSelectedTracks()
+        if not selected:
+            print 'Select at least one track'
+            return
+        t = cls.getNext(cls.getLastTrackInSegment(selected))
+        if not t:
+            return
+        successors = [t]
+        while cls.getNext(t):
+            t = cls.getNext(t)
+            successors.append(t)
+        cmds.select(successors)
 
-        shader, shaderEngine = self.createShader('ForePrint_Blinn')
-        cmds.setAttr(shader + '.color', 0.309, 0.8618, 1.0, type='double3')
-        cmds.select(
-            cmds.ls(self.group + '|left_fore_*', objectsOnly=True, exactType='transform', long=True)
-        )
-        cmds.sets(forceElement=shaderEngine)
+#___________________________________________________________________________________________________ selectSuccessors
+    @classmethod
+    def deleteSelected(cls):
+        selected = cls.getSelectedTracks()
+        cmds.delete(selected)
 
-        cmds.select(
-            cmds.ls(self.group + '|right_fore_*', objectsOnly=True, exactType='transform', long=True)
-        )
-        cmds.sets(forceElement=shaderEngine)
-
-        shader, shaderEngine = self.createShader('HindFoot_Blinn')
-        cmds.setAttr(shader + '.color', 0.792, 0.383566, 0.338184, type='double3')
-        cmds.select([self.leftHind, self.rightHind])
-        cmds.sets(forceElement=shaderEngine)
-
-        shader, shaderEngine = self.createShader('ForeFoot_Blinn')
-        cmds.setAttr(shader + '.color', 0.287, 0.762333, 1.0, type='double3')
-        cmds.select([self.leftFore, self.rightFore])
-        cmds.sets(forceElement=shaderEngine)
-
-
-#___________________________________________________________________________________________________ createShader
-    def createShader(self, shaderName, shaderType ='blinn'):
-        shaderEngine = None
-        if not cmds.objExists(shaderName):
-            shader       = cmds.shadingNode(shaderType, asShader=True)
-            shader       = cmds.rename(shader, shaderName)
-            shaderEngine = cmds.sets(renderable=True, empty=True, noSurfaceShader=True, name=shader + '_SG')
-            cmds.connectAttr(shader + '.outColor', shaderEngine + '.surfaceShader')
-        else:
-            shader  = shaderName
-            engines = cmds.listConnections(shader + '.outColor')
-            if engines:
-                shaderEngine = engines[0]
-
-        return shader, shaderEngine
-
-    def createRenderEnvironment(self):
-        lightName = 'scenic_light1'
-        if not cmds.objExists(lightName):
-            lightName = cmds.directionalLight(name=lightName, intensity=0.5)
-            cmds.move(0, 2500, 0, lightName)
-            cmds.rotate('-45deg', '-45deg', 0, lightName)
-
-        lightName = 'scenic_light2'
-        if not cmds.objExists(lightName):
-            lightName = cmds.directionalLight(name=lightName, intensity=0.5)
-            cmds.move(0, 2500, 0, lightName)
-            cmds.rotate('-45deg', '135deg', 0, lightName)
-
-        floorName = 'floor'
-        if not cmds.objExists(floorName):
-            floorName = cmds.polyPlane(width=10000, height=10000, name=floorName)[0]
-        shader, shaderEngine = self.createShader('Whiteout_Surface', 'surfaceShader')
-        cmds.setAttr(shader + '.outColor', 1.0, 1.0, 1.0, type='double3')
-        cmds.select([floorName])
-        cmds.sets(forceElement=shaderEngine)

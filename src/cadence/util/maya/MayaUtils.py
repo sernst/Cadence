@@ -27,4 +27,5 @@ class MayaUtils(object):
     @classmethod
     def setSelection(cls, selection, add =False, **kwargs):
         """Modifies Maya's current selection state to the specified selection list."""
-        cmds.select(selection, add=add, **kwargs)
+        if selection:
+            cmds.select(selection, add=add, **kwargs)

@@ -9,22 +9,26 @@ class TrackwayShaderConfig(object):
 #===================================================================================================
 
     GREEN_COLOR = {
-        'uid': 'Cadence_Green_Lambert',
+        'uid': 'CadenceGreenLambert',
         'type': 'lambert',
         'color': [0.0, 1.0, 0.0]
     }
 
     RED_COLOR = {
-        'uid': 'Cadence_Red_Lambert',
+        'uid': 'CadenceRedLambert',
         'type': 'lambert',
         'color': [1.0, 0.0, 0.0]
     }
 
 
     LIGHT_GRAY_COLOR = {
-        'uid': 'Cadence_LIGHT_GRAY_Lambert',
+        'uid': 'CadenceLightGrayLambert',
         'type': 'lambert',
         'color': [0.8, 0.8, 0.8]
     }
 
-
+    DARK_GRAY_COLOR = {
+        'uid': 'CadenceDarkGrayLambert',
+        'type': 'lambert',
+        'color': [0.4, 0.4, 0.4]
+    }
