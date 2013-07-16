@@ -17,6 +17,16 @@ class TrackwayManagerWidget(PyGlassWidget):
     def __init__(self, parent, **kwargs):
         super(TrackwayManagerWidget, self).__init__(parent, **kwargs)
 
+
+        path = self.getResourcePath('..', '..', 'help.markdown', isFile=True) #gives you the TrackwayManager folder
+        print "in the TrackwayManagerWidget, the path =%s" % path
+        # get a qIcon or something or QButton icon and put the icons in the TrackwayManager Widget
+        # folder and commit them to the project also. Look for them in the changes at the bottom
+        # of PyCharm window
+
+        # this returns the path to the shared directory resources/apps/CadenceApplication
+        # to get self.getAppResourcePath()
+
         self.cloneButton.clicked.connect(self._cloneTracks)
         self.deleteButton.clicked.connect(self._deleteTracks)
         self.firstButton.clicked.connect(self._goToFirstTrack)
@@ -27,6 +37,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.nextButton.clicked.connect(self._goToNextTrack)
         self.prevButton.clicked.connect(self._goToPreviousTrack)
         self.refreshButton.clicked.connect(self._refresh)
+        self.renameButton.clicked.connect(self._rename)
         self.selectAllButton.clicked.connect(self._selectAll)
         self.selectLaterButton.clicked.connect(self._selectSuccessors)
         self.selectPriorButton.clicked.connect(self._selectPrecursors)
@@ -51,6 +62,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _linkTracks
     def _linkTracks(self):
         TrackwayManager.linkTracks()
+        self._refresh()
  #___________________________________________________________________________________________________ _unlinkTracks
     def _unlinkTracks(self):
         TrackwayManager.unlinkTracks()
@@ -78,6 +90,10 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _newTrack
     def _newTrack(self):
         TrackwayManager.duplicateTrack()
+        self._refresh()
+#___________________________________________________________________________________________________ _insertTrack
+    def _insertTrack(self):
+        TrackwayManager.insertTrack()
         self._refresh()
 #___________________________________________________________________________________________________ _getMetadata
     def _getMetadata(self):
@@ -108,8 +124,8 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.noteTextEdit.setText(TrackwayManager.getNote(s))
             self.nameLineEdit.setText(TrackwayManager.getName(s))
         else:
-            self.siteLineEdit.setText('BSY')
-            self.levelLineEdit.setText('1040')
+            self.siteLineEdit.setText('BEB')
+            self.levelLineEdit.setText('515')
             self.trackwayLineEdit.setText('S18')
             self.noteTextEdit.setText('An example of a remarkable trackway')
             # self.siteLineEdit.setText(self._BLANK)
@@ -117,11 +133,15 @@ class TrackwayManagerWidget(PyGlassWidget):
             # self.trackwayLineEdit.setText(self._BLANK)
             # self.noteTextEdit.setText(self._BLANK)
             self.nameLineEdit.setText(self._BLANK)
+#___________________________________________________________________________________________________ _rename
+    def _rename(self):
+        metadata = self._getMetadata()
+        name = self.nameLineEdit.text()
+        TrackwayManager.renameSelected(name, *metadata)
 
 #___________________________________________________________________________________________________ _test
     def _test(self):
         self._initializeTrackway()
-
 #___________________________________________________________________________________________________
     def _selectSuccessors(self):
         TrackwayManager.selectSuccessors()
