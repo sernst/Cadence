@@ -19,14 +19,23 @@
      <property name="enabled">
       <bool>true</bool>
      </property>
-     <widget class="QPushButton" name="lastButton">
+     <widget class="QPushButton" name="lastBtn">
       <property name="geometry">
        <rect>
-        <x>450</x>
-        <y>10</y>
+        <x>370</x>
+        <y>0</y>
         <width>40</width>
         <height>40</height>
        </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="acceptDrops">
+       <bool>false</bool>
       </property>
       <property name="text">
        <string>Last</string>
@@ -35,15 +44,27 @@
        <iconset>
         <normaloff>../../../../../../../../../../../Desktop/end.png</normaloff>../../../../../../../../../../../Desktop/end.png</iconset>
       </property>
+      <property name="flat">
+       <bool>false</bool>
+      </property>
      </widget>
-     <widget class="QPushButton" name="firstButton">
+     <widget class="QPushButton" name="firstBtn">
       <property name="geometry">
        <rect>
-        <x>330</x>
-        <y>10</y>
+        <x>250</x>
+        <y>0</y>
         <width>40</width>
         <height>40</height>
        </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="acceptDrops">
+       <bool>false</bool>
       </property>
       <property name="text">
        <string>First</string>
@@ -52,15 +73,27 @@
        <iconset>
         <normaloff>../../../../../../../../../../../Desktop/start.png</normaloff>../../../../../../../../../../../Desktop/start.png</iconset>
       </property>
+      <property name="flat">
+       <bool>false</bool>
+      </property>
      </widget>
-     <widget class="QPushButton" name="nextButton">
+     <widget class="QPushButton" name="nextBtn">
       <property name="geometry">
        <rect>
-        <x>410</x>
-        <y>10</y>
+        <x>330</x>
+        <y>0</y>
         <width>40</width>
         <height>40</height>
        </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="acceptDrops">
+       <bool>false</bool>
       </property>
       <property name="text">
        <string>Next</string>
@@ -69,12 +102,15 @@
        <iconset>
         <normaloff>../../../../../../../../../../../Desktop/next.png</normaloff>../../../../../../../../../../../Desktop/next.png</iconset>
       </property>
+      <property name="flat">
+       <bool>false</bool>
+      </property>
      </widget>
-     <widget class="QPushButton" name="setButton">
+     <widget class="QPushButton" name="setBtn">
       <property name="geometry">
        <rect>
-        <x>580</x>
-        <y>30</y>
+        <x>80</x>
+        <y>0</y>
         <width>80</width>
         <height>40</height>
        </rect>
@@ -83,27 +119,36 @@
        <string>set</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="initButton">
+     <widget class="QPushButton" name="initBtn">
       <property name="geometry">
        <rect>
-        <x>0</x>
+        <x>510</x>
         <y>0</y>
-        <width>80</width>
+        <width>150</width>
         <height>40</height>
        </rect>
       </property>
       <property name="text">
-       <string>Initialize</string>
+       <string>Initialize Trackway</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="prevButton">
+     <widget class="QPushButton" name="prevBtn">
       <property name="geometry">
        <rect>
-        <x>370</x>
-        <y>10</y>
+        <x>290</x>
+        <y>0</y>
         <width>40</width>
         <height>40</height>
        </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="acceptDrops">
+       <bool>false</bool>
       </property>
       <property name="text">
        <string>Prev</string>
@@ -112,50 +157,53 @@
        <iconset>
         <normaloff>../../../../../../../../../../../Desktop/previous.png</normaloff>../../../../../../../../../../../Desktop/previous.png</iconset>
       </property>
+      <property name="flat">
+       <bool>false</bool>
+      </property>
      </widget>
-     <widget class="QPushButton" name="newButton">
+     <widget class="QPushButton" name="newBtn">
       <property name="geometry">
        <rect>
-        <x>480</x>
-        <y>90</y>
-        <width>80</width>
+        <x>380</x>
+        <y>80</y>
+        <width>120</width>
         <height>40</height>
        </rect>
       </property>
       <property name="text">
-       <string>New</string>
+       <string>Add Track</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="linkButton">
+     <widget class="QPushButton" name="linkBtn">
       <property name="geometry">
        <rect>
         <x>370</x>
-        <y>90</y>
-        <width>80</width>
+        <y>130</y>
+        <width>140</width>
         <height>40</height>
        </rect>
       </property>
       <property name="text">
-       <string>Link</string>
+       <string>Link Selected</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="cloneButton">
+     <widget class="QPushButton" name="cloneBtn">
       <property name="geometry">
        <rect>
-        <x>480</x>
-        <y>150</y>
-        <width>80</width>
+        <x>500</x>
+        <y>190</y>
+        <width>120</width>
         <height>40</height>
        </rect>
       </property>
       <property name="text">
-       <string>Clone</string>
+       <string>Clone Tracks</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="refreshButton">
+     <widget class="QPushButton" name="refreshBtn">
       <property name="geometry">
        <rect>
-        <x>580</x>
+        <x>0</x>
         <y>0</y>
         <width>80</width>
         <height>40</height>
@@ -168,51 +216,83 @@
        <bool>false</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="levelLineEdit">
+     <widget class="QLineEdit" name="levelLEdit">
       <property name="geometry">
        <rect>
-        <x>40</x>
-        <y>60</y>
-        <width>40</width>
-        <height>20</height>
+        <x>70</x>
+        <y>70</y>
+        <width>60</width>
+        <height>50</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>18</pointsize>
+       </font>
+      </property>
+      <property name="frame">
+       <bool>false</bool>
+      </property>
      </widget>
-     <widget class="QLineEdit" name="siteLineEdit">
+     <widget class="QLineEdit" name="siteLEdit">
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>60</y>
-        <width>40</width>
-        <height>20</height>
+        <y>70</y>
+        <width>60</width>
+        <height>50</height>
        </rect>
       </property>
-     </widget>
-     <widget class="QLineEdit" name="trackwayLineEdit">
-      <property name="geometry">
-       <rect>
-        <x>80</x>
-        <y>60</y>
-        <width>40</width>
-        <height>20</height>
-       </rect>
+      <property name="font">
+       <font>
+        <pointsize>18</pointsize>
+       </font>
+      </property>
+      <property name="frame">
+       <bool>false</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="nameLineEdit">
+     <widget class="QLineEdit" name="trackwayLEdit">
       <property name="geometry">
        <rect>
-        <x>120</x>
-        <y>60</y>
-        <width>40</width>
-        <height>20</height>
+        <x>210</x>
+        <y>70</y>
+        <width>61</width>
+        <height>50</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>18</pointsize>
+       </font>
+      </property>
+      <property name="frame">
+       <bool>false</bool>
+      </property>
      </widget>
-     <widget class="QPushButton" name="testButton">
+     <widget class="QLineEdit" name="rightLeftLEdit">
       <property name="geometry">
        <rect>
-        <x>80</x>
-        <y>0</y>
+        <x>280</x>
+        <y>70</y>
+        <width>20</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>18</pointsize>
+       </font>
+      </property>
+      <property name="frame">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="testBtn">
+      <property name="geometry">
+       <rect>
+        <x>580</x>
+        <y>80</y>
         <width>80</width>
         <height>40</height>
        </rect>
@@ -221,117 +301,171 @@
        <string>Test</string>
       </property>
      </widget>
-     <widget class="QTextEdit" name="noteTextEdit">
+     <widget class="QTextEdit" name="noteTEdit">
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>100</y>
+        <y>140</y>
         <width>231</width>
         <height>81</height>
        </rect>
       </property>
      </widget>
-     <widget class="QPushButton" name="unlinkButton">
+     <widget class="QPushButton" name="unlinkBtn">
       <property name="geometry">
        <rect>
         <x>370</x>
-        <y>120</y>
-        <width>80</width>
+        <y>160</y>
+        <width>140</width>
         <height>40</height>
        </rect>
       </property>
       <property name="text">
-       <string>Unlink</string>
+       <string>Unlink Selected</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="deleteButton">
+     <widget class="QPushButton" name="deleteBtn">
       <property name="geometry">
        <rect>
         <x>370</x>
-        <y>150</y>
-        <width>80</width>
+        <y>190</y>
+        <width>140</width>
         <height>40</height>
        </rect>
       </property>
       <property name="text">
-       <string>Delete</string>
+       <string>Delete Selected</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="selectPriorButton">
+     <widget class="QPushButton" name="selectPriorBtn">
       <property name="geometry">
        <rect>
         <x>260</x>
-        <y>120</y>
-        <width>85</width>
+        <y>160</y>
+        <width>120</width>
         <height>40</height>
        </rect>
       </property>
       <property name="text">
-       <string>Precursors</string>
+       <string>Select Earlier</string>
       </property>
       <property name="icon">
        <iconset>
         <normaloff>../../../../../../../../../../../Desktop/start.png</normaloff>../../../../../../../../../../../Desktop/start.png</iconset>
       </property>
      </widget>
-     <widget class="QPushButton" name="selectLaterButton">
+     <widget class="QPushButton" name="selectLaterBtn">
       <property name="geometry">
        <rect>
         <x>260</x>
-        <y>150</y>
-        <width>85</width>
+        <y>190</y>
+        <width>120</width>
         <height>40</height>
        </rect>
       </property>
       <property name="text">
-       <string>Successors</string>
+       <string>Select Later</string>
       </property>
       <property name="icon">
        <iconset>
         <normaloff>../../../../../../../../../../../Desktop/start.png</normaloff>../../../../../../../../../../../Desktop/start.png</iconset>
       </property>
      </widget>
-     <widget class="QPushButton" name="selectAllButton">
+     <widget class="QPushButton" name="selectAllBtn">
       <property name="geometry">
        <rect>
         <x>260</x>
-        <y>90</y>
-        <width>85</width>
+        <y>130</y>
+        <width>120</width>
         <height>40</height>
        </rect>
       </property>
       <property name="text">
-       <string>Series</string>
+       <string>Select Series</string>
       </property>
       <property name="icon">
        <iconset>
         <normaloff>../../../../../../../../../../../Desktop/start.png</normaloff>../../../../../../../../../../../Desktop/start.png</iconset>
       </property>
      </widget>
-     <widget class="QPushButton" name="insertButton">
+     <widget class="QPushButton" name="insertBtn">
       <property name="geometry">
        <rect>
-        <x>480</x>
-        <y>120</y>
-        <width>80</width>
+        <x>500</x>
+        <y>160</y>
+        <width>120</width>
         <height>40</height>
        </rect>
       </property>
       <property name="text">
-       <string>Insert</string>
+       <string>Insert Tracks</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="renameButton">
+     <widget class="QPushButton" name="renameBtn">
       <property name="geometry">
        <rect>
-        <x>580</x>
-        <y>60</y>
-        <width>80</width>
+        <x>540</x>
+        <y>40</y>
+        <width>120</width>
         <height>40</height>
        </rect>
       </property>
       <property name="text">
-       <string>rename</string>
+       <string>rename tracks</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="manusPesLEdit">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>70</y>
+        <width>20</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>18</pointsize>
+       </font>
+      </property>
+      <property name="frame">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="numberLEdit">
+      <property name="geometry">
+       <rect>
+        <x>320</x>
+        <y>70</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>18</pointsize>
+       </font>
+      </property>
+      <property name="frame">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="yearLEdit">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>70</y>
+        <width>60</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>18</pointsize>
+       </font>
+      </property>
+      <property name="frame">
+       <bool>false</bool>
       </property>
      </widget>
     </widget>
@@ -339,27 +473,27 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>siteLineEdit</tabstop>
-  <tabstop>levelLineEdit</tabstop>
-  <tabstop>trackwayLineEdit</tabstop>
-  <tabstop>nameLineEdit</tabstop>
-  <tabstop>setButton</tabstop>
-  <tabstop>firstButton</tabstop>
-  <tabstop>prevButton</tabstop>
-  <tabstop>nextButton</tabstop>
-  <tabstop>lastButton</tabstop>
-  <tabstop>linkButton</tabstop>
-  <tabstop>unlinkButton</tabstop>
-  <tabstop>deleteButton</tabstop>
-  <tabstop>selectAllButton</tabstop>
-  <tabstop>selectPriorButton</tabstop>
-  <tabstop>selectLaterButton</tabstop>
-  <tabstop>newButton</tabstop>
-  <tabstop>cloneButton</tabstop>
-  <tabstop>initButton</tabstop>
-  <tabstop>testButton</tabstop>
-  <tabstop>refreshButton</tabstop>
-  <tabstop>noteTextEdit</tabstop>
+  <tabstop>siteLEdit</tabstop>
+  <tabstop>levelLEdit</tabstop>
+  <tabstop>trackwayLEdit</tabstop>
+  <tabstop>rightLeftLEdit</tabstop>
+  <tabstop>setBtn</tabstop>
+  <tabstop>firstBtn</tabstop>
+  <tabstop>prevBtn</tabstop>
+  <tabstop>nextBtn</tabstop>
+  <tabstop>lastBtn</tabstop>
+  <tabstop>linkBtn</tabstop>
+  <tabstop>unlinkBtn</tabstop>
+  <tabstop>deleteBtn</tabstop>
+  <tabstop>selectAllBtn</tabstop>
+  <tabstop>selectPriorBtn</tabstop>
+  <tabstop>selectLaterBtn</tabstop>
+  <tabstop>newBtn</tabstop>
+  <tabstop>cloneBtn</tabstop>
+  <tabstop>initBtn</tabstop>
+  <tabstop>testBtn</tabstop>
+  <tabstop>refreshBtn</tabstop>
+  <tabstop>noteTEdit</tabstop>
  </tabstops>
  <resources/>
  <connections/>

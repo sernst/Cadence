@@ -26,11 +26,12 @@ class TrackwayManager(object):
 
     _log = Logger('TrackwayManager')
 
+
 #============================================================================ TRACK SERIES TRAVERSAL
 #___________________________________________________________________________________________________ goTo
     @classmethod
     def goTo(cls, track):
-       cls.focusOnTrack('cadenceCam', track)
+       cls.focusOnTrack(track,'cadenceCam')
        cmds.select(track)
 
 #___________________________________________________________________________________________________ goToFirstTrack
@@ -168,15 +169,25 @@ class TrackwayManager(object):
     @classmethod
     def setName(cls, track, name):
         cmds.setAttr(track + '.' + cls._NAME_ATTR, name, type='string')
-        #
-        # site     = cls.getSite(track)
-        # level    = cls.getLevel(track)
-        # trackway = cls.getTrackway(track)
-        # return cmds.rename(track, site + '_' + level + '_' + trackway + '_' + name)
+        cls.colorTrack(track, name)
 
     @classmethod
     def getName(cls, track):
         return cmds.getAttr(track + '.' + cls._NAME_ATTR)
+
+#___________________________________________________________________________________________________ colorTrack
+    @classmethod
+    def colorTrack(cls, track, name):
+        print 'in colorTrack, track = %s and name = %s' % (track, name)
+        if name[1] == 'M':
+            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, track)
+        else:
+            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, track)
+        if name[0] == 'R':
+            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, track +"|pointer")
+        else:
+            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, track +"|pointer")
+
 #___________________________________________________________________________________________________ set/get note
     @classmethod
     def setNote(cls, track, note):
@@ -185,6 +196,7 @@ class TrackwayManager(object):
     @classmethod
     def getNote(cls, track):
         return cmds.getAttr(track + '.' + cls._NOTE_ATTR)
+
 #___________________________________________________________________________________________________ set/get snapshot
     @classmethod
     def setSnapshot(cls, track, snapshot):
@@ -193,6 +205,7 @@ class TrackwayManager(object):
     @classmethod
     def getSnapshot(cls, track):
         return cmds.getAttr(track + '.' + cls._SNAPSHOT_ATTR)
+
 #___________________________________________________________________________________________________ set/get metadata
     @classmethod
     def setMetadata(cls, track, site, level, trackway, note):
@@ -208,22 +221,25 @@ class TrackwayManager(object):
             cls.getLevel(track),
             cls.getTrackway(track),
             cls.getNote(track)]
+
 #___________________________________________________________________________________________________ isPes / isManus
     @classmethod
     def isPes(cls, track):
-        return cls.getName(track)[0] is 'P'
+        return cls.getName(track)[1] is 'P'
 
     @classmethod
     def isManus(cls, track):
         return cls.getName(track)[0] is 'M'
+
 #___________________________________________________________________________________________________ isRight / isLeft
     @classmethod
     def isRight(cls, track):
-        return cls.getName(track)[1] is 'R'
+        return cls.getName(track)[0] is 'R'
 
     @classmethod
     def isLeft(cls, track):
         return cls.getName(track)[1] is 'L'
+
 #___________________________________________________________________________________________________ set/get position
     @classmethod
     def setPosition(cls, track, position):
@@ -232,10 +248,12 @@ class TrackwayManager(object):
     @classmethod
     def getPosition(cls, track):
        return cmds.xform(track, query=True, translation=True)
+
 #___________________________________________________________________________________________________ moveRelative
     @classmethod
     def moveRelative(cls, track, dx, dy, dz):
        cmds.move(dx, dy, dz, track, relative=True)
+
 #___________________________________________________________________________________________________ set/get orientation
     @classmethod
     def setOrientation(cls, track, rotation):
@@ -244,6 +262,7 @@ class TrackwayManager(object):
     @classmethod
     def getOrientation(cls, track):
         return cmds.getAttr(track + '.rotateY')
+
 #___________________________________________________________________________________________________ set/get dimensions
     @classmethod
     def setDimensions(cls, track, width, length):
@@ -262,13 +281,15 @@ class TrackwayManager(object):
         prefix = name[:2]
         number = int(name[2:])
         return prefix + str(number + 1)
+
 #___________________________________________________________________________________________________ duplicateTrack
     @classmethod
     def duplicateTrack(cls):
         lastTrack = cls.getLastTrack()
         prevTrack = cls.getPrev(lastTrack)
         nextTrack = cmds.duplicate(lastTrack)[0]
-        nextTrack = cls.setName(nextTrack, cls.incrementName(cls.getName(lastTrack)))
+        nextName = cls.incrementName(cls.getName(lastTrack))
+        cls.setName(nextTrack, nextName)
         p1 = cls.getPosition(prevTrack)
         p2 = cls.getPosition(lastTrack)
         dx = p2[0] - p1[0]
@@ -276,6 +297,7 @@ class TrackwayManager(object):
         dz = p2[2] - p1[2]
         cls.moveRelative(nextTrack, dx, dy, dz)
         cls.link(lastTrack, nextTrack)
+      #  cls.focusOnTrack('cadenceCam', nextTrack)
 
 #___________________________________________________________________________________________________ renameSelected
     @classmethod
@@ -298,14 +320,11 @@ class TrackwayManager(object):
 #___________________________________________________________________________________________________ createTrack
     @classmethod
     def createTrack(cls, name, site, level, trackway, note):
-        r = 50
+        r = 50 # important:  this allows scale to be read in terms of (fractional) meters
         a = 2.0*r
         y = (0, 1, 0)
-        c = cmds.polyCylinder(r=r, h=5, sx=40, sy=1, sz=1, ax=y, rcp=0, cuv=2, ch=1, n=name)[0]
-        if name[0] == 'M':
-            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, c)
-        else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, c)
+        c = cmds.polyCylinder(r=r, h=5, sx=40, sy=1, sz=1, ax=y, rcp=0, cuv=2, ch=1, n='track0')[0]
+
         cmds.addAttr(longName=cls._PREV_ATTR,     attributeType='message')
         cmds.addAttr(longName=cls._NAME_ATTR,     dataType='string')
         cmds.addAttr(longName=cls._SITE_ATTR,     dataType='string')
@@ -314,53 +333,59 @@ class TrackwayManager(object):
         cmds.addAttr(longName=cls._NOTE_ATTR,     dataType='string')
         cmds.addAttr(longName=cls._SNAPSHOT_ATTR, dataType='string')
 
-        cmds.setAttr(name + '.' + cls._NAME_ATTR, name, type='string')
-
         p = cmds.polyPrism(l=4, w=a, ns=3, sh=1, sc=0, ax=y, cuv=3, ch=1, n='pointer')[0]
         cmds.rotate(0.0, -90.0, 0.0)
         cmds.scale(1.0/math.sqrt(3.0), 1.0, 1.0)
         cmds.move(0, 5, a/6.0)
-        if name[1] == 'R':
-            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, p)
-        else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, p)
 
         cmds.setAttr(p + '.overrideEnabled', 1)
         cmds.setAttr(p + '.overrideDisplayType', 2)
 
-        cmds.parent(p, name)
+        cmds.parent(p, c)
         cls.setMetadata(c, site, level, trackway, note)
+        cls.setName(c, name)
         cmds.select(c)
         cmds.setAttr(c + '.translateY', lock=1)
         cmds.setAttr(c + '.rotateX', lock=1)
         cmds.setAttr(c + '.rotateZ', lock=1)
         cmds.setAttr(c + '.scaleY', lock=1)
-        return cmds.rename(c, site + '_' + level + '_' + trackway + '_' + name)
+
+        return c
+
 #___________________________________________________________________________________________________ initialTrack
     @classmethod
     def initialize(cls, site, level, trackway, note):
-        pl1 = cls.createTrack('LP1', site, level, trackway, note)
-        pr1 = cls.createTrack('RP1', site, level, trackway, note)
-        ml1 = cls.createTrack('LM1', site, level, trackway, note)
-        mr1 = cls.createTrack('RM1', site, level, trackway, note)
-        pl2 = cls.createTrack('LP2', site, level, trackway, note)
-        pr2 = cls.createTrack('RP2', site, level, trackway, note)
-        ml2 = cls.createTrack('LM2', site, level, trackway, note)
-        mr2 = cls.createTrack('RM2', site, level, trackway, note)
+        lp1 = cls.createTrack('LP1', site, level, trackway, note)
+        rp1 = cls.createTrack('RP1', site, level, trackway, note)
+        lm1 = cls.createTrack('LM1', site, level, trackway, note)
+        rm1 = cls.createTrack('RM1', site, level, trackway, note)
+        lp2 = cls.createTrack('LP2', site, level, trackway, note)
+        rp2 = cls.createTrack('RP2', site, level, trackway, note)
+        lm2 = cls.createTrack('LM2', site, level, trackway, note)
+        rm2 = cls.createTrack('RM2', site, level, trackway, note)
 
-        cls.setPosition(pl1, (200.0, 0.0, 100.0))
-        cls.setPosition(pr1, (100.0, 0.0, 100.0))
-        cls.setPosition(ml1, (200.0, 0.0, 200.0))
-        cls.setPosition(mr1, (100.0, 0.0, 200.0))
-        cls.setPosition(pl2, (200.0, 0.0, 400.0))
-        cls.setPosition(pr2, (100.0, 0.0, 400.0))
-        cls.setPosition(ml2, (200.0, 0.0, 500.0))
-        cls.setPosition(mr2, (100.0, 0.0, 500.0))
+        cls.setPosition(lp1, (200.0, 0.0, 100.0))
+        cls.setPosition(rp1, (100.0, 0.0, 100.0))
+        cls.setPosition(lm1, (200.0, 0.0, 200.0))
+        cls.setPosition(rm1, (100.0, 0.0, 200.0))
+        cls.setPosition(lp2, (200.0, 0.0, 400.0))
+        cls.setPosition(rp2, (100.0, 0.0, 400.0))
+        cls.setPosition(lm2, (200.0, 0.0, 500.0))
+        cls.setPosition(rm2, (100.0, 0.0, 500.0))
 
-        cls.link(pl1, pl2)
-        cls.link(pr1, pr2)
-        cls.link(ml1, ml2)
-        cls.link(mr1, mr2)
+        cls.setDimensions(lp1, 0.4, 0.6)
+        cls.setDimensions(lp2, 0.4, 0.6)
+        cls.setDimensions(rp1, 0.4, 0.6)
+        cls.setDimensions(rp2, 0.4, 0.6)
+        cls.setDimensions(lm1, 0.25, 0.2)
+        cls.setDimensions(lm2, 0.25, 0.2)
+        cls.setDimensions(rm1, 0.25, 0.2)
+        cls.setDimensions(rm2, 0.25, 0.2)
+
+        cls.link(lp1, lp2)
+        cls.link(rp1, rp2)
+        cls.link(lm1, lm2)
+        cls.link(rm1, rm2)
 
 #===================================================================================================
 #___________________________________________________________________________________________________ link / unlink
@@ -455,6 +480,8 @@ class TrackwayManager(object):
     @classmethod
     def selectAll(cls):
         series = cls.getSeries()
+        if series:
+            print "series consists of %s tracks" % len(series)
         cmds.select(series)
 
 #___________________________________________________________________________________________________ selectPrecursors
@@ -496,6 +523,7 @@ class TrackwayManager(object):
         selected = cls.getSelectedTracks()
         cls.unlinkTracks()
         cmds.delete(selected)
+
 #___________________________________________________________________________________________________ initializeCamera
     @classmethod
     def initializeCamera(cls):
@@ -511,7 +539,7 @@ class TrackwayManager(object):
 
 #___________________________________________________________________________________________________ focusOnTrack
     @classmethod
-    def focusOnTrack(cls, camera, track):
+    def focusOnTrack(cls,track, camera='cadenceCam'):
         cls.initializeCamera()
         p = cls.getPosition(track)
         height = cmds.xform(camera, query=True, translation=True)[1]
