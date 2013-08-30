@@ -2,7 +2,6 @@
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
-import sys
 import os
 
 #___________________________________________________________________________________________________ CadenceEnvironment
@@ -11,6 +10,8 @@ class CadenceEnvironment(object):
 
 #===================================================================================================
 #                                                                                       C L A S S
+
+    BASE_UNIX_TIME = 1373932675
 
     _ENV_PATH = os.path.dirname(os.path.abspath(__file__))
 
