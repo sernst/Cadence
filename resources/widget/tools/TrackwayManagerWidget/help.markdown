@@ -64,6 +64,6 @@ Selected Tracks'.  Confirm by then navigating to previous and next tracks.
 
 A number of tracks can be selected and renamed consecutively by selecting them in the desired order
 then entering the new track name for the first track in the sequence and pressing 'Rename Selected
-Tracks'
+Tracks'.
 
 
