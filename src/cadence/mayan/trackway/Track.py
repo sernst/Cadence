@@ -99,10 +99,6 @@ class Track(object):
     def setTrackProp(self, p, value):
         enum = self._getTrackPropEnum(p) if isinstance(p, basestring) else p
 
-        print "n setTrackProp for p = %s, enum.name = %s, and enum.type = %s, an value = %s" % (p,
-                                                                                                enum.name,
-                                                                                                enum.type,
-                                                                                                value)
         if not self.hasProp(enum.name):
             if enum.type == 'string':
                 cmds.addAttr(ln=p, dt=enum.type)
@@ -246,7 +242,7 @@ class Track(object):
                     return Track(node)
         return None
 
-#___________________________________________________________________________________________________ getNext
+#___________________________________________________________________________________________________ getNextTrack
     def getNextTrack(self):
         connections = cmds.listConnections(self.node + '.message', d=True, p=True)
         if connections:
@@ -269,7 +265,7 @@ class Track(object):
             return
         cmds.disconnectAttr(p.node + '.message', self.node + '.' + TrackPropEnum.PREV_TRACK.name)
 
-#___________________________________________________________________________________________________ setFocus
+#___________________________________________________________________________________________________ setCadenceCamFocus
     def setCadenceCamFocus(self):
         if not cmds.objExists('CadenceCam'):
             self.initializeCadenceCam()
