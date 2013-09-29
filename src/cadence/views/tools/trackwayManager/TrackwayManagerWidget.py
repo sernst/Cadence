@@ -70,7 +70,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________
     def getAllTracks(self):
-        nodes = cmds.ls(transforms=True, exactType='transform')
+        nodes = cmds.ls('track*')
 
         if nodes is None:
             return None
@@ -400,7 +400,6 @@ class TrackwayManagerWidget(PyGlassWidget):
             width = s.getWidth()
             self.widthLEdit.setText(   "%.2f" % width)
             self.lengthLEdit.setText(  "%.2f" % s.getLength())
-            print "in refresh, rotation = %s"  % s.getRotation()
             self.rotationLEdit.setText("%.2f" % s.getRotation())
             self.noteTEdit.setText(s.getTrackProp(TrackPropEnum.NOTE))
 
@@ -409,12 +408,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
              return None
-        #trackwayProps = self.getTrackwayPropertiesFromUI()
-        #trackProps = self.getTrackProperties()
-        name = self.rightLeftLEdit.text() + self.manusPesLEdit.text() + self.numberLEdit.text()
+        name = self.getNameFromUI()
         for track in selectedTracks:
              track.setName(name)
-             name = self.incrementName(name)
+             name = Track.incrementName(name)
 
 #___________________________________________________________________________________________________ selectSuccessorTracks
     def selectSuccessorTracks(self):
