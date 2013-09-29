@@ -4,7 +4,9 @@ Building Trackways
 ------------------
 When starting a new trackway series:
 
-1) First fill out the site, level, trackway such as BEB 515 S18. Push SET.
+1) Fill out the trackway data (Community, Site, Year, Sector, Level, and Trackway).
+
+2) Push Set Select
 
 2) Add any notes that will associated by default with the series. Note that the notes for
 any specific track can be overwritten to annotate any particlar track.

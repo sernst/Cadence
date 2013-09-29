@@ -27,7 +27,7 @@ class CadenceMainWindow(PyGlassWindow):
             title='Cadence Toolset',
             **kwargs
         )
-        self.setMinimumSize(1100, 200)
+        self.setMinimumSize(1100, 600)
         self.setContentsMargins(0, 0, 0, 0)
 
         widget = self._createCentralWidget()
