@@ -14,6 +14,7 @@ class TrackPropEnum(object):
     transform attributes such as scale, rotation, or translation."""
 
 #===================================================================================================
+#                                                                                       C L A S S
 
     COMM     = TRACK_PROP_NT('community', 'string')
     SITE     = TRACK_PROP_NT('site',      'string')

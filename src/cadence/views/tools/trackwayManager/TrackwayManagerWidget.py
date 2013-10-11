@@ -234,68 +234,69 @@ class TrackwayManagerWidget(PyGlassWidget):
         # load up a new dictionary for this
 
         lp1 = Track(Track.createNode())
-        lp1.setName('LP1')
-        lp1.setX(200.0)
-        lp1.setZ(100.0)
-        lp1.setWidth(0.4)
-        lp1.setLength(0.6)
+        lp1.name = 'LP1'
+        lp1.x = 200.0
+        lp1.z = 100.0
+        lp1.width = 0.4
+        lp1.length = 0.6
 
         rp1 = Track(Track.createNode())
-        rp1.setName('RP1')
-        rp1.setX(100.0)
-        rp1.setZ(100.0)
-        rp1.setWidth(0.4)
-        rp1.setLength(0.6)
+        rp1.name = 'RP1'
+        rp1.x = 100.0
+        rp1.z = 100.0
+        rp1.width = 0.4
+        rp1.length = 0.6
 
         lm1 = Track(Track.createNode())
-        lm1.setName('LM1')
-        lm1.setX(200.0)
-        lm1.setZ(200.0)
-        lm1.setWidth(0.25)
-        lm1.setLength(0.2)
+        lm1.name = 'LM1'
+        lm1.x = 200.0
+        lm1.z = 200.0
+        lm1.width = 0.25
+        lm1.length = 0.2
 
         rm1 = Track(Track.createNode())
-        rm1.setName('RM1')
-        rm1.setX(100.0)
-        rm1.setZ(200.0)
-        rm1.setWidth(0.25)
-        rm1.setLength(0.2)
+        rm1.name = 'RM1'
+        rm1.x = 100.0
+        rm1.z = 200.0
+        rm1.width = 0.25
+        rm1.length = 0.2
 
         lp2 = Track(Track.createNode())
-        lp2.setName('LP2')
-        lp2.setX(200.0)
-        lp2.setZ(400.0)
-        lp2.setWidth(0.4)
-        lp2.setLength(0.6)
+        lp2.name = 'LP2'
+        lp2.x = 200.0
+        lp2.z = 400.0
+        lp2.width = 0.4
+        lp2.length = 0.6
 
         rp2 = Track(Track.createNode())
-        rp2.setName('RP2')
-        rp2.setX(100.0)
-        rp2.setZ(400.0)
-        rp2.setWidth(0.4)
-        rp2.setLength(0.6)
+        rp2.name = 'RP2'
+        rp2.x = 100.0
+        rp2.z = 400.0
+        rp2.width = 0.4
+        rp2.length = 0.6
 
         lm2 = Track(Track.createNode())
-        lm2.setName('LM2')
-        lm2.setX(200.0)
-        lm2.setZ(500.0)
-        lm2.setWidth(0.25)
-        lm2.setLength(0.2)
+        lm2.name = 'LM2'
+        lm2.x = 200.0
+        lm2.z = 500.0
+        lm2.width = 0.25
+        lm2.length = 0.2
 
         rm2 = Track(Track.createNode())
-        rm2.setName('RM2')
-        rm2.setX(100.0)
-        rm2.setZ(500.0)
-        rm2.setWidth(0.25)
-        rm2.setLength(0.2)
+        rm2.name = 'RM2'
+        rm2.x = 100.0
+        rm2.z = 500.0
+        rm2.width = 0.25
+        rm2.length = 0.2
 
         lp2.link(lp1)
         rp2.link(rp1)
         lm2.link(lm1)
         rm2.link(rm1)
 
-        cmds.select([lp1.node, rp1.node, lm1.node, rm1.node,
-                     lp2.node, rp2.node, lm2.node, rm2.node])
+        cmds.select([
+            lp1.node, rp1.node, lm1.node, rm1.node,
+            lp2.node, rp2.node, lm2.node, rm2.node] )
 
 #___________________________________________________________________________________________________ addTrack
     def addTrack(self):
@@ -304,12 +305,12 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
         prevTrack = lastTrack.getPrev()
         nextTrack = Track(cmds.duplicate(lastTrack.node)[0])
-        nextName  = Track.incrementName(lastTrack.getName())
-        nextTrack.setName(nextName)
-        dx = lastTrack.getX() - prevTrack.getX()
-        dz = lastTrack.getZ() - prevTrack.getZ()
-        nextTrack.setX(lastTrack.getX() + dx)
-        nextTrack.setZ(lastTrack.getZ() + dz)
+        nextName  = Track.incrementName(lastTrack.name)
+        nextTrack.name = nextName
+        dx = lastTrack.x - prevTrack.x
+        dz = lastTrack.z - prevTrack.z
+        nextTrack.x = lastTrack.x + dx
+        nextTrack.z = lastTrack.z + dz
         nextTrack.link(lastTrack)
         self.refreshUI()
 
@@ -521,8 +522,8 @@ class TrackwayManagerWidget(PyGlassWidget):
              return None
         name = self.getNameFromUI()
         for t in selectedTracks:
-             t.setName(name)
-             name = Track.incrementName(name)
+             t.name = name
+             name   = Track.incrementName(name)
 
 #___________________________________________________________________________________________________ selectSuccessorTracks
     def selectSuccessorTracks(self):

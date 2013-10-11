@@ -6,6 +6,7 @@ from PySide import QtGui
 
 from pyglass.windows.PyGlassWindow import PyGlassWindow
 
+# AS NEEDED: from cadence.models import tracks
 from cadence.views.home.CadenceHomeWidget import CadenceHomeWidget
 from cadence.views.tools.CadenceToolViewerWidget import CadenceToolViewerWidget
 
@@ -22,11 +23,9 @@ class CadenceMainWindow(PyGlassWindow):
             self,
             widgets={
                 'home':CadenceHomeWidget,
-                'toolViewer':CadenceToolViewerWidget
-            },
+                'toolViewer':CadenceToolViewerWidget },
             title='Cadence Toolset',
-            **kwargs
-        )
+            **kwargs )
         self.setMinimumSize(1200,500)
         self.setContentsMargins(0, 0, 0, 0)
 
@@ -37,3 +36,13 @@ class CadenceMainWindow(PyGlassWindow):
         widget.setLayout(layout)
 
         self.setActiveWidget('home')
+
+#===================================================================================================
+#                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _initializeImpl
+    def _initializeImpl(self, *args, **kwargs):
+        # Initialize databases
+        from cadence.models import tracks
+
+        super(CadenceMainWindow, self)._initializeImpl()

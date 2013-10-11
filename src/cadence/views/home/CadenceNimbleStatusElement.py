@@ -22,6 +22,9 @@ class CadenceNimbleStatusElement(PyGlassElement):
     _ACTIVE_LABEL = u'Nimble Connected'
     _ACTIVE_INFO  = u'An active connection exists to a Maya Nimble server'
 
+    _INACTIVE_LABEL = u'Nimble Disabled'
+    _INACTIVE_INFO  = u'Nimble will remain disabled until you initiate a retry'
+
     _FAILED_LABEL = u'Nimble Disconnected'
     _FAILED_INFO  = u'Unable to connect to a Maya Nimble server instance'
 
@@ -37,6 +40,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
         self._timer       = None
         self._activeCheck = False
         self._canceled    = False
+        self._disabled    = False
 
         mainLayout = self._getLayout(self, QtGui.QVBoxLayout)
         self.setContentsMargins(6, 6, 6, 6)
@@ -72,8 +76,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
         """Doc..."""
         if self._colors:
             PyGlassGuiUtils.gradientPainter(
-                self, self.size(), self._colors.light.qColor, self._colors.dark.qColor
-            )
+                self, self.size(), self._colors.light.qColor, self._colors.dark.qColor)
 
 #___________________________________________________________________________________________________ refresh
     def refresh(self):
@@ -81,17 +84,24 @@ class CadenceNimbleStatusElement(PyGlassElement):
             return
         self._activeCheck = True
 
-        try:
-            nimble.cmds.ls()
-            self._colors = ThemeColorBundle(ColorSchemes.GREEN)
-            self._status = True
-            self._label.setText(self._ACTIVE_LABEL)
-            self._info.setText(self._ACTIVE_INFO)
-        except Exception, err:
-            self._colors = ThemeColorBundle(ColorSchemes.RED)
+        if self._disabled:
+            self._colors = ThemeColorBundle(ColorSchemes.GREY)
             self._status = False
-            self._label.setText(self._FAILED_LABEL)
-            self._info.setText(self._FAILED_INFO)
+            self._label.setText(self._INACTIVE_LABEL)
+            self._info.setText(self._INACTIVE_INFO)
+        else:
+            try:
+                nimble.cmds.ls()
+                self._colors = ThemeColorBundle(ColorSchemes.GREEN)
+                self._status = True
+                self._label.setText(self._ACTIVE_LABEL)
+                self._info.setText(self._ACTIVE_INFO)
+            except Exception, err:
+                print 'FAILED: Nimble connection attempt'
+                self._colors = ThemeColorBundle(ColorSchemes.RED)
+                self._status = False
+                self._label.setText(self._FAILED_LABEL)
+                self._info.setText(self._FAILED_INFO)
 
         self._label.setStyleSheet(self._LABEL_STYLE.replace('#C#', self._colors.strong.web))
         self._info.setStyleSheet(self._INFO_STYLE.replace('#C#', self._colors.weak.web))
@@ -100,7 +110,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
 
         self.repaint()
 
-        if not self._status:
+        if not self._status and not self._disabled:
             QtCore.QTimer.singleShot(10000, self._handleTimer)
         self._activeCheck = False
 
@@ -120,9 +130,13 @@ class CadenceNimbleStatusElement(PyGlassElement):
 
 #___________________________________________________________________________________________________ _handleRetryClick
     def _handleRetryClick(self):
+        self._disabled = False
         self.refresh()
 
 #___________________________________________________________________________________________________ _handleCancelClick
     def _handleCancelClick(self):
-        self._canceled = True
-        self.setVisible(False)
+        if self._disabled:
+            return
+
+        self._disabled = True
+        self.refresh()
