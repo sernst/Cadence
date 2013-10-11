@@ -9,6 +9,7 @@ from sqlalchemy import UnicodeText
 
 from pyaid.ArgsUtils import ArgsUtils
 
+# AS NEEDED: from cadence.mayan.trackway.Track import Track
 from cadence.models.tracks.TracksDefault import TracksDefault
 
 #___________________________________________________________________________________________________ Tracks_Track
@@ -45,6 +46,11 @@ class Tracks_Track(TracksDefault):
 
 #===================================================================================================
 #                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ createTrack
+    def createTrack(self, node =None):
+        from cadence.mayan.trackway.Track import Track
+        return Track(node=node, trackUid=self.id, trackData=self.toDict())
 
 #___________________________________________________________________________________________________ fromDict
     def fromDict(self, data):

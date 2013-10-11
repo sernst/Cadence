@@ -92,6 +92,14 @@ class Track(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ generateNode
+    def generateNode(self):
+        if self.node is not None:
+            return
+
+        self.node = self.createNode()
+        self.setProperties(self._trackData)
+
 #___________________________________________________________________________________________________ nodeHasAttribute
     def nodeHasAttribute(self, attribute):
         if self.node is None:
@@ -120,6 +128,10 @@ class Track(object):
 
 #___________________________________________________________________________________________________ setProperty
     def setProperty(self, p, value):
+        if p == 'id':
+            self.trackUid = p
+            return
+
         enum = self._getTrackPropEnum(p) if isinstance(p, basestring) else p
         name = enum.name
 
@@ -144,7 +156,7 @@ class Track(object):
             return self._trackData
 
         properties = Reflection.getReflectionList(TrackPropEnum)
-        dictionary = dict()
+        dictionary = dict(id=self.trackUid)
         for p in properties:
             name = p.name
             value = self.getProperty(p.name)
@@ -229,6 +241,11 @@ class Track(object):
             self.initializeCadenceCam()
         height = cmds.xform('CadenceCam', query=True, translation=True)[1]
         cmds.move(self.x, height, self.z, 'CadenceCam', absolute=True)
+
+#___________________________________________________________________________________________________ importData
+    def importData(self, trackData):
+        self._trackData = trackData
+        self.saveData()
 
 #___________________________________________________________________________________________________ loadData
     def loadData(self):
@@ -351,7 +368,23 @@ class Track(object):
 
         if mayaAttrName is None:
             mayaAttrName = enum.name
-        cmds.setAttr(self.node + '.' + mayaAttrName, value, type=enum.type)
+
+        propType = enum.type
+        if propType == 'float':
+            propType = None
+
+        try:
+            if propType is None:
+                cmds.setAttr(self.node + '.' + mayaAttrName, value)
+            else:
+                cmds.setAttr(self.node + '.' + mayaAttrName, value, type=propType)
+        except Exception, err:
+            print 'ERROR: Track._setTrackAttr'
+            print '\tNODE: ' + str(self.node)
+            print '\tATTR: ' + str(mayaAttrName)
+            print '\tTYPE: ' + str(propType)
+            print '\tVALUE: ' + str(value) + ' | ' + str(type(value))
+            raise
 
 #___________________________________________________________________________________________________ _getTrackPropEnum
     @classmethod
