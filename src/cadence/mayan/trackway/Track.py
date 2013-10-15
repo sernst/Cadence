@@ -10,6 +10,7 @@ from pyaid.reflection.Reflection import Reflection
 import nimble
 from nimble import cmds
 
+from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
 from cadence.models.tracks.Tracks_Track import Tracks_Track
@@ -293,41 +294,18 @@ class Track(object):
         non-selectable (reference) and the marker is prohibited from changing y (elevation) or
         rotation about either x or z.  The color of the cylinder indicates manus versus pes, and
         the color of the pointer on top of the cylinder indicates left versus right."""
-        r = 50
-        a = 2.0*r
-        y = (0, 1, 0)
-        c = cmds.polyCylinder(r=r, h=5, sx=40, sy=1, sz=1, ax=y, rcp=0, cuv=2, ch=1, n='track0')[0]
 
-        bcmds = nimble.createCommandsBatch()
+        trackProps = []
+        for enum in Reflection.getReflectionList(TrackPropEnum):
+            trackProps.append({'name':enum.name, 'type':enum.type})
 
-        for item in Reflection.getReflectionList(TrackPropEnum):
-            if item.type == 'string':
-                bcmds.addAttr(ln=item.name, dt=item.type)
-            else:
-                bcmds.addAttr(ln=item.name, at=item.type)
-        bcmds.sendCommandBatch()
+        path = CadenceEnvironment.getResourceScriptPath('createTrackNode.py', isFile=True)
+        conn = nimble.getConnection()
+        out  = conn.runPythonScriptFile(path, trackProps=trackProps)
+        if not out.success:
+            print 'CREATE NODE ERROR:', out.error
 
-        p = cmds.polyPrism(l=4, w=a, ns=3, sh=1, sc=0, ax=y, cuv=3, ch=1, n='pointer')[0]
-
-        bcmds = nimble.createCommandsBatch()
-
-        bcmds.rotate(0.0, -90.0, 0.0)
-        bcmds.scale(1.0/math.sqrt(3.0), 1.0, 1.0)
-        bcmds.move(0, 5, a/6.0)
-
-        bcmds.setAttr(p + '.overrideEnabled', 1)
-        bcmds.setAttr(p + '.overrideDisplayType', 2)
-
-        bcmds.parent(p, c)
-        bcmds.select(c)
-        bcmds.setAttr(c + '.translateY', l=1)
-        bcmds.setAttr(c + '.rotateX',    l=1)
-        bcmds.setAttr(c + '.rotateZ',    l=1)
-        bcmds.setAttr(c + '.scaleY',     l=1)
-
-        bcmds.sendCommandBatch()
-
-        return c
+        return out.result['name']
 
 #___________________________________________________________________________________________________ incrementName
     @classmethod

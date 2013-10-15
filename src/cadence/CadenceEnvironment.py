@@ -1,8 +1,10 @@
 # CadenceEnvironment.py
-# (C)2012 http://cadence.threeaddone.com
+# (C)2012-2013 http://cadence.threeaddone.com
 # Scott Ernst
 
 import os
+
+from pyaid.file.FileUtils import FileUtils
 
 #___________________________________________________________________________________________________ CadenceEnvironment
 class CadenceEnvironment(object):
@@ -29,6 +31,12 @@ class CadenceEnvironment(object):
     @classmethod
     def getResourcePath(cls, folder =None, filename =None):
         return cls._createAbsolutePath('resources', folder, filename)
+
+#___________________________________________________________________________________________________ getResourceScriptPath
+    @classmethod
+    def getResourceScriptPath(cls, *args, **kwargs):
+        return FileUtils.createPath(
+            cls._ENV_PATH, '..', '..', 'resources', 'scripts', *args, **kwargs)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
