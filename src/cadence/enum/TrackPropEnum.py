@@ -28,6 +28,7 @@ class TrackPropEnum(object):
     NEXT     = TRACK_PROP_NT('next',      'string')
     SNAPSHOT = TRACK_PROP_NT('snapshot',  'string')
     INDEX    = TRACK_PROP_NT('index',     'string')
+    ID       = TRACK_PROP_NT('id',        'string')
     WIDTH    = TRACK_PROP_NT('width',     'float')
     LENGTH   = TRACK_PROP_NT('length',    'float')
     ROTATION = TRACK_PROP_NT('rotation',  'float')

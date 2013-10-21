@@ -51,10 +51,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.addBtn.clicked.connect(self.addTrack)
 
         self.renameBtn.clicked.connect(self.renameSelectedTracks)
-        self.selectAllTracksBtn.clicked.connect(self.selectAllTracks)
-        self.exportSelectedBtn.clicked.connect(self.exportSelectedTracks)
+        self.selectTrackwayBtn.clicked.connect(self.selectAllTracks)
 
-        self.testBtn.clicked.connect(self.test)
         self.initBtn.clicked.connect(self.initializeTrackway)
 
         self.adjustSize()
@@ -70,7 +68,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ getAllTracks
     def getAllTracks(self):
-        nodes = cmds.ls('track*')
+        nodes = cmds.ls('track*') # presumes object is a track node iff name starts with 'track'
 
         if nodes is None:
             return None
@@ -98,8 +96,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             return None
         t = selectedTracks[0]
-        while t.getPrev():
-            t = t.getPrev()
+        while t.prev is not None:
+            t = t.prev
         return t
 
 #___________________________________________________________________________________________________ getLastTrack
@@ -108,8 +106,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             return None
         t = selectedTracks[-1]
-        while t.getNext():
-            t = t.getNext()
+        while t.next is not None:
+            t = t.next
         return t
 
 #___________________________________________________________________________________________________ getFirstSelectedTrack
@@ -118,8 +116,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             return None
         s = selectedTracks[0]
-        while s.getPrev() in selectedTracks:
-            s = s.getPrev()
+        while s.prev in selectedTracks:
+            s = s.prev
         return s
 
 #___________________________________________________________________________________________________ getLastSelectedTrack
@@ -128,8 +126,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             return None
         s = selectedTracks[-1]
-        while s.getNext() in selectedTracks:
-            s = s.getNext(s)
+        while s.next in selectedTracks:
+            s = s.next
         return s
 
  #__________________________________________________________________________________________________ getTrackSeries
@@ -138,7 +136,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = self.getFirstTrack()
         while t:
             series.append(t)
-            t = t.getNext()
+            t = t.next
         return series
 
 #___________________________________________________________________________________________________ selectTrack
@@ -160,7 +158,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = self.getFirstSelectedTrack()
         if t is None:
             return
-        p = t.getPrev()
+        p = t.prev
         if p:
             self.selectTrack(p)
         else:
@@ -173,7 +171,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = self.getLastSelectedTrack()
         if t is None:
             return
-        n = t.getNext()
+        n = t.next
         if n:
             self.selectTrack(n)
         else:
@@ -208,8 +206,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         s1 = self.getFirstSelectedTrack()
         s2 = self.getLastSelectedTrack()
-        p = s1.getPrev()
-        n = s2.getNext()
+        p = s1.prev
+        n = s2.next
 
         if p and n:              # if track(s) to be unlinked are within
             s1.unlink()          # disconnect previous track from first selected track
@@ -225,7 +223,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             s.unlink()
         self.refreshUI()
 
-#___________________________________________________________________________________________________ _initializeTrackway
+#___________________________________________________________________________________________________ initializeTrackway
     def initializeTrackway(self):
         """  This creates the initial two tracks for each of the four series of a trackway.
         Select the eight initial tracks and then set series information"""
@@ -303,8 +301,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         lastTrack = self.getLastTrack()
         if lastTrack is None:
             return
-        prevTrack = lastTrack.getPrev()
-        nextTrack = Track(cmds.duplicate(lastTrack.node)[0])
+        prevTrack = lastTrack.prev
+        nextTrack = Track(cmds.duplicate(lastTrack.node)[0]) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         nextName  = Track.incrementName(lastTrack.name)
         nextTrack.name = nextName
         dx = lastTrack.x - prevTrack.x
@@ -316,61 +314,60 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ getNamefromUI
     def getNameFromUI(self):
-        return self.rightLeftLEdit.text() + self.manusPesLEdit.text() + self.numberLEdit.text()
+        return self.rightLeftLE.text() + self.manusPesLE.text() + self.numberLE.text()
 
 #___________________________________________________________________________________________________ getTrackPropertiesFromUI
-    def getPropertiesFromUI(self):
-        """This returns a dictionary of only non-empty attribute-value pairs from the UI."""
-
+    def getTrackwayPropertiesFromUI(self):
         dictionary = dict()
 
-        dictionary[TrackPropEnum.COMM.name]     = self.communityLEdit.text()
-        dictionary[TrackPropEnum.SITE.name]     = self.siteLEdit.text()
-        dictionary[TrackPropEnum.YEAR.name]     = self.yearLEdit.text()
-        dictionary[TrackPropEnum.SECTOR.name]   = self.sectorLEdit.text()
-        dictionary[TrackPropEnum.LEVEL.name]    = self.levelLEdit.text()
-        dictionary[TrackPropEnum.TRACKWAY.name] = self.trackwayLEdit.text()
-        dictionary[TrackPropEnum.NAME.name]     = self.getNameFromUI()
-        dictionary[TrackPropEnum.INDEX.name]    = self.indexLEdit.text()
-        dictionary[TrackPropEnum.NOTE.name]     = self.noteTEdit.toPlainText()
+        dictionary[TrackPropEnum.COMM.name]     = self.communityLE.text()
+        dictionary[TrackPropEnum.SITE.name]     = self.siteLE.text()
+        dictionary[TrackPropEnum.YEAR.name]     = self.yearLE.text()
+        dictionary[TrackPropEnum.SECTOR.name]   = self.sectorLE.text()
+        dictionary[TrackPropEnum.LEVEL.name]    = self.levelLE.text()
+        dictionary[TrackPropEnum.TRACKWAY.name] = self.trackwayLE.text()
+        return dictionary
 
-        v = self.widthLEdit.text()
+#___________________________________________________________________________________________________ getTrackPropertiesFromUI
+    def getTrackPropertiesFromUI(self):
+        dictionary = self.getTrackwayPropertiesFromUI() # first get the trackway properties
+        # then add to the dictionary the specifics of a given track
+        dictionary[TrackPropEnum.NAME.name]  = self.getNameFromUI()
+        dictionary[TrackPropEnum.INDEX.name] = self.indexLE.text()
+        dictionary[TrackPropEnum.ID.name]    = self.idLE.text()
+        dictionary[TrackPropEnum.NOTE.name]  = self.noteTE.toPlainText()
+
+        v = self.widthLE.text()
         if v != '':
             dictionary[TrackPropEnum.WIDTH.name] = float(v)
-
-        v = self.widthUncertaintyLEdit.text()
+        v = self.widthUncertaintyLE.text()
         if v != '':
             dictionary[TrackPropEnum.WIDTH_UNCERTAINTY.name] = float(v)
-
-        v = self.widthMeasuredLEdit.text()
+        v = self.widthMeasuredLE.text()
         if v != '':
             dictionary[TrackPropEnum.WIDTH_MEASURED.name] = float(v)
 
-        v = self.lengthLEdit.text()
+        v = self.lengthLE.text()
         if v != '':
             dictionary[TrackPropEnum.LENGTH.name] = float(v)
-
-        v = self.lengthUncertaintyLEdit.text()
+        v = self.lengthUncertaintyLE.text()
         if v != '':
             dictionary[TrackPropEnum.LENGTH_UNCERTAINTY.name] = float(v)
-
-        v = self.lengthMeasuredLEdit.text()
+        v = self.lengthMeasuredLE.text()
         if v != '':
             dictionary[TrackPropEnum.LENGTH_MEASURED.name] = float(v)
 
-        v = self.rotationLEdit.text()
+        v = self.rotationLE.text()
         if v != '':
             dictionary[TrackPropEnum.ROTATION.name] = float(v)
-
-        v = self.rotationUncertaintyLEdit.text()
+        v = self.rotationUncertaintyLE.text()
         if v != '':
             dictionary[TrackPropEnum.ROTATION_UNCERTAINTY.name] = float(v)
 
-        v = self.xLEdit.text()
+        v = self.xLE.text()
         if v != '':
             dictionary[TrackPropEnum.X.name] = float(v)
-
-        v = self.zLEdit.text()
+        v = self.zLE.text()
         if v != '':
             dictionary[TrackPropEnum.Z.name] = float(v)
 
@@ -382,49 +379,42 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             return
 
-        dictionary = dict()
-        if len(selectedTracks) > 1:
-            dictionary[TrackPropEnum.COMM.name]     = self.communityLEdit.text()
-            dictionary[TrackPropEnum.SITE.name]     = self.siteLEdit.text()
-            dictionary[TrackPropEnum.YEAR.name]     = self.yearLEdit.text()
-            dictionary[TrackPropEnum.SECTOR.name]   = self.sectorLEdit.text()
-            dictionary[TrackPropEnum.LEVEL.name]    = self.levelLEdit.text()
-            dictionary[TrackPropEnum.TRACKWAY.name] = self.trackwayLEdit.text()
-            dictionary[TrackPropEnum.NOTE.name]     = self.noteTEdit.toPlainText()
-            selectedTracks[0].setProperties(dictionary)
+        if len(selectedTracks) == 1:
+            dictionary = self.getTrackPropertiesFromUI()
         else:
-            dictionary = self.getPropertiesFromUI()
+            dictionary = self.getTrackwayPropertiesFromUI()
         for t in selectedTracks:
             t.setProperties(dictionary)
 
 #___________________________________________________________________________________________________ clearUI
     def clearUI(self):
-        self.communityLEdit.setText('')
-        self.siteLEdit.setText('')
-        self.yearLEdit.setText('')
-        self.sectorLEdit.setText('')
-        self.levelLEdit.setText('')
-        self.trackwayLEdit.setText('')
-        self.rightLeftLEdit.setText('')
-        self.manusPesLEdit.setText('')
-        self.numberLEdit.setText('')
+        self.communityLE.setText('')
+        self.siteLE.setText('')
+        self.yearLE.setText('')
+        self.sectorLE.setText('')
+        self.levelLE.setText('')
+        self.trackwayLE.setText('')
+        self.rightLeftLE.setText('')
+        self.manusPesLE.setText('')
+        self.numberLE.setText('')
 
-        self.widthLEdit.setText('')
-        self.widthUncertaintyLEdit.setText('')
-        self.widthMeasuredLEdit.setText('')
+        self.widthLE.setText('')
+        self.widthUncertaintyLE.setText('')
+        self.widthMeasuredLE.setText('')
 
-        self.lengthLEdit.setText('')
-        self.lengthUncertaintyLEdit.setText('')
-        self.lengthMeasuredLEdit.setText('')
+        self.lengthLE.setText('')
+        self.lengthUncertaintyLE.setText('')
+        self.lengthMeasuredLE.setText('')
 
-        self.rotationLEdit.setText('')
-        self.rotationUncertaintyLEdit.setText('')
+        self.rotationLE.setText('')
+        self.rotationUncertaintyLE.setText('')
 
-        self.indexLEdit.setText('')
-        self.noteTEdit.setPlainText('')
+        self.indexLE.setText('')
+        self.idLE.setText('')
+        self.noteTE.setPlainText('')
 
-        self.xLEdit.setText('')
-        self.zLEdit.setText('')
+        self.xLE.setText('')
+        self.zLE.setText('')
 
         self.firstBtn.setText('First Track')
         self.prevBtn.setText('Prev Track')
@@ -438,80 +428,80 @@ class TrackwayManagerWidget(PyGlassWidget):
         if len(selectedTracks) == 1:
             t = selectedTracks[0]
 
-            s = t.getProperty(TrackPropEnum.COMM)
-            s = '' if s is None else s
-            self.communityLEdit.setText('' if s is None else s)
+            v = t.getProperty(TrackPropEnum.COMM)
+            self.communityLE.setText(u'' if v is None else v)
 
-            s = t.getProperty(TrackPropEnum.SITE)
-            s = '' if s is None else s
-            self.siteLEdit.setText('' if s is None else s)
+            v = t.getProperty(TrackPropEnum.SITE)
+            self.siteLE.setText(u'' if v is None else v)
 
-            s = t.getProperty(TrackPropEnum.YEAR)
-            s = '' if s is None else s
-            self.yearLEdit.setText('' if s is None else s)
+            v = t.getProperty(TrackPropEnum.YEAR)
+            self.yearLE.setText(u'' if v is None else v)
 
-            s = t.getProperty(TrackPropEnum.SECTOR)
-            self.sectorLEdit.setText('' if s is None else s)
+            v = t.getProperty(TrackPropEnum.SECTOR)
+            self.sectorLE.setText(u'' if v is None else v)
 
-            s = t.getProperty(TrackPropEnum.LEVEL)
-            self.levelLEdit.setText('' if s is None else s)
+            v = t.getProperty(TrackPropEnum.LEVEL)
+            self.levelLE.setText(u'' if v is None else v)
 
-            s = t.getProperty(TrackPropEnum.TRACKWAY)
-            self.trackwayLEdit.setText('' if s is None else s)
+            v = t.getProperty(TrackPropEnum.TRACKWAY)
+            self.trackwayLE.setText(u'' if v is None else v)
 
-            s = t.getProperty(TrackPropEnum.NAME)
-            s = '' if s is None else s
-            self.rightLeftLEdit.setText(s[0])
-            self.manusPesLEdit.setText(s[1])
-            self.numberLEdit.setText(s[2:])
+            v = t.getProperty(TrackPropEnum.NAME)
+            v = '' if v is None else v
+            self.rightLeftLE.setText(v[0])
+            self.manusPesLE.setText(v[1])
+            self.numberLE.setText(v[2:])
 
             v = t.getProperty(TrackPropEnum.WIDTH)
-            self.widthLEdit.setText('' if v is None else "%.2f" % v)
+            self.widthLE.setText(u'' if v is None else '%.2f' % v)
 
             v = t.getProperty(TrackPropEnum.WIDTH_MEASURED)
-            self.widthMeasuredLEdit.setText('' if v is None else "%.2f" % v)
+            self.widthMeasuredLE.setText(u'' if v is None else '%.2f' % v)
 
             v = t.getProperty(TrackPropEnum.WIDTH_UNCERTAINTY)
-            self.widthUncertaintyLEdit.setText('' if v is None else "%.2f" % v)
+            self.widthUncertaintyLE.setText(u'' if v is None else '%.2f' % v)
 
             v = t.getProperty(TrackPropEnum.LENGTH)
-            self.lengthLEdit.setText('' if v is None else "%.2f" % v)
+            self.lengthLE.setText(u'' if v is None else '%.2f' % v)
 
             v = t.getProperty(TrackPropEnum.LENGTH_MEASURED)
-            self.lengthMeasuredLEdit.setText('' if v is None else "%.2f" % v)
+            self.lengthMeasuredLE.setText(u'' if v is None else '%.2f' % v)
 
             v = t.getProperty(TrackPropEnum.LENGTH_UNCERTAINTY)
-            self.lengthUncertaintyLEdit.setText('' if v is None else "%.2f" % v)
+            self.lengthUncertaintyLE.setText(u'' if v is None else '%.2f' % v)
 
             v = t.getProperty(TrackPropEnum.ROTATION)
-            self.rotationLEdit.setText('' if v is None else "%.2f" % v)
+            self.rotationLE.setText(u'' if v is None else '%.2f' % v)
 
             v = t.getProperty(TrackPropEnum.ROTATION_UNCERTAINTY)
-            self.rotationUncertaintyLEdit.setText('' if v is None else "%.2f" % v)
+            self.rotationUncertaintyLE.setText(u'' if v is None else '%.2f' % v)
 
-            s = t.getProperty(TrackPropEnum.INDEX)
-            self.indexLEdit.setText(u'' if s is None else s)
+            v = t.getProperty(TrackPropEnum.INDEX)
+            self.indexLE.setText(u'' if v is None else v)
 
-            s = t.getProperty(TrackPropEnum.NOTE)
-            self.noteTEdit.setPlainText(u'' if s is None else s)
+            v = t.getProperty(TrackPropEnum.ID)
+            self.idLE.setText(u'' if v is None else v)
+
+            v = t.getProperty(TrackPropEnum.NOTE)
+            self.noteTE.setPlainText(u'' if v is None else v)
 
             v = t.getProperty(TrackPropEnum.X)
-            self.xLEdit.setText(u'' if v is None else "%.2f" % v)
+            self.xLE.setText(u'' if v is None else '%.2f' % v)
 
             v = t.getProperty(TrackPropEnum.Z)
-            self.zLEdit.setText(u'' if v is None else "%.2f" % v)
+            self.zLE.setText(u'' if v is None else '%.2f' % v)
 
-            s = self.getFirstTrack()
-            self.firstTrackLbl.setText(u'' if s is None else unicode(s))
+            v = self.getFirstTrack()
+            self.firstTrackLbl.setText(u'' if v is None else unicode(v))
 
-            s = t.getPrev()
-            self.prevTrackLbl.setText(u'' if s is None else unicode(s))
+            v = t.prev
+            self.prevTrackLbl.setText(u'' if v is None else unicode(v))
 
-            s = t.getNext()
-            self.nextTrackLbl.setText(u'' if s is None else unicode(s))
+            v = t.next
+            self.nextTrackLbl.setText(u'' if v is None else unicode(v))
 
-            s = self.getLastTrack()
-            self.lastTrackLbl.setText(u'' if s is None else unicode(s))
+            v = self.getLastTrack()
+            self.lastTrackLbl.setText(u'' if v is None else unicode(v))
         else:
             self.clearUI()
 
@@ -531,11 +521,11 @@ class TrackwayManagerWidget(PyGlassWidget):
         if t is None:
             print 'Select at least one track'
             return
-        n = t.getNext()
+        n = t.next
         successorNodes = list()
         while n:
             successorNodes.append(n.node)
-            n = n.getNext()
+            n = n.next
         cmds.select(successorNodes)
 
 #___________________________________________________________________________________________________ selectPrecursorTracks
@@ -544,11 +534,11 @@ class TrackwayManagerWidget(PyGlassWidget):
          if t is None:
              print 'Select at least one track'
              return
-         p = t.getPrev()
+         p = t.prev
          precursorNodes = list()
          while p:
             precursorNodes.append(p.node)
-            p = p.getPrev()
+            p = p.prev
          cmds.select(precursorNodes)
 
 #___________________________________________________________________________________________________ selectTrackSeries
@@ -587,6 +577,9 @@ class TrackwayManagerWidget(PyGlassWidget):
     def exportSelectedTracks(self):
         tracks = self.getSelectedTracks()
 
+        if tracks is None:
+            return
+
         l = list()
         for t in tracks:
             l.append(t.getProperties())
@@ -597,4 +590,4 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ test
     def test(self):
-        pass;
+        pass

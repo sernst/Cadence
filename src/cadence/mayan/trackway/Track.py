@@ -2,8 +2,6 @@
 # (C)2013
 # Kent A. Stevens and Scott Ernst
 
-import math
-
 from pyaid.radix.Base64 import Base64
 from pyaid.reflection.Reflection import Reflection
 
@@ -26,20 +24,66 @@ class Track(object):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, node =None, trackUid =None, trackData =None):
+    def __init__(self, node =None, trackId =None, trackData =None):
         """ Creates a new instance of a Track.  Argument is the string name of the Maya node. """
-        self.node     = node
-        self.trackUid = trackUid
-
+        self.node       = node
+        self._trackId   = trackId
         self._trackData = trackData
+
         if self._trackData is not None:
-            self.trackUid = self._trackData.get('id', trackUid)
-            return
-        elif trackUid is not None:
+            self._trackId = self._trackData.get('id', trackId)
+        elif trackId is not None:
             self.loadData()
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+#___________________________________________________________________________________________________ GS: comm
+    @property
+    def comm(self):
+        return self._getTrackAttr(TrackPropEnum.COMM)
+    @comm.setter
+    def comm(self, value):
+        self._setTrackAttr(TrackPropEnum.COMM, value)
+
+#___________________________________________________________________________________________________ GS: site
+    @property
+    def site(self):
+        return self._getTrackAttr(TrackPropEnum.SITE)
+    @site.setter
+    def site(self, value):
+        self._setTrackAttr(TrackPropEnum.SITE, value)
+
+#___________________________________________________________________________________________________ GS: year
+    @property
+    def year(self):
+        return self._getTrackAttr(TrackPropEnum.YEAR)
+    @year.setter
+    def year(self, value):
+        self._setTrackAttr(TrackPropEnum.YEAR, value)
+
+#___________________________________________________________________________________________________ GS: level
+    @property
+    def level(self):
+        return self._getTrackAttr(TrackPropEnum.LEVEL)
+    @level.setter
+    def level(self, value):
+        self._setTrackAttr(TrackPropEnum.LEVEL, value)
+
+#___________________________________________________________________________________________________ GS: sector
+    @property
+    def sector(self):
+        return self._getTrackAttr(TrackPropEnum.SECTOR)
+    @sector.setter
+    def sector(self, value):
+        self._setTrackAttr(TrackPropEnum.SECTOR, value)
+
+#___________________________________________________________________________________________________ GS: trackway
+    @property
+    def trackway(self):
+        return self._getTrackAttr(TrackPropEnum.TRACKWAY)
+    @trackway.setter
+    def trackway(self, value):
+        self._setTrackAttr(TrackPropEnum.TRACKWAY, value)
 
 #___________________________________________________________________________________________________ GS: name
     @property
@@ -50,6 +94,62 @@ class Track(object):
         self._setTrackAttr(TrackPropEnum.NAME, value)
         if self.node is not None and value:
             self.colorTrack()
+
+#___________________________________________________________________________________________________ GS: note
+    @property
+    def note(self):
+        return self._getTrackAttr(TrackPropEnum.NOTE)
+    @note.setter
+    def note(self, value):
+        self._setTrackAttr(TrackPropEnum.NOTE, value)
+
+#___________________________________________________________________________________________________ GS: prev
+    @property
+    def prev(self):
+        connections = cmds.listConnections(self.node + '.prevTrack', s=True, p=True)
+        if connections:
+            for c in connections:
+                if c.endswith('.message'):
+                    node = c.split('.')[0]
+                    return Track(node)
+        return None
+    @prev.setter
+    def prev(self, value):
+        self._setTrackAttr(TrackPropEnum.PREV, value)
+
+#___________________________________________________________________________________________________ GS: next
+    @property
+    def next(self):
+        connections = cmds.listConnections(self.node + '.message', d=True, p=True)
+        if connections:
+            for c in connections:
+                if c.endswith('.prevTrack'):
+                    node = c.split('.')[0]
+                    return Track(node)
+    @next.setter
+    def next(self, value):
+        self._setTrackAttr(TrackPropEnum.NEXT, value)
+
+#___________________________________________________________________________________________________ GS: snapshot
+    @property
+    def snapshot(self):
+        return self._getTrackAttr(TrackPropEnum.SNAPSHOT)
+    @snapshot.setter
+    def snapshot(self, value):
+        self._setTrackAttr(TrackPropEnum.SNAPSHOT, value)
+
+#___________________________________________________________________________________________________ GS: index
+    @property
+    def index(self):
+        return self._getTrackAttr(TrackPropEnum.INDEX)
+    @index.setter
+    def index(self, value):
+        self._setTrackAttr(TrackPropEnum.INDEX, value)
+
+#___________________________________________________________________________________________________ GS: id
+    @property
+    def id(self):
+        return self._getTrackAttr(TrackPropEnum.ID)
 
 #___________________________________________________________________________________________________ GS: width
     @property
@@ -70,7 +170,7 @@ class Track(object):
 #___________________________________________________________________________________________________ GS: rotation
     @property
     def rotation(self):
-        return self._getTrackAttr(TrackPropEnum.ROTATION, 'rotateY')
+        return self._getTrackAttr(TrackPropEnum.ROTATION, 'ry')
     @rotation.setter
     def rotation(self, value):
         self._setTrackAttr(TrackPropEnum.ROTATION, value, 'ry')
@@ -91,6 +191,39 @@ class Track(object):
     def z(self, value):
         self._setTrackAttr(TrackPropEnum.Z, value, 'translateZ')
 
+#___________________________________________________________________________________________________ GS: widthUncertainty
+    @property
+    def widthUncertainty(self):
+        return self._getTrackAttr(TrackPropEnum.WIDTH_UNCERTAINTY)
+    @widthUncertainty.setter
+    def widthUncertainty(self, value):
+        self._setTrackAttr(TrackPropEnum.WIDTH_UNCERTAINTY, value)
+
+#___________________________________________________________________________________________________ GS: lengthUncertainty
+    @property
+    def lengthUncertainty(self):
+        return self._getTrackAttr(TrackPropEnum.LENGTH_UNCERTAINTY)
+    @lengthUncertainty.setter
+    def lengthUncertainty(self, value):
+        self._setTrackAttr(TrackPropEnum.WIDTH_UNCERTAINTY, value)
+
+#___________________________________________________________________________________________________ GS: widthMeasured
+    @property
+    def widthMeasured(self):
+        return self._getTrackAttr(TrackPropEnum.WIDTH_MEASURED)
+    @widthMeasured.setter
+    def widthMeasured(self, value):
+        self._setTrackAttr(TrackPropEnum.WIDTH_MEASURED, value)
+
+#___________________________________________________________________________________________________ GS: lengthMeasured
+    @property
+    def lengthMeasured(self):
+        return self._getTrackAttr(TrackPropEnum.LENGTH_MEASURED)
+    @lengthMeasured.setter
+    def lengthMeasured(self, value):
+        self._setTrackAttr(TrackPropEnum.LENGTH_MEASURED, value)
+
+
 #===================================================================================================
 #                                                                                     P U B L I C
 
@@ -98,9 +231,31 @@ class Track(object):
     def generateNode(self):
         if self.node is not None:
             return
-
         self.node = self.createNode()
         self.setProperties(self._trackData)
+
+#___________________________________________________________________________________________________ createNode
+    @classmethod
+    def createNode(cls):
+        """Create an elliptical cylinder (disk) plus a superimposed triangular pointer to signify
+        the position, dimensions, and rotation of a manus or pes print.  The cylinder has a
+        diameter of one meter so that the scale in x and z equates to the width and length of the
+        manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The pointer is locked to not be
+        non-selectable (reference) and the marker is prohibited from changing y (elevation) or
+        rotation about either x or z.  The color of the cylinder indicates manus versus pes, and
+        the color of the pointer on top of the cylinder indicates left versus right."""
+
+        trackProps = []
+        for enum in Reflection.getReflectionList(TrackPropEnum):
+            trackProps.append({'name':enum.name, 'type':enum.type})
+
+        path = CadenceEnvironment.getResourceScriptPath('createTrackNode.py', isFile=True)
+        conn = nimble.getConnection()
+        out  = conn.runPythonScriptFile(path, trackProps=trackProps)
+        if not out.success:
+            print 'CREATE NODE ERROR:', out.error
+
+        return out.result['name']
 
 #___________________________________________________________________________________________________ nodeHasAttribute
     def nodeHasAttribute(self, attribute):
@@ -111,43 +266,37 @@ class Track(object):
 #___________________________________________________________________________________________________ getProperty
     def getProperty(self, p):
         enum = self._getTrackPropEnum(p) if isinstance(p, basestring) else p
-        name = enum.name
 
-        if name == TrackPropEnum.NAME.name:
-            return self.name
-        elif name == TrackPropEnum.WIDTH.name:
+        if enum.name == TrackPropEnum.WIDTH.name:
             return self.width
-        elif name == TrackPropEnum.LENGTH.name:
+        elif enum.name == TrackPropEnum.LENGTH.name:
             return self.length
-        elif name == TrackPropEnum.ROTATION.name:
+        elif enum.name == TrackPropEnum.ROTATION.name:
             return self.rotation
-        elif name == TrackPropEnum.X.name:
+        elif enum.name == TrackPropEnum.X.name:
             return self.x
-        elif name == TrackPropEnum.Z.name:
+        elif enum.name == TrackPropEnum.Z.name:
             return self.z
-
         return self._getTrackAttr(enum)
 
 #___________________________________________________________________________________________________ setProperty
     def setProperty(self, p, value):
-        if p == 'id':
-            self.trackUid = p
+        if p == TrackPropEnum.ID.name:
             return
 
         enum = self._getTrackPropEnum(p) if isinstance(p, basestring) else p
-        name = enum.name
 
-        if name == TrackPropEnum.NAME.name:
+        if enum.name == TrackPropEnum.NAME.name:
             self.name = value
-        elif name == TrackPropEnum.WIDTH.name:
+        elif enum.name == TrackPropEnum.WIDTH.name:
             self.width = value
-        elif name == TrackPropEnum.LENGTH.name:
+        elif enum.name == TrackPropEnum.LENGTH.name:
             self.length = value
-        elif name == TrackPropEnum.ROTATION.name:
+        elif enum.name == TrackPropEnum.ROTATION.name:
             self.rotation = value
-        elif name == TrackPropEnum.X.name:
+        elif enum.name == TrackPropEnum.X.name:
             self.x = value
-        elif name == TrackPropEnum.Z.name:
+        elif enum.name == TrackPropEnum.Z.name:
             self.z = value
         else:
             self._setTrackAttr(enum, value)
@@ -158,13 +307,17 @@ class Track(object):
             return self._trackData
 
         properties = Reflection.getReflectionList(TrackPropEnum)
-        dictionary = dict(id=self.trackUid)
+        dictionary = dict()
         for p in properties:
             name = p.name
-            value = self.getProperty(p.name)
+            if name == TrackPropEnum.ID.name:
+                dictionary[p.name] = self._trackId
+                continue
+
+            value = self.getProperty(name)
             if value is not None:
                 dictionary[name] = value
-            print "in getProperties, name = %s, value = %s" % (name, value)
+
         return dictionary
 #___________________________________________________________________________________________________ setProperties
     def setProperties(self, dictionary):
@@ -198,41 +351,25 @@ class Track(object):
     def isLeft(self):
         return self.name[1] == 'L'
 
-#___________________________________________________________________________________________________ getPrev
-    def getPrev(self):
-        connections = cmds.listConnections(self.node + '.prevTrack', s=True, p=True)
-        if connections:
-            for c in connections:
-                if c.endswith('.message'):
-                    node = c.split('.')[0]
-                    return Track(node)
-        return None
-
-#___________________________________________________________________________________________________ getNext
-    def getNext(self):
-        connections = cmds.listConnections(self.node + '.message', d=True, p=True)
-        if connections:
-            for c in connections:
-                if c.endswith('.prevTrack'):
-                    node = c.split('.')[0]
-                    return Track(node)
-        return None
-
 #___________________________________________________________________________________________________ link
-    def link(self, prev):
-        self.unlink()
-        self.setProperty(TrackPropEnum.PREV.name, prev.name)
-        prev.setProperty(TrackPropEnum.NEXT.name, self.name)
-        cmds.connectAttr(prev.node + '.message', self.node + '.prev', f=True)
+    def link(self, prevTrack):
+        """ sets the (string-type) prev and next attributes to reference the name of self and
+        the name of some previousTrack, and also connects the current node's (message-type) prev
+        attribute to previousTrack's node """
+        self.unlink()  # break current next/prev link if present
+        prevTrack.next = self.name
+        self.prev = prevTrack.name
+        cmds.connectAttr(prevTrack.node + '.message', self.node + '.prevTrack', f=True)
 
 #___________________________________________________________________________________________________ unlink
     def unlink(self):
-        prev = self.getPrev()
-        if not prev:
+        p = self.prev
+        if p is None:
             return
-        cmds.disconnectAttr(prev.node + '.message', self.node + '.prevTrack')
-        self.setProperty(TrackPropEnum.PREV.name, '')
-        prev.setProperty(TrackPropEnum.NEXT.name, '')
+        cmds.disconnectAttr(p.node + '.message', self.node + '.prevTrack')
+        if p.nodeHasAttribute(TrackPropEnum.NEXT.name):
+            p.next = "" # uses empty string rather than None since this is a node attribute
+        self.prev = ''
 
 #___________________________________________________________________________________________________ setCadenceCamFocus
     def setCadenceCamFocus(self):
@@ -251,10 +388,10 @@ class Track(object):
 
 #___________________________________________________________________________________________________ loadData
     def loadData(self):
-        if self.trackUid is None:
+        if self._trackId is None:
             return
 
-        entry = self._getTrackEntry(self.trackUid)
+        entry = self._getTrackEntry(self._trackId)
         if entry is None:
             return
 
@@ -264,8 +401,8 @@ class Track(object):
 #___________________________________________________________________________________________________ saveData
     def saveData(self):
         props = self.getProperties()
-        if self.trackUid is not None:
-            entry = self._getTrackEntry(self.trackUid)
+        if self._trackId is not None:
+            entry = self._getTrackEntry(self._trackId)
             entry.fromDict(props)
             entry.session.commit()
             entry.session.close()
@@ -279,34 +416,10 @@ class Track(object):
         session.add(entry)
         session.flush()
 
-        self.trackUid = Base64.to64(entry.i)
-        entry.id = self.trackUid
+        self._trackId = Base64.to64(entry.i)
+        entry.id = self._trackId
         session.commit()
         session.close()
-
-#___________________________________________________________________________________________________ createNode
-    @classmethod
-    def createNode(cls):
-        """Create an elliptical cylinder (disk) plus a superimposed triangular pointer to signify
-        the position, dimensions, and rotation of a manus or pes print.  The cylinder has a
-        diameter of one meter so that the scale in x and z equates to the width and length of the
-        manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The pointer is locked to not be
-        non-selectable (reference) and the marker is prohibited from changing y (elevation) or
-        rotation about either x or z.  The color of the cylinder indicates manus versus pes, and
-        the color of the pointer on top of the cylinder indicates left versus right."""
-
-        trackProps = []
-        for enum in Reflection.getReflectionList(TrackPropEnum):
-            trackProps.append({'name':enum.name, 'type':enum.type})
-
-        path = CadenceEnvironment.getResourceScriptPath('createTrackNode.py', isFile=True)
-        conn = nimble.getConnection()
-        out  = conn.runPythonScriptFile(path, trackProps=trackProps)
-        if not out.success:
-            print 'CREATE NODE ERROR:', out.error
-
-        return out.result['name']
-
 #___________________________________________________________________________________________________ incrementName
     @classmethod
     def incrementName(cls, name):
@@ -321,7 +434,7 @@ class Track(object):
             orthographic=True,
             nearClipPlane=1,
             farClipPlane=100000,
-            orthographicWidth=300)
+            orthographicWidth=500)
         cmds.rename(c[0], 'CadenceCam')
         cmds.rotate(-90, 180, 0)
         cmds.move(0, 100, 0, 'CadenceCam', absolute=True)
@@ -348,15 +461,14 @@ class Track(object):
             self._trackData[enum.name] = value
             return
 
-        if not self.nodeHasAttribute(enum.name):
-            if enum.type == "string":
-                cmds.addAttr(ln=enum.name, dt=enum.type)
-            elif enum.type == "float":
-                cmds.addAttr(ln=enum.name, at=enum.type)
-
         if mayaAttrName is None:
             mayaAttrName = enum.name
 
+        if not self.nodeHasAttribute(mayaAttrName):
+            if enum.type == "string":
+                cmds.addAttr(self.node, ln=mayaAttrName, dt=enum.type)
+            elif enum.type == "float":
+                cmds.addAttr(self.node, ln=mayaAttrName, at=enum.type)
         propType = enum.type
         if propType == 'float':
             propType = None
@@ -384,10 +496,10 @@ class Track(object):
 
 #___________________________________________________________________________________________________ _getTrackEntry
     @classmethod
-    def _getTrackEntry(cls, trackUid):
+    def _getTrackEntry(cls, trackId):
         model   = Tracks_Track.MASTER
         session = model.createSession()
-        result  = session.query(model).filter(model.id == trackUid).first()
+        result  = session.query(model).filter(model.id == trackId).first()
         if result is None:
             session.close()
             return None
@@ -406,5 +518,5 @@ class Track(object):
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):
-        return '[Track %s]' % self.name
+        return '%s' % self.name
 

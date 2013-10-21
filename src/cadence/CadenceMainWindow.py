@@ -44,5 +44,4 @@ class CadenceMainWindow(PyGlassWindow):
     def _initializeImpl(self, *args, **kwargs):
         # Initialize databases
         from cadence.models import tracks
-
         super(CadenceMainWindow, self)._initializeImpl()
