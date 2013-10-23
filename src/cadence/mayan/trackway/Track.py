@@ -247,7 +247,7 @@ class Track(object):
 
         trackProps = []
         for enum in Reflection.getReflectionList(TrackPropEnum):
-            trackProps.append({'name':enum.name, 'type':enum.type})
+            trackProps.append({'name':enum.name, 'type':enum.type, 'intrinsic':enum.intrinsic})
 
         path = CadenceEnvironment.getResourceScriptPath('createTrackNode.py', isFile=True)
         conn = nimble.getConnection()

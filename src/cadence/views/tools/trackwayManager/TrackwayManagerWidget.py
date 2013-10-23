@@ -295,6 +295,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         cmds.select([
             lp1.node, rp1.node, lm1.node, rm1.node,
             lp2.node, rp2.node, lm2.node, rm2.node] )
+        lp1.setCadenceCamFocus()
+        self.setSelectedTracks()
 
 #___________________________________________________________________________________________________ addTrack
     def addTrack(self):
@@ -302,7 +304,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         if lastTrack is None:
             return
         prevTrack = lastTrack.prev
-        nextTrack = Track(cmds.duplicate(lastTrack.node)[0]) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        nextTrack = Track(cmds.duplicate(lastTrack.node)[0])
         nextName  = Track.incrementName(lastTrack.name)
         nextTrack.name = nextName
         dx = lastTrack.x - prevTrack.x
@@ -380,9 +382,11 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         if len(selectedTracks) == 1:
-            dictionary = self.getTrackPropertiesFromUI()
-        else:
-            dictionary = self.getTrackwayPropertiesFromUI()
+            selectedTracks[0].setProperties(self.getTrackPropertiesFromUI())
+            return
+
+        dictionary = self.getTrackwayPropertiesFromUI()
+        dictionary[TrackPropEnum.NOTE.name] = self.noteTE.toPlainText()
         for t in selectedTracks:
             t.setProperties(dictionary)
 
@@ -424,28 +428,30 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ refreshUI
     def refreshUI(self):
         selectedTracks = self.getSelectedTracks()
+        if not selectedTracks:
+            return
+
+        t = selectedTracks[0]
+
+        v = t.getProperty(TrackPropEnum.COMM)
+        self.communityLE.setText(u'' if v is None else v)
+
+        v = t.getProperty(TrackPropEnum.SITE)
+        self.siteLE.setText(u'' if v is None else v)
+
+        v = t.getProperty(TrackPropEnum.YEAR)
+        self.yearLE.setText(u'' if v is None else v)
+
+        v = t.getProperty(TrackPropEnum.SECTOR)
+        self.sectorLE.setText(u'' if v is None else v)
+
+        v = t.getProperty(TrackPropEnum.LEVEL)
+        self.levelLE.setText(u'' if v is None else v)
+
+        v = t.getProperty(TrackPropEnum.TRACKWAY)
+        self.trackwayLE.setText(u'' if v is None else v)
 
         if len(selectedTracks) == 1:
-            t = selectedTracks[0]
-
-            v = t.getProperty(TrackPropEnum.COMM)
-            self.communityLE.setText(u'' if v is None else v)
-
-            v = t.getProperty(TrackPropEnum.SITE)
-            self.siteLE.setText(u'' if v is None else v)
-
-            v = t.getProperty(TrackPropEnum.YEAR)
-            self.yearLE.setText(u'' if v is None else v)
-
-            v = t.getProperty(TrackPropEnum.SECTOR)
-            self.sectorLE.setText(u'' if v is None else v)
-
-            v = t.getProperty(TrackPropEnum.LEVEL)
-            self.levelLE.setText(u'' if v is None else v)
-
-            v = t.getProperty(TrackPropEnum.TRACKWAY)
-            self.trackwayLE.setText(u'' if v is None else v)
-
             v = t.getProperty(TrackPropEnum.NAME)
             v = '' if v is None else v
             self.rightLeftLE.setText(v[0])

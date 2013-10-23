@@ -10,10 +10,13 @@ y       = (0, 1, 0)
 c       = cmds.polyCylinder(r=r, h=5, sx=40, sy=1, sz=1, ax=y, rcp=0, cuv=2, ch=1, n='track0')[0]
 
 for item in kwargs.get('trackProps'):
+    if item['intrinsic']:
+        continue
     if item['type'] == 'string':
         cmds.addAttr(ln=item['name'], dt=item['type'])
     else:
         cmds.addAttr(ln=item['name'], at=item['type'])
+cmds.addAttr(ln='prevTrack', at='message')
 
 p = cmds.polyPrism(l=4, w=a, ns=3, sh=1, sc=0, ax=y, cuv=3, ch=1, n='pointer')[0]
 
