@@ -91,7 +91,8 @@ class CadenceNimbleStatusElement(PyGlassElement):
             self._info.setText(self._INACTIVE_INFO)
         else:
             try:
-                nimble.cmds.ls()
+                # Run an ls command looking for the time node (to prevent large returns)
+                nimble.cmds.ls(exactType='time')
                 self._colors = ThemeColorBundle(ColorSchemes.GREEN)
                 self._status = True
                 self._label.setText(self._ACTIVE_LABEL)

@@ -1,12 +1,15 @@
+import sys
 import xlrd
 
-book = xlrd.open_workbook('C:\\Users\\scott\\Desktop\\A16\\TCH_S_1000.xls')
+book = xlrd.open_workbook('C:\\Users\\sernst\\Desktop\\spreadsheets\\Bdd_Sauro2013_05_17.xls')
 
-print book.nsheets
-print book.sheet_names()
+sheetIndex = 0
+while sheetIndex < book.nsheets:
+    sh = book.sheet_by_index(sheetIndex)
+    print 'SHEET: [NAME: %s] [ROWS: %s] [COLUMNS: %s]' % (sh.name, sh.nrows, sh.ncols)
+    sheetIndex += 1
 
-sh = book.sheet_by_index(0)
-print sh.name, sh.nrows, sh.ncols
+sys.exit()
 
 rows     = []
 col      = []
