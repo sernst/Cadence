@@ -51,12 +51,15 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.addBtn.clicked.connect(self.addTrack)
 
         self.renameBtn.clicked.connect(self.renameSelectedTracks)
-        self.selectTrackwayBtn.clicked.connect(self.selectAllTracks)
+        self.selectSeriesBtn.clicked.connect(self.selectTrackSeries)
 
+        # in EditTrackway tab:
+        self.trackwayCB.activated.connect(self.selectFromTrackwayCB)
         self.initBtn.clicked.connect(self.initializeTrackway)
 
+
         self.adjustSize()
-        self.refreshUI()
+  #      self.refreshUI()
 
 #===================================================================================================
 #                                                                                                     P U B L I C
@@ -510,6 +513,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.lastTrackLbl.setText(u'' if v is None else unicode(v))
         else:
             self.clearUI()
+        self.trackwayCB.addItem(t.trackway)
 
 #___________________________________________________________________________________________________ renameSelectedTracks
     def renameSelectedTracks(self):
@@ -593,6 +597,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         JSON.toFile('../../sandbox/test.json', l)
 
         return tracks
+
+#___________________________________________________________________________________________________ selectFromTrackwayCB
+    def selectFromTrackwayCB(self):
+        print 'selectFromTrackwayCB: clicked'
 
 #___________________________________________________________________________________________________ test
     def test(self):

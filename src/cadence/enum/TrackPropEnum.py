@@ -40,4 +40,4 @@ class TrackPropEnum(object):
     ROTATION_UNCERTAINTY = TRACK_PROP_NT('rotationUncertainty', 'float', False)
     WIDTH_MEASURED       = TRACK_PROP_NT('widthMeasured',       'float', False)
     LENGTH_MEASURED      = TRACK_PROP_NT('lengthMeasured',      'float', False)
-
+    DEPTH_MEASURED       = TRACK_PROP_NT('depthMeasured',       'float', False)
