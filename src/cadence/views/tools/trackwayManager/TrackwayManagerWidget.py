@@ -59,7 +59,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 
         self.adjustSize()
-  #      self.refreshUI()
+        self.refreshUI()
 
 #===================================================================================================
 #                                                                                                     P U B L I C
@@ -84,8 +84,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ getSelectedTracks
     def getSelectedTracks(self):
         selectedNodes = cmds.ls(selection=True, exactType='transform')
-
-        if selectedNodes is None:
+        if len(selectedNodes) == 0:
             return None
         tracks = list()
         for n in selectedNodes:
@@ -333,50 +332,33 @@ class TrackwayManagerWidget(PyGlassWidget):
         dictionary[TrackPropEnum.TRACKWAY.name] = self.trackwayLE.text()
         return dictionary
 
+#___________________________________________________________________________________________________ floatWithDefault
+    def floatLE(self, string, default =0.0):
+        return default if string == '' else float(string)
+
 #___________________________________________________________________________________________________ getTrackPropertiesFromUI
     def getTrackPropertiesFromUI(self):
-        dictionary = self.getTrackwayPropertiesFromUI() # first get the trackway properties
+        d = self.getTrackwayPropertiesFromUI() # first get the trackway properties
         # then add to the dictionary the specifics of a given track
-        dictionary[TrackPropEnum.NAME.name]  = self.getNameFromUI()
-        dictionary[TrackPropEnum.INDEX.name] = self.indexLE.text()
-        dictionary[TrackPropEnum.ID.name]    = self.idLE.text()
-        dictionary[TrackPropEnum.NOTE.name]  = self.noteTE.toPlainText()
+        d[TrackPropEnum.NAME.name]  = self.getNameFromUI()
+        d[TrackPropEnum.INDEX.name] = self.indexLE.text()
+        d[TrackPropEnum.ID.name]    = self.idLE.text()
+        d[TrackPropEnum.NOTE.name]  = self.noteTE.toPlainText()
 
-        v = self.widthLE.text()
-        if v != '':
-            dictionary[TrackPropEnum.WIDTH.name] = float(v)
-        v = self.widthUncertaintyLE.text()
-        if v != '':
-            dictionary[TrackPropEnum.WIDTH_UNCERTAINTY.name] = float(v)
-        v = self.widthMeasuredLE.text()
-        if v != '':
-            dictionary[TrackPropEnum.WIDTH_MEASURED.name] = float(v)
+        d[TrackPropEnum.WIDTH.name]                = self.floatLE(self.widthLE.text())
+        d[TrackPropEnum.WIDTH_UNCERTAINTY.name]    = self.floatLE(self.widthUncertaintyLE.text())
+        d[TrackPropEnum.WIDTH_MEASURED.name]       = self.floatLE(self.widthMeasuredLE.text())
+        d[TrackPropEnum.LENGTH.name]               = self.floatLE(self.lengthLE.text())
+        d[TrackPropEnum.LENGTH_UNCERTAINTY.name]   = self.floatLE(self.lengthUncertaintyLE.text())
+        d[TrackPropEnum.LENGTH_MEASURED.name]      = self.floatLE(self.lengthMeasuredLE.text())
+        d[TrackPropEnum.ROTATION.name]             = self.floatLE(self.rotationLE.text())
+        d[TrackPropEnum.ROTATION_UNCERTAINTY.name] = self.floatLE(self.rotationUncertaintyLE.text())
+        d[TrackPropEnum.DEPTH_MEASURED.name]       = self.floatLE(self.depthMeasuredLE.text())
+        d[TrackPropEnum.DEPTH_UNCERTAINTY.name]    = self.floatLE(self.depthUncertaintyLE.text())
+        d[TrackPropEnum.X.name]                    = self.floatLE(self.xLE.text())
+        d[TrackPropEnum.Z.name]                    = self.floatLE(self.zLE.text())
 
-        v = self.lengthLE.text()
-        if v != '':
-            dictionary[TrackPropEnum.LENGTH.name] = float(v)
-        v = self.lengthUncertaintyLE.text()
-        if v != '':
-            dictionary[TrackPropEnum.LENGTH_UNCERTAINTY.name] = float(v)
-        v = self.lengthMeasuredLE.text()
-        if v != '':
-            dictionary[TrackPropEnum.LENGTH_MEASURED.name] = float(v)
-
-        v = self.rotationLE.text()
-        if v != '':
-            dictionary[TrackPropEnum.ROTATION.name] = float(v)
-        v = self.rotationUncertaintyLE.text()
-        if v != '':
-            dictionary[TrackPropEnum.ROTATION_UNCERTAINTY.name] = float(v)
-
-        v = self.xLE.text()
-        if v != '':
-            dictionary[TrackPropEnum.X.name] = float(v)
-        v = self.zLE.text()
-        if v != '':
-            dictionary[TrackPropEnum.Z.name] = float(v)
-
-        return dictionary
+        return d
 
 #___________________________________________________________________________________________________ setSelected
     def setSelectedTracks(self):
@@ -386,12 +368,12 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         if len(selectedTracks) == 1:
             selectedTracks[0].setProperties(self.getTrackPropertiesFromUI())
-            return
-
-        dictionary = self.getTrackwayPropertiesFromUI()
-        dictionary[TrackPropEnum.NOTE.name] = self.noteTE.toPlainText()
-        for t in selectedTracks:
-            t.setProperties(dictionary)
+        else:
+            dictionary = self.getTrackwayPropertiesFromUI()
+            dictionary[TrackPropEnum.NOTE.name] = self.noteTE.toPlainText()
+            for t in selectedTracks:
+                t.setProperties(dictionary)
+        self.refreshUI()
 
 #___________________________________________________________________________________________________ clearUI
     def clearUI(self):
@@ -416,6 +398,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.rotationLE.setText('')
         self.rotationUncertaintyLE.setText('')
 
+        self.depthMeasuredLE.setText('')
+        self.depthUncertaintyLE.setText('')
+
         self.indexLE.setText('')
         self.idLE.setText('')
         self.noteTE.setPlainText('')
@@ -423,37 +408,18 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.xLE.setText('')
         self.zLE.setText('')
 
-        self.firstBtn.setText('First Track')
-        self.prevBtn.setText('Prev Track')
-        self.nextBtn.setText('Next Track')
-        self.lastBtn.setText('Last Track')
+        self.prevTrackLbl.setText(u'')
+        self.nextTrackLbl.setText(u'')
 
 #___________________________________________________________________________________________________ refreshUI
     def refreshUI(self):
         selectedTracks = self.getSelectedTracks()
-        if not selectedTracks:
+        self.clearUI()
+
+        if selectedTracks is None:
             return
 
         t = selectedTracks[0]
-
-        v = t.getProperty(TrackPropEnum.COMM)
-        self.communityLE.setText(u'' if v is None else v)
-
-        v = t.getProperty(TrackPropEnum.SITE)
-        self.siteLE.setText(u'' if v is None else v)
-
-        v = t.getProperty(TrackPropEnum.YEAR)
-        self.yearLE.setText(u'' if v is None else v)
-
-        v = t.getProperty(TrackPropEnum.SECTOR)
-        self.sectorLE.setText(u'' if v is None else v)
-
-        v = t.getProperty(TrackPropEnum.LEVEL)
-        self.levelLE.setText(u'' if v is None else v)
-
-        v = t.getProperty(TrackPropEnum.TRACKWAY)
-        self.trackwayLE.setText(u'' if v is None else v)
-
         if len(selectedTracks) == 1:
             v = t.getProperty(TrackPropEnum.NAME)
             v = '' if v is None else v
@@ -468,7 +434,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.widthMeasuredLE.setText(u'' if v is None else '%.2f' % v)
 
             v = t.getProperty(TrackPropEnum.WIDTH_UNCERTAINTY)
-            self.widthUncertaintyLE.setText(u'' if v is None else '%.2f' % v)
+            self.widthUncertaintyLE.setText(u'' if v is None else '%.1f' % v)
 
             v = t.getProperty(TrackPropEnum.LENGTH)
             self.lengthLE.setText(u'' if v is None else '%.2f' % v)
@@ -477,13 +443,19 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.lengthMeasuredLE.setText(u'' if v is None else '%.2f' % v)
 
             v = t.getProperty(TrackPropEnum.LENGTH_UNCERTAINTY)
-            self.lengthUncertaintyLE.setText(u'' if v is None else '%.2f' % v)
+            self.lengthUncertaintyLE.setText(u'' if v is None else '%.1f' % v)
 
             v = t.getProperty(TrackPropEnum.ROTATION)
             self.rotationLE.setText(u'' if v is None else '%.2f' % v)
 
             v = t.getProperty(TrackPropEnum.ROTATION_UNCERTAINTY)
-            self.rotationUncertaintyLE.setText(u'' if v is None else '%.2f' % v)
+            self.rotationUncertaintyLE.setText(u'' if v is None else '%.1f' % v)
+
+            v = t.getProperty(TrackPropEnum.DEPTH_MEASURED)
+            self.depthMeasuredLE.setText(u'' if v is None else '%.2f' % v)
+
+            v = t.getProperty(TrackPropEnum.DEPTH_UNCERTAINTY)
+            self.depthUncertaintyLE.setText(u'' if v is None else '%.1f' % v)
 
             v = t.getProperty(TrackPropEnum.INDEX)
             self.indexLE.setText(u'' if v is None else v)
@@ -511,8 +483,24 @@ class TrackwayManagerWidget(PyGlassWidget):
 
             v = self.getLastTrack()
             self.lastTrackLbl.setText(u'' if v is None else unicode(v))
-        else:
-            self.clearUI()
+
+        v = t.getProperty(TrackPropEnum.COMM)
+        self.communityLE.setText(u'' if v is None else v)
+
+        v = t.getProperty(TrackPropEnum.SITE)
+        self.siteLE.setText(u'' if v is None else v)
+
+        v = t.getProperty(TrackPropEnum.YEAR)
+        self.yearLE.setText(u'' if v is None else v)
+
+        v = t.getProperty(TrackPropEnum.SECTOR)
+        self.sectorLE.setText(u'' if v is None else v)
+
+        v = t.getProperty(TrackPropEnum.LEVEL)
+        self.levelLE.setText(u'' if v is None else v)
+
+        v = t.getProperty(TrackPropEnum.TRACKWAY)
+        self.trackwayLE.setText(u'' if v is None else v)
         self.trackwayCB.addItem(t.trackway)
 
 #___________________________________________________________________________________________________ renameSelectedTracks

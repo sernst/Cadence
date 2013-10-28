@@ -41,3 +41,4 @@ class TrackPropEnum(object):
     WIDTH_MEASURED       = TRACK_PROP_NT('widthMeasured',       'float', False)
     LENGTH_MEASURED      = TRACK_PROP_NT('lengthMeasured',      'float', False)
     DEPTH_MEASURED       = TRACK_PROP_NT('depthMeasured',       'float', False)
+    DEPTH_UNCERTAINTY    = TRACK_PROP_NT('depthUncertainty',    'float', False)
