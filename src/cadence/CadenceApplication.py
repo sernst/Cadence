@@ -20,6 +20,11 @@ class CadenceApplication(PyGlassApplication):
     def splashScreenUrl(self):
         return None
 
+#___________________________________________________________________________________________________ GS: appID
+    @property
+    def appID(self):
+        return 'Cadence'
+
 #___________________________________________________________________________________________________ GS: appGroupID
     @property
     def appGroupID(self):
