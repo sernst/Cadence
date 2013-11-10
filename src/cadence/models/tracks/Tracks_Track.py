@@ -9,6 +9,7 @@ from sqlalchemy import UnicodeText
 
 from pyaid.ArgsUtils import ArgsUtils
 
+from cadence.enum.TrackPropEnum import TrackPropEnum
 # AS NEEDED: from cadence.mayan.trackway.Track import Track
 from cadence.models.tracks.TracksDefault import TracksDefault
 
@@ -38,11 +39,13 @@ class Tracks_Track(TracksDefault):
     _rotation            = Column(Float, default=0.0)
     _x                   = Column(Float, default=0.0)
     _z                   = Column(Float, default=0.0)
-    _widthUncertainty    = Column(Float, default=0.0)
-    _lengthUncertainty   = Column(Float, default=0.0)
-    _rotationUncertainty = Column(Float, default=0.0)
+    _widthUncertainty    = Column(Float, default=5.0)
+    _lengthUncertainty   = Column(Float, default=5.0)
+    _depthUncertainty    = Column(Float, default=5.0)
+    _rotationUncertainty = Column(Float, default=5.0)
     _widthMeasured       = Column(Float, default=0.0)
     _lengthMeasured      = Column(Float, default=0.0)
+    _depthMeasured       = Column(Float, default=0.0)
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -50,57 +53,63 @@ class Tracks_Track(TracksDefault):
 #___________________________________________________________________________________________________ createTrack
     def createTrack(self, node =None):
         from cadence.mayan.trackway.Track import Track
-        return Track(node=node, trackUid=self.id, trackData=self.toDict())
+        return Track(node=node, trackId=self.id, trackData=self.toDict())
 
 #___________________________________________________________________________________________________ fromDict
     def fromDict(self, data):
+        TPE     = TrackPropEnum
         argsGet = ArgsUtils.get
 
-        self.community           = argsGet('community', self.community, data)
-        self.site                = argsGet('site', self.site, data)
-        self.year                = argsGet('year', self.year, data)
-        self.level               = argsGet('level', self.level, data)
-        self.sector              = argsGet('sector', self.sector, data)
-        self.trackway            = argsGet('trackway', self.trackway, data)
-        self.name                = argsGet('name', self.name, data)
-        self.note                = argsGet('note', self.note, data)
-        self.prev                = argsGet('prev', self.prev, data)
-        self.next                = argsGet('next', self.next, data)
-        self.snapshot            = argsGet('snapshot', self.snapshot, data)
-        self.index               = argsGet('index', self.index, data)
-        self.width               = argsGet('width', self.width, data)
-        self.rotation            = argsGet('rotation', self.rotation, data)
-        self.length              = argsGet('length', self.length, data)
-        self.x                   = argsGet('x', self.x, data)
-        self.z                   = argsGet('z', self.z, data)
-        self.widthUncertainty    = argsGet('widthUncertainty', self.widthUncertainty, data)
-        self.lengthUncertainty   = argsGet('lengthUncertainty', self.lengthUncertainty, data)
-        self.rotationUncertainty = argsGet('rotationUncertainty', self.rotationUncertainty, data)
-        self.widthMeasured       = argsGet('widthMeasured', self.widthMeasured, data)
-        self.lengthMeasured      = argsGet('lengthMeasured', self.lengthMeasured, data)
+        self.community           = argsGet(TPE.COMM.name, self.community, data)
+        self.site                = argsGet(TPE.SITE.name, self.site, data)
+        self.year                = argsGet(TPE.YEAR.name, self.year, data)
+        self.level               = argsGet(TPE.LEVEL.name, self.level, data)
+        self.sector              = argsGet(TPE.SECTOR.name, self.sector, data)
+        self.trackway            = argsGet(TPE.TRACKWAY.name, self.trackway, data)
+        self.name                = argsGet(TPE.NAME.name, self.name, data)
+        self.note                = argsGet(TPE.NOTE.name, self.note, data)
+        self.prev                = argsGet(TPE.PREV.name, self.prev, data)
+        self.next                = argsGet(TPE.NEXT.name, self.next, data)
+        self.snapshot            = argsGet(TPE.SNAPSHOT.name, self.snapshot, data)
+        self.index               = argsGet(TPE.INDEX.name, self.index, data)
+        self.width               = argsGet(TPE.WIDTH.name, self.width, data)
+        self.rotation            = argsGet(TPE.ROTATION.name, self.rotation, data)
+        self.length              = argsGet(TPE.LENGTH.name, self.length, data)
+        self.x                   = argsGet(TPE.X.name, self.x, data)
+        self.z                   = argsGet(TPE.Z.name, self.z, data)
+        self.widthUncertainty    = argsGet(TPE.WIDTH_UNCERTAINTY.name, self.widthUncertainty, data)
+        self.lengthUncertainty   = argsGet(TPE.LENGTH_UNCERTAINTY.name, self.lengthUncertainty, data)
+        self.rotationUncertainty = argsGet(TPE.ROTATION_UNCERTAINTY.name, self.rotationUncertainty, data)
+        self.depthUncertainty    = argsGet(TPE.DEPTH_UNCERTAINTY.name, self.rotationUncertainty, data)
+        self.widthMeasured       = argsGet(TPE.WIDTH_UNCERTAINTY.name, self.widthMeasured, data)
+        self.lengthMeasured      = argsGet(TPE.LENGTH_UNCERTAINTY.name, self.lengthMeasured, data)
+        self.depthMeasured       = argsGet(TPE.DEPTH_UNCERTAINTY.name, self.lengthMeasured, data)
 
 #___________________________________________________________________________________________________ toDict
     def toDict(self):
-        return self._createDict(
-            community=self.community,
-            site=self.site,
-            year=self.year,
-            level=self.level,
-            sector=self.sector,
-            trackway=self.trackway,
-            name=self.name,
-            note=self.note,
-            prev=self.prev,
-            next=self.next,
-            snapshot=self.snapshot,
-            index=self.index,
-            width=self.width,
-            length=self.length,
-            rotation=self.rotation,
-            x=self.x,
-            z=self.z,
-            widthUncertainty=self.widthUncertainty,
-            lengthUncertainty=self.lengthUncertainty,
-            rotationUncertainty=self.rotationUncertainty,
-            widthMeasured=self.widthMeasured,
-            lengthMeasured=self.lengthMeasured )
+        TPE = TrackPropEnum
+        return self._createDict(**{
+            TPE.COMM.name:self.community,
+            TPE.SITE.name:self.site,
+            TPE.YEAR.name:self.year,
+            TPE.LEVEL.name:self.level,
+            TPE.SECTOR.name:self.sector,
+            TPE.TRACKWAY.name:self.trackway,
+            TPE.NAME.name:self.name,
+            TPE.NOTE.name:self.note,
+            TPE.PREV.name:self.prev,
+            TPE.NEXT.name:self.next,
+            TPE.SNAPSHOT.name:self.snapshot,
+            TPE.INDEX.name:self.index,
+            TPE.WIDTH.name:self.width,
+            TPE.LENGTH.name:self.length,
+            TPE.ROTATION.name:self.rotation,
+            TPE.X.name:self.x,
+            TPE.Z.name:self.z,
+            TPE.WIDTH_UNCERTAINTY.name:self.widthUncertainty,
+            TPE.LENGTH_UNCERTAINTY.name:self.lengthUncertainty,
+            TPE.ROTATION_UNCERTAINTY.name:self.rotationUncertainty,
+            TPE.DEPTH_UNCERTAINTY.name:self.depthUncertainty,
+            TPE.WIDTH_MEASURED.name:self.widthMeasured,
+            TPE.LENGTH_MEASURED.name:self.lengthMeasured,
+            TPE.DEPTH_MEASURED.name:self.depthMeasured })

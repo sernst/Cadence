@@ -2,8 +2,13 @@
 # (C)2013 http://cadence.ThreeAddOne.com
 # Scott Ernst
 
+from pyaid.file.FileUtils import FileUtils
+
+from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
+from cadence.enum.UserConfigEnum import UserConfigEnum
+from cadence.data.TrackCsvImporterRemoteThread import TrackCsvImporterRemoteThread
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ Viewer
@@ -19,6 +24,8 @@ class TrackwayImporterWidget(PyGlassWidget):
         super(TrackwayImporterWidget, self).__init__(parent, **kwargs)
 
         self.loadAllBtn.clicked.connect(self._handleLoadAllTracks)
+        self.importBtn.clicked.connect(self._handleImportCsv)
+        self._thread = None
 
 #===================================================================================================
 #                                                                                 H A N D L E R S
@@ -35,3 +42,32 @@ class TrackwayImporterWidget(PyGlassWidget):
         session.close()
         self.setEnabled(True)
 
+#___________________________________________________________________________________________________ _handleImportCsv
+    def _handleImportCsv(self):
+        path = PyGlassBasicDialogManager.browseForFileOpen(
+            parent=self,
+            caption=u'Select CSV File to Import',
+            defaultPath=self.mainWindow.appConfig.get(UserConfigEnum.LAST_BROWSE_PATH) )
+        if not path:
+            return
+
+        # Store directory location as the last active directory
+        self.mainWindow.appConfig.set(
+            UserConfigEnum.LAST_BROWSE_PATH,
+            FileUtils.getDirectoryOf(path) )
+
+        # Disable gui while import in progress
+        self.mainWindow.setEnabled(False)
+        self.mainWindow.refreshGui()
+
+        self._thread = TrackCsvImporterRemoteThread(parent=self, path=path)
+        self._thread.execute(callback=self._handleCsvImportComplete)
+
+#___________________________________________________________________________________________________ _handleCsvImportComplete
+    def _handleCsvImportComplete(self, response):
+        if response['response']:
+            print 'ERROR: CSV Import Failed'
+            print '  OUTPUT:', response['output']
+            print '  ERROR:', response['error']
+        print response
+        self.mainWindow.setEnabled(True)

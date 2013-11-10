@@ -9,6 +9,7 @@ import nimble
 from nimble import cmds
 
 from cadence.CadenceEnvironment import CadenceEnvironment
+from cadence.enum.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
 from cadence.models.tracks.Tracks_Track import Tracks_Track
@@ -205,7 +206,15 @@ class Track(object):
         return self._getTrackAttr(TrackPropEnum.LENGTH_UNCERTAINTY)
     @lengthUncertainty.setter
     def lengthUncertainty(self, value):
-        self._setTrackAttr(TrackPropEnum.WIDTH_UNCERTAINTY, value)
+        self._setTrackAttr(TrackPropEnum.LENGTH_UNCERTAINTY, value)
+
+#___________________________________________________________________________________________________ GS: depthUncertainty
+    @property
+    def depthUncertainty(self):
+        return self._getTrackAttr(TrackPropEnum.DEPTH_UNCERTAINTY)
+    @depthUncertainty.setter
+    def depthUncertainty(self, value):
+        self._setTrackAttr(TrackPropEnum.DEPTH_UNCERTAINTY, value)
 
 #___________________________________________________________________________________________________ GS: widthMeasured
     @property
@@ -222,6 +231,14 @@ class Track(object):
     @lengthMeasured.setter
     def lengthMeasured(self, value):
         self._setTrackAttr(TrackPropEnum.LENGTH_MEASURED, value)
+
+#___________________________________________________________________________________________________ GS: length
+    @property
+    def depthMeasured(self):
+        return self._getTrackAttr(TrackPropEnum.DEPTH_MEASURED)
+    @depthMeasured.setter
+    def depthMeasured(self, value):
+        self._setTrackAttr(TrackPropEnum.DEPTH_MEASURED, value)
 
 
 #===================================================================================================
@@ -389,14 +406,58 @@ class Track(object):
 #___________________________________________________________________________________________________ loadData
     def loadData(self):
         if self._trackId is None:
-            return
+            return False
 
         entry = self._getTrackEntry(self._trackId)
         if entry is None:
-            return
+            return False
 
-        self._trackData = entry.toDict()
+        if self._trackData:
+            self._trackData = dict(entry.toDict().items() + self._trackData.items())
+        else:
+            self._trackData =  entry.toDict()
         entry.session.close()
+        return True
+
+#___________________________________________________________________________________________________ findAndLoadData
+    def findAndLoadData(self):
+        if self._trackId is not None:
+            return self.loadData()
+
+        model   = Tracks_Track.MASTER
+        session = model.createSession()
+        query   = session.query(model)
+
+        if self.name:
+            query = query.filter(TrackPropEnum.NAME.name == self.name)
+        if self.level:
+            query = query.filter(TrackPropEnum.LEVEL.name == self.level)
+        if self.trackway:
+            query = query.filter(TrackPropEnum.TRACKWAY.name == self.trackway)
+        if self.year:
+            query = query.filter(TrackPropEnum.YEAR.name == self.year)
+        if self.site:
+            query = query.filter(TrackPropEnum.SITE.name == self.site)
+        if self.sector:
+            query = query.filter(TrackPropEnum.SECTOR.name == self.sector)
+
+        result = query.all()
+        if not result:
+            session.close()
+            return False
+
+        if len(result) > 1:
+            print 'ERROR: Ambiguous track definition. Unable to load'
+            session.close()
+            return False
+
+        entry = result[0]
+        if self._trackData:
+            self._trackData = dict(entry.toDict().items() + self._trackData.items())
+        else:
+            self._trackData =  entry.toDict()
+        session.close()
+        return True
 
 #___________________________________________________________________________________________________ saveData
     def saveData(self):
@@ -420,6 +481,7 @@ class Track(object):
         entry.id = self._trackId
         session.commit()
         session.close()
+
 #___________________________________________________________________________________________________ incrementName
     @classmethod
     def incrementName(cls, name):
@@ -438,6 +500,65 @@ class Track(object):
         cmds.rename(c[0], 'CadenceCam')
         cmds.rotate(-90, 180, 0)
         cmds.move(0, 100, 0, 'CadenceCam', absolute=True)
+
+#___________________________________________________________________________________________________ fromSpreadsheetEntry
+    @classmethod
+    def fromSpreadsheetEntry(cls, csvRow):
+        t = Track(trackData=dict())
+        trackInfo   = csvRow[TrackCsvColumnEnum.TRACKWAY].strip().split(' ')
+        t.comm      = trackInfo[0].strip()
+        t.trackway  = trackInfo[-1].strip()
+        t.site      = csvRow[TrackCsvColumnEnum.TRACKSITE]
+        t.year      = csvRow[TrackCsvColumnEnum.CAST_DATE].split('_')[-1]
+        t.sector    = csvRow[TrackCsvColumnEnum.SECTOR]
+        t.level     = csvRow[TrackCsvColumnEnum.LEVEL]
+        t.name      = csvRow[TrackCsvColumnEnum.TRACK_NAME]
+
+        # Use data set above to attempt to load the track database entry
+        t.findAndLoadData()
+
+        t.index = csvRow[TrackCsvColumnEnum.INDEX]
+
+        if t.isManus():
+            wide      = csvRow[TrackCsvColumnEnum.MANUS_WIDTH]
+            wideGuess = csvRow[TrackCsvColumnEnum.MANUS_WIDTH_GUESS]
+            long      = csvRow[TrackCsvColumnEnum.MANUS_LENGTH]
+            longGuess = csvRow[TrackCsvColumnEnum.MANUS_LENGTH_GUESS]
+            deep      = csvRow[TrackCsvColumnEnum.MANUS_DEPTH]
+            deepGuess = csvRow[TrackCsvColumnEnum.MANUS_DEPTH_GUESS]
+        else:
+            wide      = csvRow[TrackCsvColumnEnum.PES_WIDTH]
+            wideGuess = csvRow[TrackCsvColumnEnum.PES_WIDTH_GUESS]
+            long      = csvRow[TrackCsvColumnEnum.PES_LENGTH]
+            longGuess = csvRow[TrackCsvColumnEnum.PES_LENGTH_GUESS]
+            deep      = csvRow[TrackCsvColumnEnum.PES_DEPTH]
+            deepGuess = csvRow[TrackCsvColumnEnum.PES_DEPTH_GUESS]
+
+        try:
+            t.widthMeasured     = float(wide if wide else wideGuess)
+            t.widthUncertainty  = 5.0 if wideGuess else 4.0
+        except Exception, err:
+            t.widthMeasured    = 0.0
+            t.widthUncertainty = 5.0
+
+        try:
+            t.lengthMeasured    = float(long if long else longGuess)
+            t.lengthUncertainty = 5.0 if longGuess else 4.0
+        except Exception, err:
+            t.lengthMeasured    = 0.0
+            t.lengthUncertainty = 5.0
+
+        try:
+            t.depthMeasured     = float(deep if deep else deepGuess)
+            t.depthUncertainty  = 5.0 if deepGuess else 4.0
+        except Exception, err:
+            t.depthMeasured    = 0.0
+            t.depthUncertainty = 5.0
+
+        # Save csv value changes to the database
+        t.saveData()
+
+        return t
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -518,5 +639,5 @@ class Track(object):
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):
-        return '%s' % self.name
+        return '[%s(%s) "%s"]' % (self.__class__.__name__, self.name, self._trackId)
 

@@ -4,5 +4,5 @@
 
 from pyglass.sqlalchemy.PyGlassModelUtils import PyGlassModelUtils
 
-DATABASE_URL = 'CadenceApplication://tracks'
+DATABASE_URL = 'Cadence://tracks'
 MODELS = PyGlassModelUtils.modelsInit(__path__, __name__)
