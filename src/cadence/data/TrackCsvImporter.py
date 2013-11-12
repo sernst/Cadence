@@ -23,7 +23,7 @@ class TrackCsvImporter(object):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ read
-    def read(self, path =None):
+    def read(self, path =None, force =True):
         """Doc..."""
         if path is not None:
             self._path = path
@@ -40,8 +40,7 @@ class TrackCsvImporter(object):
                 except Exception, err:
                     continue
 
-                t = Track.fromSpreadsheetEntry(row)
-                print 'TRACK:', t._trackData
+                t = Track.fromSpreadsheetEntry(row, force=force)
                 self._tracks.append(t)
 
 #===================================================================================================

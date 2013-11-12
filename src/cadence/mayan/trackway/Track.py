@@ -38,6 +38,12 @@ class Track(object):
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: trackData
+    @property
+    def trackData(self):
+        return self._trackData
+
 #___________________________________________________________________________________________________ GS: comm
     @property
     def comm(self):
@@ -429,17 +435,17 @@ class Track(object):
         query   = session.query(model)
 
         if self.name:
-            query = query.filter(TrackPropEnum.NAME.name == self.name)
+            query = query.filter(model.name == self.name)
         if self.level:
-            query = query.filter(TrackPropEnum.LEVEL.name == self.level)
+            query = query.filter(model.level == self.level)
         if self.trackway:
-            query = query.filter(TrackPropEnum.TRACKWAY.name == self.trackway)
+            query = query.filter(model.trackway == self.trackway)
         if self.year:
-            query = query.filter(TrackPropEnum.YEAR.name == self.year)
+            query = query.filter(model.year == self.year)
         if self.site:
-            query = query.filter(TrackPropEnum.SITE.name == self.site)
+            query = query.filter(model.site == self.site)
         if self.sector:
-            query = query.filter(TrackPropEnum.SECTOR.name == self.sector)
+            query = query.filter(model.sector == self.sector)
 
         result = query.all()
         if not result:
@@ -503,7 +509,7 @@ class Track(object):
 
 #___________________________________________________________________________________________________ fromSpreadsheetEntry
     @classmethod
-    def fromSpreadsheetEntry(cls, csvRow):
+    def fromSpreadsheetEntry(cls, csvRow, force =True):
         t = Track(trackData=dict())
         trackInfo   = csvRow[TrackCsvColumnEnum.TRACKWAY].strip().split(' ')
         t.comm      = trackInfo[0].strip()
@@ -514,10 +520,15 @@ class Track(object):
         t.level     = csvRow[TrackCsvColumnEnum.LEVEL]
         t.name      = csvRow[TrackCsvColumnEnum.TRACK_NAME]
 
-        # Use data set above to attempt to load the track database entry
-        t.findAndLoadData()
+        csvIndex = csvRow[TrackCsvColumnEnum.INDEX]
 
-        t.index = csvRow[TrackCsvColumnEnum.INDEX]
+        # Use data set above to attempt to load the track database entry
+        if t.findAndLoadData() and not force:
+            if csvIndex != t.index:
+                print 'Ambiguous Track Entry [%s != %s]' % (csvIndex, t.index)
+            return t
+
+        t.index = csvIndex
 
         if t.isManus():
             wide      = csvRow[TrackCsvColumnEnum.MANUS_WIDTH]

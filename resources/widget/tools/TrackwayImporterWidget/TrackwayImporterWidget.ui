@@ -39,6 +39,19 @@
     <string>Import Spreadsheet (CSV)</string>
    </property>
   </widget>
+  <widget class="QCheckBox" name="overwriteImportChk">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>20</y>
+     <width>85</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Overwrite</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

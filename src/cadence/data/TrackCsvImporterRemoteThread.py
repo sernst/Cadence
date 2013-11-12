@@ -14,11 +14,11 @@ class TrackCsvImporterRemoteThread(RemoteExecutionThread):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, parent, path, **kwargs):
+    def __init__(self, parent, path, force =True, **kwargs):
         """Creates a new instance of TrackCsvImporterRemoteThread."""
         RemoteExecutionThread.__init__(self, parent, **kwargs)
-        self._path = path
-
+        self._path  = path
+        self._force = force
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -27,7 +27,7 @@ class TrackCsvImporterRemoteThread(RemoteExecutionThread):
     def _runImpl(self):
         try:
             importer = TrackCsvImporter(self._path)
-            importer.read()
+            importer.read(force=self._force)
         except Exception, err:
             self._log.writeError('Track CSV Parsing Error', err)
             return 1

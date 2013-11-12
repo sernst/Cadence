@@ -2,9 +2,12 @@
 # (C)2013 http://cadence.ThreeAddOne.com
 # Scott Ernst
 
+from PySide import QtCore
+
 from pyaid.file.FileUtils import FileUtils
 
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
+from pyglass.elements.PyGlassElementUtils import PyGlassElementUtils
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
 from cadence.enum.UserConfigEnum import UserConfigEnum
@@ -17,11 +20,18 @@ class TrackwayImporterWidget(PyGlassWidget):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    _OVERWRITE_IMPORT_SUFFIX = '_OVERWRITE_IMPORT'
+
     RESOURCE_FOLDER_PREFIX = ['tools']
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, parent, **kwargs):
         super(TrackwayImporterWidget, self).__init__(parent, **kwargs)
+
+        PyGlassElementUtils.registerCheckBox(
+            owner=self,
+            target=self.overwriteImportChk,
+            configSetting=self.__class__.__name__ + self._OVERWRITE_IMPORT_SUFFIX)
 
         self.loadAllBtn.clicked.connect(self._handleLoadAllTracks)
         self.importBtn.clicked.connect(self._handleImportCsv)
@@ -60,7 +70,10 @@ class TrackwayImporterWidget(PyGlassWidget):
         self.mainWindow.setEnabled(False)
         self.mainWindow.refreshGui()
 
-        self._thread = TrackCsvImporterRemoteThread(parent=self, path=path)
+        self._thread = TrackCsvImporterRemoteThread(
+            parent=self,
+            path=path,
+            force=self.overwriteImportChk.isChecked())
         self._thread.execute(callback=self._handleCsvImportComplete)
 
 #___________________________________________________________________________________________________ _handleCsvImportComplete
@@ -69,5 +82,5 @@ class TrackwayImporterWidget(PyGlassWidget):
             print 'ERROR: CSV Import Failed'
             print '  OUTPUT:', response['output']
             print '  ERROR:', response['error']
-        print response
+
         self.mainWindow.setEnabled(True)
