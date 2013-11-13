@@ -2,6 +2,7 @@
 # (C)2013
 # Scott Ernst
 
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import Unicode
@@ -27,8 +28,12 @@ class Tracks_Track(TracksDefault):
     _year                = Column(Unicode, default=u'')
     _level               = Column(Unicode, default=u'')
     _sector              = Column(Unicode, default=u'')
-    _trackway            = Column(Unicode, default=u'')
-    _name                = Column(Unicode, default=u'')
+    _trackwayType        = Column(Unicode, default=u'')
+    _trackwayNumber      = Column(Float, default=0.0)
+    _left                = Column(Boolean, default=True)
+    _pes                 = Column(Boolean, default=True)
+    _number              = Column(Float, default=0.0)
+
     _prev                = Column(Unicode, default=u'')
     _next                = Column(Unicode, default=u'')
     _snapshot            = Column(Unicode, default=u'')
@@ -65,8 +70,11 @@ class Tracks_Track(TracksDefault):
         self.year                = argsGet(TPE.YEAR.name, self.year, data)
         self.level               = argsGet(TPE.LEVEL.name, self.level, data)
         self.sector              = argsGet(TPE.SECTOR.name, self.sector, data)
-        self.trackway            = argsGet(TPE.TRACKWAY.name, self.trackway, data)
-        self.name                = argsGet(TPE.NAME.name, self.name, data)
+        self.trackwayNumber      = argsGet(TPE.TRACKWAY_NUMBER.name, self.trackwayNumber, data)
+        self.trackwayType        = argsGet(TPE.TRACKWAY_TYPE.name, self.trackwayType, data)
+        self.left                = argsGet(TPE.LEFT.name, self.left, data)
+        self.pes                 = argsGet(TPE.PES.name, self.pes, data)
+        self.number              = argsGet(TPE.NUMBER.name, self.number, data)
         self.note                = argsGet(TPE.NOTE.name, self.note, data)
         self.prev                = argsGet(TPE.PREV.name, self.prev, data)
         self.next                = argsGet(TPE.NEXT.name, self.next, data)
@@ -94,8 +102,11 @@ class Tracks_Track(TracksDefault):
             TPE.YEAR.name:self.year,
             TPE.LEVEL.name:self.level,
             TPE.SECTOR.name:self.sector,
-            TPE.TRACKWAY.name:self.trackway,
-            TPE.NAME.name:self.name,
+            TPE.TRACKWAY_TYPE.name:self.trackwayType,
+            TPE.TRACKWAY_NUMBER.name:self.trackwayNumber,
+            TPE.LEFT.name:self.left,
+            TPE.PES.name:self.pes,
+            TPE.NUMBER.name:self.trackwayNumber,
             TPE.NOTE.name:self.note,
             TPE.PREV.name:self.prev,
             TPE.NEXT.name:self.next,

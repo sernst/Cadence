@@ -2,8 +2,11 @@
 # (C)2013
 # Kent A. Stevens and Scott Ernst
 
+import re
+
 from pyaid.radix.Base64 import Base64
 from pyaid.reflection.Reflection import Reflection
+from pyaid.string.StringUtils import StringUtils
 
 import nimble
 from nimble import cmds
@@ -24,6 +27,8 @@ class Track(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    _TRACKWAY_PATTERN = re.compile('(?P<type>[A-Za-z]+)[\s\t]*(?P<number>[0-9]+)')
+
 #___________________________________________________________________________________________________ __init__
     def __init__(self, node =None, trackId =None, trackData =None):
         """ Creates a new instance of a Track.  Argument is the string name of the Maya node. """
@@ -38,6 +43,14 @@ class Track(object):
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: name
+    @property
+    def name(self):
+        number = self.number
+        if not number:
+            number = 0
+        return (u'L' if self.left else u'R') + (u'P' if self.pes else u'M') + unicode(int(number))
 
 #___________________________________________________________________________________________________ GS: trackData
     @property
@@ -84,23 +97,49 @@ class Track(object):
     def sector(self, value):
         self._setTrackAttr(TrackPropEnum.SECTOR, value)
 
-#___________________________________________________________________________________________________ GS: trackway
+#___________________________________________________________________________________________________ GS: trackwayType
     @property
-    def trackway(self):
-        return self._getTrackAttr(TrackPropEnum.TRACKWAY)
-    @trackway.setter
-    def trackway(self, value):
-        self._setTrackAttr(TrackPropEnum.TRACKWAY, value)
+    def trackwayType(self):
+        return self._getTrackAttr(TrackPropEnum.TRACKWAY_TYPE)
+    @trackwayType.setter
+    def trackwayType(self, value):
+        self._setTrackAttr(TrackPropEnum.TRACKWAY_TYPE, value)
 
-#___________________________________________________________________________________________________ GS: name
+#___________________________________________________________________________________________________ GS: trackwayNumber
     @property
-    def name(self):
-        return self._getTrackAttr(TrackPropEnum.NAME)
-    @name.setter
-    def name(self, value):
-        self._setTrackAttr(TrackPropEnum.NAME, value)
+    def trackwayNumber(self):
+        return self._getTrackAttr(TrackPropEnum.TRACKWAY_NUMBER)
+    @trackwayNumber.setter
+    def trackwayNumber(self, value):
+        self._setTrackAttr(TrackPropEnum.TRACKWAY_NUMBER, value)
+
+#___________________________________________________________________________________________________ GS: left
+    @property
+    def left(self):
+        return self._getTrackAttr(TrackPropEnum.LEFT)
+    @left.setter
+    def left(self, value):
+        self._setTrackAttr(TrackPropEnum.LEFT, value)
         if self.node is not None and value:
             self.colorTrack()
+
+#___________________________________________________________________________________________________ GS: pes
+    @property
+    def pes(self):
+        return self._getTrackAttr(TrackPropEnum.PES)
+    @pes.setter
+    def pes(self, value):
+        self._setTrackAttr(TrackPropEnum.PES, value)
+        if self.node is not None and value:
+            self.colorTrack()
+
+#___________________________________________________________________________________________________ GS: number
+    @property
+    def number(self):
+        return self._getTrackAttr(TrackPropEnum.NUMBER)
+    @number.setter
+    def number(self, value):
+        self._setTrackAttr(TrackPropEnum.NUMBER, value)
 
 #___________________________________________________________________________________________________ GS: note
     @property
@@ -309,9 +348,7 @@ class Track(object):
 
         enum = self._getTrackPropEnum(p) if isinstance(p, basestring) else p
 
-        if enum.name == TrackPropEnum.NAME.name:
-            self.name = value
-        elif enum.name == TrackPropEnum.WIDTH.name:
+        if enum.name == TrackPropEnum.WIDTH.name:
             self.width = value
         elif enum.name == TrackPropEnum.LENGTH.name:
             self.length = value
@@ -349,30 +386,31 @@ class Track(object):
 
 #___________________________________________________________________________________________________ colorTrack
     def colorTrack(self):
-        if self.name[1] == 'M':
-            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.node)
-        else:
+        if self.pes:
             ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.node)
-        if self.name[0] == 'R':
-            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.node +"|pointer")
         else:
+            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.node)
+
+        if self.left:
             ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.node +"|pointer")
+        else:
+            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.node +"|pointer")
 
 #___________________________________________________________________________________________________ isPes
     def isPes(self):
-        return self.name[1] == 'P'
+        return self.pes
 
 #___________________________________________________________________________________________________ isManus
     def isManus(self):
-        return self.name[0] == 'M'
+        return not self.pes
 
 #___________________________________________________________________________________________________ isRight
     def isRight(self):
-        return self.name[0] == 'R'
+        return not self.left
 
 #___________________________________________________________________________________________________ isLeft
     def isLeft(self):
-        return self.name[1] == 'L'
+        return self.left
 
 #___________________________________________________________________________________________________ link
     def link(self, prevTrack):
@@ -434,17 +472,23 @@ class Track(object):
         session = model.createSession()
         query   = session.query(model)
 
-        if self.name:
-            query = query.filter(model.name == self.name)
-        if self.level:
+        if self.pes is not None:
+            query = query.filter(model.pes == self.pes)
+        if self.left is not None:
+            query = query.filter(model.left == self.left)
+        if self.number is not None:
+            query = query.filter(model.number == self.number)
+        if self.trackwayNumber is not None:
+            query = query.filter(model.trackwayNumber == self.trackwayNumber)
+        if self.trackwayType:
+            query = query.filter(model.trackwayType == self.trackwayType)
+        if self.level is not None:
             query = query.filter(model.level == self.level)
-        if self.trackway:
-            query = query.filter(model.trackway == self.trackway)
-        if self.year:
+        if self.year is not None:
             query = query.filter(model.year == self.year)
-        if self.site:
+        if self.site is not None:
             query = query.filter(model.site == self.site)
-        if self.sector:
+        if self.sector is not None:
             query = query.filter(model.sector == self.sector)
 
         result = query.all()
@@ -510,19 +554,41 @@ class Track(object):
 #___________________________________________________________________________________________________ fromSpreadsheetEntry
     @classmethod
     def fromSpreadsheetEntry(cls, csvRow, force =True):
-        t = Track(trackData=dict())
-        trackInfo   = csvRow[TrackCsvColumnEnum.TRACKWAY].strip().split(' ')
-        t.comm      = trackInfo[0].strip()
-        t.trackway  = trackInfo[-1].strip()
+        csvIndex    = csvRow[TrackCsvColumnEnum.INDEX]
+        t           = Track(trackData=dict())
         t.site      = csvRow[TrackCsvColumnEnum.TRACKSITE]
         t.year      = csvRow[TrackCsvColumnEnum.CAST_DATE].split('_')[-1]
         t.sector    = csvRow[TrackCsvColumnEnum.SECTOR]
         t.level     = csvRow[TrackCsvColumnEnum.LEVEL]
-        t.name      = csvRow[TrackCsvColumnEnum.TRACK_NAME]
 
-        csvIndex = csvRow[TrackCsvColumnEnum.INDEX]
+        #-------------------------------------------------------------------------------------------
+        # TRACKWAY
+        #       Parse the trackway entry into type and number values
+        test   = csvRow[TrackCsvColumnEnum.TRACKWAY].strip()
+        result = cls._TRACKWAY_PATTERN.search(test)
+        try:
+            t.trackwayType   = result.groupdict()['type']
+            t.trackwayNumber = float(result.groupdict()['number'])
+        except Exception, err:
+            print 'ERROR: Invalid trackway value "%s" at index: %s' % (test, csvIndex)
+            print '    RESULT:', result, '->', result.groupdict() if result else 'N/A'
+            raise
 
-        # Use data set above to attempt to load the track database entry
+        #-------------------------------------------------------------------------------------------
+        # NAME
+        #       Parse the name value into left, pes, and number attributes
+        name = csvRow[TrackCsvColumnEnum.TRACK_NAME].strip()
+        if StringUtils.begins(name.upper(), [u'M', u'P']):
+            t.left = name[1].upper() == u'L'
+            t.pes  = name[0].upper() == u'P'
+        else:
+            t.left = name[0].upper() == u'L'
+            t.pes  = name[1].upper() == u'P'
+        t.number = float(re.compile('[^0-9]+').sub(u'', name[2:]))
+
+        #-------------------------------------------------------------------------------------------
+        # FIND EXISTING
+        #       Use data set above to attempt to load the track database entry
         if t.findAndLoadData() and not force:
             if csvIndex != t.index:
                 print 'Ambiguous Track Entry [%s != %s]' % (csvIndex, t.index)
@@ -533,14 +599,14 @@ class Track(object):
         if t.isManus():
             wide      = csvRow[TrackCsvColumnEnum.MANUS_WIDTH]
             wideGuess = csvRow[TrackCsvColumnEnum.MANUS_WIDTH_GUESS]
-            long      = csvRow[TrackCsvColumnEnum.MANUS_LENGTH]
+            longVal   = csvRow[TrackCsvColumnEnum.MANUS_LENGTH]
             longGuess = csvRow[TrackCsvColumnEnum.MANUS_LENGTH_GUESS]
             deep      = csvRow[TrackCsvColumnEnum.MANUS_DEPTH]
             deepGuess = csvRow[TrackCsvColumnEnum.MANUS_DEPTH_GUESS]
         else:
             wide      = csvRow[TrackCsvColumnEnum.PES_WIDTH]
             wideGuess = csvRow[TrackCsvColumnEnum.PES_WIDTH_GUESS]
-            long      = csvRow[TrackCsvColumnEnum.PES_LENGTH]
+            longVal   = csvRow[TrackCsvColumnEnum.PES_LENGTH]
             longGuess = csvRow[TrackCsvColumnEnum.PES_LENGTH_GUESS]
             deep      = csvRow[TrackCsvColumnEnum.PES_DEPTH]
             deepGuess = csvRow[TrackCsvColumnEnum.PES_DEPTH_GUESS]
@@ -553,7 +619,7 @@ class Track(object):
             t.widthUncertainty = 5.0
 
         try:
-            t.lengthMeasured    = float(long if long else longGuess)
+            t.lengthMeasured    = float(long if longVal else longGuess)
             t.lengthUncertainty = 5.0 if longGuess else 4.0
         except Exception, err:
             t.lengthMeasured    = 0.0
@@ -597,9 +663,11 @@ class Track(object):
             mayaAttrName = enum.name
 
         if not self.nodeHasAttribute(mayaAttrName):
-            if enum.type == "string":
+            if enum.type == 'string':
                 cmds.addAttr(self.node, ln=mayaAttrName, dt=enum.type)
-            elif enum.type == "float":
+            elif enum.type == 'float':
+                cmds.addAttr(self.node, ln=mayaAttrName, at=enum.type)
+            elif enum.type == 'bool':
                 cmds.addAttr(self.node, ln=mayaAttrName, at=enum.type)
         propType = enum.type
         if propType == 'float':
@@ -612,10 +680,11 @@ class Track(object):
                 cmds.setAttr(self.node + '.' + mayaAttrName, value, type=propType)
         except Exception, err:
             print 'ERROR: Track._setTrackAttr'
-            print '\tNODE: ' + str(self.node)
-            print '\tATTR: ' + str(mayaAttrName)
-            print '\tTYPE: ' + str(propType)
-            print '\tVALUE: ' + str(value) + ' | ' + str(type(value))
+            print '  NODE: ' + str(self.node)
+            print '  ATTR: ' + str(mayaAttrName)
+            print '  TYPE: ' + str(propType)
+            print '  VALUE: ' + str(value) + ' | ' + str(type(value))
+            print '  ERROR: ', err
             raise
 
 #___________________________________________________________________________________________________ _getTrackPropEnum
