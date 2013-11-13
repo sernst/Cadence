@@ -15,7 +15,13 @@
         {   "id":"trackwayImporter",
             "module":"cadence.views.tools.trackwayImporter.TrackwayImporterWidget",
             "name":"Trackway Importer",
-            "description":"Imports and Exports trackways between Maya and the database."
+            "description":"Imports and exports trackways between Maya and the database."
+        },
+
+        {   "id":"mayaInitializer",
+            "module":"cadence.views.tools.mayaInitializer.MayaIniWidget",
+            "name":"Maya Initializer",
+            "description":"Modifies your maya installation with the necessary settings and scripts to use Cadence."
         }
     ]
 }
