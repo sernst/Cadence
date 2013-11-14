@@ -28,7 +28,6 @@ class TrackPropEnum(object):
     NUMBER          = TRACK_PROP_NT('number',           'float',    False)
     NOTE            = TRACK_PROP_NT('note',             'string',   False)
     PREV            = TRACK_PROP_NT('prev',             'string',   False)
-    NEXT            = TRACK_PROP_NT('next',             'string',   False)
     SNAPSHOT        = TRACK_PROP_NT('snapshot',         'string',   False)
     INDEX           = TRACK_PROP_NT('index',            'string',   False)
     ID              = TRACK_PROP_NT('id',               'string',   False)

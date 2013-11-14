@@ -152,29 +152,92 @@ class Track(object):
 #___________________________________________________________________________________________________ GS: prev
     @property
     def prev(self):
-        connections = cmds.listConnections(self.node + '.prevTrack', s=True, p=True)
-        if connections:
-            for c in connections:
-                if c.endswith('.message'):
-                    node = c.split('.')[0]
-                    return Track(node)
+        """ The Unique Track ID (as created by the database) for the previous track within the
+            track series in which this track resides."""
+
+        if not self.node:
+            return self._trackData.get(TrackPropEnum.PREV.name)
+
+        node = self.previousTrackNode
+        if node:
+            return cmds.getAttr(node + '.' + TrackPropEnum.ID.name)
         return None
     @prev.setter
     def prev(self, value):
         self._setTrackAttr(TrackPropEnum.PREV, value)
 
+#___________________________________________________________________________________________________ GS: previousTrackNode
+    @property
+    def previousTrackNode(self):
+        if not self.node:
+            return None
+
+        connections = cmds.listConnections(self.node + '.prevTrack', s=True, p=True)
+        if not connections:
+            return None
+
+        for c in connections:
+            if c.endswith('.message'):
+                node = c.split('.')[0]
+                return node
+        return None
+
+#___________________________________________________________________________________________________ GS: previousTrack
+    @property
+    def previousTrack(self):
+        if not self.node:
+            prev = self.prev
+            if prev:
+                return Track(trackId=prev)
+            return None
+
+        node = self.previousTrackNode if self.node else None
+        return Track(node=node)
+
+#___________________________________________________________________________________________________ GS: nextTrackNode
+    @property
+    def nextTrackNode(self):
+        if not self.node:
+            return None
+
+        connections = cmds.listConnections(self.node + '.message', d=True, p=True)
+        if not connections:
+            return None
+
+        for c in connections:
+            if c.endswith('.prevTrack'):
+                node = c.split('.')[0]
+                return node
+        return None
+
 #___________________________________________________________________________________________________ GS: next
     @property
     def next(self):
-        connections = cmds.listConnections(self.node + '.message', d=True, p=True)
-        if connections:
-            for c in connections:
-                if c.endswith('.prevTrack'):
-                    node = c.split('.')[0]
-                    return Track(node)
-    @next.setter
-    def next(self, value):
-        self._setTrackAttr(TrackPropEnum.NEXT, value)
+        if not self.node:
+            if not self._trackId:
+                return None
+
+            model   = Tracks_Track.MASTER
+            session = model.createSession()
+            result  = session.query(model).filter(model.prev == self._trackId).first()
+            return result.id if result else None
+
+        node = self.nextTrackNode
+        if node:
+            return cmds.getAttr(node + '.' + TrackPropEnum.ID.name)
+        return None
+
+#___________________________________________________________________________________________________ GS: nextTrack
+    @property
+    def nextTrack(self):
+        if not self.node:
+            n = self.next
+            if n:
+                return Track(trackId=n)
+            return None
+
+        node = self.nextTrackNode if self.node else None
+        return Track(node=node)
 
 #___________________________________________________________________________________________________ GS: snapshot
     @property
@@ -195,7 +258,13 @@ class Track(object):
 #___________________________________________________________________________________________________ GS: id
     @property
     def id(self):
-        return self._getTrackAttr(TrackPropEnum.ID)
+        """ The Base-64 unique identifier of the track within the database if a database record
+            exists, otherwise an empty string."""
+
+        out = self._getTrackAttr(TrackPropEnum.ID)
+        if out is None:
+            return u''
+        return None
 
 #___________________________________________________________________________________________________ GS: width
     @property
@@ -299,13 +368,14 @@ class Track(object):
 #___________________________________________________________________________________________________ createNode
     @classmethod
     def createNode(cls):
-        """Create an elliptical cylinder (disk) plus a superimposed triangular pointer to signify
-        the position, dimensions, and rotation of a manus or pes print.  The cylinder has a
-        diameter of one meter so that the scale in x and z equates to the width and length of the
-        manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The pointer is locked to not be
-        non-selectable (reference) and the marker is prohibited from changing y (elevation) or
-        rotation about either x or z.  The color of the cylinder indicates manus versus pes, and
-        the color of the pointer on top of the cylinder indicates left versus right."""
+        """ Create an elliptical cylinder (disk) plus a superimposed triangular pointer to signify
+            the position, dimensions, and rotation of a manus or pes print.  The cylinder has a
+            diameter of one meter so that the scale in x and z equates to the width and length of
+            the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The pointer is locked to
+            not be non-selectable (reference) and the marker is prohibited from changing y
+            (elevation) or rotation about either x or z.  The color of the cylinder indicates manus
+            versus pes, and the color of the pointer on top of the cylinder indicates left versus
+            right."""
 
         trackProps = []
         for enum in Reflection.getReflectionList(TrackPropEnum):
@@ -363,25 +433,30 @@ class Track(object):
 
 #___________________________________________________________________________________________________ getProperties
     def getProperties(self):
+        # Outside of Maya return track data directly
         if self.node is None:
             return self._trackData
 
-        properties = Reflection.getReflectionList(TrackPropEnum)
-        dictionary = dict()
-        for p in properties:
-            name = p.name
+        propEnums = Reflection.getReflectionList(TrackPropEnum)
+        props     = dict()
+        for enum in propEnums:
+            name = enum.name
+
+            # Handle the track ID as a special case so that it is current when the database entry
+            # is created
             if name == TrackPropEnum.ID.name:
-                dictionary[p.name] = self._trackId
+                props[name] = self._trackId
                 continue
 
             value = self.getProperty(name)
             if value is not None:
-                dictionary[name] = value
+                props[name] = value
 
-        return dictionary
+        return props
+
 #___________________________________________________________________________________________________ setProperties
-    def setProperties(self, dictionary):
-        for prop,value in dictionary.iteritems():
+    def setProperties(self, properties):
+        for prop,value in properties.iteritems():
             self.setProperty(prop, value)
 
 #___________________________________________________________________________________________________ colorTrack
@@ -392,9 +467,9 @@ class Track(object):
             ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.node)
 
         if self.left:
-            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.node +"|pointer")
+            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.node + '|pointer')
         else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.node +"|pointer")
+            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.node + '|pointer')
 
 #___________________________________________________________________________________________________ isPes
     def isPes(self):
@@ -415,22 +490,21 @@ class Track(object):
 #___________________________________________________________________________________________________ link
     def link(self, prevTrack):
         """ sets the (string-type) prev and next attributes to reference the name of self and
-        the name of some previousTrack, and also connects the current node's (message-type) prev
-        attribute to previousTrack's node """
-        self.unlink()  # break current next/prev link if present
-        prevTrack.next = self.name
-        self.prev = prevTrack.name
+            the name of some previousTrack, and also connects the current node's (message-type)
+            prev attribute to previousTrack's node."""
+
+        # Break existing next/prev link if present
+        self.unlink()
+        self.prev = prevTrack.id
         cmds.connectAttr(prevTrack.node + '.message', self.node + '.prevTrack', f=True)
 
 #___________________________________________________________________________________________________ unlink
     def unlink(self):
-        p = self.prev
+        p = self.previousTrack
         if p is None:
             return
         cmds.disconnectAttr(p.node + '.message', self.node + '.prevTrack')
-        if p.nodeHasAttribute(TrackPropEnum.NEXT.name):
-            p.next = "" # uses empty string rather than None since this is a node attribute
-        self.prev = ''
+        self.prev = u''
 
 #___________________________________________________________________________________________________ setCadenceCamFocus
     def setCadenceCamFocus(self):
@@ -510,27 +584,38 @@ class Track(object):
         return True
 
 #___________________________________________________________________________________________________ saveData
-    def saveData(self):
+    def saveData(self, session =None):
         props = self.getProperties()
-        if self._trackId is not None:
-            entry = self._getTrackEntry(self._trackId)
-            entry.fromDict(props)
-            entry.session.commit()
-            entry.session.close()
-            return
-
         model = Tracks_Track.MASTER
-        entry = Tracks_Track()
-        entry.fromDict(props)
 
-        session = model.createSession()
-        session.add(entry)
-        session.flush()
+        # Update or create the database entry from the property data
+        if self._trackId is not None:
+            entry = self._getTrackEntry(self._trackId, session=session)
+            s     = entry.session
+            entry.fromDict(props)
+        else:
+            entry = Tracks_Track()
+            entry.fromDict(props)
 
-        self._trackId = Base64.to64(entry.i)
-        entry.id = self._trackId
-        session.commit()
-        session.close()
+            s = model.createSession() if session is None else session
+            s.add(entry)
+            s.flush()
+
+            self._trackId = Base64.to64(entry.i)
+            entry.id = self._trackId
+
+        # If the previous track has not been saved to the database, save it as well to populate
+        # the prev id value
+        if not entry.prev:
+            track = self.previousTrack
+            if track:
+                if not track.id:
+                    track.saveData(session=s)
+                    entry.prev = track.id
+
+        s.commit()
+        if session is None:
+            s.close()
 
 #___________________________________________________________________________________________________ incrementName
     @classmethod
@@ -697,13 +782,15 @@ class Track(object):
 
 #___________________________________________________________________________________________________ _getTrackEntry
     @classmethod
-    def _getTrackEntry(cls, trackId):
-        model   = Tracks_Track.MASTER
-        session = model.createSession()
-        result  = session.query(model).filter(model.id == trackId).first()
+    def _getTrackEntry(cls, trackId, session =None):
+        model  = Tracks_Track.MASTER
+        s      = model.createSession() if session is None else session
+        result = s.query(model).filter(model.id == trackId).first()
         if result is None:
-            session.close()
+            if session is None:
+                s.close()
             return None
+
         return result
 
 #===================================================================================================
