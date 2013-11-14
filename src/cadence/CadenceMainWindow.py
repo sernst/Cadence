@@ -42,6 +42,18 @@ class CadenceMainWindow(PyGlassWindow):
         self.setActiveWidget('home')
 
 #===================================================================================================
+#                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ toggleInteractivity
+    def toggleInteractivity(self, value):
+        if self._currentWidget.widgetID == 'home':
+            self.setEnabled(value)
+        else:
+            if value and not self.isEnabled():
+                self.setEnabled(value)
+            self._currentWidget.toggleInteractivity(value)
+
+#===================================================================================================
 #                                                                               P R O T E C T E D
 
 #___________________________________________________________________________________________________ _initializeImpl

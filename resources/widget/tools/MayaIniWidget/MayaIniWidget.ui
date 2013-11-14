@@ -15,15 +15,8 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="QWidget" name="widget" native="true">
+    <widget class="QWidget" name="controlsBox" native="true">
      <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QPushButton" name="runBtn">
-        <property name="text">
-         <string>Run Initializer</string>
-        </property>
-       </widget>
-      </item>
       <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
@@ -36,6 +29,27 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="runBtn">
+        <property name="text">
+         <string>Install</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="removeBtn">
+        <property name="text">
+         <string>Remove</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="testChk">
+        <property name="text">
+         <string>Test Only</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
