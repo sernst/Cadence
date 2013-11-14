@@ -12,6 +12,7 @@ from pyglass.gui.scrollArea.SimpleScrollArea import SimpleScrollArea
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from pyglass.widgets.LineSeparatorWidget import LineSeparatorWidget
 
+from cadence.enum.UserConfigEnum import UserConfigEnum
 from cadence.views.home.CadenceNimbleStatusElement import CadenceNimbleStatusElement
 
 #___________________________________________________________________________________________________ CadenceHomeWidget
@@ -25,6 +26,7 @@ class CadenceHomeWidget(PyGlassWidget):
     def __init__(self, parent, **kwargs):
         """Creates a new instance of CadenceHomeWidget."""
         super(CadenceHomeWidget, self).__init__(parent, widgetFile=False, **kwargs)
+        self._firstView = True
 
         mainLayout = self._getLayout(self, QtGui.QHBoxLayout)
         mainLayout.setContentsMargins(6, 6, 6, 6)
@@ -38,13 +40,21 @@ class CadenceHomeWidget(PyGlassWidget):
         self._statusBox, statusLayout = self._createElementWidget(self, QtGui.QVBoxLayout, True)
         statusLayout.addStretch()
 
-        nimbleStatus = CadenceNimbleStatusElement(self._statusBox)
-        statusLayout.addWidget(nimbleStatus)
+        self._nimbleStatus = CadenceNimbleStatusElement(
+            self._statusBox,
+            disabled=self.mainWindow.appConfig.get(UserConfigEnum.NIMBLE_TEST_STATUS, True) )
+        statusLayout.addWidget(self._nimbleStatus)
 
         self._populateTools()
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
+    def _activateWidgetDisplayImpl(self, **kwargs):
+        if self._firstView:
+            self._nimbleStatus.refresh()
+            self._firstView = False
 
 #___________________________________________________________________________________________________ _addTool
     def _addTool(self, definition):

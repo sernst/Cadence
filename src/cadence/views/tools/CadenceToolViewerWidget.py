@@ -98,3 +98,7 @@ class CadenceToolViewerWidget(PyGlassWidget):
 
         self._helpBox.setVisible(self._helpComm.loadContent(self._currentWidget))
 
+#___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
+    def _deactivateWidgetDisplayImpl(self, **kwargs):
+        self.clearActiveWidget()
+        self._helpBox.setVisible(False)

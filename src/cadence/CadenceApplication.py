@@ -18,7 +18,7 @@ class CadenceApplication(PyGlassApplication):
 #___________________________________________________________________________________________________ GS: splashScreenUrl
     @property
     def splashScreenUrl(self):
-        return None
+        return 'splashscreen.png'
 
 #___________________________________________________________________________________________________ GS: appID
     @property

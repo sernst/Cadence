@@ -45,8 +45,11 @@ class ToolsHelpCommunicator(PyGlassCommunicator):
                 md = f.read().encode('utf-8', 'ignore')
                 f.close()
                 self._content = markdown.markdown(md)
+            else:
+                return False
         except Exception, err:
             return False
+
         self.callUpdate()
         return True
 

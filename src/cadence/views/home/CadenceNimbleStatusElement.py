@@ -12,6 +12,8 @@ from pyglass.elements.PyGlassElement import PyGlassElement
 from pyglass.themes.ColorSchemes import ColorSchemes
 from pyglass.themes.ThemeColorBundle import ThemeColorBundle
 
+from cadence.enum.UserConfigEnum import UserConfigEnum
+
 #___________________________________________________________________________________________________ CadenceNimbleStatusElement
 class CadenceNimbleStatusElement(PyGlassElement):
     """A class for..."""
@@ -32,7 +34,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
     _INFO_STYLE   = "QLabel { font-size:11x; color:#C#; }"
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, parent, **kwargs):
+    def __init__(self, parent, enabled =False, **kwargs):
         """Creates a new instance of CadenceNimbleStatusElement."""
         super(CadenceNimbleStatusElement, self).__init__(parent, **kwargs)
         self._colors      = None
@@ -40,7 +42,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
         self._timer       = None
         self._activeCheck = False
         self._canceled    = False
-        self._disabled    = False
+        self.disabled     = not enabled
 
         mainLayout = self._getLayout(self, QtGui.QVBoxLayout)
         self.setContentsMargins(6, 6, 6, 6)
@@ -66,8 +68,6 @@ class CadenceNimbleStatusElement(PyGlassElement):
         btn.clicked.connect(self._handleCancelClick)
         buttonLayout.addWidget(btn)
 
-        self.refresh()
-
 #===================================================================================================
 #                                                                                     P U B L I C
 
@@ -84,7 +84,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
             return
         self._activeCheck = True
 
-        if self._disabled:
+        if self.disabled:
             self._colors = ThemeColorBundle(ColorSchemes.GREY)
             self._status = False
             self._label.setText(self._INACTIVE_LABEL)
@@ -111,7 +111,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
 
         self.repaint()
 
-        if not self._status and not self._disabled:
+        if not self._status and not self.disabled:
             QtCore.QTimer.singleShot(10000, self._handleTimer)
         self._activeCheck = False
 
@@ -131,13 +131,17 @@ class CadenceNimbleStatusElement(PyGlassElement):
 
 #___________________________________________________________________________________________________ _handleRetryClick
     def _handleRetryClick(self):
-        self._disabled = False
+        self.mainWindow.appConfig.set(UserConfigEnum.NIMBLE_TEST_STATUS, True)
+
+        self.disabled = False
         self.refresh()
 
 #___________________________________________________________________________________________________ _handleCancelClick
     def _handleCancelClick(self):
-        if self._disabled:
+        if self.disabled:
             return
 
-        self._disabled = True
+        self.mainWindow.appConfig.set(UserConfigEnum.NIMBLE_TEST_STATUS, False)
+
+        self.disabled = True
         self.refresh()
