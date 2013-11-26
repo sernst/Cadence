@@ -23,40 +23,40 @@ class TrackwayManagerWidget(PyGlassWidget):
     def __init__(self, parent, **kwargs):
         super(TrackwayManagerWidget, self).__init__(parent, **kwargs)
 
-        # path = self.getResourcePath('..', '..', 'help.markdown', isFile=True)
-        # gives you the TrackwayManager folder
-        # print "in the TrackwayManagerWidget, the path =%s" % path
-        # get a qIcon or something or QButton icon and put the icons in the TrackwayManager Widget
-        # folder and commit them to the project also. Look for them in the changes at the bottom
-        # of PyCharm window
+        self.refreshBtn.clicked.connect(self.refreshUI)
 
-        # this returns the path to the shared directory resources/apps/CadenceApplication
-        # to get self.getAppResourcePath()
+        # in Edit Track tab:
+        self.selectPriorBtn.clicked.connect(self.selectPrecursors)
+        self.selectLaterBtn.clicked.connect(self.selectSuccessors)
 
-        self.selectPriorBtn.clicked.connect(self.selectPrecursorTracks)
-        self.selectLaterBtn.clicked.connect(self.selectSuccessorTracks)
-        self.selectSeriesBtn.clicked.connect(self.selectTrackSeries)
+        self.selectSeriesBtn.clicked.connect(self.selectSeries)
+        self.deleteBtn.clicked.connect(self.deleteSelected)
 
         self.linkBtn.clicked.connect(self.linkSelectedTracks)
         self.unlinkBtn.clicked.connect(self.unlinkSelectedTracks)
-        self.deleteBtn.clicked.connect(self.deleteSelectedTracks)
+
+        self.renameBtn.clicked.connect(self.renameSelected)
+        self.setSelectedBtn.clicked.connect(self.setSelected)
 
         self.firstBtn.clicked.connect(self.goToFirstTrack)
         self.prevBtn.clicked.connect(self.goToPrevTrack)
         self.nextBtn.clicked.connect(self.goToNextTrack)
         self.lastBtn.clicked.connect(self.goToLastTrack)
 
-        self.refreshBtn.clicked.connect(self.refreshUI)
-        self.setSelectedBtn.clicked.connect(self.setSelectedTracks)
         self.addBtn.clicked.connect(self.addTrack)
+        self.findBtn.clicked.connect(self.findTrack)
 
-        self.renameBtn.clicked.connect(self.renameSelectedTracks)
-        self.selectSeriesBtn.clicked.connect(self.selectTrackSeries)
-
-        # in EditTrackway tab:
-        self.trackwayCB.activated.connect(self.selectFromTrackwayCB)
+        # in Edit Trackway tab:
+        #self.trackwayCB.activated.connect(self.selectFromTrackwayCB)
+        self.showTrackwayBtn.clicked.connect(self.showTrackway)
+        self.hideTrackwayBtn.clicked.connect(self.hideTrackway)
+        self.selectTrackwayBtn.clicked.connect(self.selectTrackway)
+        self.showAllTrackwaysBtn.clicked.connect(self.showAllTrackways)
+        self.hideAllTrackwaysBtn.clicked.connect(self.hideAllTrackways)
+        self.selectAllTrackwaysBtn.clicked.connect(self.selectAllTrackways)
+        self.setTrackwayBtn.clicked.connect(self.setSelectedTrackway)
         self.initBtn.clicked.connect(self.initializeTrackway)
-
+        self.repairBtn.clicked.connect(self.repair)
 
         self.adjustSize()
         self.refreshUI()
@@ -67,11 +67,11 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ isTrackNode
     def isTrackNode(self, n):
-        return cmds.attributeQuery(TrackPropEnum.NAME.name, node=n, exists=True)
+        return cmds.attributeQuery(TrackPropEnum.SITE.name, node=n, exists=True)
 
 #___________________________________________________________________________________________________ getAllTracks
     def getAllTracks(self):
-        nodes = cmds.ls('track*') # presumes object is a track node iff name starts with 'track'
+        nodes = cmds.ls('track*') # all track nodes are presumed to start with 'track'
 
         if nodes is None:
             return None
@@ -79,10 +79,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         for n in nodes:
             if self.isTrackNode(n):
                 tracks.append(Track(n))
-        return tracks
+        return tracks if len(tracks) > 0 else None
 
-#___________________________________________________________________________________________________ getSelectedTracks
-    def getSelectedTracks(self):
+#___________________________________________________________________________________________________ getSelected
+    def getSelected(self):
         selectedNodes = cmds.ls(selection=True, exactType='transform')
         if len(selectedNodes) == 0:
             return None
@@ -94,42 +94,42 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ getFirstTrack
     def getFirstTrack(self):
-        selectedTracks = self.getSelectedTracks()
+        selectedTracks = self.getSelected()
         if not selectedTracks:
             return None
         t = selectedTracks[0]
-        while t.prev is not None:
-            t = t.prev
+        while t.prevTrack is not None:
+            t = t.prevTrack
         return t
 
 #___________________________________________________________________________________________________ getLastTrack
     def getLastTrack(self):
-        selectedTracks = self.getSelectedTracks()
+        selectedTracks = self.getSelected()
         if not selectedTracks:
             return None
         t = selectedTracks[-1]
-        while t.next is not None:
-            t = t.next
+        while t.nextTrack is not None:
+            t = t.nextTrack
         return t
 
 #___________________________________________________________________________________________________ getFirstSelectedTrack
     def getFirstSelectedTrack(self):
-        selectedTracks = self.getSelectedTracks()
+        selectedTracks = self.getSelected()
         if not selectedTracks:
             return None
         s = selectedTracks[0]
-        while s.prev in selectedTracks:
-            s = s.prev
+        while s.prevTrack in selectedTracks:
+            s = s.prevTrack
         return s
 
 #___________________________________________________________________________________________________ getLastSelectedTrack
     def getLastSelectedTrack(self):
-        selectedTracks = self.getSelectedTracks()
+        selectedTracks = self.getSelected()
         if not selectedTracks:
             return None
         s = selectedTracks[-1]
-        while s.next in selectedTracks:
-            s = s.next
+        while s.nextTrack in selectedTracks:
+            s = s.nextTrack
         return s
 
  #__________________________________________________________________________________________________ getTrackSeries
@@ -138,7 +138,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = self.getFirstTrack()
         while t:
             series.append(t)
-            t = t.next
+            t = t.nextTrack
         return series
 
 #___________________________________________________________________________________________________ selectTrack
@@ -160,11 +160,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = self.getFirstSelectedTrack()
         if t is None:
             return
-        p = t.prev
-        if p:
-            self.selectTrack(p)
-        else:
-            self.selectTrack(t)
+        p = t.prevTrack
+        self.selectTrack(p if p else t)
         self.refreshUI()
 
 #___________________________________________________________________________________________________ goToNextTrack
@@ -173,11 +170,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = self.getLastSelectedTrack()
         if t is None:
             return
-        n = t.next
-        if n:
-            self.selectTrack(n)
-        else:
-            self.selectTrack(t)
+        n = t.nextTrack
+        self.selectTrack(n if n else t)
         self.refreshUI()
 
 #___________________________________________________________________________________________________ goToLastTrack
@@ -190,7 +184,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ linkSelectedTracks
     def linkSelectedTracks(self):
-        selected = self.getSelectedTracks()
+        selected = self.getSelected()
         if selected is None:
             return
         i = 0
@@ -202,14 +196,14 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ unlinkSelectedTracks
     def unlinkSelectedTracks(self):
-        selected = self.getSelectedTracks()
+        selected = self.getSelected()
         if selected is None:
             return
 
         s1 = self.getFirstSelectedTrack()
         s2 = self.getLastSelectedTrack()
-        p = s1.prev
-        n = s2.next
+        p = s1.prevTrackNode
+        n = s2.nextTrackNode
 
         if p and n:              # if track(s) to be unlinked are within
             s1.unlink()          # disconnect previous track from first selected track
@@ -234,59 +228,75 @@ class TrackwayManagerWidget(PyGlassWidget):
         # load up a new dictionary for this
 
         lp1 = Track(Track.createNode())
-        lp1.name = 'LP1'
-        lp1.x = 200.0
-        lp1.z = 100.0
-        lp1.width = 0.4
+        lp1.left   = True
+        lp1.pes    = True
+        lp1.number = 1
+        lp1.x      = 200.0
+        lp1.z      = 100.0
+        lp1.width  = 0.4
         lp1.length = 0.6
 
         rp1 = Track(Track.createNode())
-        rp1.name = 'RP1'
-        rp1.x = 100.0
-        rp1.z = 100.0
-        rp1.width = 0.4
+        rp1.left   = False
+        rp1.pes    = True
+        rp1.number = 1
+        rp1.x      = 100.0
+        rp1.z      = 100.0
+        rp1.width  = 0.4
         rp1.length = 0.6
 
         lm1 = Track(Track.createNode())
-        lm1.name = 'LM1'
-        lm1.x = 200.0
-        lm1.z = 200.0
-        lm1.width = 0.25
+        lm1.left   = True
+        lm1.pes    = False
+        lm1.number = 1
+        lm1.x      = 200.0
+        lm1.z      = 200.0
+        lm1.width  = 0.25
         lm1.length = 0.2
 
         rm1 = Track(Track.createNode())
-        rm1.name = 'RM1'
-        rm1.x = 100.0
-        rm1.z = 200.0
-        rm1.width = 0.25
+        rm1.left   = False
+        rm1.pes    = False
+        rm1.number = 1
+        rm1.x      = 100.0
+        rm1.z      = 200.0
+        rm1.width  = 0.25
         rm1.length = 0.2
 
         lp2 = Track(Track.createNode())
-        lp2.name = 'LP2'
-        lp2.x = 200.0
-        lp2.z = 400.0
-        lp2.width = 0.4
+        lp2.left   = True
+        lp2.pes    = True
+        lp2.number = 2
+        lp2.x      = 200.0
+        lp2.z      = 400.0
+        lp2.width  = 0.4
         lp2.length = 0.6
 
         rp2 = Track(Track.createNode())
-        rp2.name = 'RP2'
-        rp2.x = 100.0
-        rp2.z = 400.0
-        rp2.width = 0.4
+        rp2.left   = False
+        rp2.pes    = True
+        rp2.number = 2
+        rp2.x      = 100.0
+        rp2.z      = 400.0
+        rp2.width  = 0.4
         rp2.length = 0.6
 
         lm2 = Track(Track.createNode())
-        lm2.name = 'LM2'
-        lm2.x = 200.0
-        lm2.z = 500.0
-        lm2.width = 0.25
+        lm2.left   = True
+        lm2.pes    = False
+        lm2.number = 1
+        lm2.x      = 200.0
+        lm2.z      = 500.0
+        lm2.width  = 0.25
         lm2.length = 0.2
 
         rm2 = Track(Track.createNode())
-        rm2.name = 'RM2'
-        rm2.x = 100.0
-        rm2.z = 500.0
-        rm2.width = 0.25
+        rm2.left   = False
+        rm2.pes    = False
+        rm2.number = 1
+        rm2.x      = 100.0
+        rm2.z      = 500.0
+        rm2.width  = 0.25
         rm2.length = 0.2
 
         lp2.link(lp1)
@@ -298,29 +308,29 @@ class TrackwayManagerWidget(PyGlassWidget):
             lp1.node, rp1.node, lm1.node, rm1.node,
             lp2.node, rp2.node, lm2.node, rm2.node] )
         lp1.setCadenceCamFocus()
-        self.setSelectedTracks()
+        self.setSelected()
 
 #___________________________________________________________________________________________________ addTrack
     def addTrack(self):
         lastTrack = self.getLastTrack()
         if lastTrack is None:
             return
-        prevTrack = lastTrack.prev
+        prevTrackNode = lastTrack.prevTrackNode
         nextTrack = Track(cmds.duplicate(lastTrack.node)[0])
         nextName  = Track.incrementName(lastTrack.name)
         nextTrack.name = nextName
-        dx = lastTrack.x - prevTrack.x
-        dz = lastTrack.z - prevTrack.z
+        dx = lastTrack.x - prevTrackNode.x
+        dz = lastTrack.z - prevTrackNode.z
         nextTrack.x = lastTrack.x + dx
         nextTrack.z = lastTrack.z + dz
         nextTrack.link(lastTrack)
+        nextTrack.setCadenceCamFocus()
         self.refreshUI()
-
 #___________________________________________________________________________________________________ getNamefromUI
     def getNameFromUI(self):
         return self.rightLeftLE.text() + self.manusPesLE.text() + self.numberLE.text()
 
-#___________________________________________________________________________________________________ getTrackPropertiesFromUI
+#___________________________________________________________________________________________________ getTrackwayPropertiesFromUI
     def getTrackwayPropertiesFromUI(self):
         dictionary = dict()
 
@@ -332,12 +342,13 @@ class TrackwayManagerWidget(PyGlassWidget):
         dictionary[TrackPropEnum.TRACKWAY.name] = self.trackwayLE.text()
         return dictionary
 
-#___________________________________________________________________________________________________ floatWithDefault
+#___________________________________________________________________________________________________ floatLE
     def floatLE(self, string, default =0.0):
         return default if string == '' else float(string)
 
 #___________________________________________________________________________________________________ getTrackPropertiesFromUI
     def getTrackPropertiesFromUI(self):
+        """ Get UI values (except for WIDTH, LENGTH, ROTATION, X and Z """
         d = self.getTrackwayPropertiesFromUI() # first get the trackway properties
         # then add to the dictionary the specifics of a given track
         d[TrackPropEnum.NAME.name]  = self.getNameFromUI()
@@ -345,24 +356,19 @@ class TrackwayManagerWidget(PyGlassWidget):
         d[TrackPropEnum.ID.name]    = self.idLE.text()
         d[TrackPropEnum.NOTE.name]  = self.noteTE.toPlainText()
 
-        d[TrackPropEnum.WIDTH.name]                = self.floatLE(self.widthLE.text())
         d[TrackPropEnum.WIDTH_UNCERTAINTY.name]    = self.floatLE(self.widthUncertaintyLE.text())
         d[TrackPropEnum.WIDTH_MEASURED.name]       = self.floatLE(self.widthMeasuredLE.text())
-        d[TrackPropEnum.LENGTH.name]               = self.floatLE(self.lengthLE.text())
         d[TrackPropEnum.LENGTH_UNCERTAINTY.name]   = self.floatLE(self.lengthUncertaintyLE.text())
         d[TrackPropEnum.LENGTH_MEASURED.name]      = self.floatLE(self.lengthMeasuredLE.text())
-        d[TrackPropEnum.ROTATION.name]             = self.floatLE(self.rotationLE.text())
         d[TrackPropEnum.ROTATION_UNCERTAINTY.name] = self.floatLE(self.rotationUncertaintyLE.text())
         d[TrackPropEnum.DEPTH_MEASURED.name]       = self.floatLE(self.depthMeasuredLE.text())
         d[TrackPropEnum.DEPTH_UNCERTAINTY.name]    = self.floatLE(self.depthUncertaintyLE.text())
-        d[TrackPropEnum.X.name]                    = self.floatLE(self.xLE.text())
-        d[TrackPropEnum.Z.name]                    = self.floatLE(self.zLE.text())
 
         return d
 
 #___________________________________________________________________________________________________ setSelected
-    def setSelectedTracks(self):
-        selectedTracks = self.getSelectedTracks()
+    def setSelected(self):
+        selectedTracks = self.getSelected()
         if not selectedTracks:
             return
 
@@ -383,8 +389,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.sectorLE.setText('')
         self.levelLE.setText('')
         self.trackwayLE.setText('')
-        self.rightLeftLE.setText('')
-        self.manusPesLE.setText('')
+        self.leftLE.setText('')
+        self.pesLE.setText('')
         self.numberLE.setText('')
 
         self.widthLE.setText('')
@@ -413,7 +419,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ refreshUI
     def refreshUI(self):
-        selectedTracks = self.getSelectedTracks()
+        selectedTracks = self.getSelected()
         self.clearUI()
 
         if selectedTracks is None:
@@ -421,91 +427,92 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         t = selectedTracks[0]
         if len(selectedTracks) == 1:
-            v = t.getProperty(TrackPropEnum.NAME)
-            v = '' if v is None else v
-            self.rightLeftLE.setText(v[0])
-            self.manusPesLE.setText(v[1])
-            self.numberLE.setText(v[2:])
+            self.leftLE.setText(u'L'if t.left else u'R')
+            self.pesLE.setText(u'P'if t.pes else u'M')
+            self.numberLE.setText(unicode(t.number))
 
-            v = t.getProperty(TrackPropEnum.WIDTH)
+            v = t.width
             self.widthLE.setText(u'' if v is None else '%.2f' % v)
 
-            v = t.getProperty(TrackPropEnum.WIDTH_MEASURED)
+            v = t.widthMeasured
             self.widthMeasuredLE.setText(u'' if v is None else '%.2f' % v)
 
-            v = t.getProperty(TrackPropEnum.WIDTH_UNCERTAINTY)
+            v = t.widthUncertainty
             self.widthUncertaintyLE.setText(u'' if v is None else '%.1f' % v)
 
-            v = t.getProperty(TrackPropEnum.LENGTH)
+            v = t.length
             self.lengthLE.setText(u'' if v is None else '%.2f' % v)
 
-            v = t.getProperty(TrackPropEnum.LENGTH_MEASURED)
+            v = t.lengthMeasured
             self.lengthMeasuredLE.setText(u'' if v is None else '%.2f' % v)
 
-            v = t.getProperty(TrackPropEnum.LENGTH_UNCERTAINTY)
+            v = t.lengthUncertainty
             self.lengthUncertaintyLE.setText(u'' if v is None else '%.1f' % v)
 
-            v = t.getProperty(TrackPropEnum.ROTATION)
+            v = t.rotation
             self.rotationLE.setText(u'' if v is None else '%.2f' % v)
 
-            v = t.getProperty(TrackPropEnum.ROTATION_UNCERTAINTY)
+            v = t.rotationUncertainty
             self.rotationUncertaintyLE.setText(u'' if v is None else '%.1f' % v)
 
-            v = t.getProperty(TrackPropEnum.DEPTH_MEASURED)
+            v = t.depthMeasured
             self.depthMeasuredLE.setText(u'' if v is None else '%.2f' % v)
 
-            v = t.getProperty(TrackPropEnum.DEPTH_UNCERTAINTY)
+            v = t.depthUncertainty
             self.depthUncertaintyLE.setText(u'' if v is None else '%.1f' % v)
 
-            v = t.getProperty(TrackPropEnum.INDEX)
+            v = t.index
             self.indexLE.setText(u'' if v is None else v)
 
-            v = t.getProperty(TrackPropEnum.ID)
+            v = t.id
             self.idLE.setText(u'' if v is None else v)
 
-            v = t.getProperty(TrackPropEnum.NOTE)
+            v = t.note
             self.noteTE.setPlainText(u'' if v is None else v)
 
-            v = t.getProperty(TrackPropEnum.X)
+            v = t.x
             self.xLE.setText(u'' if v is None else '%.2f' % v)
 
-            v = t.getProperty(TrackPropEnum.Z)
+            v = t.z
             self.zLE.setText(u'' if v is None else '%.2f' % v)
 
             v = self.getFirstTrack()
-            self.firstTrackLbl.setText(u'' if v is None else unicode(v))
+            self.firstTrackLbl.setText(unicode('') if v is None else unicode(v.name))
 
-            v = t.prev
-            self.prevTrackLbl.setText(u'' if v is None else unicode(v))
+            v = t.prevTrack
+            self.prevTrackLbl.setText(u'' if v is None else unicode(v.name))
 
-            v = t.next
-            self.nextTrackLbl.setText(u'' if v is None else unicode(v))
+            v = t.nextTrack
+            self.nextTrackLbl.setText(u'' if v is None else unicode(v.name))
 
             v = self.getLastTrack()
-            self.lastTrackLbl.setText(u'' if v is None else unicode(v))
+            self.lastTrackLbl.setText(u'' if v is None else unicode(v.name))
 
-        v = t.getProperty(TrackPropEnum.COMM)
+        v = t.comm
         self.communityLE.setText(u'' if v is None else v)
 
-        v = t.getProperty(TrackPropEnum.SITE)
+        v = t.site
         self.siteLE.setText(u'' if v is None else v)
 
-        v = t.getProperty(TrackPropEnum.YEAR)
+        v = t.year
         self.yearLE.setText(u'' if v is None else v)
 
-        v = t.getProperty(TrackPropEnum.SECTOR)
+        v = t.sector
         self.sectorLE.setText(u'' if v is None else v)
 
-        v = t.getProperty(TrackPropEnum.LEVEL)
+        v = t.level
         self.levelLE.setText(u'' if v is None else v)
 
-        v = t.getProperty(TrackPropEnum.TRACKWAY)
+        v = unicode(t.trackwayType) + unicode(t.trackwayNumber)
         self.trackwayLE.setText(u'' if v is None else v)
-        self.trackwayCB.addItem(t.trackway)
+        if v is not None:
+            self.addTrackwayToCB(v)
+            i = self.trackwayCB.findText(v)
+            self.trackwayCB.setCurrentIndex(i)
 
-#___________________________________________________________________________________________________ renameSelectedTracks
-    def renameSelectedTracks(self):
-        selectedTracks = self.getSelectedTracks()
+#___________________________________________________________________________________________________ renameSelected
+    def renameSelected(self):
+        selectedTracks = self.getSelected()
         if selectedTracks is None:
              return None
         name = self.getNameFromUI()
@@ -513,46 +520,44 @@ class TrackwayManagerWidget(PyGlassWidget):
              t.name = name
              name   = Track.incrementName(name)
 
-#___________________________________________________________________________________________________ selectSuccessorTracks
-    def selectSuccessorTracks(self):
+#___________________________________________________________________________________________________ selectSuccessors
+    def selectSuccessors(self):
         t = self.getLastSelectedTrack()
         if t is None:
-            print 'Select at least one track'
             return
-        n = t.next
-        successorNodes = list()
-        while n:
-            successorNodes.append(n.node)
-            n = n.next
-        cmds.select(successorNodes)
+        successor = list()
+        t = t.nextTrack
+        while t:
+            successor.append(t.node)
+            t = t.nextTrack
+        cmds.select(successor)
 
-#___________________________________________________________________________________________________ selectPrecursorTracks
-    def selectPrecursorTracks(self):
+#___________________________________________________________________________________________________ selectPrecursors
+    def selectPrecursors(self):
          t = self.getFirstSelectedTrack()
          if t is None:
-             print 'Select at least one track'
              return
-         p = t.prev
-         precursorNodes = list()
-         while p:
-            precursorNodes.append(p.node)
-            p = p.prev
-         cmds.select(precursorNodes)
+         precursors = list()
+         t = t.prevTrack
+         while t:
+            precursors.append(t.node)
+            t = t.prevTrack
+         cmds.select(precursors)
 
-#___________________________________________________________________________________________________ selectTrackSeries
-    def selectTrackSeries(self):
+#___________________________________________________________________________________________________ selectSeries
+    def selectSeries(self):
         tracks = self.getTrackSeries()
         if tracks is None:
             return
-        print "selected track series consists of %s tracks" % len(tracks)
+        print "This track series consists of %s tracks" % len(tracks)
         nodes = list()
         for t in tracks:
             nodes.append(t.node)
         cmds.select(nodes)
 
-#___________________________________________________________________________________________________ deleteSelectedTracks
-    def deleteSelectedTracks(self):
-        tracks = self.getSelectedTracks()
+#___________________________________________________________________________________________________ deleteSelected
+    def deleteSelected(self):
+        tracks = self.getSelected()
         if tracks is None:
             return
         self.unlinkSelectedTracks()
@@ -571,9 +576,9 @@ class TrackwayManagerWidget(PyGlassWidget):
             nodes.append(t.node)
         cmds.select(nodes)
 
-#___________________________________________________________________________________________________ exportSelectedTracks
-    def exportSelectedTracks(self):
-        tracks = self.getSelectedTracks()
+#___________________________________________________________________________________________________ exportSelected
+    def exportSelected(self):
+        tracks = self.getSelected()
 
         if tracks is None:
             return
@@ -586,10 +591,112 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         return tracks
 
-#___________________________________________________________________________________________________ selectFromTrackwayCB
-    def selectFromTrackwayCB(self):
-        print 'selectFromTrackwayCB: clicked'
+#___________________________________________________________________________________________________ addTrackwayToCB
+    def addTrackwayToCB(self, trackway):
+        tracks = self.getSelected()
+
+        i = self.trackwayCB.findText(trackway)
+        if i == -1:
+            self.trackwayCB.addItem(trackway)
+
+#___________________________________________________________________________________________________ showTrackway
+    def showTrackway(self):
+        tracks = self.getSelected()
+        if tracks is None:
+            return
+        t = tracks[0]
+        trackway = t.trackwayType + t.trackwayNumber
+        layer = trackway + '_Layer'
+        if cmds.objExists(layer):
+            cmds.setAttr('%s.visibility' % layer, 1)
+
+#___________________________________________________________________________________________________ hideTrackway
+    def hideTrackway(self):
+        tracks = self.getSelected()
+        if tracks is None:
+            return
+        t = tracks[0]
+        trackway = t.trackway
+        layer = trackway + '_Layer'
+        if cmds.objExists(layer):
+            cmds.setAttr('%s.visibility' % layer, 0)
+
+#___________________________________________________________________________________________________ findTrack
+    def findTrack(self):
+        targetName = self.getNameFromUI()
+        targetTrackway = self.trackwayLE.text()
+        for node in cmds.ls('track*', exactType='transform'):
+            if self.isTrackNode(node):
+                name = cmds.getAttr('%s.name' % node)
+                trackway = cmds.getAttr('%s.trackway' % node)
+                if name == targetName and trackway == targetTrackway:
+                    t = Track(node)
+                    self.selectTrack(t)
+                    return
+
+#___________________________________________________________________________________________________ selectTrackway
+    def selectTrackway(self):
+        target = self.trackwayLE.text()
+        if not target:
+            return
+        print 'target = ', target
+        tracks = self.getAllTracks()
+        nodes = list()
+        for t in tracks:
+            if t.trackwayType == target[0] and t.trackwayNumber == target[1:]:
+                nodes.append(t.node)
+        cmds.select(nodes, add=True)
+
+#___________________________________________________________________________________________________ showAllTrackways
+    def showAllTrackways(self):
+        print 'showAllTrackways: clicked'
+
+#___________________________________________________________________________________________________ hideAllTrackways
+    def hideAllTrackways(self):
+        print 'hideAllTrackways: clicked'
+
+#___________________________________________________________________________________________________ selectAllTrackways
+    def selectAllTrackways(self):
+        print 'selectAllTrackways: clicked'
+
+#___________________________________________________________________________________________________ setSelectedTrackway
+    def setSelectedTrackway(self):
+        print 'selectTrackway: clicked'
 
 #___________________________________________________________________________________________________ test
     def test(self):
         pass
+
+#___________________________________________________________________________________________________ repair
+    def repair(self):
+        tracks = self.getSelected()
+        #tracks = self.getAllTracks()
+        if tracks is None:
+            print 'no tracks to repair'
+            return
+        print 'repair of %s tracks' % len(tracks)
+
+        for t in tracks:
+            print 'repairing track %s' % t.node
+            if t.nodeHasAttribute('name'):
+                v = cmds.getAttr(t.node + '.name')
+                print 'name = ', v
+                if len(v) > 0:
+                    t.left = True if v[0] == u'L' else False
+                if len(v) > 1:
+                    t.pes  = True if v[1] == u'P' else False
+                if len(v) > 2:
+                    print 'number = ', v[2:]
+                    t.number = v[2:]
+                cmds.deleteAttr(t.node + '.name')
+            if t.nodeHasAttribute('trackway'):
+                v = cmds.getAttr(t.node + '.trackway')
+                print 'repair:  trackway = ', v
+                t.trackwayType = v[0]
+                t.trackwayNumber = v[1:]
+                cmds.deleteAttr(t.node + '.trackway')
+            if t.nodeHasAttribute('next'):
+                cmds.deleteAttr(t.node + '.next')
+            if t.nodeHasAttribute('prev'):
+                cmds.deleteAttr(t.node + '.prev')
+        print 'done'

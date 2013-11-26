@@ -1,6 +1,6 @@
 # TrackPropEnum.py
 # (C)2013
-# Kent A. Stevens
+# Scott Ernst and Kent A. Stevens
 
 from collections import namedtuple
 
@@ -21,11 +21,11 @@ class TrackPropEnum(object):
     YEAR            = TRACK_PROP_NT('year',             'string',   False)
     LEVEL           = TRACK_PROP_NT('level',            'string',   False)
     SECTOR          = TRACK_PROP_NT('sector',           'string',   False)
-    TRACKWAY_NUMBER = TRACK_PROP_NT('trackwayNumber',   'float',    False)
+    TRACKWAY_NUMBER = TRACK_PROP_NT('trackwayNumber',   'string',   False)
     TRACKWAY_TYPE   = TRACK_PROP_NT('trackwayType',     'string',   False)
     LEFT            = TRACK_PROP_NT('left',             'bool',     False)
     PES             = TRACK_PROP_NT('pes',              'bool',     False)
-    NUMBER          = TRACK_PROP_NT('number',           'float',    False)
+    NUMBER          = TRACK_PROP_NT('number',           'string',   False)
     NOTE            = TRACK_PROP_NT('note',             'string',   False)
     PREV            = TRACK_PROP_NT('prev',             'string',   False)
     SNAPSHOT        = TRACK_PROP_NT('snapshot',         'string',   False)
