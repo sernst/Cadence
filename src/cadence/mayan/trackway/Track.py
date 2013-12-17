@@ -47,10 +47,13 @@ class Track(object):
 #___________________________________________________________________________________________________ GS: name
     @property
     def name(self):
-        number = self.number
-        if not number:
-            number = 0
-        return (u'L' if self.left else u'R') + (u'P' if self.pes else u'M') + unicode(int(number))
+        number = unicode(int(self.number)) if self.number else u'-'
+        return (u'L' if self.left else u'R') + (u'P' if self.pes else u'M') + number
+    @name.setter
+    def name(self, value):
+        self.pes    = True if value[0] == u'P' else False
+        self.left   = True if value[1] == u'L' else False
+        self.number = value[2:]
 
 #___________________________________________________________________________________________________ GS: trackData
     @property
@@ -158,57 +161,13 @@ class Track(object):
         if not self.node:
             return self._trackData.get(TrackPropEnum.PREV.name)
 
-        node = self.previousTrackNode
+        node = self.prevNode
         if node:
             return cmds.getAttr(node + '.' + TrackPropEnum.ID.name)
         return None
     @prev.setter
     def prev(self, value):
         self._setTrackAttr(TrackPropEnum.PREV, value)
-
-#___________________________________________________________________________________________________ GS: previousTrackNode
-    @property
-    def previousTrackNode(self):
-        if not self.node:
-            return None
-
-        connections = cmds.listConnections(self.node + '.prevTrack', s=True, p=True)
-        if not connections:
-            return None
-
-        for c in connections:
-            if c.endswith('.message'):
-                node = c.split('.')[0]
-                return node
-        return None
-
-#___________________________________________________________________________________________________ GS: previousTrack
-    @property
-    def previousTrack(self):
-        if not self.node:
-            prev = self.prev
-            if prev:
-                return Track(trackId=prev)
-            return None
-
-        node = self.previousTrackNode if self.node else None
-        return Track(node=node)
-
-#___________________________________________________________________________________________________ GS: nextTrackNode
-    @property
-    def nextTrackNode(self):
-        if not self.node:
-            return None
-
-        connections = cmds.listConnections(self.node + '.message', d=True, p=True)
-        if not connections:
-            return None
-
-        for c in connections:
-            if c.endswith('.prevTrack'):
-                node = c.split('.')[0]
-                return node
-        return None
 
 #___________________________________________________________________________________________________ GS: next
     @property
@@ -222,22 +181,60 @@ class Track(object):
             result  = session.query(model).filter(model.prev == self._trackId).first()
             return result.id if result else None
 
-        node = self.nextTrackNode
+        node = self.nextNode
         if node:
             return cmds.getAttr(node + '.' + TrackPropEnum.ID.name)
         return None
+
+#___________________________________________________________________________________________________ GS: prevNode
+    @property
+    def prevNode(self):
+        if not self.node:
+            return None
+
+        connections = cmds.listConnections(self.node + '.prevTrack', s=True, p=True)
+        if not connections:
+            return None
+
+        for c in connections:
+            if c.endswith('.message'):
+                node = c.split('.')[0]
+                return node
+        return None
+#___________________________________________________________________________________________________ GS: nextNode
+    @property
+    def nextNode(self):
+        if not self.node:
+            return None
+
+        connections = cmds.listConnections(self.node + '.message', d=True, p=True)
+        if not connections:
+            return None
+
+        for c in connections:
+            if c.endswith('.prevTrack'):
+                node = c.split('.')[0]
+                return node
+        return None
+#___________________________________________________________________________________________________ GS: prevTrack
+    @property
+    def prevTrack(self):
+        if not self.node:
+            p = self.prev
+            return Track(trackId=p) if p else None
+        else:
+            p = self.prevNode
+            return Track(node=p) if p else None
 
 #___________________________________________________________________________________________________ GS: nextTrack
     @property
     def nextTrack(self):
         if not self.node:
             n = self.next
-            if n:
-                return Track(trackId=n)
-            return None
-
-        node = self.nextTrackNode if self.node else None
-        return Track(node=node)
+            return Track(trackId=n) if n else None
+        else:
+            n = self.nextNode
+            return Track(node=n) if n else None
 
 #___________________________________________________________________________________________________ GS: snapshot
     @property
@@ -329,6 +326,14 @@ class Track(object):
     @depthUncertainty.setter
     def depthUncertainty(self, value):
         self._setTrackAttr(TrackPropEnum.DEPTH_UNCERTAINTY, value)
+
+#___________________________________________________________________________________________________ GS: rotationUncertainty
+    @property
+    def rotationUncertainty(self):
+        return self._getTrackAttr(TrackPropEnum.ROTATION_UNCERTAINTY)
+    @rotationUncertainty.setter
+    def rotationUncertainty(self, value):
+        self._setTrackAttr(TrackPropEnum.ROTATION_UNCERTAINTY, value)
 
 #___________________________________________________________________________________________________ GS: widthMeasured
     @property
@@ -471,22 +476,6 @@ class Track(object):
         else:
             ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.node + '|pointer')
 
-#___________________________________________________________________________________________________ isPes
-    def isPes(self):
-        return self.pes
-
-#___________________________________________________________________________________________________ isManus
-    def isManus(self):
-        return not self.pes
-
-#___________________________________________________________________________________________________ isRight
-    def isRight(self):
-        return not self.left
-
-#___________________________________________________________________________________________________ isLeft
-    def isLeft(self):
-        return self.left
-
 #___________________________________________________________________________________________________ link
     def link(self, prevTrack):
         """ sets the (string-type) prev and next attributes to reference the name of self and
@@ -500,11 +489,11 @@ class Track(object):
 
 #___________________________________________________________________________________________________ unlink
     def unlink(self):
-        p = self.previousTrack
+        p = self.prevTrack
         if p is None:
             return
         cmds.disconnectAttr(p.node + '.message', self.node + '.prevTrack')
-        self.prev = u''
+        self.prevTrack = u''
 
 #___________________________________________________________________________________________________ setCadenceCamFocus
     def setCadenceCamFocus(self):
@@ -607,7 +596,7 @@ class Track(object):
         # If the previous track has not been saved to the database, save it as well to populate
         # the prev id value
         if not entry.prev:
-            track = self.previousTrack
+            track = self.prevTrack
             if track:
                 if not track.id:
                     track.saveData(session=s)
@@ -681,20 +670,20 @@ class Track(object):
 
         t.index = csvIndex
 
-        if t.isManus():
-            wide      = csvRow[TrackCsvColumnEnum.MANUS_WIDTH]
-            wideGuess = csvRow[TrackCsvColumnEnum.MANUS_WIDTH_GUESS]
-            longVal   = csvRow[TrackCsvColumnEnum.MANUS_LENGTH]
-            longGuess = csvRow[TrackCsvColumnEnum.MANUS_LENGTH_GUESS]
-            deep      = csvRow[TrackCsvColumnEnum.MANUS_DEPTH]
-            deepGuess = csvRow[TrackCsvColumnEnum.MANUS_DEPTH_GUESS]
-        else:
+        if t.pes:
             wide      = csvRow[TrackCsvColumnEnum.PES_WIDTH]
             wideGuess = csvRow[TrackCsvColumnEnum.PES_WIDTH_GUESS]
             longVal   = csvRow[TrackCsvColumnEnum.PES_LENGTH]
             longGuess = csvRow[TrackCsvColumnEnum.PES_LENGTH_GUESS]
             deep      = csvRow[TrackCsvColumnEnum.PES_DEPTH]
             deepGuess = csvRow[TrackCsvColumnEnum.PES_DEPTH_GUESS]
+        else:
+            wide      = csvRow[TrackCsvColumnEnum.MANUS_WIDTH]
+            wideGuess = csvRow[TrackCsvColumnEnum.MANUS_WIDTH_GUESS]
+            longVal   = csvRow[TrackCsvColumnEnum.MANUS_LENGTH]
+            longGuess = csvRow[TrackCsvColumnEnum.MANUS_LENGTH_GUESS]
+            deep      = csvRow[TrackCsvColumnEnum.MANUS_DEPTH]
+            deepGuess = csvRow[TrackCsvColumnEnum.MANUS_DEPTH_GUESS]
 
         try:
             t.widthMeasured     = float(wide if wide else wideGuess)
@@ -746,7 +735,6 @@ class Track(object):
 
         if mayaAttrName is None:
             mayaAttrName = enum.name
-
         if not self.nodeHasAttribute(mayaAttrName):
             if enum.type == 'string':
                 cmds.addAttr(self.node, ln=mayaAttrName, dt=enum.type)
@@ -755,9 +743,8 @@ class Track(object):
             elif enum.type == 'bool':
                 cmds.addAttr(self.node, ln=mayaAttrName, at=enum.type)
         propType = enum.type
-        if propType == 'float':
+        if propType == 'float' or propType =='bool':
             propType = None
-
         try:
             if propType is None:
                 cmds.setAttr(self.node + '.' + mayaAttrName, value)
@@ -806,5 +793,6 @@ class Track(object):
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):
+        print self.name
         return '[%s(%s) "%s"]' % (self.__class__.__name__, self.name, self._trackId)
 

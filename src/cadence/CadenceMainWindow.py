@@ -30,7 +30,7 @@ class CadenceMainWindow(PyGlassWindow):
             title='Cadence Toolset',
             keyboardCallback=self._handleKeyboardCallback,
             **kwargs )
-        self.setMinimumSize(920,480)
+        self.setMinimumSize(1024,480)
         self.setContentsMargins(0, 0, 0, 0)
 
         widget = self._createCentralWidget()
