@@ -1,4 +1,4 @@
-# StaticFlowCompiler.py
+# CadenceCompiler.py
 # (C)2013
 # Scott Ernst
 
@@ -7,8 +7,8 @@ from pyglass.compile.SiteLibraryEnum import SiteLibraryEnum
 
 from cadence.CadenceApplication import CadenceApplication
 
-#___________________________________________________________________________________________________ StaticFlowCompiler
-class StaticFlowCompiler(PyGlassApplicationCompiler):
+#___________________________________________________________________________________________________ CadenceCompiler
+class CadenceCompiler(PyGlassApplicationCompiler):
     """A class for..."""
 
 #===================================================================================================
@@ -48,5 +48,5 @@ class StaticFlowCompiler(PyGlassApplicationCompiler):
 ####################################################################################################
 
 if __name__ == '__main__':
-    StaticFlowCompiler().run()
+    CadenceCompiler().run()
 
