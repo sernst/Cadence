@@ -16,6 +16,8 @@ class CadenceEnvironment(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    NIMBLE_IS_ACTIVE = False
+
     BASE_UNIX_TIME = 1373932675
 
     _ENV_PATH = os.path.dirname(os.path.abspath(__file__))

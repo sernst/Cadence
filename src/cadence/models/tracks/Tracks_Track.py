@@ -53,6 +53,10 @@ class Tracks_Track(TracksDefault):
     _lengthMeasured      = Column(Float,        default=0.0)
     _depthMeasured       = Column(Float,        default=0.0)
 
+    _flags               = Column(Integer,      default=0)
+    _sourceFlags         = Column(Integer,      default=0)
+    _displayFlags        = Column(Integer,      default=0)
+
 #===================================================================================================
 #                                                                                     P U B L I C
 
@@ -102,6 +106,9 @@ class Tracks_Track(TracksDefault):
         self.widthMeasured       = argsGet(TPE.WIDTH_UNCERTAINTY.name,      self.widthMeasured, data)
         self.lengthMeasured      = argsGet(TPE.LENGTH_UNCERTAINTY.name,     self.lengthMeasured, data)
         self.depthMeasured       = argsGet(TPE.DEPTH_UNCERTAINTY.name,      self.lengthMeasured, data)
+        self.flags               = argsGet(TPE.FLAGS.name,                  self.flags, data)
+        self.sourceFlags         = argsGet(TPE.SOURCE_FLAGS.name,           self.sourceFlags, data)
+        self.displayFlags        = argsGet(TPE.DISPLAY_FLAGS.name,          self.displayFlags, data)
 
 #___________________________________________________________________________________________________ toDict
     def toDict(self):
@@ -134,7 +141,10 @@ class Tracks_Track(TracksDefault):
             TPE.DEPTH_UNCERTAINTY.name:self.depthUncertainty,
             TPE.WIDTH_MEASURED.name:self.widthMeasured,
             TPE.LENGTH_MEASURED.name:self.lengthMeasured,
-            TPE.DEPTH_MEASURED.name:self.depthMeasured })
+            TPE.DEPTH_MEASURED.name:self.depthMeasured,
+            TPE.FLAGS.name:self.flags,
+            TPE.SOURCE_FLAGS.name:self.sourceFlags,
+            TPE.DISPLAY_FLAGS.name:self.displayFlags })
 
 #___________________________________________________________________________________________________ getByUid
     @classmethod

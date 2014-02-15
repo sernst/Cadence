@@ -12,6 +12,7 @@ from pyglass.elements.PyGlassElement import PyGlassElement
 from pyglass.themes.ColorSchemes import ColorSchemes
 from pyglass.themes.ThemeColorBundle import ThemeColorBundle
 
+from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enum.UserConfigEnum import UserConfigEnum
 
 #___________________________________________________________________________________________________ CadenceNimbleStatusElement
@@ -89,6 +90,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
             self._status = False
             self._label.setText(self._INACTIVE_LABEL)
             self._info.setText(self._INACTIVE_INFO)
+            CadenceEnvironment.NIMBLE_IS_ACTIVE = False
         else:
             try:
                 # Run an ls command looking for the time node (to prevent large returns)
@@ -97,12 +99,14 @@ class CadenceNimbleStatusElement(PyGlassElement):
                 self._status = True
                 self._label.setText(self._ACTIVE_LABEL)
                 self._info.setText(self._ACTIVE_INFO)
+                CadenceEnvironment.NIMBLE_IS_ACTIVE = True
             except Exception, err:
                 print 'FAILED: Nimble connection attempt'
                 self._colors = ThemeColorBundle(ColorSchemes.RED)
                 self._status = False
                 self._label.setText(self._FAILED_LABEL)
                 self._info.setText(self._FAILED_INFO)
+                CadenceEnvironment.NIMBLE_IS_ACTIVE = False
 
         self._label.setStyleSheet(self._LABEL_STYLE.replace('#C#', self._colors.strong.web))
         self._info.setStyleSheet(self._INFO_STYLE.replace('#C#', self._colors.weak.web))

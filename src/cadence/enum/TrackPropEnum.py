@@ -65,6 +65,15 @@ class TrackPropEnum(object):
     DEPTH_MEASURED       = TRACK_PROP_NT('depthMeasured',       'float', False)
     DEPTH_UNCERTAINTY    = TRACK_PROP_NT('depthUncertainty',    'float', False)
 
+    # A 32bit integer containing enumerated flags related to the state and type of the track
+    FLAGS         = TRACK_PROP_NT('flags', 'long', False)
+
+    # A 32bit integer containing enumerated flags related to how the track data was imported
+    SOURCE_FLAGS  = TRACK_PROP_NT('flags', 'long', False)
+
+    # A 32bit integer containing enumerated flags for how the track should be displayed
+    DISPLAY_FLAGS = TRACK_PROP_NT('flags', 'long', False)
+
 #___________________________________________________________________________________________________ TrackPropEnumOps
 class TrackPropEnumOps(object):
     """ Support class for helper operations related to the TrackPropEnum class. """

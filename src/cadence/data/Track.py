@@ -2,17 +2,12 @@
 # (C)2013-2014
 # Kent A. Stevens and Scott Ernst
 
-import re
-
-from pyaid.json.JSON import JSON
 from pyaid.reflection.Reflection import Reflection
-from pyaid.string.StringUtils import StringUtils
 
 import nimble
 from nimble import cmds
 
 from cadence.CadenceEnvironment import CadenceEnvironment
-from cadence.enum.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.enum.TrackPropEnum import TrackPropEnumOps
 from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
@@ -27,9 +22,6 @@ class Track(object):
 
 #===================================================================================================
 #                                                                                       C L A S S
-
-    # Used to break trackway specifier into separate type and number entries
-    _TRACKWAY_PATTERN = re.compile('(?P<type>[A-Za-z]+)[\s\t]*(?P<number>[0-9]+)')
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, node =None, uid = None, trackData =None):
@@ -472,9 +464,10 @@ class Track(object):
         if self.uid is None:
             return False
 
-        self.refreshNodeLink()
-        if self.node:
-            return True
+        if CadenceEnvironment.NIMBLE_IS_ACTIVE:
+            self.refreshNodeLink()
+            if self.node:
+                return True
 
         entry = Tracks_Track.getByUid(self._uid)
         if entry is None:
@@ -601,95 +594,6 @@ class Track(object):
         cmds.rotate(-90, 180, 0)
         cmds.move(0, 100, 0, 'CadenceCam', absolute=True)
 
-#___________________________________________________________________________________________________ fromSpreadsheetEntry
-    @classmethod
-    def fromSpreadsheetEntry(cls, csvRow, force =True):
-        csvIndex    = int(csvRow[TrackCsvColumnEnum.INDEX])
-        t           = Track(trackData=dict())
-        t.site      = csvRow[TrackCsvColumnEnum.TRACKSITE]
-        t.year      = csvRow[TrackCsvColumnEnum.CAST_DATE].split('_')[-1]
-        t.sector    = csvRow[TrackCsvColumnEnum.SECTOR]
-        t.level     = csvRow[TrackCsvColumnEnum.LEVEL]
-
-        #-------------------------------------------------------------------------------------------
-        # TRACKWAY
-        #       Parse the trackway entry into type and number values
-        test   = csvRow[TrackCsvColumnEnum.TRACKWAY].strip()
-        result = cls._TRACKWAY_PATTERN.search(test)
-        try:
-            t.trackwayType   = result.groupdict()['type']
-            t.trackwayNumber = float(result.groupdict()['number'])
-        except Exception, err:
-            print 'ERROR: Invalid trackway value "%s" at index: %s' % (test, csvIndex)
-            print '    RESULT:', result, '->', result.groupdict() if result else 'N/A'
-            raise
-
-        #-------------------------------------------------------------------------------------------
-        # NAME
-        #       Parse the name value into left, pes, and number attributes
-        name = csvRow[TrackCsvColumnEnum.TRACK_NAME].strip()
-        if StringUtils.begins(name.upper(), [u'M', u'P']):
-            t.left = name[1].upper() == u'L'
-            t.pes  = name[0].upper() == u'P'
-        else:
-            t.left = name[0].upper() == u'L'
-            t.pes  = name[1].upper() == u'P'
-        t.number = float(re.compile('[^0-9]+').sub(u'', name[2:]))
-
-        #-------------------------------------------------------------------------------------------
-        # FIND EXISTING
-        #       Use data set above to attempt to load the track database entry
-        if t.loadFromValues() and not force:
-            if csvIndex != t.index:
-                print 'Ambiguous Track [%s != %s]:' % (csvIndex, t.index)
-                print '\t%s:' % t.index, JSON.fromString(t.snapshot)
-                print '\t%s:' % csvIndex, csvRow
-            return t
-
-        t.index     = csvIndex
-        t.snapshot  = JSON.asString(csvRow)
-
-        if t.pes:
-            wide      = csvRow[TrackCsvColumnEnum.PES_WIDTH]
-            wideGuess = csvRow[TrackCsvColumnEnum.PES_WIDTH_GUESS]
-            longVal   = csvRow[TrackCsvColumnEnum.PES_LENGTH]
-            longGuess = csvRow[TrackCsvColumnEnum.PES_LENGTH_GUESS]
-            deep      = csvRow[TrackCsvColumnEnum.PES_DEPTH]
-            deepGuess = csvRow[TrackCsvColumnEnum.PES_DEPTH_GUESS]
-        else:
-            wide      = csvRow[TrackCsvColumnEnum.MANUS_WIDTH]
-            wideGuess = csvRow[TrackCsvColumnEnum.MANUS_WIDTH_GUESS]
-            longVal   = csvRow[TrackCsvColumnEnum.MANUS_LENGTH]
-            longGuess = csvRow[TrackCsvColumnEnum.MANUS_LENGTH_GUESS]
-            deep      = csvRow[TrackCsvColumnEnum.MANUS_DEPTH]
-            deepGuess = csvRow[TrackCsvColumnEnum.MANUS_DEPTH_GUESS]
-
-        try:
-            t.widthMeasured     = float(wide if wide else wideGuess)
-            t.widthUncertainty  = 5.0 if wideGuess else 4.0
-        except Exception, err:
-            t.widthMeasured    = 0.0
-            t.widthUncertainty = 5.0
-
-        try:
-            t.lengthMeasured    = float(long if longVal else longGuess)
-            t.lengthUncertainty = 5.0 if longGuess else 4.0
-        except Exception, err:
-            t.lengthMeasured    = 0.0
-            t.lengthUncertainty = 5.0
-
-        try:
-            t.depthMeasured     = float(deep if deep else deepGuess)
-            t.depthUncertainty  = 5.0 if deepGuess else 4.0
-        except Exception, err:
-            t.depthMeasured    = 0.0
-            t.depthUncertainty = 5.0
-
-        # Save csv value changes to the database
-        t.save()
-
-        return t
-
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
@@ -721,12 +625,10 @@ class Track(object):
         if not self.nodeHasAttribute(mayaAttrName):
             if enum.type == 'string':
                 cmds.addAttr(self.node, ln=mayaAttrName, dt=enum.type)
-            elif enum.type == 'float':
-                cmds.addAttr(self.node, ln=mayaAttrName, at=enum.type)
-            elif enum.type == 'bool':
+            else:
                 cmds.addAttr(self.node, ln=mayaAttrName, at=enum.type)
         propType = enum.type
-        if propType == 'float' or propType =='bool':
+        if propType in ['float', 'bool', 'long']:
             propType = None
         try:
             if propType is None:

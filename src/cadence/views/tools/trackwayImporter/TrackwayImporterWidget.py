@@ -1,17 +1,14 @@
 # TrackwayImporterWidget.py
-# (C)2013 http://cadence.ThreeAddOne.com
+# (C)2013
 # Scott Ernst
 
-from PySide import QtCore
-
 from pyaid.file.FileUtils import FileUtils
-
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from pyglass.elements.PyGlassElementUtils import PyGlassElementUtils
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
 from cadence.enum.UserConfigEnum import UserConfigEnum
-from cadence.data.TrackCsvImporterRemoteThread import TrackCsvImporterRemoteThread
+from cadence.dataio.TrackCsvImporterRemoteThread import TrackCsvImporterRemoteThread
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ Viewer

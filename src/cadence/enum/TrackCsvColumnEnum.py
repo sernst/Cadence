@@ -1,6 +1,14 @@
 # TrackCsvColumnEnum.py
-# (C)2013
+# (C)2013-2014
 # Scott Ernst
+
+from collections import namedtuple
+
+#___________________________________________________________________________________________________ TRACK_PROP_NT
+# A custom data type for track csv column enumerations that contain the following information:
+#   * index     | Index of the column within the source spreadsheet
+#   * name      | Key for the column. Used by the importer and stored by the database
+CSV_COLUMN_NT = namedtuple('TRACK_PROP_NT', ['index', 'name' ])
 
 #___________________________________________________________________________________________________ TrackCsvColumnEnum
 class TrackCsvColumnEnum(object):
@@ -9,72 +17,72 @@ class TrackCsvColumnEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    INDEX                               = 0
-    TRACKSITE                           = 1
-    LEVEL                               = 2
-    TRACKWAY                            = 3
-    SECTOR                              = 4
-    ORIENTATIONS                        = 5
-    MEAN_ORIENTATION                    = 6
-    TRACKWAY_LENGTH                     = 7
-    COMMENT                             = 8
-    OUTLINE_DRAWING                     = 9
-    SAMPLE                              = 10
-    CAST                                = 11
-    CAST_NAME                           = 12
-    CAST_DATE                           = 13
-    DATA_NAME                           = 14
-    DATA_DATE                           = 15
-    TRACK_NAME                          = 16
-    MISSING                             = 17
-    PES_LENGTH                          = 18
-    PES_LENGTH_GUESS                    = 19
-    PES_WIDTH                           = 20
-    PES_WIDTH_GUESS                     = 21
-    PES_DEPTH                           = 22
-    PES_DEPTH_GUESS                     = 23
-    LEFT_PES_ROTATION                   = 24
-    LEFT_PES_ROTATION_GUESS             = 25
-    RIGHT_PES_ROTATION                  = 26
-    RIGHT_PES_ROTATION_GUESS            = 27
-    MANUS_LENGTH                        = 28
-    MANUS_LENGTH_GUESS                  = 29
-    MANUS_WIDTH                         = 30
-    MANUS_WIDTH_GUESS                   = 31
-    MANUS_DEPTH                         = 32
-    MANUS_DEPTH_GUESS                   = 33
-    LEFT_MANUS_ROTATION                 = 34
-    LEFT_MANUS_ROTATION_GUESS           = 35
-    RIGHT_MANUS_ROTATION                = 36
-    RIGHT_MANUS_ROTATION_GUESS          = 37
-    PES_STRIDE                          = 38
-    PES_STRIDE_GUESS                    = 39
-    PES_STRIDE_FACTOR                   = 40
-    WIDTH_PES_ANGULATION_PATTERN        = 41
-    WIDTH_PES_ANGULATION_PATTERN_GUESS  = 42
-    LEFT_PES_PACE                       = 43
-    LEFT_PES_PACE_GUESS                 = 44
-    LEFT_PES_PROGRESSION                = 45
-    LEFT_PES_PROGRESSION_GUESS          = 46
-    RIGHT_PES_PACE                      = 47
-    RIGHT_PES_PACE_GUESS                = 48
-    PES_PACE_ANGULATION                 = 49
-    PES_PACE_ANGULATION_GUESS           = 50
-    MANUS_STRIDE                        = 51
-    MANUS_STRIDE_GUESS                  = 52
-    MANUS_STRIDE_FACTOR                 = 53
-    WIDTH_MANUS_ANGULATION_PATTERN      = 54
-    WIDTH_MANUS_ANGULATION_PATTERN_GUESS= 55
-    LEFT_MANUS_PACE                     = 56
-    LEFT_MANUS_PACE_GUESS               = 57
-    LEFT_MANUS_PROGRESSION              = 58
-    LEFT_MANUS_PROGRESSION_GUESS        = 59
-    RIGHT_MANUS_PACE                    = 60
-    RIGHT_MANUS_PACE_GUESS              = 61
-    RIGHT_MANUS_PROGRESSION             = 62
-    RIGHT_MANUS_PROGRESSION_GUESS       = 63
-    MANUS_PACE_ANGULATION               = 64
-    MANUS_PACE_ANGULATION_GUESS         = 65
-    GLENO_ACETABULAR_DISTANCE           = 66
-    GLENO_ACETABULAR_DISTANCE_GUESS     = 67
-    ANATOMICAL_DETAILS                  = 68
+    INDEX                               = CSV_COLUMN_NT(0, 'index')
+    TRACKSITE                           = CSV_COLUMN_NT(1, 'tracksite')
+    LEVEL                               = CSV_COLUMN_NT(2, 'level')
+    TRACKWAY                            = CSV_COLUMN_NT(3, 'trackway')
+    SECTOR                              = CSV_COLUMN_NT(4, 'sector')
+    ORIENTATIONS                        = CSV_COLUMN_NT(5, 'orientations')
+    MEAN_ORIENTATION                    = CSV_COLUMN_NT(6, 'mean_orientation')
+    TRACKWAY_LENGTH                     = CSV_COLUMN_NT(7, 'trackway_length')
+    COMMENT                             = CSV_COLUMN_NT(8, 'comment')
+    OUTLINE_DRAWING                     = CSV_COLUMN_NT(9, 'outline_drawing')
+    SAMPLE                              = CSV_COLUMN_NT(10, 'sample')
+    CAST                                = CSV_COLUMN_NT(11, 'cast')
+    CAST_NAME                           = CSV_COLUMN_NT(12, 'cast_name')
+    CAST_DATE                           = CSV_COLUMN_NT(13, 'cast_date')
+    DATA_NAME                           = CSV_COLUMN_NT(14, 'data_name')
+    DATA_DATE                           = CSV_COLUMN_NT(15, 'data_date')
+    TRACK_NAME                          = CSV_COLUMN_NT(16, 'track_name')
+    MISSING                             = CSV_COLUMN_NT(17, 'missing')
+    PES_LENGTH                          = CSV_COLUMN_NT(18, 'pes_length')
+    PES_LENGTH_GUESS                    = CSV_COLUMN_NT(19, 'pes_length_guess')
+    PES_WIDTH                           = CSV_COLUMN_NT(20, 'pes_width')
+    PES_WIDTH_GUESS                     = CSV_COLUMN_NT(21, 'pes_width_guess')
+    PES_DEPTH                           = CSV_COLUMN_NT(22, 'pes_depth')
+    PES_DEPTH_GUESS                     = CSV_COLUMN_NT(23, 'pes_depth_guess')
+    LEFT_PES_ROTATION                   = CSV_COLUMN_NT(24, 'left_pes_rotation')
+    LEFT_PES_ROTATION_GUESS             = CSV_COLUMN_NT(25, 'left_pes_rotation_guess')
+    RIGHT_PES_ROTATION                  = CSV_COLUMN_NT(26, 'right_pes_rotation')
+    RIGHT_PES_ROTATION_GUESS            = CSV_COLUMN_NT(27, 'right_pes_rotation_guess')
+    MANUS_LENGTH                        = CSV_COLUMN_NT(28, 'manus_length')
+    MANUS_LENGTH_GUESS                  = CSV_COLUMN_NT(29, 'manus_length_guess')
+    MANUS_WIDTH                         = CSV_COLUMN_NT(30, 'manus_width')
+    MANUS_WIDTH_GUESS                   = CSV_COLUMN_NT(31, 'manus_width_guess')
+    MANUS_DEPTH                         = CSV_COLUMN_NT(32, 'manus_depth')
+    MANUS_DEPTH_GUESS                   = CSV_COLUMN_NT(33, 'manus_depth_guess')
+    LEFT_MANUS_ROTATION                 = CSV_COLUMN_NT(34, 'left_manus_rotation')
+    LEFT_MANUS_ROTATION_GUESS           = CSV_COLUMN_NT(35, 'left_manus_rotation_guess')
+    RIGHT_MANUS_ROTATION                = CSV_COLUMN_NT(36, 'right_manus_rotation')
+    RIGHT_MANUS_ROTATION_GUESS          = CSV_COLUMN_NT(37, 'right_manus_rotation_guess')
+    PES_STRIDE                          = CSV_COLUMN_NT(38, 'pes_stride')
+    PES_STRIDE_GUESS                    = CSV_COLUMN_NT(39, 'pes_stride_guess')
+    PES_STRIDE_FACTOR                   = CSV_COLUMN_NT(40, 'pes_stride_factor')
+    WIDTH_PES_ANGULATION_PATTERN        = CSV_COLUMN_NT(41, 'width_pes_angulation_pattern')
+    WIDTH_PES_ANGULATION_PATTERN_GUESS  = CSV_COLUMN_NT(42, 'width_pes_angulation_pattern_guess')
+    LEFT_PES_PACE                       = CSV_COLUMN_NT(43, 'left_pes_pace')
+    LEFT_PES_PACE_GUESS                 = CSV_COLUMN_NT(44, 'left_pes_pace_guess')
+    LEFT_PES_PROGRESSION                = CSV_COLUMN_NT(45, 'left_pes_progression')
+    LEFT_PES_PROGRESSION_GUESS          = CSV_COLUMN_NT(46, 'left_pes_progression_guess')
+    RIGHT_PES_PACE                      = CSV_COLUMN_NT(47, 'right_pes_pace')
+    RIGHT_PES_PACE_GUESS                = CSV_COLUMN_NT(48, 'right_pes_pace_guess')
+    PES_PACE_ANGULATION                 = CSV_COLUMN_NT(49, 'pes_pace_angulation')
+    PES_PACE_ANGULATION_GUESS           = CSV_COLUMN_NT(50, 'pes_pace_angulation')
+    MANUS_STRIDE                        = CSV_COLUMN_NT(51, 'manus_stride')
+    MANUS_STRIDE_GUESS                  = CSV_COLUMN_NT(52, 'manus_stride_guess')
+    MANUS_STRIDE_FACTOR                 = CSV_COLUMN_NT(53, 'manus_stride_factor')
+    WIDTH_MANUS_ANGULATION_PATTERN      = CSV_COLUMN_NT(54, 'width_manus_angulation_pattern')
+    WIDTH_MANUS_ANGULATION_PATTERN_GUESS= CSV_COLUMN_NT(55, 'width_manus_angulation_pattern_guess')
+    LEFT_MANUS_PACE                     = CSV_COLUMN_NT(56, 'left_manus_pace')
+    LEFT_MANUS_PACE_GUESS               = CSV_COLUMN_NT(57, 'left_manus_pace_guess')
+    LEFT_MANUS_PROGRESSION              = CSV_COLUMN_NT(58, 'left_manus_progression')
+    LEFT_MANUS_PROGRESSION_GUESS        = CSV_COLUMN_NT(59, 'left_manus_progression_guess')
+    RIGHT_MANUS_PACE                    = CSV_COLUMN_NT(60, 'right_manus_pace')
+    RIGHT_MANUS_PACE_GUESS              = CSV_COLUMN_NT(61, 'right_manus_pace_guess')
+    RIGHT_MANUS_PROGRESSION             = CSV_COLUMN_NT(62, 'right_manus_progression')
+    RIGHT_MANUS_PROGRESSION_GUESS       = CSV_COLUMN_NT(63, 'right_manus_progression_guess')
+    MANUS_PACE_ANGULATION               = CSV_COLUMN_NT(64, 'manus_pace_angulation')
+    MANUS_PACE_ANGULATION_GUESS         = CSV_COLUMN_NT(65, 'manus_pace_angulation_guess')
+    GLENO_ACETABULAR_DISTANCE           = CSV_COLUMN_NT(66, 'gleno_acetabular_distance')
+    GLENO_ACETABULAR_DISTANCE_GUESS     = CSV_COLUMN_NT(67, 'gleno_acetabykar_distance_guess')
+    ANATOMICAL_DETAILS                  = CSV_COLUMN_NT(68, 'anatomical_details')

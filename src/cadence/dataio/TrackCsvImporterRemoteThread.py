@@ -4,7 +4,8 @@
 
 from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
 
-from cadence.data.TrackCsvImporter import TrackCsvImporter
+
+from cadence.dataio.TrackCsvImporter import TrackCsvImporter
 
 #___________________________________________________________________________________________________ TrackCsvImporterRemoteThread
 class TrackCsvImporterRemoteThread(RemoteExecutionThread):
@@ -26,7 +27,7 @@ class TrackCsvImporterRemoteThread(RemoteExecutionThread):
 #___________________________________________________________________________________________________ _internalMethod
     def _runImpl(self):
         try:
-            importer = TrackCsvImporter(self._path)
+            importer = TrackCsvImporter(self._path, logger=self._log)
             importer.read(force=self._force)
         except Exception, err:
             self._log.writeError('Track CSV Parsing Error', err)
