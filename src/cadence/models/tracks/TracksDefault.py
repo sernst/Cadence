@@ -2,8 +2,7 @@
 # (C)2013
 # Scott Ernst
 
-from sqlalchemy import Column
-from sqlalchemy import Unicode
+from pyaid.radix.Base64 import Base64
 
 from pyglass.sqlalchemy.PyGlassModelsDefault import PyGlassModelsDefault
 from pyglass.sqlalchemy.ConcretePyGlassModelsMeta import ConcretePyGlassModelsMeta
@@ -17,8 +16,13 @@ class TracksDefault(PyGlassModelsDefault):
     __metaclass__ = ConcretePyGlassModelsMeta
     __abstract__  = True
 
-    # The base 64 identifier for the item
-    _id = Column(Unicode, default=u'')
+#===================================================================================================
+#                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: propertyName
+    @property
+    def id(self):
+        return Base64.to64(self.i)
 
 #===================================================================================================
 #                                                                                     P U B L I C

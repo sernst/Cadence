@@ -4,13 +4,11 @@
 
 
 from nimble import cmds
-
 from pyaid.json.JSON import JSON
-
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
+from cadence.data import Track
 from cadence.enum.TrackPropEnum import TrackPropEnum
-from cadence.mayan.trackway.Track import Track
 
 #___________________________________________________________________________________________________ TrackwayManagerWidget
 class TrackwayManagerWidget(PyGlassWidget):

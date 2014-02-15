@@ -1,14 +1,14 @@
 # TrackCsvImporter.py
-# (C)2013
+# (C)2013-2014
 # Scott Ernst
 
 import csv
 
-from cadence.mayan.trackway.Track import Track
+from cadence.data.Track import Track
 
 #___________________________________________________________________________________________________ TrackCsvImporter
 class TrackCsvImporter(object):
-    """A class for..."""
+    """ Importing data from the """
 
 #===================================================================================================
 #                                                                                       C L A S S

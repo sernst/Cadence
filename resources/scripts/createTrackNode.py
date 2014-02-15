@@ -1,3 +1,7 @@
+# createTrackNode.py
+# (C)2013
+# Kent A. Stevens and Scott Ernst
+
 import math
 
 import nimble

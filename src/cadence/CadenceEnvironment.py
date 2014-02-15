@@ -1,10 +1,13 @@
 # CadenceEnvironment.py
-# (C)2012-2013 http://cadence.threeaddone.com
+# (C)2012-2014 http://cadence.threeaddone.com
 # Scott Ernst
 
 import os
 
 from pyaid.file.FileUtils import FileUtils
+from pyaid.string.StringUtils import StringUtils
+from pyaid.radix.Base64 import Base64
+from pyaid.time.TimeUtils import TimeUtils
 
 #___________________________________________________________________________________________________ CadenceEnvironment
 class CadenceEnvironment(object):
@@ -16,6 +19,19 @@ class CadenceEnvironment(object):
     BASE_UNIX_TIME = 1373932675
 
     _ENV_PATH = os.path.dirname(os.path.abspath(__file__))
+
+    _UID_INDEX = 0
+
+#___________________________________________________________________________________________________ createUniqueId
+    @classmethod
+    def createUniqueId(cls, prefix = u''):
+        """ Creates a universally unique identifier string based on current time, active
+            application instance state, and a randomized hash """
+        cls._UID_INDEX += 1
+        return prefix \
+            + TimeUtils.getNowTimecode(cls.BASE_UNIX_TIME) + u'-' \
+            + Base64.to64(cls._UID_INDEX) + u'-' \
+            + StringUtils.getRandomString(12)
 
 #___________________________________________________________________________________________________ getConfigPath
     @classmethod

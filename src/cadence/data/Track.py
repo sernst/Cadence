@@ -1,10 +1,10 @@
 # Track.py
-# (C)2013
+# (C)2013-2014
 # Kent A. Stevens and Scott Ernst
 
 import re
 
-from pyaid.radix.Base64 import Base64
+from pyaid.json.JSON import JSON
 from pyaid.reflection.Reflection import Reflection
 from pyaid.string.StringUtils import StringUtils
 
@@ -14,6 +14,7 @@ from nimble import cmds
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enum.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.enum.TrackPropEnum import TrackPropEnumOps
 from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.util.shading.ShadingUtils import ShadingUtils
@@ -27,26 +28,42 @@ class Track(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    # Used to break trackway specifier into separate type and number entries
     _TRACKWAY_PATTERN = re.compile('(?P<type>[A-Za-z]+)[\s\t]*(?P<number>[0-9]+)')
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, node =None, trackId =None, trackData =None):
-        """ Creates a new instance of a Track.  Argument is the string name of the Maya node. """
+    def __init__(self, node =None, uid = None, trackData =None):
+        """ Creates a new instance of a Track.
+            * node => String name of an existing Maya transform node representing the track
+            * uid => Universal unique identifier string for the track within the database
+                    and within Maya
+            * trackData => A dictionary representation of the current track data either loaded
+                    from disk or from the Track_Track model toDict() method """
         self.node       = node
-        self._trackId   = trackId
         self._trackData = trackData
-
-        if self._trackData is not None:
-            self._trackId = self._trackData.get('id', trackId)
-        elif trackId is not None:
-            self.loadData()
+        self._uid       = trackData.get(
+            'uid', uid if uid else CadenceEnvironment.createUniqueId(u'track'))
 
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+#___________________________________________________________________________________________________ GS: databaseId
+    @property
+    def databaseId(self):
+        return self._trackData.get('id', None) if self._trackData else None
+
+#___________________________________________________________________________________________________ GS: uid
+    @property
+    def uid(self):
+        """ The universal unique identifier for this track within Maya, the database, and during
+            computation. """
+        uid = self._getTrackProp(TrackPropEnum.UID)
+        return uid if uid else self._uid
+
 #___________________________________________________________________________________________________ GS: name
     @property
     def name(self):
+        """ Human-readable display name for the track based of its properties """
         number = unicode(int(self.number)) if self.number else u'-'
         return (u'L' if self.left else u'R') + (u'P' if self.pes else u'M') + number
     @name.setter
@@ -58,351 +75,297 @@ class Track(object):
 #___________________________________________________________________________________________________ GS: trackData
     @property
     def trackData(self):
+        """ Dictionary representation of the track as stored by the database and on disk if such
+            an entry exists or None otherwise. """
         return self._trackData
+
+#___________________________________________________________________________________________________ GS: propertyName
+    @property
+    def index(self):
+        return self._getTrackProp(TrackPropEnum.INDEX, 0)
+    @index.setter
+    def index(self, value):
+        self._setTrackProp(TrackPropEnum.INDEX, value)
 
 #___________________________________________________________________________________________________ GS: comm
     @property
     def comm(self):
-        return self._getTrackAttr(TrackPropEnum.COMM)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.COMM)
     @comm.setter
     def comm(self, value):
-        self._setTrackAttr(TrackPropEnum.COMM, value)
+        self._setTrackProp(TrackPropEnum.COMM, value)
 
 #___________________________________________________________________________________________________ GS: site
     @property
     def site(self):
-        return self._getTrackAttr(TrackPropEnum.SITE)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.SITE)
     @site.setter
     def site(self, value):
-        self._setTrackAttr(TrackPropEnum.SITE, value)
+        self._setTrackProp(TrackPropEnum.SITE, value)
 
 #___________________________________________________________________________________________________ GS: year
     @property
     def year(self):
-        return self._getTrackAttr(TrackPropEnum.YEAR)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.YEAR)
     @year.setter
     def year(self, value):
-        self._setTrackAttr(TrackPropEnum.YEAR, value)
+        self._setTrackProp(TrackPropEnum.YEAR, value)
 
 #___________________________________________________________________________________________________ GS: level
     @property
     def level(self):
-        return self._getTrackAttr(TrackPropEnum.LEVEL)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.LEVEL)
     @level.setter
     def level(self, value):
-        self._setTrackAttr(TrackPropEnum.LEVEL, value)
+        self._setTrackProp(TrackPropEnum.LEVEL, value)
 
 #___________________________________________________________________________________________________ GS: sector
     @property
     def sector(self):
-        return self._getTrackAttr(TrackPropEnum.SECTOR)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.SECTOR)
     @sector.setter
     def sector(self, value):
-        self._setTrackAttr(TrackPropEnum.SECTOR, value)
+        self._setTrackProp(TrackPropEnum.SECTOR, value)
 
 #___________________________________________________________________________________________________ GS: trackwayType
     @property
     def trackwayType(self):
-        return self._getTrackAttr(TrackPropEnum.TRACKWAY_TYPE)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.TRACKWAY_TYPE)
     @trackwayType.setter
     def trackwayType(self, value):
-        self._setTrackAttr(TrackPropEnum.TRACKWAY_TYPE, value)
+        self._setTrackProp(TrackPropEnum.TRACKWAY_TYPE, value)
 
 #___________________________________________________________________________________________________ GS: trackwayNumber
     @property
     def trackwayNumber(self):
-        return self._getTrackAttr(TrackPropEnum.TRACKWAY_NUMBER)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.TRACKWAY_NUMBER)
     @trackwayNumber.setter
     def trackwayNumber(self, value):
-        self._setTrackAttr(TrackPropEnum.TRACKWAY_NUMBER, value)
+        self._setTrackProp(TrackPropEnum.TRACKWAY_NUMBER, value)
 
-#___________________________________________________________________________________________________ GS: left
+#___________________________________________________________________________________________________ GS: isLeft
     @property
     def left(self):
-        return self._getTrackAttr(TrackPropEnum.LEFT)
+        """ True if the track was made by the left side of the track maker. """
+        return self._getTrackProp(TrackPropEnum.LEFT)
     @left.setter
     def left(self, value):
-        self._setTrackAttr(TrackPropEnum.LEFT, value)
+        self._setTrackProp(TrackPropEnum.LEFT, value)
         if self.node is not None and value:
             self.colorTrack()
 
 #___________________________________________________________________________________________________ GS: pes
     @property
     def pes(self):
-        return self._getTrackAttr(TrackPropEnum.PES)
+        """ True if the track was made by the hindquarters of the track maker. """
+        return self._getTrackProp(TrackPropEnum.PES)
     @pes.setter
     def pes(self, value):
-        self._setTrackAttr(TrackPropEnum.PES, value)
+        self._setTrackProp(TrackPropEnum.PES, value)
         if self.node is not None and value:
             self.colorTrack()
 
 #___________________________________________________________________________________________________ GS: number
     @property
     def number(self):
-        return self._getTrackAttr(TrackPropEnum.NUMBER)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.NUMBER)
     @number.setter
     def number(self, value):
-        self._setTrackAttr(TrackPropEnum.NUMBER, value)
+        self._setTrackProp(TrackPropEnum.NUMBER, value)
 
 #___________________________________________________________________________________________________ GS: note
     @property
     def note(self):
-        return self._getTrackAttr(TrackPropEnum.NOTE)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.NOTE)
     @note.setter
     def note(self, value):
-        self._setTrackAttr(TrackPropEnum.NOTE, value)
+        self._setTrackProp(TrackPropEnum.NOTE, value)
 
 #___________________________________________________________________________________________________ GS: prev
     @property
     def prev(self):
-        """ The Unique Track ID (as created by the database) for the previous track within the
-            track series in which this track resides."""
-
-        if not self.node:
-            return self._trackData.get(TrackPropEnum.PREV.name)
-
-        node = self.prevNode
-        if node:
-            return cmds.getAttr(node + '.' + TrackPropEnum.ID.name)
-        return None
+        """ The universally unique identifier for the previous track within thr track series, or an
+            empty value if no previous track exists. """
+        return self._getTrackProp(TrackPropEnum.PREV)
     @prev.setter
     def prev(self, value):
-        self._setTrackAttr(TrackPropEnum.PREV, value)
+        self._setTrackProp(TrackPropEnum.PREV, value)
 
 #___________________________________________________________________________________________________ GS: next
     @property
     def next(self):
-        if not self.node:
-            if not self._trackId:
-                return None
-
-            model   = Tracks_Track.MASTER
-            session = model.createSession()
-            result  = session.query(model).filter(model.prev == self._trackId).first()
-            return result.id if result else None
-
-        node = self.nextNode
-        if node:
-            return cmds.getAttr(node + '.' + TrackPropEnum.ID.name)
-        return None
-
-#___________________________________________________________________________________________________ GS: prevNode
-    @property
-    def prevNode(self):
-        if not self.node:
-            return None
-
-        connections = cmds.listConnections(self.node + '.prevTrack', s=True, p=True)
-        if not connections:
-            return None
-
-        for c in connections:
-            if c.endswith('.message'):
-                node = c.split('.')[0]
-                return node
-        return None
-#___________________________________________________________________________________________________ GS: nextNode
-    @property
-    def nextNode(self):
-        if not self.node:
-            return None
-
-        connections = cmds.listConnections(self.node + '.message', d=True, p=True)
-        if not connections:
-            return None
-
-        for c in connections:
-            if c.endswith('.prevTrack'):
-                node = c.split('.')[0]
-                return node
-        return None
-#___________________________________________________________________________________________________ GS: prevTrack
-    @property
-    def prevTrack(self):
-        if not self.node:
-            p = self.prev
-            return Track(trackId=p) if p else None
-        else:
-            p = self.prevNode
-            return Track(node=p) if p else None
-
-#___________________________________________________________________________________________________ GS: nextTrack
-    @property
-    def nextTrack(self):
-        if not self.node:
-            n = self.next
-            return Track(trackId=n) if n else None
-        else:
-            n = self.nextNode
-            return Track(node=n) if n else None
+        """ The universally unique identifier for the next track within thr track series, or an
+            empty value if no next track exists. """
+        return self._getTrackProp(TrackPropEnum.NEXT)
+    @next.setter
+    def next(self, value):
+        self._setTrackProp(TrackPropEnum.PREV, value)
 
 #___________________________________________________________________________________________________ GS: snapshot
     @property
     def snapshot(self):
-        return self._getTrackAttr(TrackPropEnum.SNAPSHOT)
+        """ A serialized JSON string containing track data from the spreadsheet source. """
+        return self._getTrackProp(TrackPropEnum.SNAPSHOT)
     @snapshot.setter
     def snapshot(self, value):
-        self._setTrackAttr(TrackPropEnum.SNAPSHOT, value)
-
-#___________________________________________________________________________________________________ GS: index
-    @property
-    def index(self):
-        return self._getTrackAttr(TrackPropEnum.INDEX)
-    @index.setter
-    def index(self, value):
-        self._setTrackAttr(TrackPropEnum.INDEX, value)
-
-#___________________________________________________________________________________________________ GS: id
-    @property
-    def id(self):
-        """ The Base-64 unique identifier of the track within the database if a database record
-            exists, otherwise an empty string."""
-
-        out = self._getTrackAttr(TrackPropEnum.ID)
-        if out is None:
-            return u''
-        return None
+        self._setTrackProp(TrackPropEnum.SNAPSHOT, value)
 
 #___________________________________________________________________________________________________ GS: width
     @property
     def width(self):
-        return self._getTrackAttr(TrackPropEnum.WIDTH, 'scaleX')
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.WIDTH, 'scaleX')
     @width.setter
     def width(self, value):
-        self._setTrackAttr(TrackPropEnum.WIDTH, value, 'scaleX')
+        self._setTrackProp(TrackPropEnum.WIDTH, value, 'scaleX')
 
 #___________________________________________________________________________________________________ GS: length
     @property
     def length(self):
-        return self._getTrackAttr(TrackPropEnum.LENGTH, 'scaleZ')
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.LENGTH, 'scaleZ')
     @length.setter
     def length(self, value):
-        self._setTrackAttr(TrackPropEnum.LENGTH, value, 'scaleZ')
+        self._setTrackProp(TrackPropEnum.LENGTH, value, 'scaleZ')
 
 #___________________________________________________________________________________________________ GS: rotation
     @property
     def rotation(self):
-        return self._getTrackAttr(TrackPropEnum.ROTATION, 'ry')
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.ROTATION, 'ry')
     @rotation.setter
     def rotation(self, value):
-        self._setTrackAttr(TrackPropEnum.ROTATION, value, 'ry')
+        self._setTrackProp(TrackPropEnum.ROTATION, value, 'ry')
 
 #___________________________________________________________________________________________________ GS: x
     @property
     def x(self):
-        return self._getTrackAttr(TrackPropEnum.X, 'translateX')
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.X, 'translateX')
     @x.setter
     def x(self, value):
-        self._setTrackAttr(TrackPropEnum.X, value, 'translateX')
+        self._setTrackProp(TrackPropEnum.X, value, 'translateX')
 
 #___________________________________________________________________________________________________ GS: z
     @property
     def z(self):
-        return self._getTrackAttr(TrackPropEnum.Z, 'translateZ')
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.Z, 'translateZ')
     @z.setter
     def z(self, value):
-        self._setTrackAttr(TrackPropEnum.Z, value, 'translateZ')
+        self._setTrackProp(TrackPropEnum.Z, value, 'translateZ')
 
 #___________________________________________________________________________________________________ GS: widthUncertainty
     @property
     def widthUncertainty(self):
-        return self._getTrackAttr(TrackPropEnum.WIDTH_UNCERTAINTY)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.WIDTH_UNCERTAINTY)
     @widthUncertainty.setter
     def widthUncertainty(self, value):
-        self._setTrackAttr(TrackPropEnum.WIDTH_UNCERTAINTY, value)
+        self._setTrackProp(TrackPropEnum.WIDTH_UNCERTAINTY, value)
 
 #___________________________________________________________________________________________________ GS: lengthUncertainty
     @property
     def lengthUncertainty(self):
-        return self._getTrackAttr(TrackPropEnum.LENGTH_UNCERTAINTY)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.LENGTH_UNCERTAINTY)
     @lengthUncertainty.setter
     def lengthUncertainty(self, value):
-        self._setTrackAttr(TrackPropEnum.LENGTH_UNCERTAINTY, value)
+        self._setTrackProp(TrackPropEnum.LENGTH_UNCERTAINTY, value)
 
 #___________________________________________________________________________________________________ GS: depthUncertainty
     @property
     def depthUncertainty(self):
-        return self._getTrackAttr(TrackPropEnum.DEPTH_UNCERTAINTY)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.DEPTH_UNCERTAINTY)
     @depthUncertainty.setter
     def depthUncertainty(self, value):
-        self._setTrackAttr(TrackPropEnum.DEPTH_UNCERTAINTY, value)
+        self._setTrackProp(TrackPropEnum.DEPTH_UNCERTAINTY, value)
 
 #___________________________________________________________________________________________________ GS: rotationUncertainty
     @property
     def rotationUncertainty(self):
-        return self._getTrackAttr(TrackPropEnum.ROTATION_UNCERTAINTY)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.ROTATION_UNCERTAINTY)
     @rotationUncertainty.setter
     def rotationUncertainty(self, value):
-        self._setTrackAttr(TrackPropEnum.ROTATION_UNCERTAINTY, value)
+        self._setTrackProp(TrackPropEnum.ROTATION_UNCERTAINTY, value)
 
 #___________________________________________________________________________________________________ GS: widthMeasured
     @property
     def widthMeasured(self):
-        return self._getTrackAttr(TrackPropEnum.WIDTH_MEASURED)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.WIDTH_MEASURED)
     @widthMeasured.setter
     def widthMeasured(self, value):
-        self._setTrackAttr(TrackPropEnum.WIDTH_MEASURED, value)
+        self._setTrackProp(TrackPropEnum.WIDTH_MEASURED, value)
 
 #___________________________________________________________________________________________________ GS: lengthMeasured
     @property
     def lengthMeasured(self):
-        return self._getTrackAttr(TrackPropEnum.LENGTH_MEASURED)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.LENGTH_MEASURED)
     @lengthMeasured.setter
     def lengthMeasured(self, value):
-        self._setTrackAttr(TrackPropEnum.LENGTH_MEASURED, value)
+        self._setTrackProp(TrackPropEnum.LENGTH_MEASURED, value)
 
 #___________________________________________________________________________________________________ GS: length
     @property
     def depthMeasured(self):
-        return self._getTrackAttr(TrackPropEnum.DEPTH_MEASURED)
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.DEPTH_MEASURED)
     @depthMeasured.setter
     def depthMeasured(self, value):
-        self._setTrackAttr(TrackPropEnum.DEPTH_MEASURED, value)
-
+        self._setTrackProp(TrackPropEnum.DEPTH_MEASURED, value)
 
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ GS: createPreviousTrack
+    def createPreviousTrack(self):
+        """ Creates and returns a Track instance for the previous track entry if one exists or
+            None if this is the first track in the series. """
+        p = self.prev
+        return Track(uid=p) if p else None
+
+#___________________________________________________________________________________________________ GS: createNextTrack
+    def createNextTrack(self):
+        """ Creates and returns a Track instance for the next track entry if one exists or
+            None if this is the last track in the series. """
+        n = self.next
+        return Track(uid=n) if n else None
+
 #___________________________________________________________________________________________________ generateNode
     def generateNode(self):
+        """ Creates a node for this track instance based on the existing track data """
         if self.node is not None:
             return
         self.node = self.createNode()
         self.setProperties(self._trackData)
 
-#___________________________________________________________________________________________________ createNode
-    @classmethod
-    def createNode(cls):
-        """ Create an elliptical cylinder (disk) plus a superimposed triangular pointer to signify
-            the position, dimensions, and rotation of a manus or pes print.  The cylinder has a
-            diameter of one meter so that the scale in x and z equates to the width and length of
-            the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The pointer is locked to
-            not be non-selectable (reference) and the marker is prohibited from changing y
-            (elevation) or rotation about either x or z.  The color of the cylinder indicates manus
-            versus pes, and the color of the pointer on top of the cylinder indicates left versus
-            right."""
-
-        trackProps = []
-        for enum in Reflection.getReflectionList(TrackPropEnum):
-            trackProps.append({'name':enum.name, 'type':enum.type, 'intrinsic':enum.intrinsic})
-
-        path = CadenceEnvironment.getResourceScriptPath('createTrackNode.py', isFile=True)
-        conn = nimble.getConnection()
-        out  = conn.runPythonScriptFile(path, trackProps=trackProps)
-        if not out.success:
-            print 'CREATE NODE ERROR:', out.error
-
-        return out.result['name']
-
 #___________________________________________________________________________________________________ nodeHasAttribute
     def nodeHasAttribute(self, attribute):
+        """ Checks the Maya node associated with this track for the specified attribute and returns
+            True if found or False if not or no node exists. """
         if self.node is None:
             return False
-        return cmds.attributeQuery(attribute, node=self.node, exists=True)
+        return cmds.hasAttr(self.node + '.' + attribute)
 
 #___________________________________________________________________________________________________ getProperty
     def getProperty(self, p):
-        enum = self._getTrackPropEnum(p) if isinstance(p, basestring) else p
+        """ Returns the value of a track property based on its name or enumeration. The p argument
+            can be either a TrackPropEnum enumerated value or the name of a TrackPropEnum value. """
+
+        enum = TrackPropEnumOps.getTrackPropEnumByName(p) if isinstance(p, basestring) else p
 
         if enum.name == TrackPropEnum.WIDTH.name:
             return self.width
@@ -414,14 +377,15 @@ class Track(object):
             return self.x
         elif enum.name == TrackPropEnum.Z.name:
             return self.z
-        return self._getTrackAttr(enum)
+        return self._getTrackProp(enum)
 
 #___________________________________________________________________________________________________ setProperty
     def setProperty(self, p, value):
-        if p == TrackPropEnum.ID.name:
-            return
+        """ Sets the value of a track property based on its name or enumeration and value. The
+            p argument can be either a TrackPropEnum enumerated value or the name of a
+            TrackPropEnum value. """
 
-        enum = self._getTrackPropEnum(p) if isinstance(p, basestring) else p
+        enum = TrackPropEnumOps.getTrackPropEnumByName(p) if isinstance(p, basestring) else p
 
         if enum.name == TrackPropEnum.WIDTH.name:
             self.width = value
@@ -434,10 +398,12 @@ class Track(object):
         elif enum.name == TrackPropEnum.Z.name:
             self.z = value
         else:
-            self._setTrackAttr(enum, value)
+            self._setTrackProp(enum, value)
 
 #___________________________________________________________________________________________________ getProperties
     def getProperties(self):
+        """ Returns a dictionary containing the various properties of the track data. """
+
         # Outside of Maya return track data directly
         if self.node is None:
             return self._trackData
@@ -445,14 +411,7 @@ class Track(object):
         propEnums = Reflection.getReflectionList(TrackPropEnum)
         props     = dict()
         for enum in propEnums:
-            name = enum.name
-
-            # Handle the track ID as a special case so that it is current when the database entry
-            # is created
-            if name == TrackPropEnum.ID.name:
-                props[name] = self._trackId
-                continue
-
+            name  = enum.name
             value = self.getProperty(name)
             if value is not None:
                 props[name] = value
@@ -461,11 +420,14 @@ class Track(object):
 
 #___________________________________________________________________________________________________ setProperties
     def setProperties(self, properties):
+        """ Sets the value of each track property in the properties dictionary. """
         for prop,value in properties.iteritems():
             self.setProperty(prop, value)
 
 #___________________________________________________________________________________________________ colorTrack
     def colorTrack(self):
+        """ TODO: Kent... """
+
         if self.pes:
             ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.node)
         else:
@@ -476,27 +438,9 @@ class Track(object):
         else:
             ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.node + '|pointer')
 
-#___________________________________________________________________________________________________ link
-    def link(self, prevTrack):
-        """ sets the (string-type) prev and next attributes to reference the name of self and
-            the name of some previousTrack, and also connects the current node's (message-type)
-            prev attribute to previousTrack's node."""
-
-        # Break existing next/prev link if present
-        self.unlink()
-        self.prev = prevTrack.id
-        cmds.connectAttr(prevTrack.node + '.message', self.node + '.prevTrack', f=True)
-
-#___________________________________________________________________________________________________ unlink
-    def unlink(self):
-        p = self.prevTrack
-        if p is None:
-            return
-        cmds.disconnectAttr(p.node + '.message', self.node + '.prevTrack')
-        self.prevTrack = u''
-
 #___________________________________________________________________________________________________ setCadenceCamFocus
     def setCadenceCamFocus(self):
+        """ TODO: Kent... """
         if self.node is None:
             return
 
@@ -505,31 +449,47 @@ class Track(object):
         height = cmds.xform('CadenceCam', query=True, translation=True)[1]
         cmds.move(self.x, height, self.z, 'CadenceCam', absolute=True)
 
-#___________________________________________________________________________________________________ importData
-    def importData(self, trackData):
-        self._trackData = trackData
-        self.saveData()
+#___________________________________________________________________________________________________ refreshNodeLink
+    def refreshNodeLink(self):
+        """ Tries to find the Maya node with the given uid and assigns the result to the node
+            property of the track. Can be used even if a node name already exists to heal after
+            potential name changes. """
 
-#___________________________________________________________________________________________________ loadData
-    def loadData(self):
-        if self._trackId is None:
+        try:
+            conn   = nimble.getConnection()
+            result = conn.runPythonScriptFile(
+                CadenceEnvironment.getResourceScriptPath('findTrackNode.py'))
+
+            self.node = result.payload.get('node')
+        except Exception, err:
+            self.node = None
+        return self.node
+
+#___________________________________________________________________________________________________ load
+    def load(self):
+        """ Loads the Track from the database or Maya depending on how the instance was
+            constructed. """
+        if self.uid is None:
             return False
 
-        entry = self._getTrackEntry(self._trackId)
+        self.refreshNodeLink()
+        if self.node:
+            return True
+
+        entry = Tracks_Track.getByUid(self._uid)
         if entry is None:
             return False
 
-        if self._trackData:
-            self._trackData = dict(entry.toDict().items() + self._trackData.items())
-        else:
-            self._trackData =  entry.toDict()
+        self._trackData =  entry.toDict()
         entry.session.close()
         return True
 
-#___________________________________________________________________________________________________ findAndLoadData
-    def findAndLoadData(self):
-        if self._trackId is not None:
-            return self.loadData()
+#___________________________________________________________________________________________________ loadFromValues
+    def loadFromValues(self):
+        """ Loads based on the current values set for the track. This form of loading is useful
+            when the uid is not available, e.g. when importing data from the spreadsheet. """
+        if self.uid is not None and self.load():
+            return True
 
         model   = Tracks_Track.MASTER
         session = model.createSession()
@@ -572,39 +532,55 @@ class Track(object):
         session.close()
         return True
 
-#___________________________________________________________________________________________________ saveData
-    def saveData(self, session =None):
+#___________________________________________________________________________________________________ save
+    def save(self, session =None):
         props = self.getProperties()
         model = Tracks_Track.MASTER
+        entry = None
 
         # Update or create the database entry from the property data
-        if self._trackId is not None:
-            entry = self._getTrackEntry(self._trackId, session=session)
-            s     = entry.session
-            entry.fromDict(props)
-        else:
+        if self._uid is not None:
+            entry = Tracks_Track.getByUid(self._uid, session=session)
+
+        if entry is None:
             entry = Tracks_Track()
             entry.fromDict(props)
+            entry.uid = self._uid
 
             s = model.createSession() if session is None else session
             s.add(entry)
             s.flush()
-
-            self._trackId = Base64.to64(entry.i)
-            entry.id = self._trackId
-
-        # If the previous track has not been saved to the database, save it as well to populate
-        # the prev id value
-        if not entry.prev:
-            track = self.prevTrack
-            if track:
-                if not track.id:
-                    track.saveData(session=s)
-                    entry.prev = track.id
+        else:
+            s = entry.session
+            entry.fromDict(props)
 
         s.commit()
         if session is None:
             s.close()
+
+#___________________________________________________________________________________________________ createNode
+    @classmethod
+    def createNode(cls):
+        """ Create an elliptical cylinder (disk) plus a superimposed triangular pointer to signify
+            the position, dimensions, and rotation of a manus or pes print.  The cylinder has a
+            diameter of one meter so that the scale in x and z equates to the width and length of
+            the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The pointer is locked to
+            not be non-selectable (reference) and the marker is prohibited from changing y
+            (elevation) or rotation about either x or z.  The color of the cylinder indicates manus
+            versus pes, and the color of the pointer on top of the cylinder indicates left versus
+            right."""
+
+        trackProps = []
+        for enum in Reflection.getReflectionList(TrackPropEnum):
+            trackProps.append({'name':enum.name, 'type':enum.type, 'intrinsic':enum.intrinsic})
+
+        path = CadenceEnvironment.getResourceScriptPath('createTrackNode.py', isFile=True)
+        conn = nimble.getConnection()
+        out  = conn.runPythonScriptFile(path, trackProps=trackProps)
+        if not out.success:
+            print 'CREATE NODE ERROR:', out.error
+
+        return out.result['name']
 
 #___________________________________________________________________________________________________ incrementName
     @classmethod
@@ -628,7 +604,7 @@ class Track(object):
 #___________________________________________________________________________________________________ fromSpreadsheetEntry
     @classmethod
     def fromSpreadsheetEntry(cls, csvRow, force =True):
-        csvIndex    = csvRow[TrackCsvColumnEnum.INDEX]
+        csvIndex    = int(csvRow[TrackCsvColumnEnum.INDEX])
         t           = Track(trackData=dict())
         t.site      = csvRow[TrackCsvColumnEnum.TRACKSITE]
         t.year      = csvRow[TrackCsvColumnEnum.CAST_DATE].split('_')[-1]
@@ -663,12 +639,15 @@ class Track(object):
         #-------------------------------------------------------------------------------------------
         # FIND EXISTING
         #       Use data set above to attempt to load the track database entry
-        if t.findAndLoadData() and not force:
+        if t.loadFromValues() and not force:
             if csvIndex != t.index:
-                print 'Ambiguous Track Entry [%s != %s]' % (csvIndex, t.index)
+                print 'Ambiguous Track [%s != %s]:' % (csvIndex, t.index)
+                print '\t%s:' % t.index, JSON.fromString(t.snapshot)
+                print '\t%s:' % csvIndex, csvRow
             return t
 
-        t.index = csvIndex
+        t.index     = csvIndex
+        t.snapshot  = JSON.asString(csvRow)
 
         if t.pes:
             wide      = csvRow[TrackCsvColumnEnum.PES_WIDTH]
@@ -707,17 +686,19 @@ class Track(object):
             t.depthUncertainty = 5.0
 
         # Save csv value changes to the database
-        t.saveData()
+        t.save()
 
         return t
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _getTrackAttr
-    def _getTrackAttr(self, enum, mayaAttrName =None):
+#___________________________________________________________________________________________________ _getTrackProp
+    def _getTrackProp(self, enum, mayaAttrName =None, defaultValue =None):
+        """ Retrieves the track property defined by the specified TrackPropEnum. """
+
         if self.node is None:
-            return self._trackData[enum.name]
+            return self._trackData.get(enum.name, defaultValue)
 
         if mayaAttrName is None:
             mayaAttrName = enum.name
@@ -727,8 +708,10 @@ class Track(object):
 
         return cmds.getAttr(self.node + '.' + mayaAttrName)
 
-#___________________________________________________________________________________________________ _setTrackAttr
-    def _setTrackAttr(self, enum, value, mayaAttrName =None):
+#___________________________________________________________________________________________________ _setTrackProp
+    def _setTrackProp(self, enum, value, mayaAttrName =None):
+        """ Sets the track property defined by the specified TrackPropEnum and value. """
+
         if self.node is None:
             self._trackData[enum.name] = value
             return
@@ -751,34 +734,13 @@ class Track(object):
             else:
                 cmds.setAttr(self.node + '.' + mayaAttrName, value, type=propType)
         except Exception, err:
-            print 'ERROR: Track._setTrackAttr'
+            print 'ERROR: Track._setTrackProp'
             print '  NODE: ' + str(self.node)
             print '  ATTR: ' + str(mayaAttrName)
             print '  TYPE: ' + str(propType)
             print '  VALUE: ' + str(value) + ' | ' + str(type(value))
             print '  ERROR: ', err
             raise
-
-#___________________________________________________________________________________________________ _getTrackPropEnum
-    @classmethod
-    def _getTrackPropEnum(cls, name):
-        for enum in Reflection.getReflectionList(TrackPropEnum):
-            if enum.name == name:
-                return enum
-        return None
-
-#___________________________________________________________________________________________________ _getTrackEntry
-    @classmethod
-    def _getTrackEntry(cls, trackId, session =None):
-        model  = Tracks_Track.MASTER
-        s      = model.createSession() if session is None else session
-        result = s.query(model).filter(model.id == trackId).first()
-        if result is None:
-            if session is None:
-                s.close()
-            return None
-
-        return result
 
 #===================================================================================================
 #                                                                               I N T R I N S I C
@@ -794,5 +756,5 @@ class Track(object):
 #___________________________________________________________________________________________________ __str__
     def __str__(self):
         print self.name
-        return '[%s(%s) "%s"]' % (self.__class__.__name__, self.name, self._trackId)
+        return '[%s(%s) "%s"]' % (self.__class__.__name__, self.name, self.uid)
 
