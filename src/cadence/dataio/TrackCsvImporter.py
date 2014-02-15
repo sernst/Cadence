@@ -16,7 +16,7 @@ from cadence.enum.TrackCsvColumnEnum import TrackCsvColumnEnum
 
 #___________________________________________________________________________________________________ TrackCsvImporter
 class TrackCsvImporter(object):
-    """ Importing data from the """
+    """ Imports track data from CSV formatted spreadsheets into the local Cadence database. """
 
 #===================================================================================================
 #                                                                                       C L A S S
@@ -38,7 +38,9 @@ class TrackCsvImporter(object):
 
 #___________________________________________________________________________________________________ read
     def read(self, path =None, force =True):
-        """Doc..."""
+        """ Reads from the spreadsheet located at the absolute path argument and adds each row
+            to the tracks in the database. """
+
         if path is not None:
             self._path = path
         if self._path is None:
@@ -70,6 +72,9 @@ class TrackCsvImporter(object):
 #___________________________________________________________________________________________________ fromSpreadsheetEntry
     @classmethod
     def fromSpreadsheetEntry(cls, csvRowData, force =True):
+        """ From the spreadsheet data dictionary representing raw track data, this method creates
+            a track entry in the database. """
+
         try:
             csvIndex = int(csvRowData[TrackCsvColumnEnum.INDEX.name])
         except Exception, err:
@@ -210,6 +215,7 @@ class TrackCsvImporter(object):
 
 #___________________________________________________________________________________________________ _writeError
     def _writeError(self, data):
+        """ Writes import error data to the logger, formatting it for human readable display. """
         source = {}
         for n,v in data['data'].iteritems():
             source[u' '.join(n.split(u'_')).title()] = v

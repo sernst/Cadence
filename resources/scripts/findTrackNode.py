@@ -7,14 +7,20 @@ from nimble import NimbleScriptBase
 
 #___________________________________________________________________________________________________ findTrackNode
 class FindTrackNode(NimbleScriptBase):
-    """A class for..."""
+    """A remote script class for locating a track based on its uid property.
+        -> uid          | UID to find within the Maya scene nodes.
+        -> [uidKey]     | String name of the maya attribute on which to search. Default 'uid'.
+
+        <- success      | Boolean specifying if the find operation was able to locate a node with
+                            the specified uid argument.
+        <- [node]       | Node name of the transform node found with the matching uid if such a
+                            node was found. """
 
 #===================================================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ publicMethod
+#___________________________________________________________________________________________________ run
     def run(self):
-        """Doc..."""
         uidKey = self.getKwarg('uidKey', 'uid')
         uid    = self.getKwarg('uid', None)
 
