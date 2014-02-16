@@ -36,6 +36,7 @@ class CadenceToolViewerWidget(PyGlassWidget):
         """Creates a new instance of CadenceToolViewerWidget."""
         super(CadenceToolViewerWidget, self).__init__(parent, widgetFile=False, **kwargs)
 
+        self._hasHelp    = False
         self._definition = None
 
         mainLayout = self._getLayout(self, QtGui.QVBoxLayout)
@@ -68,6 +69,10 @@ class CadenceToolViewerWidget(PyGlassWidget):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ toggleHelpDisplay
+    def toggleHelpDisplay(self):
+        self._helpBox.setVisible(self._hasHelp and not self._helpBox.isVisible())
+
 #___________________________________________________________________________________________________ toggleInteractivity
     def toggleInteractivity(self, value):
         self._header.setEnabled(value)
@@ -97,6 +102,8 @@ class CadenceToolViewerWidget(PyGlassWidget):
         self.setActiveWidget(d['id'])
 
         self._helpBox.setVisible(self._helpComm.loadContent(self._currentWidget))
+        self._hasHelp = self._helpBox.isVisible()
+        self._header.toggleHelpButton(self._hasHelp)
 
 #___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
     def _deactivateWidgetDisplayImpl(self, **kwargs):

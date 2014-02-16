@@ -13,6 +13,8 @@ from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ Viewer
 class TrackwayImporterWidget(PyGlassWidget):
+    """ User interface class for handling track data IO from any of the possible sources and
+        saving them to, or loading them from the database. """
 
 #===================================================================================================
 #                                                                                       C L A S S

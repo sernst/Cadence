@@ -2,6 +2,7 @@
 # (C)2013
 # Scott Ernst
 
+from __future__ import absolute_import
 from pyglass.app.PyGlassApplication import PyGlassApplication
 
 #___________________________________________________________________________________________________ CadenceApplication

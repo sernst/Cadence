@@ -30,23 +30,22 @@ class ToolViewerHeaderElement(PyGlassElement):
         layout.addStretch()
 
         btn = QtGui.QPushButton(self)
+        btn.setText('Help')
+        btn.clicked.connect(self._handleToggleHelp)
+        layout.addWidget(btn)
+        self._helpBtn = btn
+
+        btn = QtGui.QPushButton(self)
         btn.setText('Close')
         btn.clicked.connect(self._handleCloseTool)
         layout.addWidget(btn)
 
 #===================================================================================================
-#                                                                                   G E T / S E T
-
-#___________________________________________________________________________________________________ GS: propertyName
-    @property
-    def propertyName(self):
-        return None
-    @propertyName.setter
-    def propertyName(self, value):
-        pass
-
-#===================================================================================================
 #                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ toggleHelpButton
+    def toggleHelpButton(self, value):
+        self._helpBtn.setEnabled(value)
 
 #___________________________________________________________________________________________________ setLabel
     def setLabel(self, value):
@@ -63,3 +62,7 @@ class ToolViewerHeaderElement(PyGlassElement):
 #___________________________________________________________________________________________________ _handleCloseTool
     def _handleCloseTool(self):
         self.mainWindow.setActiveWidget('home')
+
+#___________________________________________________________________________________________________ _handleToggleHelp
+    def _handleToggleHelp(self):
+        self.owner.toggleHelpDisplay()

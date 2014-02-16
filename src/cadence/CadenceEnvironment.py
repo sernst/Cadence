@@ -1,5 +1,5 @@
 # CadenceEnvironment.py
-# (C)2012-2014 http://cadence.threeaddone.com
+# (C)2012-2014
 # Scott Ernst
 
 import os
