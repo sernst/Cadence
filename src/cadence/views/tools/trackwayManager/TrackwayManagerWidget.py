@@ -7,7 +7,7 @@ from nimble import cmds
 from pyaid.json.JSON import JSON
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
-from cadence.data import Track
+from cadence.data.Track import Track
 from cadence.enum.TrackPropEnum import TrackPropEnum
 
 #___________________________________________________________________________________________________ TrackwayManagerWidget
@@ -154,7 +154,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ gotoPrevTrack
     def goToPrevTrack(self):
-        p = None
         t = self.getFirstSelectedTrack()
         if t is None:
             return
@@ -164,7 +163,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ goToNextTrack
     def goToNextTrack(self):
-        n = None
         t = self.getLastSelectedTrack()
         if t is None:
             return
@@ -297,10 +295,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         rm2.width  = 0.25
         rm2.length = 0.2
 
-        lp2.link(lp1)
-        rp2.link(rp1)
-        lm2.link(lm1)
-        rm2.link(rm1)
+        lp2.prev = lp1
+        rp2.prev = rp1
+        lm2.prev = lm1
+        rm2.prev = rm1
 
         cmds.select([
             lp1.node, rp1.node, lm1.node, rm1.node,
@@ -352,7 +350,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         # then add to the dictionary the specifics of a given track
         d[TrackPropEnum.NAME.name]  = self.getNameFromUI()
         d[TrackPropEnum.INDEX.name] = self.indexLE.text()
-        d[TrackPropEnum.ID.name]    = self.idLE.text()
+        d[TrackPropEnum.UID.name]    = self.idLE.text()
         d[TrackPropEnum.NOTE.name]  = self.noteTE.toPlainText()
 
         d[TrackPropEnum.WIDTH_UNCERTAINTY.name]    = self.floatLE(self.widthUncertaintyLE.text())
