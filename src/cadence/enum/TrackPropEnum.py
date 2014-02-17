@@ -22,57 +22,92 @@ class TrackPropEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    # Unique identifier for the track, created when the track is first created and never changed
-    # fort the lifetime of the track. The UID has no dependence upon any other track property
-    UID             = TRACK_PROP_NT('uid',              'string',   False)
+    # Community, site, year, level, sector, trackway
+    COMM = TRACK_PROP_NT('community', 'string', False)
 
-    # Community for the track
-    COMM            = TRACK_PROP_NT('community',        'string',   False)
-    SITE            = TRACK_PROP_NT('site',             'string',   False)
-    YEAR            = TRACK_PROP_NT('year',             'string',   False)
-    LEVEL           = TRACK_PROP_NT('level',            'string',   False)
-    SECTOR          = TRACK_PROP_NT('sector',           'string',   False)
-    TRACKWAY_NUMBER = TRACK_PROP_NT('trackwayNumber',   'string',   False)
-    TRACKWAY_TYPE   = TRACK_PROP_NT('trackwayType',     'string',   False)
-    LEFT            = TRACK_PROP_NT('left',             'bool',     False)
-    PES             = TRACK_PROP_NT('pes',              'bool',     False)
-    NUMBER          = TRACK_PROP_NT('number',           'string',   False)
-    NOTE            = TRACK_PROP_NT('note',             'string',   False)
-
-    # UID of the previous track in the track series, or an empty string if no previous track exists
-    PREV            = TRACK_PROP_NT('prev',             'string',   False)
-
-    # UID of the next track in the track series, or an empty string if no next track exists
-    NEXT            = TRACK_PROP_NT('next',             'string',   False)
-
-    # A serialized JSON string of that stores the last saved state of the track for reference
-    SNAPSHOT        = TRACK_PROP_NT('snapshot',         'string',   False)
-
-    # The row index of the track entry in the source spreadsheet where the track data was imported
-    INDEX           = TRACK_PROP_NT('index',            'float',    False)
-
-    WIDTH           = TRACK_PROP_NT('width',            'float',    True)
-    LENGTH          = TRACK_PROP_NT('length',           'float',    True)
-    ROTATION        = TRACK_PROP_NT('rotation',         'float',    True)
-    X               = TRACK_PROP_NT('x',                'float',    True)
-    Z               = TRACK_PROP_NT('z',                'float',    True)
-
-    WIDTH_UNCERTAINTY    = TRACK_PROP_NT('widthUncertainty',    'float', False)
-    LENGTH_UNCERTAINTY   = TRACK_PROP_NT('lengthUncertainty',   'float', False)
-    ROTATION_UNCERTAINTY = TRACK_PROP_NT('rotationUncertainty', 'float', False)
-    WIDTH_MEASURED       = TRACK_PROP_NT('widthMeasured',       'float', False)
-    LENGTH_MEASURED      = TRACK_PROP_NT('lengthMeasured',      'float', False)
-    DEPTH_MEASURED       = TRACK_PROP_NT('depthMeasured',       'float', False)
-    DEPTH_UNCERTAINTY    = TRACK_PROP_NT('depthUncertainty',    'float', False)
-
-    # A 32bit integer containing enumerated flags related to the state and type of the track
-    FLAGS         = TRACK_PROP_NT('flags', 'long', False)
-
-    # A 32bit integer containing enumerated flags related to how the track data was imported
-    SOURCE_FLAGS  = TRACK_PROP_NT('flags', 'long', False)
+    # the depth of a given track (in cm) as originally measured
+    DEPTH_MEASURED    = TRACK_PROP_NT('depthMeasured',    'float', False)
+    DEPTH_UNCERTAINTY = TRACK_PROP_NT('depthUncertainty', 'float', False)
 
     # A 32bit integer containing enumerated flags for how the track should be displayed
     DISPLAY_FLAGS = TRACK_PROP_NT('flags', 'long', False)
+
+    # A 32bit integer containing enumerated flags related to the state and type of the track
+    FLAGS = TRACK_PROP_NT('flags', 'long', False)
+
+    # The row index of the track entry in the source spreadsheet where the track data was imported
+    INDEX = TRACK_PROP_NT('index', 'float', False)
+
+    # a boolean indicating left versus right track, defaults to false if unknown
+    LEFT = TRACK_PROP_NT('left', 'bool', False)
+
+    # the length of a given track (as fitted by an ellipse, as previously measured, and uncertainty)
+    LENGTH             = TRACK_PROP_NT('length',            'float', True)
+    LENGTH_MEASURED    = TRACK_PROP_NT('lengthMeasured',    'float', False)
+    LENGTH_UNCERTAINTY = TRACK_PROP_NT('lengthUncertainty', 'float', False)
+
+    # a given tracksite has multiple levels
+    LEVEL = TRACK_PROP_NT('level', 'string', False)
+
+    # UID of the next track in the track series, or an empty string if no next track exists
+    NEXT = TRACK_PROP_NT('next', 'string', False)
+
+    # a text note associated with a given track
+    NOTE = TRACK_PROP_NT('note', 'string', False)
+
+    # each track has a number (part of the 'name', such as the 3 in LM3 or the 15 in RP1)5
+    NUMBER = TRACK_PROP_NT('number', 'string', False)
+
+    # a boolean, true if the track is a pes (hind) print, not a manus, default is false if unknown
+    PES = TRACK_PROP_NT('pes', 'bool', False)
+
+    # the UID of the previous track in the track series, or an empty string if first track.  Note
+    # that there might be missing tracks.  E.g., the prev of LM33 might be LM30 (31 and 32 missing)
+    PREV = TRACK_PROP_NT('prev', 'string', False)
+
+    # rotation is measured relative to North (the world coordinates z-axis in the scene), and
+    # increases counterclockwise.  It is an intrinsic attribute of the node transform (rotation
+    # about the 'vertical' y axis).
+    ROTATION             = TRACK_PROP_NT('rotation',            'float', True)
+    ROTATION_MEASURED    = TRACK_PROP_NT('rotationMeasured',    'float', False)
+    ROTATION_UNCERTAINTY = TRACK_PROP_NT('rotationUncertainty', 'float', False)
+
+    # the specified sector for this track, at this site
+    SECTOR = TRACK_PROP_NT('sector', 'string', False)
+
+    # a given tracksite (BEB, TCH, etc.)
+    SITE = TRACK_PROP_NT('site', 'string', False)
+
+    # A serialized JSON string of that stores the last saved state of the track for reference
+    SNAPSHOT = TRACK_PROP_NT('snapshot', 'string', False)
+
+    # A 32bit integer containing enumerated flags related to how the track data was imported
+    SOURCE_FLAGS = TRACK_PROP_NT('flags', 'long', False)
+
+    # a trackway is numbered at a given site/level, and consists of four (for quadrupedal) or
+    # two (bipedal) track series.
+    TRACKWAY_NUMBER = TRACK_PROP_NT('trackwayNumber',  'string', False)
+
+    # trackways are 'S' for sauropod, 'T' for theropod, 'tr' for tridactyl, and 'U' for unclassified
+    TRACKWAY_TYPE = TRACK_PROP_NT('trackwayType', 'string', False)
+
+    # Unique identifier for the track, created when the track is first created and never changed
+    # for the lifetime of the track. The UID has no dependence upon any other track property
+    UID = TRACK_PROP_NT('uid', 'string', False)
+
+    # the width of a given track (as fitted by an ellipse, as previously measured, and uncertainty)
+    WIDTH             = TRACK_PROP_NT('width',            'float', True)
+    WIDTH_MEASURED    = TRACK_PROP_NT('widthMeasured',    'float', False)
+    WIDTH_UNCERTAINTY = TRACK_PROP_NT('widthUncertainty', 'float', False)
+
+    # the x coordinate of a given track (relative to tracksite's map origin) encoded in node
+    X = TRACK_PROP_NT('x', 'float', True)
+
+    # the year of excavation of the tracksite of which this track belongs
+    YEAR = TRACK_PROP_NT('year', 'string', False)
+
+    # the z coordinate of a given track (relative to tracksite's map origin) encoded in node
+    Z = TRACK_PROP_NT('z', 'float', True)
 
 #___________________________________________________________________________________________________ TrackPropEnumOps
 class TrackPropEnumOps(object):

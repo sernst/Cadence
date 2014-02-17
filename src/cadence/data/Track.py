@@ -1,6 +1,6 @@
 # Track.py
 # (C)2013-2014
-# Kent A. Stevens and Scott Ernst
+# Scott Ernst and Kent A. Stevens
 
 from pyaid.reflection.Reflection import Reflection
 
@@ -14,7 +14,7 @@ from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.util.shading.ShadingUtils import ShadingUtils
 
-#___________________________________________________________________________________________________ Track
+#___________________________________________________________________________________________________ Tra ck
 class Track(object):
     """ A track object wraps a reference to a Maya node (it's string name). A track has properties
         that are stored in the node, as string attributes, or floats, or directly by the values of
@@ -39,18 +39,92 @@ class Track(object):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+
+#___________________________________________________________________________________________________ GS: comm
+    @property
+    def comm(self):
+        """ The community associated with a given track (and trackway) """
+        return self._getTrackProp(TrackPropEnum.COMM)
+    @comm.setter
+    def comm(self, value):
+        self._setTrackProp(TrackPropEnum.COMM, value)
+
 #___________________________________________________________________________________________________ GS: databaseId
     @property
     def databaseId(self):
         return self._trackData.get('id', None) if self._trackData else None
 
-#___________________________________________________________________________________________________ GS: uid
+#___________________________________________________________________________________________________ GS: length
     @property
-    def uid(self):
-        """ The universal unique identifier for this track within Maya, the database, and during
-            computation. """
-        uid = self._getTrackProp(TrackPropEnum.UID)
-        return uid if uid else self._uid
+    def depthMeasured(self):
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.DEPTH_MEASURED)
+    @depthMeasured.setter
+    def depthMeasured(self, value):
+        self._setTrackProp(TrackPropEnum.DEPTH_MEASURED, value)
+
+#___________________________________________________________________________________________________ GS: depthUncertainty
+    @property
+    def depthUncertainty(self):
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.DEPTH_UNCERTAINTY)
+    @depthUncertainty.setter
+    def depthUncertainty(self, value):
+        self._setTrackProp(TrackPropEnum.DEPTH_UNCERTAINTY, value)
+
+#___________________________________________________________________________________________________ GS: propertyName
+    @property
+    def index(self):
+        return self._getTrackProp(TrackPropEnum.INDEX, 0)
+    @index.setter
+    def index(self, value):
+        self._setTrackProp(TrackPropEnum.INDEX, value)
+
+#___________________________________________________________________________________________________ GS: isLeft
+    @property
+    def left(self):
+        """ True if the track was made by the left side of the track maker. """
+        return self._getTrackProp(TrackPropEnum.LEFT)
+    @left.setter
+    def left(self, value):
+        self._setTrackProp(TrackPropEnum.LEFT, value)
+        if self.node is not None and value:
+            self.colorTrack()
+#___________________________________________________________________________________________________ GS: length
+    @property
+    def length(self):
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.LENGTH, 'scaleZ')
+    @length.setter
+    def length(self, value):
+        self._setTrackProp(TrackPropEnum.LENGTH, value, 'scaleZ')
+
+#___________________________________________________________________________________________________ GS: lengthMeasured
+    @property
+    def lengthMeasured(self):
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.LENGTH_MEASURED)
+    @lengthMeasured.setter
+    def lengthMeasured(self, value):
+        self._setTrackProp(TrackPropEnum.LENGTH_MEASURED, value)
+
+#___________________________________________________________________________________________________ GS: lengthUncertainty
+    @property
+    def lengthUncertainty(self):
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.LENGTH_UNCERTAINTY)
+    @lengthUncertainty.setter
+    def lengthUncertainty(self, value):
+        self._setTrackProp(TrackPropEnum.LENGTH_UNCERTAINTY, value)
+
+#___________________________________________________________________________________________________ GS: level
+    @property
+    def level(self):
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.LEVEL)
+    @level.setter
+    def level(self, value):
+        self._setTrackProp(TrackPropEnum.LEVEL, value)
 
 #___________________________________________________________________________________________________ GS: name
     @property
@@ -64,29 +138,84 @@ class Track(object):
         self.left   = True if value[1] == u'L' else False
         self.number = value[2:]
 
-#___________________________________________________________________________________________________ GS: trackData
+#___________________________________________________________________________________________________ GS: next
     @property
-    def trackData(self):
-        """ Dictionary representation of the track as stored by the database and on disk if such
-            an entry exists or None otherwise. """
-        return self._trackData
+    def next(self):
+        """ The universally unique identifier for the next track within thr track series, or an
+            empty value if no next track exists. """
+        return self._getTrackProp(TrackPropEnum.NEXT)
+    @next.setter
+    def next(self, value):
+        self._setTrackProp(TrackPropEnum.PREV, value)
 
-#___________________________________________________________________________________________________ GS: propertyName
+#___________________________________________________________________________________________________ GS: note
     @property
-    def index(self):
-        return self._getTrackProp(TrackPropEnum.INDEX, 0)
-    @index.setter
-    def index(self, value):
-        self._setTrackProp(TrackPropEnum.INDEX, value)
-
-#___________________________________________________________________________________________________ GS: comm
-    @property
-    def comm(self):
+    def note(self):
         """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.COMM)
-    @comm.setter
-    def comm(self, value):
-        self._setTrackProp(TrackPropEnum.COMM, value)
+        return self._getTrackProp(TrackPropEnum.NOTE)
+    @note.setter
+    def note(self, value):
+        self._setTrackProp(TrackPropEnum.NOTE, value)
+
+#___________________________________________________________________________________________________ GS: number
+    @property
+    def number(self):
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.NUMBER)
+    @number.setter
+    def number(self, value):
+        self._setTrackProp(TrackPropEnum.NUMBER, value)
+
+
+#___________________________________________________________________________________________________ GS: pes
+    @property
+    def pes(self):
+        """ True if the track was made by the hindquarters of the track maker. """
+        return self._getTrackProp(TrackPropEnum.PES)
+    @pes.setter
+    def pes(self, value):
+        self._setTrackProp(TrackPropEnum.PES, value)
+        if self.node is not None and value:
+            self.colorTrack()
+
+#___________________________________________________________________________________________________ GS: prev
+    @property
+    def prev(self):
+        """ The universally unique identifier for the previous track within thr track series, or an
+            empty value if no previous track exists. """
+        return self._getTrackProp(TrackPropEnum.PREV)
+    @prev.setter
+    def prev(self, value):
+        self._setTrackProp(TrackPropEnum.PREV, value)
+
+
+#___________________________________________________________________________________________________ GS: rotation
+    @property
+    def rotation(self):
+        """ The track's rotation is measured relative to world coordinates
+        not the trackway direction, using the 'vertical' (y axis) attribute """
+        return self._getTrackProp(TrackPropEnum.ROTATION, 'ry')
+    @rotation.setter
+    def rotation(self, value):
+        self._setTrackProp(TrackPropEnum.ROTATION, value, 'ry')
+
+#___________________________________________________________________________________________________ GS: rotationUncertainty
+    @property
+    def rotationUncertainty(self):
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.ROTATION_UNCERTAINTY)
+    @rotationUncertainty.setter
+    def rotationUncertainty(self, value):
+        self._setTrackProp(TrackPropEnum.ROTATION_UNCERTAINTY, value)
+
+#___________________________________________________________________________________________________ GS: sector
+    @property
+    def sector(self):
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.SECTOR)
+    @sector.setter
+    def sector(self, value):
+        self._setTrackProp(TrackPropEnum.SECTOR, value)
 
 #___________________________________________________________________________________________________ GS: site
     @property
@@ -97,32 +226,20 @@ class Track(object):
     def site(self, value):
         self._setTrackProp(TrackPropEnum.SITE, value)
 
-#___________________________________________________________________________________________________ GS: year
+#___________________________________________________________________________________________________ GS: snapshot
     @property
-    def year(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.YEAR)
-    @year.setter
-    def year(self, value):
-        self._setTrackProp(TrackPropEnum.YEAR, value)
-
-#___________________________________________________________________________________________________ GS: level
+    def snapshot(self):
+        """ A serialized JSON string containing track data from the spreadsheet source. """
+        return self._getTrackProp(TrackPropEnum.SNAPSHOT)
+    @snapshot.setter
+    def snapshot(self, value):
+        self._setTrackProp(TrackPropEnum.SNAPSHOT, value)
+#___________________________________________________________________________________________________ GS: trackData
     @property
-    def level(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.LEVEL)
-    @level.setter
-    def level(self, value):
-        self._setTrackProp(TrackPropEnum.LEVEL, value)
-
-#___________________________________________________________________________________________________ GS: sector
-    @property
-    def sector(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.SECTOR)
-    @sector.setter
-    def sector(self, value):
-        self._setTrackProp(TrackPropEnum.SECTOR, value)
+    def trackData(self):
+        """ Dictionary representation of the track as stored by the database and on disk if such
+            an entry exists or None otherwise. """
+        return self._trackData
 
 #___________________________________________________________________________________________________ GS: trackwayType
     @property
@@ -142,74 +259,13 @@ class Track(object):
     def trackwayNumber(self, value):
         self._setTrackProp(TrackPropEnum.TRACKWAY_NUMBER, value)
 
-#___________________________________________________________________________________________________ GS: isLeft
+#___________________________________________________________________________________________________ GS: uid
     @property
-    def left(self):
-        """ True if the track was made by the left side of the track maker. """
-        return self._getTrackProp(TrackPropEnum.LEFT)
-    @left.setter
-    def left(self, value):
-        self._setTrackProp(TrackPropEnum.LEFT, value)
-        if self.node is not None and value:
-            self.colorTrack()
-
-#___________________________________________________________________________________________________ GS: pes
-    @property
-    def pes(self):
-        """ True if the track was made by the hindquarters of the track maker. """
-        return self._getTrackProp(TrackPropEnum.PES)
-    @pes.setter
-    def pes(self, value):
-        self._setTrackProp(TrackPropEnum.PES, value)
-        if self.node is not None and value:
-            self.colorTrack()
-
-#___________________________________________________________________________________________________ GS: number
-    @property
-    def number(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.NUMBER)
-    @number.setter
-    def number(self, value):
-        self._setTrackProp(TrackPropEnum.NUMBER, value)
-
-#___________________________________________________________________________________________________ GS: note
-    @property
-    def note(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.NOTE)
-    @note.setter
-    def note(self, value):
-        self._setTrackProp(TrackPropEnum.NOTE, value)
-
-#___________________________________________________________________________________________________ GS: prev
-    @property
-    def prev(self):
-        """ The universally unique identifier for the previous track within thr track series, or an
-            empty value if no previous track exists. """
-        return self._getTrackProp(TrackPropEnum.PREV)
-    @prev.setter
-    def prev(self, value):
-        self._setTrackProp(TrackPropEnum.PREV, value)
-
-#___________________________________________________________________________________________________ GS: next
-    @property
-    def next(self):
-        """ The universally unique identifier for the next track within thr track series, or an
-            empty value if no next track exists. """
-        return self._getTrackProp(TrackPropEnum.NEXT)
-    @next.setter
-    def next(self, value):
-        self._setTrackProp(TrackPropEnum.PREV, value)
-
-#___________________________________________________________________________________________________ GS: snapshot
-    @property
-    def snapshot(self):
-        """ A serialized JSON string containing track data from the spreadsheet source. """
-        return self._getTrackProp(TrackPropEnum.SNAPSHOT)
-    @snapshot.setter
-    def snapshot(self, value):
-        self._setTrackProp(TrackPropEnum.SNAPSHOT, value)
+    def uid(self):
+        """ The universal unique identifier for this track within Maya, the database, and during
+            computation. """
+        uid = self._getTrackProp(TrackPropEnum.UID)
+        return uid if uid else self._uid
 
 #___________________________________________________________________________________________________ GS: width
     @property
@@ -220,42 +276,6 @@ class Track(object):
     def width(self, value):
         self._setTrackProp(TrackPropEnum.WIDTH, value, 'scaleX')
 
-#___________________________________________________________________________________________________ GS: length
-    @property
-    def length(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.LENGTH, 'scaleZ')
-    @length.setter
-    def length(self, value):
-        self._setTrackProp(TrackPropEnum.LENGTH, value, 'scaleZ')
-
-#___________________________________________________________________________________________________ GS: rotation
-    @property
-    def rotation(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.ROTATION, 'ry')
-    @rotation.setter
-    def rotation(self, value):
-        self._setTrackProp(TrackPropEnum.ROTATION, value, 'ry')
-
-#___________________________________________________________________________________________________ GS: x
-    @property
-    def x(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.X, 'translateX')
-    @x.setter
-    def x(self, value):
-        self._setTrackProp(TrackPropEnum.X, value, 'translateX')
-
-#___________________________________________________________________________________________________ GS: z
-    @property
-    def z(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.Z, 'translateZ')
-    @z.setter
-    def z(self, value):
-        self._setTrackProp(TrackPropEnum.Z, value, 'translateZ')
-
 #___________________________________________________________________________________________________ GS: widthUncertainty
     @property
     def widthUncertainty(self):
@@ -264,33 +284,6 @@ class Track(object):
     @widthUncertainty.setter
     def widthUncertainty(self, value):
         self._setTrackProp(TrackPropEnum.WIDTH_UNCERTAINTY, value)
-
-#___________________________________________________________________________________________________ GS: lengthUncertainty
-    @property
-    def lengthUncertainty(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.LENGTH_UNCERTAINTY)
-    @lengthUncertainty.setter
-    def lengthUncertainty(self, value):
-        self._setTrackProp(TrackPropEnum.LENGTH_UNCERTAINTY, value)
-
-#___________________________________________________________________________________________________ GS: depthUncertainty
-    @property
-    def depthUncertainty(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.DEPTH_UNCERTAINTY)
-    @depthUncertainty.setter
-    def depthUncertainty(self, value):
-        self._setTrackProp(TrackPropEnum.DEPTH_UNCERTAINTY, value)
-
-#___________________________________________________________________________________________________ GS: rotationUncertainty
-    @property
-    def rotationUncertainty(self):
-        """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.ROTATION_UNCERTAINTY)
-    @rotationUncertainty.setter
-    def rotationUncertainty(self, value):
-        self._setTrackProp(TrackPropEnum.ROTATION_UNCERTAINTY, value)
 
 #___________________________________________________________________________________________________ GS: widthMeasured
     @property
@@ -301,23 +294,32 @@ class Track(object):
     def widthMeasured(self, value):
         self._setTrackProp(TrackPropEnum.WIDTH_MEASURED, value)
 
-#___________________________________________________________________________________________________ GS: lengthMeasured
+#___________________________________________________________________________________________________ GS: x
     @property
-    def lengthMeasured(self):
+    def x(self):
         """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.LENGTH_MEASURED)
-    @lengthMeasured.setter
-    def lengthMeasured(self, value):
-        self._setTrackProp(TrackPropEnum.LENGTH_MEASURED, value)
+        return self._getTrackProp(TrackPropEnum.X, 'translateX')
+    @x.setter
+    def x(self, value):
+        self._setTrackProp(TrackPropEnum.X, value, 'translateX')
 
-#___________________________________________________________________________________________________ GS: length
+#___________________________________________________________________________________________________ GS: year
     @property
-    def depthMeasured(self):
+    def year(self):
         """ TODO: Kent... """
-        return self._getTrackProp(TrackPropEnum.DEPTH_MEASURED)
-    @depthMeasured.setter
-    def depthMeasured(self, value):
-        self._setTrackProp(TrackPropEnum.DEPTH_MEASURED, value)
+        return self._getTrackProp(TrackPropEnum.YEAR)
+    @year.setter
+    def year(self, value):
+        self._setTrackProp(TrackPropEnum.YEAR, value)
+
+#___________________________________________________________________________________________________ GS: z
+    @property
+    def z(self):
+        """ TODO: Kent... """
+        return self._getTrackProp(TrackPropEnum.Z, 'translateZ')
+    @z.setter
+    def z(self, value):
+        self._setTrackProp(TrackPropEnum.Z, value, 'translateZ')
 
 #===================================================================================================
 #                                                                                     P U B L I C

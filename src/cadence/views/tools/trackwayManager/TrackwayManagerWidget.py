@@ -2,7 +2,7 @@
 # (C)2012-2013
 # Scott Ernst and Kent A. Stevens
 
-
+import nimble
 from nimble import cmds
 from pyaid.json.JSON import JSON
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
@@ -45,14 +45,13 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.findBtn.clicked.connect(self.findTrack)
 
         # in Edit Trackway tab:
-        #self.trackwayCB.activated.connect(self.selectFromTrackwayCB)
         self.showTrackwayBtn.clicked.connect(self.showTrackway)
         self.hideTrackwayBtn.clicked.connect(self.hideTrackway)
         self.selectTrackwayBtn.clicked.connect(self.selectTrackway)
         self.showAllTrackwaysBtn.clicked.connect(self.showAllTrackways)
         self.hideAllTrackwaysBtn.clicked.connect(self.hideAllTrackways)
         self.selectAllTrackwaysBtn.clicked.connect(self.selectAllTrackways)
-        self.setTrackwayBtn.clicked.connect(self.setSelectedTrackway)
+        self.setSelectedTrackwayBtn.clicked.connect(self.setSelectedTrackway)
         self.initBtn.clicked.connect(self.initializeTrackway)
         self.repairBtn.clicked.connect(self.repair)
 
@@ -73,6 +72,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         if nodes is None:
             return None
+
         tracks = list()
         for n in nodes:
             if self.isTrackNode(n):
@@ -332,12 +332,13 @@ class TrackwayManagerWidget(PyGlassWidget):
     def getTrackwayPropertiesFromUI(self):
         dictionary = dict()
 
-        dictionary[TrackPropEnum.COMM.name]     = self.communityLE.text()
-        dictionary[TrackPropEnum.SITE.name]     = self.siteLE.text()
-        dictionary[TrackPropEnum.YEAR.name]     = self.yearLE.text()
-        dictionary[TrackPropEnum.SECTOR.name]   = self.sectorLE.text()
-        dictionary[TrackPropEnum.LEVEL.name]    = self.levelLE.text()
-        dictionary[TrackPropEnum.TRACKWAY.name] = self.trackwayLE.text()
+        dictionary[TrackPropEnum.COMM.name]            = self.communityLE.text()
+        dictionary[TrackPropEnum.SITE.name]            = self.siteLE.text()
+        dictionary[TrackPropEnum.YEAR.name]            = self.yearLE.text()
+        dictionary[TrackPropEnum.SECTOR.name]          = self.sectorLE.text()
+        dictionary[TrackPropEnum.LEVEL.name]           = self.levelLE.text()
+        dictionary[TrackPropEnum.TRACKWAY_TYPE.name]   = self.trackwayTypeLE.text()
+        dictionary[TrackPropEnum.TRACKWAY_NUMBER.name] = self.trackwayNumberLE.text()
         return dictionary
 
 #___________________________________________________________________________________________________ floatLE
@@ -386,7 +387,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.yearLE.setText('')
         self.sectorLE.setText('')
         self.levelLE.setText('')
-        self.trackwayLE.setText('')
+        self.trackwayTypeLE.setText('')
+        self.trackwayNumberLE.setText('')
         self.leftLE.setText('')
         self.pesLE.setText('')
         self.numberLE.setText('')
@@ -501,12 +503,13 @@ class TrackwayManagerWidget(PyGlassWidget):
         v = t.level
         self.levelLE.setText(u'' if v is None else v)
 
-        v = unicode(t.trackwayType) + unicode(t.trackwayNumber)
-        self.trackwayLE.setText(u'' if v is None else v)
+        v = t.trackwayType
+        self.trackwayTypeLE.setText(u'' if v is None else v)
+
+        v = t.trackwayNumber
+        self.trackwayNumberLE.setText(u'' if v is None else v)
         if v is not None:
             self.addTrackwayToCB(v)
-            i = self.trackwayCB.findText(v)
-            self.trackwayCB.setCurrentIndex(i)
 
 #___________________________________________________________________________________________________ renameSelected
     def renameSelected(self):
@@ -547,7 +550,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         tracks = self.getTrackSeries()
         if tracks is None:
             return
-        print "This track series consists of %s tracks" % len(tracks)
+        print "Selected series consists of %s tracks" % len(tracks)
         nodes = list()
         for t in tracks:
             nodes.append(t.node)
@@ -590,35 +593,35 @@ class TrackwayManagerWidget(PyGlassWidget):
         return tracks
 
 #___________________________________________________________________________________________________ addTrackwayToCB
-    def addTrackwayToCB(self, trackway):
-        tracks = self.getSelected()
-
+    def addTrackwayToCB(self, trackwayNumber):
+        trackway = "S" + trackwayNumber.zfill(2)
         i = self.trackwayCB.findText(trackway)
-        if i == -1:
-            self.trackwayCB.addItem(trackway)
+
+        if i != -1:
+            return
+
+        trackways = [self.trackwayCB.itemText(i) for i in range(self.trackwayCB.count())]
+        trackways.append(trackway)
+        trackways.sort()
+
+        self.trackwayCB.clear()
+        self.trackwayCB.addItems(trackways)
+        i = self.trackwayCB.findText(trackway)
+        self.trackwayCB.setCurrentIndex(i)
 
 #___________________________________________________________________________________________________ showTrackway
-    def showTrackway(self):
-        tracks = self.getSelected()
-        if tracks is None:
+    def showTrackway(self, visible=True):
+        trackway = self.trackwayCB.currentText()
+        print('trackway = %s' % trackway)
+        if trackway == '':
             return
-        t = tracks[0]
-        trackway = t.trackwayType + t.trackwayNumber
         layer = trackway + '_Layer'
         if cmds.objExists(layer):
-            cmds.setAttr('%s.visibility' % layer, 1)
+            cmds.setAttr('%s.visibility' % layer, visible)
 
 #___________________________________________________________________________________________________ hideTrackway
     def hideTrackway(self):
-        tracks = self.getSelected()
-        if tracks is None:
-            return
-        t = tracks[0]
-        trackway = t.trackway
-        layer = trackway + '_Layer'
-        if cmds.objExists(layer):
-            cmds.setAttr('%s.visibility' % layer, 0)
-
+        self.showTrackway(False)
 #___________________________________________________________________________________________________ findTrack
     def findTrack(self):
         targetName = self.getNameFromUI()
@@ -633,33 +636,42 @@ class TrackwayManagerWidget(PyGlassWidget):
                     return
 
 #___________________________________________________________________________________________________ selectTrackway
-    def selectTrackway(self):
-        target = self.trackwayLE.text()
-        if not target:
+    def selectTrackway(self, trackway=None):
+        if not trackway:
+            trackway = self.trackwayCB.currentText()
+            print('trackway = %s' % trackway)
+        if trackway == '':
             return
-        print 'target = ', target
+        targetType   = trackway[0]
+        targetNumber = trackway[1:]
         tracks = self.getAllTracks()
         nodes = list()
         for t in tracks:
-            if t.trackwayType == target[0] and t.trackwayNumber == target[1:]:
+            if t.trackwayType == targetType and t.trackwayNumber == targetNumber:
                 nodes.append(t.node)
+        print "and now nodes has %s instances" % len(nodes)
         cmds.select(nodes, add=True)
 
 #___________________________________________________________________________________________________ showAllTrackways
-    def showAllTrackways(self):
-        print 'showAllTrackways: clicked'
+    def showAllTrackways(self, visible=True):
+        for i in range(100):
+            layer = 'S' + str(i).zfill(2) + '_Layer'
+            if cmds.objExists(layer):
+                cmds.setAttr('%s.visibility' % layer, visible)
 
 #___________________________________________________________________________________________________ hideAllTrackways
     def hideAllTrackways(self):
-        print 'hideAllTrackways: clicked'
+        self.showAllTrackways(False)
 
 #___________________________________________________________________________________________________ selectAllTrackways
     def selectAllTrackways(self):
-        print 'selectAllTrackways: clicked'
+        for i in range(100):
+            trackway = 'S' + str(i).zfill(2)
+            self.selectTrackway(trackway)
 
 #___________________________________________________________________________________________________ setSelectedTrackway
     def setSelectedTrackway(self):
-        print 'selectTrackway: clicked'
+        print 'setSelectedTrackway: clicked!'
 
 #___________________________________________________________________________________________________ test
     def test(self):
@@ -668,33 +680,50 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ repair
     def repair(self):
         tracks = self.getSelected()
-        #tracks = self.getAllTracks()
+#        tracks = self.getAllTracks()
         if tracks is None:
-            print 'no tracks to repair'
             return
-        print 'repair of %s tracks' % len(tracks)
 
         for t in tracks:
             print 'repairing track %s' % t.node
-            if t.nodeHasAttribute('name'):
-                v = cmds.getAttr(t.node + '.name')
-                print 'name = ', v
-                if len(v) > 0:
-                    t.left = True if v[0] == u'L' else False
-                if len(v) > 1:
-                    t.pes  = True if v[1] == u'P' else False
-                if len(v) > 2:
-                    print 'number = ', v[2:]
-                    t.number = v[2:]
-                cmds.deleteAttr(t.node + '.name')
-            if t.nodeHasAttribute('trackway'):
-                v = cmds.getAttr(t.node + '.trackway')
-                print 'repair:  trackway = ', v
-                t.trackwayType = v[0]
-                t.trackwayNumber = v[1:]
-                cmds.deleteAttr(t.node + '.trackway')
-            if t.nodeHasAttribute('next'):
-                cmds.deleteAttr(t.node + '.next')
-            if t.nodeHasAttribute('prev'):
-                cmds.deleteAttr(t.node + '.prev')
+            t.category = TrackPropEnum.UNCATALOGED
+            t.name = ''
+            #if t.nodeHasAttribute('left'):
+            #    cmds.deleteAttr(t.node + '.left')
+            #
+            #if t.nodeHasAttribute('pes'):
+            #    v = cmds.getAttr(t.node + '.pes')
+            #
+            #if t.nodeHasAttribute('next'):
+            #    cmds.deleteAttr(t.node + '.next')
+            #if t.nodeHasAttribute('prev'):
+            #    cmds.deleteAttr(t.node + '.prev')
+            #
+            #if t.nodeHasAttribute('width'):
+            #    cmds.deleteAttr(t.node + '.width')
+            #if t.nodeHasAttribute('length'):
+            #    cmds.deleteAttr(t.node + '.prev')
+            #
+            #if t.nodeHasAttribute('rotation'):
+            #    cmds.deleteAttr(t.node + '.rotation')
+            #if t.nodeHasAttribute('rotationUncertainty'):
+            #    cmds.deleteAttr(t.node + '.rotationUncertainty')
+            #
+            #if t.nodeHasAttribute('widthUncertainty'):
+            #    cmds.deleteAttr(t.node + '.widthUncertainty')
+            #if t.nodeHasAttribute('lengthUncertainty'):
+            #    cmds.deleteAttr(t.node + '.lengthUncertainty')
+            #if t.nodeHasAttribute('depth'):
+            #    cmds.deleteAttr(t.node + '.depth')
+            #if t.nodeHasAttribute('depthUncertainty'):
+            #    cmds.deleteAttr(t.node + '.depthUncertainty')
+            #
+            #if t.nodeHasAttribute('depthMeasured'):
+            #    cmds.deleteAttr(t.node + '.depthMeasured')
+            #if t.nodeHasAttribute('widthMeasured'):
+            #    cmds.deleteAttr(t.node + '.widthMeasured')
+            #if t.nodeHasAttribute('lengthMeasured'):
+            #    cmds.deleteAttr(t.node + '.lengthMeasured')
+
         print 'done'
+        self.mainWindow.updateStatusBar('done', 4000)
