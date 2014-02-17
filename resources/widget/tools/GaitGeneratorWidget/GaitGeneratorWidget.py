@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file '/Users/scott/Python/Cadence/resources/widget/tools/GaitGeneratorWidget/GaitGeneratorWidget.ui'
 #
-# Created: Sun Nov 10 00:48:59 2013
-#      by: pyside-uic 0.2.13 running on PySide 1.1.1
+# Created: Mon Feb 17 16:18:19 2014
+#      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
 

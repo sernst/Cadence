@@ -43,6 +43,10 @@ class MayaIniWidget(PyGlassWidget):
         self.mainWindow.toggleInteractivity(value)
         self.controlsBox.setEnabled(value)
 
+#___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
+    def _deactivateWidgetDisplayImpl(self, **kwargs):
+        self.mainWindow.getWidgetFromID('home').refreshMayaStatus()
+
 #===================================================================================================
 #                                                                                 H A N D L E R S
 

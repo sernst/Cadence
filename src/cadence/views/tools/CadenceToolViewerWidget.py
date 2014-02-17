@@ -90,7 +90,7 @@ class CadenceToolViewerWidget(PyGlassWidget):
             widgetClass = None
             try:
                 widgetClass = ClassUtils.dynamicImport(d['module'])
-                self.addWidgetChild(d['id'], widgetClass, True)
+                self.addWidgetChild(d['id'], widgetClass)
             except Exception, err:
                 self.mainWindow.log.writeError([
                     'Activating Tool',
@@ -100,6 +100,9 @@ class CadenceToolViewerWidget(PyGlassWidget):
                 return
 
         self.setActiveWidget(d['id'])
+
+        if not self._currentWidget:
+            return
 
         self._helpBox.setVisible(self._helpComm.loadContent(self._currentWidget))
         self._hasHelp = self._helpBox.isVisible()

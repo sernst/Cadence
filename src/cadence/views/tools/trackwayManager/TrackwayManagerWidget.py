@@ -2,9 +2,15 @@
 # (C)2012-2014
 # Scott Ernst and Kent A. Stevens
 
+import inspect
+
 from nimble import cmds
+from pyaid.debug.Logger import Logger
+
 from pyaid.json.JSON import JSON
+
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
+from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.data.Track import Track
@@ -731,3 +737,11 @@ class TrackwayManagerWidget(PyGlassWidget):
     def _activateWidgetDisplayImpl(self, **kwargs):
         if CadenceEnvironment.NIMBLE_IS_ACTIVE:
             self.refreshUI()
+            return
+
+        self.setVisible(False)
+        PyGlassBasicDialogManager.openOk(
+            self,
+            header=u'No Nimble Connection',
+            message=u'This tool requires an active Nimble server connection running in Maya',
+            windowTitle=u'Tool Error')

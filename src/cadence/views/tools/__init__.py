@@ -6,3 +6,4 @@
 from cadence.views.tools.gaitGenerator.GaitGeneratorWidget import GaitGeneratorWidget
 from cadence.views.tools.trackwayIo.TrackwayIoWidget import TrackwayIoWidget
 from cadence.views.tools.trackwayManager.TrackwayManagerWidget import TrackwayManagerWidget
+from cadence.views.tools.mayaInitializer.MayaIniWidget import MayaIniWidget

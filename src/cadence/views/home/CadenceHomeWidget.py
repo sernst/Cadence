@@ -39,6 +39,7 @@ class CadenceHomeWidget(PyGlassWidget):
         self._getLayout(self._toolBox, QtGui.QVBoxLayout)
 
         self._statusBox, statusLayout = self._createElementWidget(self, QtGui.QVBoxLayout, True)
+        statusLayout.setSpacing(10)
         statusLayout.addStretch()
 
         self._mayaStatus = CadenceMayaStatusElement(self._statusBox)
@@ -52,12 +53,19 @@ class CadenceHomeWidget(PyGlassWidget):
         self._populateTools()
 
 #===================================================================================================
+#                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ refreshMayaStatus
+    def refreshMayaStatus(self):
+        self._mayaStatus.refresh()
+
+#===================================================================================================
 #                                                                               P R O T E C T E D
 
 #___________________________________________________________________________________________________ _activateWidgetDisplayImpl
     def _activateWidgetDisplayImpl(self, **kwargs):
         if self._firstView:
-            self._mayaStatus.refresh()
+            self.refreshMayaStatus()
             self._nimbleStatus.refresh()
             self._firstView = False
 

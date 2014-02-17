@@ -86,11 +86,19 @@ class CadenceMayaStatusElement(PyGlassElement):
 
         CadenceEnvironment.MAYA_IS_INITIALIZED = False
 
-        self._thread = MayaIniRemoteThread(self.mainWindow, False, False, True)
+        self._thread = MayaIniRemoteThread(self.mainWindow, False, False, check=True)
         self._thread.execute(self._handleMayaCheckResults)
+
+#===================================================================================================
+#                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _handleRetryClick
+    def _handleRetryClick(self):
+        self.refresh()
 
 #___________________________________________________________________________________________________ _handleMayaCheckResults
     def _handleMayaCheckResults(self, response):
+        print response
 
         if response['output']['success']:
             # Run an ls command looking for the time node (to prevent large returns)
@@ -109,13 +117,7 @@ class CadenceMayaStatusElement(PyGlassElement):
         self._label.setStyleSheet(self._LABEL_STYLE.replace('#C#', self._colors.strong.web))
         self._info.setStyleSheet(self._INFO_STYLE.replace('#C#', self._colors.weak.web))
 
+        self._refreshBtn.setEnabled(not self._status)
         self._buttonBox.setVisible(not self._status)
         self.repaint()
         self._thread = None
-
-#===================================================================================================
-#                                                                               P R O T E C T E D
-
-#___________________________________________________________________________________________________ _handleRetryClick
-    def _handleRetryClick(self):
-        self.refresh()

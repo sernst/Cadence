@@ -71,6 +71,7 @@ class MayaIniRemoteThread(RemoteExecutionThread):
     def _runCheck(self):
         self.log.write(u'<h1>Running Check...</h1>')
         envFiles = MayaEnvUtils.locateMayaEnvFiles()
+        print 'ENV:', envFiles
         if not envFiles:
             self.log.write(u"""\
             <p style="color:#FF6666;">Operation failed. Unable to locate a maya installation.\
