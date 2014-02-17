@@ -2,7 +2,6 @@
 # (C)2012-2013
 # Scott Ernst and Kent A. Stevens
 
-import nimble
 from nimble import cmds
 from pyaid.json.JSON import JSON
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
