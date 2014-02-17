@@ -12,10 +12,10 @@
             "description":"Manages 3D visualizations of trackways within Maya."
         },
 
-        {   "id":"trackwayImporter",
-            "module":"cadence.views.tools.trackwayImporter.TrackwayImporterWidget",
-            "name":"Trackway Importer",
-            "description":"Imports and exports trackways between Maya and the database."
+        {   "id":"trackwayIo",
+            "module":"cadence.views.tools.trackwayIo.TrackwayIoWidget",
+            "name":"Data Manager",
+            "description":"Manages trackway data between spreadsheets, Maya, and the local database."
         },
 
         {   "id":"mayaInitializer",

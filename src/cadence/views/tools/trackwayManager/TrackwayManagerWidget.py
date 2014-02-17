@@ -1,11 +1,12 @@
 # TrackwayManagerWidget.py
-# (C)2012-2013
+# (C)2012-2014
 # Scott Ernst and Kent A. Stevens
 
 from nimble import cmds
 from pyaid.json.JSON import JSON
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
+from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.data.Track import Track
 from cadence.enum.TrackPropEnum import TrackPropEnum
 
@@ -13,7 +14,7 @@ from cadence.enum.TrackPropEnum import TrackPropEnum
 class TrackwayManagerWidget(PyGlassWidget):
 
 #===================================================================================================
-#                                                                                                    C L A S S
+#                                                                                       C L A S S
     RESOURCE_FOLDER_PREFIX = ['tools']
 
 #___________________________________________________________________________________________________ __init__
@@ -54,11 +55,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.initBtn.clicked.connect(self.initializeTrackway)
         self.repairBtn.clicked.connect(self.repair)
 
-        self.adjustSize()
-        self.refreshUI()
-
 #===================================================================================================
-#                                                                                                     P U B L I C
+#                                                                                     P U B L I C
 #
 
 #___________________________________________________________________________________________________ isTrackNode
@@ -619,6 +617,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ hideTrackway
     def hideTrackway(self):
         self.showTrackway(False)
+
 #___________________________________________________________________________________________________ findTrack
     def findTrack(self):
         targetName = self.getNameFromUI()
@@ -724,3 +723,11 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         print 'done'
         self.mainWindow.updateStatusBar('done', 4000)
+
+#===================================================================================================
+#                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
+    def _activateWidgetDisplayImpl(self, **kwargs):
+        if CadenceEnvironment.NIMBLE_IS_ACTIVE:
+            self.refreshUI()

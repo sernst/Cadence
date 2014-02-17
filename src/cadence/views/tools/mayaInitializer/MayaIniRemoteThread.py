@@ -14,11 +14,13 @@ class MayaIniRemoteThread(RemoteExecutionThread):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, parent, test =True, install =True, **kwargs):
+    def __init__(self, parent, test =True, install =True, check =False, **kwargs):
         """Creates a new instance of MayaIniRemoteThread."""
         super(MayaIniRemoteThread, self).__init__(parent, **kwargs)
         self._test      = test
         self._install   = install
+        self._check     = check
+        self._output    = {}
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -26,6 +28,9 @@ class MayaIniRemoteThread(RemoteExecutionThread):
 #___________________________________________________________________________________________________ _internalMethod
     def _runImpl(self):
         """Doc..."""
+        if self._check:
+            return self._runCheck()
+
         testStr  = u'Test' if self._test else u''
         typeStr  = u'Installer' if self._install else u'Uninstaller'
         labelStr = u' '.join([testStr, typeStr]).strip()
@@ -60,4 +65,23 @@ class MayaIniRemoteThread(RemoteExecutionThread):
                     u'<p style="color:#33CC33;">SUCCESS: %s complete.</p>' % labelStr)
 
         self.log.write(u'<h2>Operation Complete</h2>')
+        return 0
+
+#___________________________________________________________________________________________________ _runCheck
+    def _runCheck(self):
+        self.log.write(u'<h1>Running Check...</h1>')
+        envFiles = MayaEnvUtils.locateMayaEnvFiles()
+        if not envFiles:
+            self.log.write(u"""\
+            <p style="color:#FF6666;">Operation failed. Unable to locate a maya installation.\
+            Make sure you have opened Maya at least once after installing it.</p>""")
+            self._output['success'] = False
+            return 0
+
+        for env in envFiles:
+            if MayaEnvUtils.checkEnvFile(env):
+                self._output['success'] = True
+                return 0
+
+        self._output['success'] = False
         return 0

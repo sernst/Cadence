@@ -166,7 +166,6 @@ class Track(object):
     def number(self, value):
         self._setTrackProp(TrackPropEnum.NUMBER, value)
 
-
 #___________________________________________________________________________________________________ GS: pes
     @property
     def pes(self):
@@ -448,6 +447,10 @@ class Track(object):
         """ Tries to find the Maya node with the given uid and assigns the result to the node
             property of the track. Can be used even if a node name already exists to heal after
             potential name changes. """
+
+        if not CadenceEnvironment.NIMBLE_IS_ACTIVE:
+            self.node = None
+            return None
 
         try:
             conn   = nimble.getConnection()

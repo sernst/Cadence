@@ -1,4 +1,4 @@
-# TrackwayImporterWidget.py
+# TrackwayIoWidget.py
 # (C)2013
 # Scott Ernst
 
@@ -12,7 +12,7 @@ from cadence.dataio.TrackCsvImporterRemoteThread import TrackCsvImporterRemoteTh
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ Viewer
-class TrackwayImporterWidget(PyGlassWidget):
+class TrackwayIoWidget(PyGlassWidget):
     """ User interface class for handling track data IO from any of the possible sources and
         saving them to, or loading them from the database. """
 
@@ -25,7 +25,7 @@ class TrackwayImporterWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, parent, **kwargs):
-        super(TrackwayImporterWidget, self).__init__(parent, **kwargs)
+        super(TrackwayIoWidget, self).__init__(parent, **kwargs)
 
         PyGlassElementUtils.registerCheckBox(
             owner=self,

@@ -13,6 +13,7 @@ from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from pyglass.widgets.LineSeparatorWidget import LineSeparatorWidget
 
 from cadence.enum.UserConfigEnum import UserConfigEnum
+from cadence.views.home.CadenceMayaStatusElement import CadenceMayaStatusElement
 from cadence.views.home.CadenceNimbleStatusElement import CadenceNimbleStatusElement
 
 #___________________________________________________________________________________________________ CadenceHomeWidget
@@ -40,6 +41,9 @@ class CadenceHomeWidget(PyGlassWidget):
         self._statusBox, statusLayout = self._createElementWidget(self, QtGui.QVBoxLayout, True)
         statusLayout.addStretch()
 
+        self._mayaStatus = CadenceMayaStatusElement(self._statusBox)
+        statusLayout.addWidget(self._mayaStatus)
+
         self._nimbleStatus = CadenceNimbleStatusElement(
             self._statusBox,
             disabled=self.mainWindow.appConfig.get(UserConfigEnum.NIMBLE_TEST_STATUS, True) )
@@ -53,6 +57,7 @@ class CadenceHomeWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _activateWidgetDisplayImpl
     def _activateWidgetDisplayImpl(self, **kwargs):
         if self._firstView:
+            self._mayaStatus.refresh()
             self._nimbleStatus.refresh()
             self._firstView = False
 
