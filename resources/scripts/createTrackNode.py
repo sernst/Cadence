@@ -1,42 +1,61 @@
 # createTrackNode.py
-# (C)2013
+# (C)2013-2014
 # Kent A. Stevens and Scott Ernst
 
 import math
 
-import nimble
 from nimble import cmds
+from nimble import NimbleScriptBase
 
-kwargs  = nimble.getRemoteKwargs(globals())
-r       = 50
-a       = 2.0*r
-y       = (0, 1, 0)
-c       = cmds.polyCylinder(r=r, h=5, sx=40, sy=1, sz=1, ax=y, rcp=0, cuv=2, ch=1, n='track0')[0]
+#___________________________________________________________________________________________________ findTrackNode
+class CreateTrackNode(NimbleScriptBase):
+    """ TODO: Kent... """
 
-for item in kwargs.get('trackProps'):
-    if item['intrinsic']:
-        continue
-    if item['type'] == 'string':
-        cmds.addAttr(ln=item['name'], dt=item['type'])
-    else:
-        cmds.addAttr(ln=item['name'], at=item['type'])
-cmds.addAttr(ln='prevTrack', at='message')
+#===================================================================================================
+#                                                                                     P U B L I C
 
-p = cmds.polyPrism(l=4, w=a, ns=3, sh=1, sc=0, ax=y, cuv=3, ch=1, n='pointer')[0]
+    RADIUS = 50
+    Y_VEC  = (0, 1, 0)
 
-cmds.rotate(0.0, -90.0, 0.0)
-cmds.scale(1.0/math.sqrt(3.0), 1.0, 1.0)
-cmds.move(0, 5, a/6.0)
+#___________________________________________________________________________________________________ run
+    def run(self):
+        a = 2.0*self.RADIUS
+        c = cmds.polyCylinder(
+            r=self.RADIUS, h=5, sx=40, sy=1, sz=1, ax=self.Y_VEC, rcp=0, cuv=2, ch=1, n='track0')[0]
 
-cmds.setAttr(p + '.overrideEnabled', 1)
-cmds.setAttr(p + '.overrideDisplayType', 2)
+        for item in self.getKwarg('trackProps', []):
+            if item['intrinsic']:
+                continue
 
-cmds.parent(p, c)
-cmds.select(c)
-cmds.setAttr(c + '.translateY', l=1)
-cmds.setAttr(c + '.rotateX',    l=1)
-cmds.setAttr(c + '.rotateZ',    l=1)
-cmds.setAttr(c + '.scaleY',     l=1)
+            if item['type'] == 'string':
+                cmds.addAttr(ln=item['name'], dt=item['type'])
+            else:
+                cmds.addAttr(ln=item['name'], at=item['type'])
 
-response = nimble.createRemoteResponse(globals())
-response.put('name', c)
+        cmds.addAttr(ln='prevTrack', at='message')
+
+        p = cmds.polyPrism(l=4, w=a, ns=3, sh=1, sc=0, ax=self.Y_VEC, cuv=3, ch=1, n='pointer')[0]
+
+        cmds.rotate(0.0, -90.0, 0.0)
+        cmds.scale(1.0/math.sqrt(3.0), 1.0, 1.0)
+        cmds.move(0, 5, a/6.0)
+
+        cmds.setAttr(p + '.overrideEnabled', 1)
+        cmds.setAttr(p + '.overrideDisplayType', 2)
+
+        cmds.parent(p, c)
+        cmds.select(c)
+        cmds.setAttr(c + '.translateY', l=1)
+        cmds.setAttr(c + '.rotateX',    l=1)
+        cmds.setAttr(c + '.rotateZ',    l=1)
+        cmds.setAttr(c + '.scaleY',     l=1)
+
+        self.response.put('name', c)
+
+####################################################################################################
+####################################################################################################
+
+if __name__ == '__main__':
+    CreateTrackNode().run()
+
+
