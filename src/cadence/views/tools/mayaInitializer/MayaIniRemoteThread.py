@@ -8,6 +8,7 @@ from pyaid.file.FileUtils import FileUtils
 
 from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
 
+import elixir
 import cadence
 
 #___________________________________________________________________________________________________ MayaIniRemoteThread
@@ -28,6 +29,9 @@ class MayaIniRemoteThread(RemoteExecutionThread):
 
         self._cadenceEntry = MayaEnvEntry.fromRootPath(FileUtils.createPath(
             FileUtils.getDirectoryOf(cadence.__file__), noTail=True))
+
+        self._elixirEntry = MayaEnvEntry.fromRootPath(FileUtils.createPath(
+            FileUtils.getDirectoryOf(elixir.__file__), noTail=True))
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -59,7 +63,7 @@ class MayaIniRemoteThread(RemoteExecutionThread):
                 envFile,
                 test=self._test,
                 install=self._install,
-                otherPaths=[self._cadenceEntry])
+                otherPaths=[self._cadenceEntry, self._elixirEntry])
 
             if result is None:
                 self.log.write(
@@ -92,7 +96,7 @@ class MayaIniRemoteThread(RemoteExecutionThread):
             return 0
 
         for env in envFiles:
-            if MayaEnvUtils.checkEnvFile(env, otherPaths=[self._cadenceEntry]):
+            if MayaEnvUtils.checkEnvFile(env, otherPaths=[self._cadenceEntry, self._elixirEntry]):
                 self._output['success'] = True
                 return 0
 

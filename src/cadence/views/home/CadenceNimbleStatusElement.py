@@ -1,11 +1,13 @@
 # CadenceNimbleStatusElement.py
-# (C)2013
+# (C)2013-2014
 # Scott Ernst
 
 import nimble
 
 from PySide import QtCore
 from PySide import QtGui
+
+from pyaid.file.FileUtils import FileUtils
 
 from pyglass.gui.PyGlassGuiUtils import PyGlassGuiUtils
 from pyglass.elements.PyGlassElement import PyGlassElement
@@ -95,13 +97,19 @@ class CadenceNimbleStatusElement(PyGlassElement):
             try:
                 # Run an ls command looking for the time node (to prevent large returns)
                 nimble.cmds.ls(exactType='time')
+
+                # Load the Cadence Trackway Plugin
+                nimble.cmds.loadPlugin(FileUtils.createPath(
+                    CadenceEnvironment.ENV_PATH,
+                    'mayan/plugins/trackway/CadenceTrackwayPlugin.py'))
+
                 self._colors = ThemeColorBundle(ColorSchemes.GREEN)
                 self._status = True
                 self._label.setText(self._ACTIVE_LABEL)
                 self._info.setText(self._ACTIVE_INFO)
                 CadenceEnvironment.NIMBLE_IS_ACTIVE = True
             except Exception, err:
-                print 'FAILED: Nimble connection attempt'
+                print 'FAILED: Nimble connection attempt', err
                 self._colors = ThemeColorBundle(ColorSchemes.RED)
                 self._status = False
                 self._label.setText(self._FAILED_LABEL)

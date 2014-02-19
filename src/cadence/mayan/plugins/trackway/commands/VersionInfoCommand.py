@@ -6,10 +6,10 @@ from maya import OpenMaya
 
 from pyaid.ArgsUtils import ArgsUtils
 
-from cadence.mayan.plugins.MayaPluginCommad import MayaPluginCommand
+from elixir.commands.ElixirCommand import ElixirCommand
 
 #___________________________________________________________________________________________________ VersionInfoCommand
-class VersionInfoCommand(MayaPluginCommand):
+class VersionInfoCommand(ElixirCommand):
 
 #===================================================================================================
 #                                                                                       C L A S S
@@ -19,7 +19,7 @@ class VersionInfoCommand(MayaPluginCommand):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self):
-        MayaPluginCommand.__init__(self)
+        ElixirCommand.__init__(self)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

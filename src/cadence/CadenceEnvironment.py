@@ -29,7 +29,8 @@ class CadenceEnvironment(object):
 
     BASE_UNIX_TIME      = 1373932675
 
-    _ENV_PATH  = os.path.dirname(os.path.abspath(__file__))
+    ENV_PATH = os.path.dirname(os.path.abspath(__file__))
+
     _UID_INDEX = 0
 
 #___________________________________________________________________________________________________ createUniqueId
@@ -62,7 +63,7 @@ class CadenceEnvironment(object):
     @classmethod
     def getResourceScriptPath(cls, *args, **kwargs):
         return FileUtils.createPath(
-            cls._ENV_PATH, '..', '..', 'resources', 'scripts', *args, **kwargs)
+            cls.ENV_PATH, '..', '..', 'resources', 'scripts', *args, **kwargs)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -79,7 +80,7 @@ class CadenceEnvironment(object):
         if isinstance(filename, basestring):
             p.append(filename)
 
-        out = os.path.join(cls._ENV_PATH, '..', '..', *p)
+        out = os.path.join(cls.ENV_PATH, '..', '..', *p)
         if filename or out.split(os.sep)[-1].find('.') > 0:
             return out
 

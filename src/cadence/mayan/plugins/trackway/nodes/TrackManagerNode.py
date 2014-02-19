@@ -5,12 +5,12 @@
 from maya import OpenMaya
 from maya import OpenMayaMPx
 
-from cadence.mayan.plugins.MayaPluginNode import MayaPluginNode
-from cadence.mayan.plugins.attrs.MessageNodeAttribute import MessageNodeAttribute
-from cadence.mayan.plugins.attrs.NumericNodeAttribute import NumericNodeAttribute
+from elixir.nodes.ElixirNode import ElixirNode
+from elixir.nodes.attrs.MessageNodeAttribute import MessageNodeAttribute
+from elixir.nodes.attrs.NumericNodeAttribute import NumericNodeAttribute
 
 #___________________________________________________________________________________________________ TrackManagerNode
-class TrackManagerNode(MayaPluginNode):
+class TrackManagerNode(ElixirNode):
     """A class for..."""
 
 #===================================================================================================
@@ -30,7 +30,7 @@ class TrackManagerNode(MayaPluginNode):
 #___________________________________________________________________________________________________ __init__
     def __init__(self):
         """Creates a new instance of TrackManagerNode."""
-        MayaPluginNode.__init__(self)
+        ElixirNode.__init__(self)
 
 #===================================================================================================
 #                                                                                     P U B L I C
