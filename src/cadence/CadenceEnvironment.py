@@ -16,8 +16,17 @@ class CadenceEnvironment(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    # Whether or not the Maya ENV files have been properly initialized with source paths for
+    # Cadence's dependent libraries
     MAYA_IS_INITIALIZED = False
+
+    # Whether or not the Cadence Maya plugins have been initialized for use
+    PLUGINS_ARE_ACTIVE  = False
+
+    # Whether or not an active Nimble connection has been established with a Maya application
+    # running a Nimble server
     NIMBLE_IS_ACTIVE    = False
+
     BASE_UNIX_TIME      = 1373932675
 
     _ENV_PATH  = os.path.dirname(os.path.abspath(__file__))

@@ -2,9 +2,13 @@
 # (C)2013
 # Scott Ernst
 
+from nimble.utils.MayaEnvEntry import MayaEnvEntry
 from nimble.utils.MayaEnvUtils import MayaEnvUtils
+from pyaid.file.FileUtils import FileUtils
 
 from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
+
+import cadence
 
 #___________________________________________________________________________________________________ MayaIniRemoteThread
 class MayaIniRemoteThread(RemoteExecutionThread):
@@ -21,6 +25,9 @@ class MayaIniRemoteThread(RemoteExecutionThread):
         self._install   = install
         self._check     = check
         self._output    = {}
+
+        self._cadenceEntry = MayaEnvEntry.fromRootPath(FileUtils.createPath(
+            FileUtils.getDirectoryOf(cadence.__file__), noTail=True))
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -48,18 +55,23 @@ class MayaIniRemoteThread(RemoteExecutionThread):
             self.log.write(
                 u'<p><span style="font-weight:bold;">%s:</span> %s' % (labelStr, envFile))
 
-            result = MayaEnvUtils.modifyEnvFile(envFile, test=self._test, install=self._install)
+            result = MayaEnvUtils.modifyEnvFile(
+                envFile,
+                test=self._test,
+                install=self._install,
+                otherPaths=[self._cadenceEntry])
+
             if result is None:
                 self.log.write(
                     u'<p style="color:#FF6666;">ERROR: %s attempt failed.</p>' % labelStr)
             else:
                 for item in result.removed:
                     self.log.write(
-                        u'<p><span style="font-weight:bold;">REMOVED:</span> %s</p>' % item)
+                        u'<p><span style="font-weight:bold;">REMOVED:</span> %s</p>' % item.rootName)
 
                 for item in result.added:
                     self.log.write(
-                        u'<p><span style="font-weight:bold;">ADDED:</span> %s</p>' % item)
+                        u'<p><span style="font-weight:bold;">ADDED:</span> %s</p>' % item.rootName)
 
                 self.log.write(
                     u'<p style="color:#33CC33;">SUCCESS: %s complete.</p>' % labelStr)
@@ -80,7 +92,7 @@ class MayaIniRemoteThread(RemoteExecutionThread):
             return 0
 
         for env in envFiles:
-            if MayaEnvUtils.checkEnvFile(env):
+            if MayaEnvUtils.checkEnvFile(env, otherPaths=[self._cadenceEntry]):
                 self._output['success'] = True
                 return 0
 
