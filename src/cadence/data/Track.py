@@ -11,6 +11,7 @@ from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.enum.TrackPropEnum import TrackPropEnumOps
 from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
+from cadence.mayan.trackway import CreateTrackNode
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.util.shading.ShadingUtils import ShadingUtils
 
@@ -572,9 +573,8 @@ class Track(object):
         for enum in Reflection.getReflectionList(TrackPropEnum):
             trackProps.append({'name':enum.name, 'type':enum.type, 'intrinsic':enum.intrinsic})
 
-        path = CadenceEnvironment.getResourceScriptPath('createTrackNode.py', isFile=True)
         conn = nimble.getConnection()
-        out  = conn.runPythonScriptFile(path, trackProps=trackProps)
+        out  = conn.runPythonScriptFile(CreateTrackNode.__file__, trackProps=trackProps)
         if not out.success:
             print 'CREATE NODE ERROR:', out.error
 

@@ -4,8 +4,8 @@
 
 from maya import OpenMayaMPx
 
-from cadence.mayan.plugins.trackway.commands import VersionInfoCommand
-from cadence.mayan.plugins.trackway.nodes import TrackManagerNode
+from cadence.mayan.trackway.plugin.commands import VersionInfoCommand
+from cadence.mayan.trackway.plugin.nodes import TrackManagerNode
 
 #___________________________________________________________________________________________________ PLUGIN_VERSION
 PLUGIN_VERSION = (1, 0, 0, 0)

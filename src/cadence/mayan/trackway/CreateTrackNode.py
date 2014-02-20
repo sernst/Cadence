@@ -1,4 +1,4 @@
-# createTrackNode.py
+# CreateTrackNode.py
 # (C)2013-2014
 # Kent A. Stevens and Scott Ernst
 
@@ -18,7 +18,7 @@ class CreateTrackNode(NimbleScriptBase):
     Y_VEC  = (0, 1, 0)
 
 #___________________________________________________________________________________________________ run
-    def run(self):
+    def run(self, *args, **kwargs):
         a = 2.0*self.RADIUS
         c = cmds.polyCylinder(
             r=self.RADIUS, h=5, sx=40, sy=1, sz=1, ax=self.Y_VEC, rcp=0, cuv=2, ch=1, n='track0')[0]
@@ -51,11 +51,5 @@ class CreateTrackNode(NimbleScriptBase):
         cmds.setAttr(c + '.scaleY',     l=1)
 
         self.response.put('name', c)
-
-####################################################################################################
-####################################################################################################
-
-if __name__ == '__main__':
-    CreateTrackNode().run()
 
 

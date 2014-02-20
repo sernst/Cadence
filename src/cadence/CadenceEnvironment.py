@@ -16,6 +16,8 @@ class CadenceEnvironment(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    TRACKWAY_SET_NODE_NAME = 'cadenceTrackSet'
+
     # Whether or not the Maya ENV files have been properly initialized with source paths for
     # Cadence's dependent libraries
     MAYA_IS_INITIALIZED = False

@@ -20,7 +20,7 @@ class FindTrackNode(NimbleScriptBase):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ run
-    def run(self):
+    def run(self, *args, **kwargs):
         uidKey = self.getKwarg('uidKey', 'uid')
         uid    = self.getKwarg('uid', None)
 
@@ -36,8 +36,3 @@ class FindTrackNode(NimbleScriptBase):
 
         self.response.put('success', False)
 
-####################################################################################################
-####################################################################################################
-
-# Run the script
-FindTrackNode().run()

@@ -7,8 +7,7 @@ import nimble
 from PySide import QtCore
 from PySide import QtGui
 
-from pyaid.file.FileUtils import FileUtils
-
+from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from pyglass.gui.PyGlassGuiUtils import PyGlassGuiUtils
 from pyglass.elements.PyGlassElement import PyGlassElement
 from pyglass.themes.ColorSchemes import ColorSchemes
@@ -16,6 +15,7 @@ from pyglass.themes.ThemeColorBundle import ThemeColorBundle
 
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enum.UserConfigEnum import UserConfigEnum
+from cadence.mayan.trackway import InitializeTrackwayScene
 
 #___________________________________________________________________________________________________ CadenceNimbleStatusElement
 class CadenceNimbleStatusElement(PyGlassElement):
@@ -62,14 +62,23 @@ class CadenceNimbleStatusElement(PyGlassElement):
         buttonLayout.addStretch()
 
         btn = QtGui.QPushButton(self._buttonBox)
-        btn.setText(u'Retry')
+        btn.setText(u'Connect')
         btn.clicked.connect(self._handleRetryClick)
         buttonLayout.addWidget(btn)
+        self._runBtn = btn
 
         btn = QtGui.QPushButton(self._buttonBox)
         btn.setText(u'Cancel')
         btn.clicked.connect(self._handleCancelClick)
         buttonLayout.addWidget(btn)
+        self._cancelBtn = btn
+
+        btn = QtGui.QPushButton(self._buttonBox)
+        btn.setText(u'Initialize Scene')
+        btn.clicked.connect(self._handleInitializeSceneClick)
+        btn.setVisible(False)
+        buttonLayout.addWidget(btn)
+        self._iniBtn = btn
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -98,11 +107,6 @@ class CadenceNimbleStatusElement(PyGlassElement):
                 # Run an ls command looking for the time node (to prevent large returns)
                 nimble.cmds.ls(exactType='time')
 
-                # Load the Cadence Trackway Plugin
-                nimble.cmds.loadPlugin(FileUtils.createPath(
-                    CadenceEnvironment.ENV_PATH,
-                    'mayan/plugins/trackway/CadenceTrackwayPlugin.py'))
-
                 self._colors = ThemeColorBundle(ColorSchemes.GREEN)
                 self._status = True
                 self._label.setText(self._ACTIVE_LABEL)
@@ -119,7 +123,9 @@ class CadenceNimbleStatusElement(PyGlassElement):
         self._label.setStyleSheet(self._LABEL_STYLE.replace('#C#', self._colors.strong.web))
         self._info.setStyleSheet(self._INFO_STYLE.replace('#C#', self._colors.weak.web))
 
-        self._buttonBox.setVisible(not self._status)
+        self._runBtn.setVisible(not self._status)
+        self._cancelBtn.setVisible(not self._status)
+        self._iniBtn.setVisible(self._status)
 
         self.repaint()
 
@@ -157,3 +163,17 @@ class CadenceNimbleStatusElement(PyGlassElement):
 
         self.disabled = True
         self.refresh()
+
+#___________________________________________________________________________________________________ _handleInitializeSceneClick
+    def _handleInitializeSceneClick(self):
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(InitializeTrackwayScene)
+        if result.success:
+            header = u'Success'
+            message = u'Your current scene has been initialized for use with Cadence'
+        else:
+            header = u'Failed'
+            message = u'Unable to initialize your Maya scene'
+
+        PyGlassBasicDialogManager.openOk(self.mainWindow, header, message, u'Initialize Scene')
+

@@ -25,7 +25,7 @@ class TrackManagerNode(ElixirNode):
         'i', 'input', 0, OpenMaya.MFnNumericData.kInt, affects='output')
     output = NumericNodeAttribute(
         'o', 'output', 0, OpenMaya.MFnNumericData.kInt, compute='outputCompute')
-    tracks = MessageNodeAttribute('ts', 'tracks', array=True)
+    tracks = MessageNodeAttribute('ts', 'trackSet')
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self):
