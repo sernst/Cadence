@@ -119,6 +119,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
                 self._label.setText(self._FAILED_LABEL)
                 self._info.setText(self._FAILED_INFO)
                 CadenceEnvironment.NIMBLE_IS_ACTIVE = False
+                self._runBtn.setText(u'Retry')
 
         self._label.setStyleSheet(self._LABEL_STYLE.replace('#C#', self._colors.strong.web))
         self._info.setStyleSheet(self._INFO_STYLE.replace('#C#', self._colors.weak.web))
@@ -176,4 +177,5 @@ class CadenceNimbleStatusElement(PyGlassElement):
             message = u'Unable to initialize your Maya scene'
 
         PyGlassBasicDialogManager.openOk(self.mainWindow, header, message, u'Initialize Scene')
+        self._iniBtn.setText(u'Reinitialize')
 

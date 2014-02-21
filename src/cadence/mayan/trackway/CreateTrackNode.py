@@ -6,8 +6,11 @@ import math
 
 from nimble import cmds
 from nimble import NimbleScriptBase
+from cadence.enum.TrackPropEnum import TrackPropEnum
 
-#___________________________________________________________________________________________________ findTrackNode
+from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
+
+#___________________________________________________________________________________________________ CreateTrackNode
 class CreateTrackNode(NimbleScriptBase):
     """ TODO: Kent... """
 
@@ -19,20 +22,15 @@ class CreateTrackNode(NimbleScriptBase):
 
 #___________________________________________________________________________________________________ run
     def run(self, *args, **kwargs):
-        a = 2.0*self.RADIUS
-        c = cmds.polyCylinder(
+        uid  = self.fetch('uid', None)
+        node = TrackSceneUtils.getTrackNode(uid)
+        if node:
+            self.puts(node=node, props=TrackSceneUtils.getTrackProps(node))
+            return
+
+        a    = 2.0*self.RADIUS
+        node = cmds.polyCylinder(
             r=self.RADIUS, h=5, sx=40, sy=1, sz=1, ax=self.Y_VEC, rcp=0, cuv=2, ch=1, n='track0')[0]
-
-        for item in self.getKwarg('trackProps', []):
-            if item['intrinsic']:
-                continue
-
-            if item['type'] == 'string':
-                cmds.addAttr(ln=item['name'], dt=item['type'])
-            else:
-                cmds.addAttr(ln=item['name'], at=item['type'])
-
-        cmds.addAttr(ln='prevTrack', at='message')
 
         p = cmds.polyPrism(l=4, w=a, ns=3, sh=1, sc=0, ax=self.Y_VEC, cuv=3, ch=1, n='pointer')[0]
 
@@ -43,13 +41,21 @@ class CreateTrackNode(NimbleScriptBase):
         cmds.setAttr(p + '.overrideEnabled', 1)
         cmds.setAttr(p + '.overrideDisplayType', 2)
 
-        cmds.parent(p, c)
-        cmds.select(c)
-        cmds.setAttr(c + '.translateY', l=1)
-        cmds.setAttr(c + '.rotateX',    l=1)
-        cmds.setAttr(c + '.rotateZ',    l=1)
-        cmds.setAttr(c + '.scaleY',     l=1)
+        cmds.parent(p, node)
 
-        self.response.put('name', c)
+        cmds.select(node)
+        cmds.addAttr(
+            longName='cadence_uniqueId',
+            shortName=TrackPropEnum.UID.maya,
+            dataType='string',
+            niceName='Unique ID')
 
+        props = self.fetch('props', {})
+        if props:
+            TrackSceneUtils.setTrackProps(node, props)
 
+        # Add the new node to the Cadence track scene set
+        trackSetNode = TrackSceneUtils.getTrackSetNode()
+        cmds.sets(node, add=trackSetNode)
+
+        self.puts(node=node, props=TrackSceneUtils.getTrackProps(node))

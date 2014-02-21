@@ -2,17 +2,30 @@
 # (C)2013-2014
 # Scott Ernst
 
+import re
+from pyaid.string.StringUtils import StringUtils
+
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import Integer
 from sqlalchemy import Unicode
 from sqlalchemy import UnicodeText
-from pyaid.ArgsUtils import ArgsUtils
+
+from pyaid.reflection.Reflection import Reflection
+
+import nimble
+from nimble import cmds
 
 # AS NEEDED: from cadence.data.Track import Track
+from cadence.CadenceEnvironment import CadenceEnvironment
+from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
 from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.mayan.trackway import GetTrackNodeData
+from cadence.mayan.trackway import UpdateTrackNode
+from cadence.mayan.trackway import CreateTrackNode
 from cadence.models.tracks.TracksDefault import TracksDefault
+from cadence.util.shading.ShadingUtils import ShadingUtils
 
 #___________________________________________________________________________________________________ Tracks_Track
 class Tracks_Track(TracksDefault):
@@ -21,6 +34,9 @@ class Tracks_Track(TracksDefault):
 
 #===================================================================================================
 #                                                                                       C L A S S
+
+    # Used to break trackway specifier into separate type and number entries
+    _TRACKWAY_PATTERN = re.compile('(?P<type>[A-Za-z]+)[\s\t]*(?P<number>[0-9]+)')
 
     __tablename__  = u'tracks'
 
@@ -34,14 +50,14 @@ class Tracks_Track(TracksDefault):
     _trackwayNumber      = Column(Float,        default=0.0)
     _left                = Column(Boolean,      default=True)
     _pes                 = Column(Boolean,      default=True)
-    _number              = Column(Float,        default=0.0)
+    _number              = Column(Unicode,      default=u'')
     _index               = Column(Integer,      default=0)
     _snapshot            = Column(Unicode,      default=u'')
     _note                = Column(UnicodeText,  default=u'')
     _prev                = Column(Unicode,      default=u'')
     _next                = Column(Unicode,      default=u'')
-    _width               = Column(Float,        default=0.0)
-    _length              = Column(Float,        default=0.0)
+    _width               = Column(Float,        default=1.0)
+    _length              = Column(Float,        default=1.0)
     _rotation            = Column(Float,        default=0.0)
     _x                   = Column(Float,        default=0.0)
     _z                   = Column(Float,        default=0.0)
@@ -57,16 +73,111 @@ class Tracks_Track(TracksDefault):
     _sourceFlags         = Column(Integer,      default=0)
     _displayFlags        = Column(Integer,      default=0)
 
+#___________________________________________________________________________________________________ __init__
+    def __init__(self, **kwargs):
+        super(Tracks_Track, self).__init__(**kwargs)
+        self.uid = CadenceEnvironment.createUniqueId(u'track')
+
+#===================================================================================================
+#                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: nodeName
+    @property
+    def nodeName(self):
+        return self.fetchTransient('nodeName')
+    @nodeName.setter
+    def nodeName(self, value):
+        self.putTransient('nodeName', value)
+
+#___________________________________________________________________________________________________ GS: name
+    @property
+    def name(self):
+        """ Human-readable display name for the track based of its properties """
+        number = unicode(int(self.number)) if self.number else u'-'
+        return (u'L' if self.left else u'R') + (u'P' if self.pes else u'M') + number
+    @name.setter
+    def name(self, value):
+        value = value.strip()
+
+        if StringUtils.begins(value.upper(), [u'M', u'P']):
+            self.left = value[1].upper() == u'L'
+            self.pes  = value[0].upper() == u'P'
+        else:
+            self.left = value[0].upper() == u'L'
+            self.pes  = value[1].upper() == u'P'
+        self.number = value[2:].upper()
+
 #===================================================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ createTrack
-    def createTrack(self, node =None):
-        """ Creates a Track operator instance for this database entry. If a node is specified, it
-            is the string name of a Maya node representation of the track, which links the database
-            and Maya node through the Track created operator instance. """
-        from cadence.data.Track import Track
-        return Track(node=node, trackData=self.toDict())
+#___________________________________________________________________________________________________ getPreviousTrack
+    def getPreviousTrack(self):
+        """ Returns the previous track in the series if such a track exists """
+        if self.prev is None:
+            return None
+        return self.getByUid(self.prev, session=self.session)
+
+#___________________________________________________________________________________________________ getNextTrack
+    def getNextTrack(self):
+        """ Returns the next track in the series if such a track exists """
+        if self.next is None:
+            return None
+        return self.getByUid(self.next, session=self.session)
+
+#___________________________________________________________________________________________________ createNode
+    def createNode(self):
+        """ Create an elliptical cylinder (disk) plus a superimposed triangular pointer to signify
+            the position, dimensions, and rotation of a manus or pes print.  The cylinder has a
+            diameter of one meter so that the scale in x and z equates to the width and length of
+            the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The pointer is locked to
+            not be non-selectable (reference) and the marker is prohibited from changing y
+            (elevation) or rotation about either x or z.  The color of the cylinder indicates manus
+            versus pes, and the color of the pointer on top of the cylinder indicates left versus
+            right."""
+
+        print 'UID:', self.uid
+
+        conn = nimble.getConnection()
+        out  = conn.runPythonModule(CreateTrackNode, uid=self.uid, props=self.toMayaNodeDict())
+        if not out.success:
+            print 'CREATE NODE ERROR:', out.error
+            return None
+
+        print out.payload
+        self.nodeName = out.payload['node']
+
+        return self.nodeName
+
+#___________________________________________________________________________________________________ updateNode
+    def updateNode(self):
+        """ Sends values to Maya node representation of the track to synchronize the values in the
+            model and the node. """
+        conn = nimble.getConnection()
+        result = conn.runPythonModule(UpdateTrackNode, uid=self.uid, props=self.toMayaNodeDict())
+        if not result.success:
+            return False
+
+        self.nodeName = result.payload.get('node')
+        return True
+
+#___________________________________________________________________________________________________ updateFromNode
+    def updateFromNode(self):
+        """ Retrieves Maya values from the node representation of the track and updates this
+            model instance with those values. """
+
+        conn = nimble.getConnection()
+        result = conn.runPythonModule(GetTrackNodeData, uid=self.uid, node=self.nodeName)
+        if result.payload.get('error'):
+            print 'NODE ERROR:', result.payload.get('message')
+            return False
+
+        self.nodeName = result.payload.get('node')
+
+        if self.nodeName:
+            self.fromDict(result.payload.get('props'))
+            return True
+
+        return False
 
 #___________________________________________________________________________________________________ fromDict
     def fromDict(self, data):
@@ -75,88 +186,108 @@ class Tracks_Track(TracksDefault):
             class and the values valid entries for each key in the database class.
 
             This method can be used to load a track object from disk into a database model. """
-        TPE     = TrackPropEnum
-        argsGet = ArgsUtils.get
-
-        self.uid                 = argsGet(TPE.UID.name,                    self.uid, data)
-        self.community           = argsGet(TPE.COMM.name,                   self.community, data)
-        self.site                = argsGet(TPE.SITE.name,                   self.site, data)
-        self.year                = argsGet(TPE.YEAR.name,                   self.year, data)
-        self.level               = argsGet(TPE.LEVEL.name,                  self.level, data)
-        self.sector              = argsGet(TPE.SECTOR.name,                 self.sector, data)
-        self.trackwayNumber      = argsGet(TPE.TRACKWAY_NUMBER.name,        self.trackwayNumber, data)
-        self.trackwayType        = argsGet(TPE.TRACKWAY_TYPE.name,          self.trackwayType, data)
-        self.left                = argsGet(TPE.LEFT.name,                   self.left, data)
-        self.pes                 = argsGet(TPE.PES.name,                    self.pes, data)
-        self.prev                = argsGet(TPE.PREV.name,                   self.prev, data)
-        self.next                = argsGet(TPE.PREV.name,                   self.next, data)
-        self.number              = argsGet(TPE.NUMBER.name,                 self.number, data)
-        self.note                = argsGet(TPE.NOTE.name,                   self.note, data)
-        self.snapshot            = argsGet(TPE.SNAPSHOT.name,               self.snapshot, data)
-        self.index               = argsGet(TPE.INDEX.name,                  self.index, data)
-        self.width               = argsGet(TPE.WIDTH.name,                  self.width, data)
-        self.rotation            = argsGet(TPE.ROTATION.name,               self.rotation, data)
-        self.length              = argsGet(TPE.LENGTH.name,                 self.length, data)
-        self.x                   = argsGet(TPE.X.name,                      self.x, data)
-        self.z                   = argsGet(TPE.Z.name,                      self.z, data)
-        self.widthUncertainty    = argsGet(TPE.WIDTH_UNCERTAINTY.name,      self.widthUncertainty, data)
-        self.lengthUncertainty   = argsGet(TPE.LENGTH_UNCERTAINTY.name,     self.lengthUncertainty, data)
-        self.rotationUncertainty = argsGet(TPE.ROTATION_UNCERTAINTY.name,   self.rotationUncertainty, data)
-        self.depthUncertainty    = argsGet(TPE.DEPTH_UNCERTAINTY.name,      self.rotationUncertainty, data)
-        self.widthMeasured       = argsGet(TPE.WIDTH_UNCERTAINTY.name,      self.widthMeasured, data)
-        self.lengthMeasured      = argsGet(TPE.LENGTH_UNCERTAINTY.name,     self.lengthMeasured, data)
-        self.depthMeasured       = argsGet(TPE.DEPTH_UNCERTAINTY.name,      self.lengthMeasured, data)
-        self.flags               = argsGet(TPE.FLAGS.name,                  self.flags, data)
-        self.sourceFlags         = argsGet(TPE.SOURCE_FLAGS.name,           self.sourceFlags, data)
-        self.displayFlags        = argsGet(TPE.DISPLAY_FLAGS.name,          self.displayFlags, data)
+        for key,value in data.iteritems():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
 #___________________________________________________________________________________________________ toDict
     def toDict(self):
         """ Returns a dictionary containing the keys and current values of the the track object
             with no dependency on a database session object. """
-        TPE = TrackPropEnum
-        return self._createDict(**{
-            TPE.COMM.name:self.community,
-            TPE.SITE.name:self.site,
-            TPE.YEAR.name:self.year,
-            TPE.LEVEL.name:self.level,
-            TPE.SECTOR.name:self.sector,
-            TPE.TRACKWAY_TYPE.name:self.trackwayType,
-            TPE.TRACKWAY_NUMBER.name:self.trackwayNumber,
-            TPE.LEFT.name:self.left,
-            TPE.PES.name:self.pes,
-            TPE.PREV.name:self.prev,
-            TPE.NUMBER.name:self.trackwayNumber,
-            TPE.NOTE.name:self.note,
-            TPE.SNAPSHOT.name:self.snapshot,
-            TPE.INDEX.name:self.index,
-            TPE.WIDTH.name:self.width,
-            TPE.LENGTH.name:self.length,
-            TPE.ROTATION.name:self.rotation,
-            TPE.X.name:self.x,
-            TPE.Z.name:self.z,
-            TPE.WIDTH_UNCERTAINTY.name:self.widthUncertainty,
-            TPE.LENGTH_UNCERTAINTY.name:self.lengthUncertainty,
-            TPE.ROTATION_UNCERTAINTY.name:self.rotationUncertainty,
-            TPE.DEPTH_UNCERTAINTY.name:self.depthUncertainty,
-            TPE.WIDTH_MEASURED.name:self.widthMeasured,
-            TPE.LENGTH_MEASURED.name:self.lengthMeasured,
-            TPE.DEPTH_MEASURED.name:self.depthMeasured,
-            TPE.FLAGS.name:self.flags,
-            TPE.SOURCE_FLAGS.name:self.sourceFlags,
-            TPE.DISPLAY_FLAGS.name:self.displayFlags })
+        out = dict()
+        for enum in Reflection.getReflectionList(TrackPropEnum):
+            out[enum.name] = getattr(self, enum.name)
+        return self._createDict(**out)
+
+#___________________________________________________________________________________________________ toMayaNodeDict
+    def toMayaNodeDict(self):
+        """ Creates a dictionary representation of the properties that can be controlled directly
+            within the Maya scene. """
+        out = dict()
+        for enum in Reflection.getReflectionList(TrackPropEnum):
+            if enum.maya:
+                out[enum.maya] = getattr(self, enum.name)
+        return out
+
+#___________________________________________________________________________________________________ colorTrack
+    def colorTrack(self):
+        """ TODO: Kent... """
+        if not self.nodeName:
+            return False
+
+        if self.pes:
+            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.nodeName)
+        else:
+            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.nodeName)
+
+        if self.left:
+            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.nodeName + '|pointer')
+        else:
+            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.nodeName + '|pointer')
+
+        return True
+
+#___________________________________________________________________________________________________ setCadenceCamFocus
+    def setCadenceCamFocus(self):
+        """ TODO: Kent... """
+        if self.nodeName is None:
+            return
+
+        if not cmds.objExists('CadenceCam'):
+            self.initializeCadenceCam()
+        height = cmds.xform('CadenceCam', query=True, translation=True)[1]
+        cmds.move(self.x, height, self.z, 'CadenceCam', absolute=True)
+
+#___________________________________________________________________________________________________ findExistingTracks
+    def findExistingTracks(self, session):
+        """ Searches the database for an existing track that matches the current values of the
+            unique properties in this track instance and returns a result list of any duplicates
+            found. """
+
+        query = session.query(self.__class__)
+        for enum in Reflection.getReflectionList(TrackPropEnum):
+            if enum.unique:
+                query = query.filter(getattr(self.__class__, enum.name) == getattr(self, enum.name))
+
+        return query.all()
 
 #___________________________________________________________________________________________________ getByUid
     @classmethod
-    def getByUid(cls, uid, session =None):
+    def getByUid(cls, uid, session):
         """ Returns the Tracks_Track model instance for the specified track universally unique id. """
+        return session.query(cls).filter(cls.uid == uid).first()
 
-        model  = Tracks_Track.MASTER
-        s      = model.createSession() if session is None else session
-        result = s.query(model).filter(model.uid == uid).first()
-        if result is None:
-            if session is None:
-                s.close()
-            return None
+#___________________________________________________________________________________________________ getByProperties
+    @classmethod
+    def getByProperties(cls, session, **kwargs):
+        """ Loads based on the current values set for the track. This form of loading is useful
+            when the uid is not available, e.g. when importing data from the spreadsheet. """
 
-        return result
+        s     = cls.createSession() if session is None else session
+        query = s.query(cls)
+
+        for key,value in kwargs.iteritems():
+            query = query.filter(getattr(cls, key) == value)
+
+        return query.all()
+
+#___________________________________________________________________________________________________ incrementName
+    @classmethod
+    def incrementName(cls, name):
+        """ TODO: Kent... """
+        prefix = name[:2]
+        number = int(name[2:])
+        return prefix + str(number + 1)
+
+#___________________________________________________________________________________________________ initializeCadenceCam
+    @classmethod
+    def initializeCadenceCam(cls):
+        """ TODO: Kent... """
+        c = cmds.camera(
+            orthographic=True,
+            nearClipPlane=1,
+            farClipPlane=100000,
+            orthographicWidth=500)
+        cmds.rename(c[0], 'CadenceCam')
+        cmds.rotate(-90, 180, 0)
+        cmds.move(0, 100, 0, 'CadenceCam', absolute=True)

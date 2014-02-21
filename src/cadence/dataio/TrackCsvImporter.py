@@ -9,10 +9,9 @@ from pyaid.debug.Logger import Logger
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
 from pyaid.reflection.Reflection import Reflection
-from pyaid.string.StringUtils import StringUtils
 
-from cadence.data.Track import Track
 from cadence.enum.TrackCsvColumnEnum import TrackCsvColumnEnum
+from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ TrackCsvImporter
 class TrackCsvImporter(object):
@@ -46,6 +45,9 @@ class TrackCsvImporter(object):
         if self._path is None:
             return False
 
+        model   = Tracks_Track.MASTER
+        session = model.createSession()
+
         with open(self._path, 'rU') as f:
             reader = csv.reader(f, delimiter=',', quotechar='"')
             for row in reader:
@@ -62,16 +64,19 @@ class TrackCsvImporter(object):
                     if value != u'' or value is None:
                         rowDict[column.name] = value
 
-                result  = self.fromSpreadsheetEntry(rowDict, force=force)
-                if  isinstance(result, Track):
+                result  = self.fromSpreadsheetEntry(rowDict, session, force=force)
+                if  isinstance(result, Tracks_Track):
                     self._tracks.append(result)
                     continue
 
                 self._writeError(result)
 
+        session.commit()
+        session.close()
+
 #___________________________________________________________________________________________________ fromSpreadsheetEntry
     @classmethod
-    def fromSpreadsheetEntry(cls, csvRowData, force =True):
+    def fromSpreadsheetEntry(cls, csvRowData, session, force =True):
         """ From the spreadsheet data dictionary representing raw track data, this method creates
             a track entry in the database. """
 
@@ -82,10 +87,10 @@ class TrackCsvImporter(object):
                 'message':u'Missing spreadsheet index',
                 'data':csvRowData }
 
-        t = Track(trackData=dict())
+        t = Tracks_Track.MASTER()
 
         try:
-            t.site  = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name)
+            t.site  = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip()
         except Exception, err:
             return {
                 'message':u'Missing track site',
@@ -93,7 +98,7 @@ class TrackCsvImporter(object):
                 'index':csvIndex }
 
         try:
-            t.year = csvRowData.get(TrackCsvColumnEnum.CAST_DATE.name).split('_')[-1]
+            t.year = csvRowData.get(TrackCsvColumnEnum.CAST_DATE.name).strip().split('_')[-1]
         except Exception, err:
             return {
                 'message':u'Missing cast date',
@@ -143,31 +148,31 @@ class TrackCsvImporter(object):
         # NAME
         #       Parse the name value into left, pes, and number attributes
         try:
-            name = csvRowData.get(TrackCsvColumnEnum.TRACK_NAME.name).strip()
+            t.name = csvRowData.get(TrackCsvColumnEnum.TRACK_NAME.name).strip()
         except Exception, err:
             return {
                 'message':u'Missing track name',
                 'data':csvRowData,
                 'index':csvIndex }
 
-        if StringUtils.begins(name.upper(), [u'M', u'P']):
-            t.left = name[1].upper() == u'L'
-            t.pes  = name[0].upper() == u'P'
-        else:
-            t.left = name[0].upper() == u'L'
-            t.pes  = name[1].upper() == u'P'
-        t.number = float(re.compile('[^0-9]+').sub(u'', name[2:]))
-
         #-------------------------------------------------------------------------------------------
         # FIND EXISTING
         #       Use data set above to attempt to load the track database entry
-        if t.loadFromValues() and not force:
+        existing = t.findExistingTracks(session)
+        if existing:
             if csvIndex != t.index:
                 return {
                     'message':u'Ambiguous track data [%s, %s]:' % (csvIndex, t.index),
                     'data':csvRowData,
                     'existing':t,
                     'index':csvIndex }
+            elif force:
+                t = existing[0]
+            else:
+                return existing[0]
+        else:
+            session.add(t)
+            session.flush()
 
         t.index     = csvIndex
         t.snapshot  = JSON.asString(csvRowData)
@@ -207,9 +212,6 @@ class TrackCsvImporter(object):
         except Exception, err:
             t.depthMeasured    = 0.0
             t.depthUncertainty = 5.0
-
-        # Save csv value changes to the database
-        t.save()
 
         return t
 

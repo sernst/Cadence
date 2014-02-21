@@ -45,9 +45,8 @@ class TrackwayIoWidget(PyGlassWidget):
         model   = Tracks_Track.MASTER
         session = model.createSession()
         entries = session.query(model).all()
-        for entry in entries:
-            track = entry.createTrack()
-            track.generateNode()
+        for entry in entries[:10]:
+            entry.createNode()
         session.close()
         self.setEnabled(True)
 

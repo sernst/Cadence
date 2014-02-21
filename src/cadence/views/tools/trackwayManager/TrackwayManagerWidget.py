@@ -2,10 +2,7 @@
 # (C)2012-2014
 # Scott Ernst and Kent A. Stevens
 
-import inspect
-
 from nimble import cmds
-from pyaid.debug.Logger import Logger
 
 from pyaid.json.JSON import JSON
 
@@ -13,8 +10,8 @@ from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 
 from cadence.CadenceEnvironment import CadenceEnvironment
-from cadence.data.Track import Track
 from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ TrackwayManagerWidget
 class TrackwayManagerWidget(PyGlassWidget):
@@ -67,7 +64,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ isTrackNode
     def isTrackNode(self, n):
-        return cmds.attributeQuery(TrackPropEnum.SITE.name, node=n, exists=True)
+        return cmds.hasAttr(n + '.' + TrackPropEnum.UID.maya)
 
 #___________________________________________________________________________________________________ getAllTracks
     def getAllTracks(self):
@@ -79,7 +76,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         tracks = list()
         for n in nodes:
             if self.isTrackNode(n):
-                tracks.append(Track(n))
+                tracks.append(None) # Track(n)
         return tracks if len(tracks) > 0 else None
 
 #___________________________________________________________________________________________________ getSelected
@@ -90,7 +87,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         tracks = list()
         for n in selectedNodes:
             if self.isTrackNode(n):
-                tracks.append(Track(n))
+                tracks.append() # Track(n)
         return tracks
 
 #___________________________________________________________________________________________________ getFirstTrack
@@ -226,7 +223,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         trackProperties = self.getTrackPropertiesFromUI()
         # load up a new dictionary for this
 
-        lp1 = Track(Track.createNode())
+        lp1 = None # Track(Track.createNode())
         lp1.left   = True
         lp1.pes    = True
         lp1.number = 1
@@ -235,7 +232,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         lp1.width  = 0.4
         lp1.length = 0.6
 
-        rp1 = Track(Track.createNode())
+        rp1 = None # Track(Track.createNode())
         rp1.left   = False
         rp1.pes    = True
         rp1.number = 1
@@ -244,7 +241,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         rp1.width  = 0.4
         rp1.length = 0.6
 
-        lm1 = Track(Track.createNode())
+        lm1 = None # Track(Track.createNode())
         lm1.left   = True
         lm1.pes    = False
         lm1.number = 1
@@ -253,7 +250,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         lm1.width  = 0.25
         lm1.length = 0.2
 
-        rm1 = Track(Track.createNode())
+        rm1 = None # Track(Track.createNode())
         rm1.left   = False
         rm1.pes    = False
         rm1.number = 1
@@ -262,7 +259,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         rm1.width  = 0.25
         rm1.length = 0.2
 
-        lp2 = Track(Track.createNode())
+        lp2 = None # Track(Track.createNode())
         lp2.left   = True
         lp2.pes    = True
         lp2.number = 2
@@ -271,7 +268,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         lp2.width  = 0.4
         lp2.length = 0.6
 
-        rp2 = Track(Track.createNode())
+        rp2 = None # Track(Track.createNode())
         rp2.left   = False
         rp2.pes    = True
         rp2.number = 2
@@ -280,7 +277,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         rp2.width  = 0.4
         rp2.length = 0.6
 
-        lm2 = Track(Track.createNode())
+        lm2 = None # Track(Track.createNode())
         lm2.left   = True
         lm2.pes    = False
         lm2.number = 1
@@ -289,7 +286,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         lm2.width  = 0.25
         lm2.length = 0.2
 
-        rm2 = Track(Track.createNode())
+        rm2 = None # Track(Track.createNode())
         rm2.left   = False
         rm2.pes    = False
         rm2.number = 1
@@ -315,8 +312,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         if lastTrack is None:
             return
         prevTrackNode = lastTrack.prevTrackNode
-        nextTrack = Track(cmds.duplicate(lastTrack.node)[0])
-        nextName  = Track.incrementName(lastTrack.name)
+        nextTrack = None # Track(cmds.duplicate(lastTrack.node)[0])
+        nextName  = None # Track.incrementName(lastTrack.name)
         nextTrack.name = nextName
         dx = lastTrack.x - prevTrackNode.x
         dz = lastTrack.z - prevTrackNode.z
@@ -520,7 +517,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         name = self.getNameFromUI()
         for t in selectedTracks:
              t.name = name
-             name   = Track.incrementName(name)
+             name   = None # Track.incrementName(name)
 
 #___________________________________________________________________________________________________ selectSuccessors
     def selectSuccessors(self):
@@ -633,7 +630,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                 name = cmds.getAttr('%s.name' % node)
                 trackway = cmds.getAttr('%s.trackway' % node)
                 if name == targetName and trackway == targetTrackway:
-                    t = Track(node)
+                    t = None # Track(node)
                     self.selectTrack(t)
                     return
 
