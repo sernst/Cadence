@@ -135,15 +135,12 @@ class Tracks_Track(TracksDefault):
             versus pes, and the color of the pointer on top of the cylinder indicates left versus
             right."""
 
-        print 'UID:', self.uid
-
         conn = nimble.getConnection()
         out  = conn.runPythonModule(CreateTrackNode, uid=self.uid, props=self.toMayaNodeDict())
         if not out.success:
             print 'CREATE NODE ERROR:', out.error
             return None
 
-        print out.payload
         self.nodeName = out.payload['node']
 
         return self.nodeName

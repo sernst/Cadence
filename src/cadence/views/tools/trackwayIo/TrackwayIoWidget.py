@@ -1,5 +1,5 @@
 # TrackwayIoWidget.py
-# (C)2013
+# (C)2013-2014
 # Scott Ernst
 
 from pyaid.file.FileUtils import FileUtils

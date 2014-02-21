@@ -2,10 +2,8 @@
 # (C)2014
 # Scott Ernst
 
-from nimble import cmds
 from nimble import NimbleScriptBase
 
-from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 
 #___________________________________________________________________________________________________ GetTrackNodeData
