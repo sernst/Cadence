@@ -84,6 +84,9 @@ class Tracks_Track(TracksDefault):
 #___________________________________________________________________________________________________ GS: nodeName
     @property
     def nodeName(self):
+        """ A cached value for the name of the Maya node representing this track if one exists,
+            which is updated each time a create/update operation on the node occurs. Can be
+            incorrect if the node was renamed between such operations. """
         return self.fetchTransient('nodeName')
     @nodeName.setter
     def nodeName(self, value):
