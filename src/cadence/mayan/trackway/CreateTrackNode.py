@@ -55,7 +55,7 @@ class CreateTrackNode(NimbleScriptBase):
             TrackSceneUtils.setTrackProps(node, props)
 
         # Add the new node to the Cadence track scene set
-        trackSetNode = TrackSceneUtils.getTrackSetNode()
+        trackSetNode = TrackSceneUtils.getTrackSetNode(createIfMissing=True)
         cmds.sets(node, add=trackSetNode)
 
         self.puts(node=node, props=TrackSceneUtils.getTrackProps(node))

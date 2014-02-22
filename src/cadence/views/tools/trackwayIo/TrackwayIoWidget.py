@@ -105,13 +105,27 @@ class TrackwayIoWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _handleLoadTracks
     def _handleLoadTracks(self):
         self.setEnabled(False)
+        self.refreshGui()
+
         model   = Tracks_Track.MASTER
         session = model.createSession()
-        entries = session.query(model).all()
-        for entry in entries[:10]:
+        query   = session.query(model)
+
+        for filterDef in self._filterList:
+            items = filterDef['widget'].selectedItems()
+            if not items or items[0].itemData is None:
+                continue
+            query = query.filter(getattr(model, filterDef['enum'].name) == items[0].itemData)
+
+        entries = query.all()
+        count   = len(entries)
+        for entry in entries:
             entry.createNode()
         session.close()
         self.setEnabled(True)
+
+        PyGlassBasicDialogManager.openOk(
+            parent=self, header=str(count) + ' Tracks Created')
 
 #___________________________________________________________________________________________________ _handleImportCsv
     def _handleImportCsv(self):
