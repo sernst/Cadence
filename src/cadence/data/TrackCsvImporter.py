@@ -26,9 +26,10 @@ class TrackCsvImporter(object):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, path =None, logger =None):
         """Creates a new instance of TrackCsvImporter."""
-        self._path   = path
-        self._tracks = []
-        self._logger = logger
+        self._path    = path
+        self.created  = []
+        self.modified = []
+        self._logger  = logger
         if not logger:
             self._logger = Logger(self, printOut=True)
 
@@ -36,7 +37,7 @@ class TrackCsvImporter(object):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ read
-    def read(self, path =None, force =True):
+    def read(self, session, path =None):
         """ Reads from the spreadsheet located at the absolute path argument and adds each row
             to the tracks in the database. """
 
@@ -44,9 +45,6 @@ class TrackCsvImporter(object):
             self._path = path
         if self._path is None:
             return False
-
-        model   = Tracks_Track.MASTER
-        session = model.createSession()
 
         with open(self._path, 'rU') as f:
             reader = csv.reader(f, delimiter=',', quotechar='"')
@@ -64,62 +62,61 @@ class TrackCsvImporter(object):
                     if value != u'' or value is None:
                         rowDict[column.name] = value
 
-                result  = self.fromSpreadsheetEntry(rowDict, session, force=force)
-                if  isinstance(result, Tracks_Track):
-                    self._tracks.append(result)
-                    continue
+                self.fromSpreadsheetEntry(rowDict, session)
 
-                self._writeError(result)
-
-        session.commit()
-        session.close()
+        session.flush()
+        return True
 
 #___________________________________________________________________________________________________ fromSpreadsheetEntry
-    @classmethod
-    def fromSpreadsheetEntry(cls, csvRowData, session, force =True):
+    def fromSpreadsheetEntry(self, csvRowData, session):
         """ From the spreadsheet data dictionary representing raw track data, this method creates
             a track entry in the database. """
 
         try:
             csvIndex = int(csvRowData[TrackCsvColumnEnum.INDEX.name])
         except Exception, err:
-            return {
+            self._writeError({
                 'message':u'Missing spreadsheet index',
-                'data':csvRowData }
+                'data':csvRowData })
+            return False
 
         t = Tracks_Track.MASTER()
 
         try:
             t.site  = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip()
         except Exception, err:
-            return {
+            self._writeError({
                 'message':u'Missing track site',
                 'data':csvRowData,
-                'index':csvIndex }
+                'index':csvIndex })
+            return False
 
         try:
             t.year = csvRowData.get(TrackCsvColumnEnum.CAST_DATE.name).strip().split('_')[-1]
         except Exception, err:
-            return {
+            self._writeError({
                 'message':u'Missing cast date',
                 'data':csvRowData,
-                'index':csvIndex }
+                'index':csvIndex })
+            return False
 
         try:
             t.sector = csvRowData.get(TrackCsvColumnEnum.SECTOR.name)
         except Exception, err:
-            return {
+            self._writeError({
                 'message':u'Missing sector',
                 'data':csvRowData,
-                'index':csvIndex }
+                'index':csvIndex })
+            return False
 
         try:
             t.level = csvRowData.get(TrackCsvColumnEnum.LEVEL.name)
         except Exception, err:
-            return {
+            self._writeError({
                 'message':u'Missing level',
                 'data':csvRowData,
-                'index':csvIndex }
+                'index':csvIndex })
+            return False
 
         #-------------------------------------------------------------------------------------------
         # TRACKWAY
@@ -127,22 +124,24 @@ class TrackCsvImporter(object):
         try:
             test = csvRowData.get(TrackCsvColumnEnum.TRACKWAY.name).strip()
         except Exception, err:
-            return {
+            self._writeError({
                 'message':u'Missing trackway',
                 'data':csvRowData,
-                'index':csvIndex }
+                'index':csvIndex })
+            return False
 
-        result = cls._TRACKWAY_PATTERN.search(test)
+        result = self._TRACKWAY_PATTERN.search(test)
         try:
             t.trackwayType   = result.groupdict()['type']
             t.trackwayNumber = float(result.groupdict()['number'])
         except Exception, err:
-            return {
+            self._writeError({
                 'message':u'Invalid trackway value: %s' % test,
                 'data':csvRowData,
                 'result':result,
                 'match':result.groupdict() if result else 'N/A',
-                'index':csvIndex }
+                'index':csvIndex })
+            return False
 
         #-------------------------------------------------------------------------------------------
         # NAME
@@ -150,29 +149,23 @@ class TrackCsvImporter(object):
         try:
             t.name = csvRowData.get(TrackCsvColumnEnum.TRACK_NAME.name).strip()
         except Exception, err:
-            return {
+            self._writeError({
                 'message':u'Missing track name',
                 'data':csvRowData,
-                'index':csvIndex }
+                'index':csvIndex })
+            return False
 
         #-------------------------------------------------------------------------------------------
         # FIND EXISTING
         #       Use data set above to attempt to load the track database entry
         existing = t.findExistingTracks(session)
         if existing:
-            if csvIndex != t.index:
-                return {
-                    'message':u'Ambiguous track data [%s, %s]:' % (csvIndex, t.index),
-                    'data':csvRowData,
-                    'existing':t,
-                    'index':csvIndex }
-            elif force:
-                t = existing[0]
-            else:
-                return existing[0]
+            t = existing[0]
+            self.modified.append(t)
         else:
             session.add(t)
             session.flush()
+            self.created.append(t)
 
         t.index     = csvIndex
         t.snapshot  = JSON.asString(csvRowData)

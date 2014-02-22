@@ -9,13 +9,12 @@ from PySide import QtGui
 
 from pyaid.file.FileUtils import FileUtils
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
-from pyglass.elements.PyGlassElementUtils import PyGlassElementUtils
 from pyglass.elements.DataListWidgetItem import DataListWidgetItem
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from cadence.enum.TrackPropEnum import TrackPropEnum
 
 from cadence.enum.UserConfigEnum import UserConfigEnum
-from cadence.dataio.TrackCsvImporterRemoteThread import TrackCsvImporterRemoteThread
+from cadence.data.TrackImporterRemoteThread import TrackImporterRemoteThread
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ Viewer
@@ -34,13 +33,9 @@ class TrackwayIoWidget(PyGlassWidget):
     def __init__(self, parent, **kwargs):
         super(TrackwayIoWidget, self).__init__(parent, **kwargs)
 
-        PyGlassElementUtils.registerCheckBox(
-            owner=self,
-            target=self.overwriteImportChk,
-            configSetting=self.__class__.__name__ + self._OVERWRITE_IMPORT_SUFFIX)
-
         self.loadBtn.clicked.connect(self._handleLoadTracks)
-        self.importBtn.clicked.connect(self._handleImportCsv)
+        self.importCsvBtn.clicked.connect(self._handleImport)
+        self.importJsonBtn.clicked.connect(self._handleImport)
         self._thread = None
 
         self._getLayout(self.filterBox, QtGui.QHBoxLayout, True)
@@ -127,13 +122,21 @@ class TrackwayIoWidget(PyGlassWidget):
         PyGlassBasicDialogManager.openOk(
             parent=self, header=str(count) + ' Tracks Created')
 
-#___________________________________________________________________________________________________ _handleImportCsv
-    def _handleImportCsv(self):
+#___________________________________________________________________________________________________ _handleImport
+    def _handleImport(self):
+        btn  = self.sender()
+        if btn == self.importCsvBtn:
+            label = u'CSV'
+            importType = TrackImporterRemoteThread.CSV
+        else:
+            label = u'JSON'
+            importType = TrackImporterRemoteThread.JSON
+
         path = PyGlassBasicDialogManager.browseForFileOpen(
             parent=self,
-            caption=u'Select CSV File to Import',
+            caption=u'Select %s File to Import' % label,
             defaultPath=self.mainWindow.appConfig.get(UserConfigEnum.LAST_BROWSE_PATH) )
-        if not path:
+        if not path or not isinstance(basestring, path):
             return
 
         # Store directory location as the last active directory
@@ -145,18 +148,27 @@ class TrackwayIoWidget(PyGlassWidget):
         self.mainWindow.setEnabled(False)
         self.mainWindow.refreshGui()
 
-        self._thread = TrackCsvImporterRemoteThread(
+        self._thread = TrackImporterRemoteThread(
             parent=self,
             path=path,
-            force=self.overwriteImportChk.isChecked())
-        self._thread.execute(callback=self._handleCsvImportComplete)
+            importType=importType)
+        self._thread.execute(callback=self._handleImportComplete)
 
 #___________________________________________________________________________________________________ _handleCsvImportComplete
     def _handleCsvImportComplete(self, response):
         if response['response']:
-            print 'ERROR: CSV Import Failed'
+            print 'ERROR: Import Failed'
             print '  OUTPUT:', response['output']
             print '  ERROR:', response['error']
+            PyGlassBasicDialogManager.openOk(
+                parent=self,
+                header='ERROR',
+                message='Import operation failed')
+        else:
+            PyGlassBasicDialogManager.openOk(
+                parent=self,
+                header='Success',
+                message='Import operation complete')
 
         self.mainWindow.setEnabled(True)
 

@@ -54,7 +54,6 @@ class Tracks_Track(TracksDefault):
     _index               = Column(Integer,      default=0)
     _snapshot            = Column(Unicode,      default=u'')
     _note                = Column(UnicodeText,  default=u'')
-    _prev                = Column(Unicode,      default=u'')
     _next                = Column(Unicode,      default=u'')
     _width               = Column(Float,        default=1.0)
     _length              = Column(Float,        default=1.0)
@@ -114,18 +113,20 @@ class Tracks_Track(TracksDefault):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ getPreviousTrack
-    def getPreviousTrack(self):
+    def getPreviousTrack(self, session):
         """ Returns the previous track in the series if such a track exists """
-        if self.prev is None:
+        model  = self.__class__
+        try:
+            return session.query(self.__class__).filter(model.next == self.uid).first()
+        except Exception, err:
             return None
-        return self.getByUid(self.prev, session=self.session)
 
 #___________________________________________________________________________________________________ getNextTrack
-    def getNextTrack(self):
+    def getNextTrack(self, session):
         """ Returns the next track in the series if such a track exists """
         if self.next is None:
             return None
-        return self.getByUid(self.next, session=self.session)
+        return self.getByUid(self.next, session=session)
 
 #___________________________________________________________________________________________________ createNode
     def createNode(self):

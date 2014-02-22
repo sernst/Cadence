@@ -63,10 +63,6 @@ class TrackPropEnum(object):
     # a boolean, true if the track is a pes (hind) print, not a manus, default is false if unknown
     PES = TRACK_PROP_NT('pes', 'bool', None, True)
 
-    # the UID of the previous track in the track series, or an empty string if first track.  Note
-    # that there might be missing tracks.  E.g., the prev of LM33 might be LM30 (31 and 32 missing)
-    PREV = TRACK_PROP_NT('prev', 'string', None, False)
-
     # rotation is measured relative to North (the world coordinates z-axis in the scene), and
     # increases counterclockwise.  It is an intrinsic attribute of the node transform (rotation
     # about the 'vertical' y axis).
