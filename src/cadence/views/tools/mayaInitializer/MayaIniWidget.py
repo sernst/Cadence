@@ -22,7 +22,6 @@ class MayaIniWidget(PyGlassWidget):
 
         self.runBtn.clicked.connect(self._handleExecute)
         self.removeBtn.clicked.connect(self._handleRemove)
-        self.reportTextEdit.setReadOnly(True)
 
         self._thread = None
 
@@ -31,17 +30,10 @@ class MayaIniWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _runInitializer
     def _runInitializer(self, install =True, test =False):
-        text = self.reportTextEdit
-        text.clear()
-        self._toggleEnabled(False)
+        self.mainWindow.showStatus(self, u'Initializing Maya', u'Running Maya Initialization')
 
         self._thread = MayaIniRemoteThread(self, test=test, install=install)
         self._thread.execute(self._handleInitializerComplete, self._handleThreadLog)
-
-#___________________________________________________________________________________________________ _toggleEnabled
-    def _toggleEnabled(self, value):
-        self.mainWindow.toggleInteractivity(value)
-        self.controlsBox.setEnabled(value)
 
 #___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
     def _deactivateWidgetDisplayImpl(self, **kwargs):
@@ -60,10 +52,10 @@ class MayaIniWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _handleInitializerComplete
     def _handleInitializerComplete(self, response):
-        self._toggleEnabled(True)
+        self.mainWindow.showStatusDone(self)
         self.refreshGui()
         self._thread = None
 
 #___________________________________________________________________________________________________ _handleThreadLog
     def _handleThreadLog(self, value):
-        self.reportTextEdit.append(value)
+        self.mainWindow.appendStatus(self, value)

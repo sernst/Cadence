@@ -132,4 +132,8 @@ class CadenceHomeWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _handleOpenTool
     def _handleOpenTool(self):
         element = self.sender().parent().parent()
+        self.mainWindow.showLoading(
+            self.mainWindow.getWidgetFromID('toolViewer'),
+            u'Opening Tool')
+        self.refreshGui()
         self.mainWindow.setActiveWidget('toolViewer', args=element.userData)

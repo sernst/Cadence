@@ -47,14 +47,14 @@ class Tracks_Track(TracksDefault):
     _level               = Column(Unicode,      default=u'')
     _sector              = Column(Unicode,      default=u'')
     _trackwayType        = Column(Unicode,      default=u'')
-    _trackwayNumber      = Column(Float,        default=0.0)
-    _left                = Column(Boolean,      default=True)
-    _pes                 = Column(Boolean,      default=True)
+    _trackwayNumber      = Column(Unicode,      default=u'')
     _number              = Column(Unicode,      default=u'')
-    _index               = Column(Integer,      default=0)
     _snapshot            = Column(Unicode,      default=u'')
     _note                = Column(UnicodeText,  default=u'')
     _next                = Column(Unicode,      default=u'')
+    _left                = Column(Boolean,      default=True)
+    _pes                 = Column(Boolean,      default=True)
+    _index               = Column(Integer,      default=0)
     _width               = Column(Float,        default=1.0)
     _length              = Column(Float,        default=1.0)
     _rotation            = Column(Float,        default=0.0)
@@ -192,11 +192,13 @@ class Tracks_Track(TracksDefault):
                 setattr(self, key, value)
 
 #___________________________________________________________________________________________________ toDict
-    def toDict(self):
+    def toDict(self, uniqueOnly =False):
         """ Returns a dictionary containing the keys and current values of the the track object
             with no dependency on a database session object. """
         out = dict()
         for enum in Reflection.getReflectionList(TrackPropEnum):
+            if uniqueOnly and not enum.unique:
+                continue
             out[enum.name] = getattr(self, enum.name)
         return self._createDict(**out)
 
@@ -264,8 +266,7 @@ class Tracks_Track(TracksDefault):
         """ Loads based on the current values set for the track. This form of loading is useful
             when the uid is not available, e.g. when importing data from the spreadsheet. """
 
-        s     = cls.createSession() if session is None else session
-        query = s.query(cls)
+        query = session.query(cls)
 
         for key,value in kwargs.iteritems():
             query = query.filter(getattr(cls, key) == value)

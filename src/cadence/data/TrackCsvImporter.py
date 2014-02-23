@@ -9,6 +9,7 @@ from pyaid.debug.Logger import Logger
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
 from pyaid.reflection.Reflection import Reflection
+from cadence.data.TrackLinkConnector import TrackLinkConnector
 
 from cadence.enum.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
@@ -21,7 +22,7 @@ class TrackCsvImporter(object):
 #                                                                                       C L A S S
 
     # Used to break trackway specifier into separate type and number entries
-    _TRACKWAY_PATTERN = re.compile('(?P<type>[A-Za-z]+)[\s\t]*(?P<number>[0-9]+)')
+    _TRACKWAY_PATTERN = re.compile('(?P<type>[^0-9\s\t]+)[\s\t]*(?P<number>[^\(\s\t]+)')
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, path =None, logger =None):
@@ -65,6 +66,10 @@ class TrackCsvImporter(object):
                 self.fromSpreadsheetEntry(rowDict, session)
 
         session.flush()
+
+        linker = TrackLinkConnector()
+        linker.run(self.created, session)
+
         return True
 
 #___________________________________________________________________________________________________ fromSpreadsheetEntry
@@ -83,7 +88,7 @@ class TrackCsvImporter(object):
         t = Tracks_Track.MASTER()
 
         try:
-            t.site  = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip()
+            t.site  = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip().upper()
         except Exception, err:
             self._writeError({
                 'message':u'Missing track site',
@@ -101,7 +106,7 @@ class TrackCsvImporter(object):
             return False
 
         try:
-            t.sector = csvRowData.get(TrackCsvColumnEnum.SECTOR.name)
+            t.sector = csvRowData.get(TrackCsvColumnEnum.SECTOR.name).strip().upper()
         except Exception, err:
             self._writeError({
                 'message':u'Missing sector',
@@ -132,8 +137,8 @@ class TrackCsvImporter(object):
 
         result = self._TRACKWAY_PATTERN.search(test)
         try:
-            t.trackwayType   = result.groupdict()['type']
-            t.trackwayNumber = float(result.groupdict()['number'])
+            t.trackwayType   = result.groupdict()['type'].upper().strip()
+            t.trackwayNumber = result.groupdict()['number'].upper().strip()
         except Exception, err:
             self._writeError({
                 'message':u'Invalid trackway value: %s' % test,

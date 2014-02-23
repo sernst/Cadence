@@ -1,5 +1,5 @@
 # CadenceMainWindow.py
-# (C)2013
+# (C)2013-2014
 # Scott Ernst
 
 from PySide import QtCore
@@ -11,6 +11,8 @@ from pyglass.windows.PyGlassWindow import PyGlassWindow
 
 # AS NEEDED: from cadence.models import tracks
 from cadence.views.home.CadenceHomeWidget import CadenceHomeWidget
+from cadence.views.loading.LoadingWidget import LoadingWidget
+from cadence.views.status.StatusWidget import StatusWidget
 from cadence.views.tools.CadenceToolViewerWidget import CadenceToolViewerWidget
 
 #___________________________________________________________________________________________________ CadenceMainWindow
@@ -38,11 +40,95 @@ class CadenceMainWindow(PyGlassWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         widget.setLayout(layout)
+        self._containerWidget = widget
 
-        self.setActiveWidget('home')
+        self._contentWidget = QtGui.QWidget(parent=widget)
+        contentLayout = QtGui.QVBoxLayout(self._contentWidget)
+        contentLayout.setContentsMargins(0, 0, 0, 0)
+        contentLayout.setSpacing(0)
+        self._contentWidget.setLayout(layout)
+        layout.addWidget(self._contentWidget)
+
+        self._centerWidget = self._contentWidget
+
+        self._loadingWidget = LoadingWidget(self._widgetParent)
+        layout.addWidget(self._loadingWidget)
+        self._loadingWidget.setVisible(False)
+
+        self._statusWidget = StatusWidget(self._widgetParent)
+        layout.addWidget(self._statusWidget)
+        self._statusWidget.setVisible(False)
+
+        self.showLoading(self)
 
 #===================================================================================================
 #                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ showLoading
+    def showLoading(self, target, header = u'Loading', info = u'(Please Stand By)'):
+        self._loadingWidget.header = header
+        self._loadingWidget.info   = info
+        self._loadingWidget.target = target
+
+        self._contentWidget.setVisible(False)
+        self._statusWidget.setVisible(False)
+        self._loadingWidget.setVisible(True)
+        self._loadingWidget.activateWidgetDisplay()
+
+#___________________________________________________________________________________________________ hideLoading
+    def hideLoading(self, target):
+        if not self._loadingWidget.isShowing or self._loadingWidget.target != target:
+            return
+
+        self._loadingWidget.deactivateWidgetDisplay()
+        self._loadingWidget.setVisible(False)
+        self._statusWidget.setVisible(False)
+        self._contentWidget.setVisible(True)
+
+#___________________________________________________________________________________________________ showStatus
+    def showStatus(self, target, header, info, clear =True):
+        self._statusWidget.header = header
+        self._statusWidget.info   = info
+        self._statusWidget.target = target
+
+        if clear:
+            self._statusWidget.clear()
+
+        self._loadingWidget.setVisible(False)
+        self._contentWidget.setVisible(False)
+        self._statusWidget.setVisible(True)
+        self._statusWidget.activateWidgetDisplay()
+
+#___________________________________________________________________________________________________ updateStatus
+    def appendStatus(self, target, message):
+        if not self._statusWidget.isShowing or self._statusWidget.target != target:
+            return
+
+        self._statusWidget.append(message)
+
+#___________________________________________________________________________________________________ clearStatus
+    def clearStatus(self, target):
+        if not self._statusWidget.isShowing or self._statusWidget.target != target:
+            return
+
+        self._statusWidget.clear()
+
+#___________________________________________________________________________________________________ showStatusDone
+    def showStatusDone(self, target):
+        if not self._statusWidget.isShowing or self._statusWidget.target != target:
+            return
+
+        self._statusWidget.showStatusDone()
+
+#___________________________________________________________________________________________________ hideStatus
+    def hideStatus(self, target):
+        if not self._statusWidget.isShowing or self._statusWidget.target != target:
+            return
+
+        self._statusWidget.deactivateWidgetDisplay()
+        self._statusWidget.setVisible(False)
+        self._loadingWidget.setVisible(False)
+        self._contentWidget.setVisible(True)
 
 #___________________________________________________________________________________________________ toggleInteractivity
     def toggleInteractivity(self, value):
@@ -61,6 +147,12 @@ class CadenceMainWindow(PyGlassWindow):
         # Initialize databases
         from cadence.models import tracks
         super(CadenceMainWindow, self)._initializeImpl()
+
+#___________________________________________________________________________________________________ _firstShowImpl
+    def _firstShowImpl(self):
+        self.loadWidgets()
+        self.hideLoading(self)
+        self.setActiveWidget('home')
 
 #===================================================================================================
 #                                                                                 H A N D L E R S

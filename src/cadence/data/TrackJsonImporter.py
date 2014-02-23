@@ -77,6 +77,8 @@ class TrackJsonImporter(object):
         if len(result) > 1:
             self._logger.write(
                 'WARNING: Ambiguous track data: ' + DictUtils.prettyPrint(searchData))
+            for r in result:
+                print '    ', DictUtils.prettyPrint(r.toDict(uniqueOnly=True))
             self._unresolvable.append(data)
             return
 

@@ -136,7 +136,7 @@ class TrackwayIoWidget(PyGlassWidget):
             parent=self,
             caption=u'Select %s File to Import' % label,
             defaultPath=self.mainWindow.appConfig.get(UserConfigEnum.LAST_BROWSE_PATH) )
-        if not path or not isinstance(basestring, path):
+        if not path or not isinstance(path, basestring):
             return
 
         # Store directory location as the last active directory
@@ -154,8 +154,8 @@ class TrackwayIoWidget(PyGlassWidget):
             importType=importType)
         self._thread.execute(callback=self._handleImportComplete)
 
-#___________________________________________________________________________________________________ _handleCsvImportComplete
-    def _handleCsvImportComplete(self, response):
+#___________________________________________________________________________________________________ _handleImportComplete
+    def _handleImportComplete(self, response):
         if response['response']:
             print 'ERROR: Import Failed'
             print '  OUTPUT:', response['output']

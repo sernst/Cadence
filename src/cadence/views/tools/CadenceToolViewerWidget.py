@@ -97,16 +97,24 @@ class CadenceToolViewerWidget(PyGlassWidget):
                     'ID: ' + str(d['id']),
                     'MODULE: ' + str(d['module']),
                     'CLASS: ' + str(widgetClass) ], err)
+                self.mainWindow.hideLoading(self)
+                self.refreshGui()
                 return
 
         self.setActiveWidget(d['id'])
 
         if not self._currentWidget:
+            self.mainWindow.hideLoading(self)
+            self.refreshGui()
             return
 
-        self._helpBox.setVisible(self._helpComm.loadContent(self._currentWidget))
-        self._hasHelp = self._helpBox.isVisible()
+        hasHelp = self._helpComm.loadContent(self._currentWidget)
+        self._helpBox.setVisible(hasHelp)
+        self._hasHelp = hasHelp
         self._header.toggleHelpButton(self._hasHelp)
+
+        self.mainWindow.hideLoading(self)
+        self.refreshGui()
 
 #___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
     def _deactivateWidgetDisplayImpl(self, **kwargs):
