@@ -15,6 +15,9 @@ from cadence.enum.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ TrackCsvImporter
+from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
+
+
 class TrackCsvImporter(object):
     """ Imports track data from CSV formatted spreadsheets into the local Cadence database. """
 
@@ -85,10 +88,10 @@ class TrackCsvImporter(object):
                 'data':csvRowData })
             return False
 
-        t = Tracks_Track.MASTER()
+        ts = Tracks_TrackStore.MASTER()
 
         try:
-            t.site  = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip().upper()
+            ts.site  = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip().upper()
         except Exception, err:
             self._writeError({
                 'message':u'Missing track site',
@@ -97,7 +100,7 @@ class TrackCsvImporter(object):
             return False
 
         try:
-            t.year = csvRowData.get(TrackCsvColumnEnum.CAST_DATE.name).strip().split('_')[-1]
+            ts.year = csvRowData.get(TrackCsvColumnEnum.CAST_DATE.name).strip().split('_')[-1]
         except Exception, err:
             self._writeError({
                 'message':u'Missing cast date',
@@ -106,7 +109,7 @@ class TrackCsvImporter(object):
             return False
 
         try:
-            t.sector = csvRowData.get(TrackCsvColumnEnum.SECTOR.name).strip().upper()
+            ts.sector = csvRowData.get(TrackCsvColumnEnum.SECTOR.name).strip().upper()
         except Exception, err:
             self._writeError({
                 'message':u'Missing sector',
@@ -115,7 +118,7 @@ class TrackCsvImporter(object):
             return False
 
         try:
-            t.level = csvRowData.get(TrackCsvColumnEnum.LEVEL.name)
+            ts.level = csvRowData.get(TrackCsvColumnEnum.LEVEL.name)
         except Exception, err:
             self._writeError({
                 'message':u'Missing level',
@@ -137,8 +140,8 @@ class TrackCsvImporter(object):
 
         result = self._TRACKWAY_PATTERN.search(test)
         try:
-            t.trackwayType   = result.groupdict()['type'].upper().strip()
-            t.trackwayNumber = result.groupdict()['number'].upper().strip()
+            ts.trackwayType   = result.groupdict()['type'].upper().strip()
+            ts.trackwayNumber = result.groupdict()['number'].upper().strip()
         except Exception, err:
             self._writeError({
                 'message':u'Invalid trackway value: %s' % test,
@@ -152,7 +155,7 @@ class TrackCsvImporter(object):
         # NAME
         #       Parse the name value into left, pes, and number attributes
         try:
-            t.name = csvRowData.get(TrackCsvColumnEnum.TRACK_NAME.name).strip()
+            ts.name = csvRowData.get(TrackCsvColumnEnum.TRACK_NAME.name).strip()
         except Exception, err:
             self._writeError({
                 'message':u'Missing track name',
@@ -163,19 +166,17 @@ class TrackCsvImporter(object):
         #-------------------------------------------------------------------------------------------
         # FIND EXISTING
         #       Use data set above to attempt to load the track database entry
-        existing = t.findExistingTracks(session)
+        existing = ts.findExistingTracks(session)
         if existing:
-            t = existing[0]
-            self.modified.append(t)
+            ts = existing[0]
         else:
-            session.add(t)
+            session.add(ts)
             session.flush()
-            self.created.append(t)
 
-        t.index     = csvIndex
-        t.snapshot  = JSON.asString(csvRowData)
+        ts.index     = csvIndex
+        ts.snapshot  = JSON.asString(csvRowData)
 
-        if t.pes:
+        if ts.pes:
             wide      = csvRowData.get(TrackCsvColumnEnum.PES_WIDTH.name)
             wideGuess = csvRowData.get(TrackCsvColumnEnum.PES_WIDTH_GUESS.name)
             longVal   = csvRowData.get(TrackCsvColumnEnum.PES_LENGTH.name)
@@ -191,25 +192,37 @@ class TrackCsvImporter(object):
             deepGuess = csvRowData.get(TrackCsvColumnEnum.MANUS_DEPTH_GUESS.name)
 
         try:
-            t.widthMeasured     = float(wide if wide else wideGuess)
-            t.widthUncertainty  = 5.0 if wideGuess else 4.0
+            ts.widthMeasured     = float(wide if wide else wideGuess)
+            ts.widthUncertainty  = 5.0 if wideGuess else 4.0
         except Exception, err:
-            t.widthMeasured    = 0.0
-            t.widthUncertainty = 5.0
+            ts.widthMeasured    = 0.0
+            ts.widthUncertainty = 5.0
 
         try:
-            t.lengthMeasured    = float(long if longVal else longGuess)
-            t.lengthUncertainty = 5.0 if longGuess else 4.0
+            ts.lengthMeasured    = float(long if longVal else longGuess)
+            ts.lengthUncertainty = 5.0 if longGuess else 4.0
         except Exception, err:
-            t.lengthMeasured    = 0.0
-            t.lengthUncertainty = 5.0
+            ts.lengthMeasured    = 0.0
+            ts.lengthUncertainty = 5.0
 
         try:
-            t.depthMeasured     = float(deep if deep else deepGuess)
-            t.depthUncertainty  = 5.0 if deepGuess else 4.0
+            ts.depthMeasured     = float(deep if deep else deepGuess)
+            ts.depthUncertainty  = 5.0 if deepGuess else 4.0
         except Exception, err:
-            t.depthMeasured    = 0.0
-            t.depthUncertainty = 5.0
+            ts.depthMeasured    = 0.0
+            ts.depthUncertainty = 5.0
+
+        t = ts.getMatchingTrack(session)
+        if t is None:
+            t     = Tracks_Track()
+            t.uid = ts.uid
+            t.fromDict(ts.toDict())
+            session.add(t)
+            session.flush()
+            self.created.append(t)
+        else:
+            t.fromDict(ts.toDiffDict(t.toDict()))
+            self.modified.append(ts)
 
         return t
 

@@ -8,13 +8,14 @@ from PySide import QtCore
 from PySide import QtGui
 
 from pyaid.file.FileUtils import FileUtils
+
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from pyglass.elements.DataListWidgetItem import DataListWidgetItem
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
-from cadence.enum.TrackPropEnum import TrackPropEnum
 
 import nimble
 
+from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.enum.UserConfigEnum import UserConfigEnum
 from cadence.data.TrackImporterRemoteThread import TrackImporterRemoteThread
 from cadence.mayan.trackway.plugin import CreateTrackNodes
