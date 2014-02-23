@@ -74,6 +74,7 @@ class CadenceMainWindow(PyGlassWindow):
         self._statusWidget.setVisible(False)
         self._loadingWidget.setVisible(True)
         self._loadingWidget.activateWidgetDisplay()
+        self.refreshGui()
 
 #___________________________________________________________________________________________________ hideLoading
     def hideLoading(self, target):
@@ -84,6 +85,7 @@ class CadenceMainWindow(PyGlassWindow):
         self._loadingWidget.setVisible(False)
         self._statusWidget.setVisible(False)
         self._contentWidget.setVisible(True)
+        self.refreshGui()
 
 #___________________________________________________________________________________________________ showStatus
     def showStatus(self, target, header, info, clear =True):
@@ -98,13 +100,23 @@ class CadenceMainWindow(PyGlassWindow):
         self._contentWidget.setVisible(False)
         self._statusWidget.setVisible(True)
         self._statusWidget.activateWidgetDisplay()
+        self.refreshGui()
 
 #___________________________________________________________________________________________________ updateStatus
-    def appendStatus(self, target, message):
+    def appendStatus(self, target, message, formatAsHtml =True):
         if not self._statusWidget.isShowing or self._statusWidget.target != target:
             return
 
+        message = message.replace(u'\r', u'')
+        if formatAsHtml:
+            parts = []
+            for p in message.strip().split(u'\n'):
+                parts.append(
+                    p.replace(u'\t', u'&nbsp;&nbsp;&nbsp;&nbsp;').replace(u' ', u'&nbsp;'))
+            message = u'<div>' + u'<br />'.join(parts) + u'</div>'
+
         self._statusWidget.append(message)
+        self.refreshGui()
 
 #___________________________________________________________________________________________________ clearStatus
     def clearStatus(self, target):
@@ -112,6 +124,7 @@ class CadenceMainWindow(PyGlassWindow):
             return
 
         self._statusWidget.clear()
+        self.refreshGui()
 
 #___________________________________________________________________________________________________ showStatusDone
     def showStatusDone(self, target):
@@ -119,6 +132,7 @@ class CadenceMainWindow(PyGlassWindow):
             return
 
         self._statusWidget.showStatusDone()
+        self.refreshGui()
 
 #___________________________________________________________________________________________________ hideStatus
     def hideStatus(self, target):
@@ -129,6 +143,7 @@ class CadenceMainWindow(PyGlassWindow):
         self._statusWidget.setVisible(False)
         self._loadingWidget.setVisible(False)
         self._contentWidget.setVisible(True)
+        self.refreshGui()
 
 #___________________________________________________________________________________________________ toggleInteractivity
     def toggleInteractivity(self, value):
@@ -138,6 +153,7 @@ class CadenceMainWindow(PyGlassWindow):
             if value and not self.isEnabled():
                 self.setEnabled(value)
             self._currentWidget.toggleInteractivity(value)
+        self.refreshGui()
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

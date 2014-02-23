@@ -70,22 +70,20 @@ class TrackJsonImporter(object):
         result = Tracks_Track.MASTER.getByProperties(session, **searchData)
         if not result:
             self._logger.write(
-                'WARNING: Missing track for data: ' + DictUtils.prettyPrint(searchData))
+                'WARNING: Missing track for data:\n    ' + DictUtils.prettyPrint(searchData))
             self._missing.append(data)
             return
 
         if len(result) > 1:
-            self._logger.write(
-                'WARNING: Ambiguous track data: ' + DictUtils.prettyPrint(searchData))
+            msg = ['WARNING: Ambiguous track data: ' + DictUtils.prettyPrint(searchData)]
             for r in result:
-                print '    ', DictUtils.prettyPrint(r.toDict(uniqueOnly=True))
+                msg.append('    ' + DictUtils.prettyPrint(r.toDict(uniqueOnly=True)))
+            self._logger.write('\n'.join(msg))
             self._unresolvable.append(data)
             return
 
         track = result[0]
-        for enum in Reflection.getReflectionList(TrackPropEnum):
-            if enum in data:
-                setattr(track, enum.name, data[enum.name])
+        track.fromDict(data)
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

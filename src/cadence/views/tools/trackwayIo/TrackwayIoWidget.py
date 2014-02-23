@@ -13,8 +13,11 @@ from pyglass.elements.DataListWidgetItem import DataListWidgetItem
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from cadence.enum.TrackPropEnum import TrackPropEnum
 
+import nimble
+
 from cadence.enum.UserConfigEnum import UserConfigEnum
 from cadence.data.TrackImporterRemoteThread import TrackImporterRemoteThread
+from cadence.mayan.trackway.plugin import CreateTrackNodes
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ Viewer
@@ -99,8 +102,7 @@ class TrackwayIoWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _handleLoadTracks
     def _handleLoadTracks(self):
-        self.setEnabled(False)
-        self.refreshGui()
+        self.mainWindow.showLoading(self, u'Loading Tracks')
 
         model   = Tracks_Track.MASTER
         session = model.createSession()
@@ -112,15 +114,27 @@ class TrackwayIoWidget(PyGlassWidget):
                 continue
             query = query.filter(getattr(model, filterDef['enum'].name) == items[0].itemData)
 
-        entries = query.all()
-        count   = len(entries)
+        entries   = query.all()
+        count     = len(entries)
+        trackList = []
         for entry in entries:
-            entry.createNode()
+            trackList.append(entry.toMayaNodeDict())
         session.close()
-        self.setEnabled(True)
 
-        PyGlassBasicDialogManager.openOk(
-            parent=self, header=str(count) + ' Tracks Created')
+        if not trackList:
+            self.mainWindow.hideLoading(self)
+            return
+
+        conn = nimble.getConnection()
+        result = conn.runPythonModule(CreateTrackNodes, trackList=trackList)
+        if not result.success:
+            PyGlassBasicDialogManager.openOk(
+                parent=self, header=u'Load Error', message=u'Unable to load tracks')
+        else:
+            PyGlassBasicDialogManager.openOk(
+                parent=self, header=str(count) + ' Tracks Created')
+
+        self.mainWindow.hideLoading(self)
 
 #___________________________________________________________________________________________________ _handleImport
     def _handleImport(self):
@@ -132,11 +146,17 @@ class TrackwayIoWidget(PyGlassWidget):
             label = u'JSON'
             importType = TrackImporterRemoteThread.JSON
 
+        self.mainWindow.showLoading(
+            self,
+            u'Browsing for Track File',
+            u'Choose the %s file to import into the database')
+
         path = PyGlassBasicDialogManager.browseForFileOpen(
             parent=self,
             caption=u'Select %s File to Import' % label,
             defaultPath=self.mainWindow.appConfig.get(UserConfigEnum.LAST_BROWSE_PATH) )
         if not path or not isinstance(path, basestring):
+            self.mainWindow.toggleInteractivity(True)
             return
 
         # Store directory location as the last active directory
@@ -144,15 +164,23 @@ class TrackwayIoWidget(PyGlassWidget):
             UserConfigEnum.LAST_BROWSE_PATH,
             FileUtils.getDirectoryOf(path) )
 
-        # Disable gui while import in progress
-        self.mainWindow.setEnabled(False)
-        self.mainWindow.refreshGui()
+        self.mainWindow.hideLoading(self)
+        self.mainWindow.showStatus(
+            self,
+            u'Importing Tracks',
+            u'Reading track information into database')
 
         self._thread = TrackImporterRemoteThread(
             parent=self,
             path=path,
             importType=importType)
-        self._thread.execute(callback=self._handleImportComplete)
+        self._thread.execute(
+            callback=self._handleImportComplete,
+            logCallback=self._handleImportStatusUpdate)
+
+#___________________________________________________________________________________________________ _handleImportStatusUpdate
+    def _handleImportStatusUpdate(self, message):
+        self.mainWindow.appendStatus(self, '<div>' + message + '</div>')
 
 #___________________________________________________________________________________________________ _handleImportComplete
     def _handleImportComplete(self, response):
@@ -170,7 +198,7 @@ class TrackwayIoWidget(PyGlassWidget):
                 header='Success',
                 message='Import operation complete')
 
-        self.mainWindow.setEnabled(True)
+        self.mainWindow.showStatusDone(self)
 
 #___________________________________________________________________________________________________ _handleFilterChange
     @QtCore.Slot(QtGui.QListWidgetItem, QtGui.QListWidgetItem)

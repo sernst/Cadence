@@ -39,9 +39,11 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
                 importer = TrackCsvImporter(self._path, logger=self._log)
             else:
                 importer = TrackJsonImporter(self._path, logger=self._log)
+
+            self._log.write(u'<h1>Beginning Import...</h1>')
             importer.read(session)
         except Exception, err:
-            self._log.writeError('Track CSV Parsing Error', err)
+            self._log.writeError(u'ERROR: Track CSV Parsing Error', err)
             return 1
 
         if not self._session:

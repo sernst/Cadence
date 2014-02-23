@@ -2,6 +2,8 @@
 # (C)2014
 # Scott Ernst
 
+import math
+
 from nimble import cmds
 
 from pyaid.reflection.Reflection import Reflection
@@ -15,6 +17,61 @@ class TrackSceneUtils(object):
 
 #===================================================================================================
 #                                                                                       C L A S S
+
+    TRACK_RADIUS = 50
+    Y_VEC  = (0, 1, 0)
+
+#___________________________________________________________________________________________________ createTrackNode
+    @classmethod
+    def createTrackNode(cls, uid, trackSetNode =None, props =None):
+        if not trackSetNode:
+            trackSetNode = TrackSceneUtils.getTrackSetNode()
+        if not trackSetNode:
+            return None
+
+        node = cls.getTrackNode(uid, trackSetNode=trackSetNode)
+        if node:
+            return node
+
+        a    = 2.0*cls.TRACK_RADIUS
+        node = cmds.polyCylinder(
+            r=cls.TRACK_RADIUS,
+            h=5,
+            sx=40,
+            sy=1,
+            sz=1,
+            ax=cls.Y_VEC,
+            rcp=0,
+            cuv=2,
+            ch=1,
+            n='track0')[0]
+
+        p = cmds.polyPrism(
+            l=4, w=a, ns=3, sh=1, sc=0, ax=cls.Y_VEC, cuv=3, ch=1, n='pointer')[0]
+
+        cmds.rotate(0.0, -90.0, 0.0)
+        cmds.scale(1.0/math.sqrt(3.0), 1.0, 1.0)
+        cmds.move(0, 5, a/6.0)
+
+        cmds.setAttr(p + '.overrideEnabled', 1)
+        cmds.setAttr(p + '.overrideDisplayType', 2)
+
+        cmds.parent(p, node)
+
+        cmds.select(node)
+        cmds.addAttr(
+            longName='cadence_uniqueId',
+            shortName=TrackPropEnum.UID.maya,
+            dataType='string',
+            niceName='Unique ID')
+
+        # Add the new node to the Cadence track scene set
+        cmds.sets(node, add=trackSetNode)
+
+        if props:
+            cls.setTrackProps(node, props)
+
+        return node
 
 #___________________________________________________________________________________________________ getTrackNode
     @classmethod

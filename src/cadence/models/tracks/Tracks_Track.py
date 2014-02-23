@@ -187,9 +187,12 @@ class Tracks_Track(TracksDefault):
             class and the values valid entries for each key in the database class.
 
             This method can be used to load a track object from disk into a database model. """
-        for key,value in data.iteritems():
-            if hasattr(self, key):
-                setattr(self, key, value)
+        for enum in Reflection.getReflectionList(TrackPropEnum):
+            if enum == TrackPropEnum.UID:
+                continue
+
+            if enum.name in data:
+                setattr(self, enum.name, data[enum.name])
 
 #___________________________________________________________________________________________________ toDict
     def toDict(self, uniqueOnly =False):
