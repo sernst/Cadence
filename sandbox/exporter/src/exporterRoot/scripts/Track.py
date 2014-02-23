@@ -184,10 +184,6 @@ class Track(object):
             return self.x
         elif enum.name == TrackPropEnum.Z.name:
             return self.z
-        elif enum.name == TrackPropEnum.NEXT.name:
-            return self.next
-        elif enum.name == TrackPropEnum.PREV.name:
-            return self.prev
         return self._getTrackAttr(enum)
 
 #___________________________________________________________________________________________________ getProperties
@@ -195,11 +191,9 @@ class Track(object):
         propEnums = [TrackPropEnum.LEFT,
                      TrackPropEnum.LENGTH,
                      TrackPropEnum.LEVEL,
-                     #TrackPropEnum.NEXT,
                      TrackPropEnum.NOTE,
                      TrackPropEnum.NUMBER,
                      TrackPropEnum.PES,
-                     #TrackPropEnum.PREV,
                      TrackPropEnum.ROTATION,
                      TrackPropEnum.SITE,
                      TrackPropEnum.TRACKWAY_NUMBER,

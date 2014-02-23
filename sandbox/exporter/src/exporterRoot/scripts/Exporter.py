@@ -10,7 +10,7 @@ from cadence.enum.TrackPropEnum import TrackPropEnum
 
 
 #___________________________________________________________________________________________________ Exporter
-from sandbox.exporter.src.exporterRoot.scripts import Track
+from exporterRoot.scripts.Track import Track
 
 
 class Exporter(NimbleScriptBase):

@@ -23,11 +23,11 @@ if not result.success:
     print result
     sys.exit(1)
 
-result = conn.runPythonModule(Exporter)
+result = conn.runPythonModule(Exporter, runInMaya=True)
 if not result.success:
     print 'Oh no, something went wrong!', result
     sys.exit(1)
 else:
-    dicts = result.payload['dicts']
+    dicts = result.payload['dictionaryList']
 
-JSON.toFile('test', dicts, gzipped=True)
+JSON.toFile('test.json', dicts, gzipped=False)
