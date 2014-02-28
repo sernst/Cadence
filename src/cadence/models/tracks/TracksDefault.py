@@ -72,7 +72,7 @@ class TracksDefault(PyGlassModelsDefault):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: propertyName
+#___________________________________________________________________________________________________ GS: id
     @property
     def id(self):
         return Base64.to64(self.i)
@@ -94,6 +94,15 @@ class TracksDefault(PyGlassModelsDefault):
             self.left = value[0].upper() == u'L'
             self.pes  = value[1].upper() == u'P'
         self.number = value[2:].upper()
+
+#___________________________________________________________________________________________________ GS: fingerprint
+    @property
+    def fingerprint(self):
+        out = []
+        for enum in Reflection.getReflectionList(TrackPropEnum):
+            if enum.unique:
+                out.append(unicode(getattr(self, enum.name)))
+        return u'|'.join(out)
 
 #===================================================================================================
 #                                                                                     P U B L I C

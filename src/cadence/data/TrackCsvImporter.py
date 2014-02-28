@@ -33,6 +33,7 @@ class TrackCsvImporter(object):
         self._path    = path
         self.created  = []
         self.modified = []
+        self.fingerprints = dict()
         self._logger  = logger
         if not logger:
             self._logger = Logger(self, printOut=True)
@@ -100,7 +101,8 @@ class TrackCsvImporter(object):
             return False
 
         try:
-            ts.year = csvRowData.get(TrackCsvColumnEnum.CAST_DATE.name).strip().split('_')[-1]
+            #ts.year = csvRowData.get(TrackCsvColumnEnum.CAST_DATE.name).strip().split('_')[-1]
+            pass
         except Exception, err:
             self._writeError({
                 'message':u'Missing cast date',
@@ -166,7 +168,20 @@ class TrackCsvImporter(object):
         #-------------------------------------------------------------------------------------------
         # FIND EXISTING
         #       Use data set above to attempt to load the track database entry
-        existing = ts.findExistingTracks(session)
+        fingerprint = ts.fingerprint
+        existing    = ts.findExistingTracks(session)
+        if existing or fingerprint in self.fingerprints:
+            if not existing:
+                existing = self.fingerprints[fingerprint]
+
+            self._writeError({
+                'message':u'Ambiguous track entry [#%s -> #%s]' % (csvIndex, existing.index),
+                'data':csvRowData,
+                'existing':existing,
+                'index':csvIndex })
+            return False
+        self.fingerprints[fingerprint] = ts
+
         if existing:
             ts = existing[0]
         else:
