@@ -45,8 +45,8 @@ class TrackPropEnum(object):
 
     # the length of a given track (as fitted by an ellipse, as previously measured, and uncertainty)
     LENGTH             = TRACK_PROP_NT('length',            'float', 'scaleZ', False)
-    LENGTH_MEASURED    = TRACK_PROP_NT('lengthMeasured',    'float', None, False)
-    LENGTH_UNCERTAINTY = TRACK_PROP_NT('lengthUncertainty', 'float', None, False)
+    LENGTH_MEASURED    = TRACK_PROP_NT('lengthMeasured',    'float', None,     False)
+    LENGTH_UNCERTAINTY = TRACK_PROP_NT('lengthUncertainty', 'float', None,     False)
 
     # a given tracksite has multiple levels
     LEVEL = TRACK_PROP_NT('level', 'string', None, True)
@@ -95,8 +95,8 @@ class TrackPropEnum(object):
 
     # the width of a given track (as fitted by an ellipse, as previously measured, and uncertainty)
     WIDTH             = TRACK_PROP_NT('width',            'float', 'scaleX', False)
-    WIDTH_MEASURED    = TRACK_PROP_NT('widthMeasured',    'float', None, False)
-    WIDTH_UNCERTAINTY = TRACK_PROP_NT('widthUncertainty', 'float', None, False)
+    WIDTH_MEASURED    = TRACK_PROP_NT('widthMeasured',    'float', None,     False)
+    WIDTH_UNCERTAINTY = TRACK_PROP_NT('widthUncertainty', 'float', None,     False)
 
     # the x coordinate of a given track (relative to tracksite's map origin) encoded in node
     X = TRACK_PROP_NT('x', 'float', 'translateX', False)

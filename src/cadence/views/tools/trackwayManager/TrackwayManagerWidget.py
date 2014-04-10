@@ -2,7 +2,8 @@
 # (C)2012-2014
 # Scott Ernst and Kent A. Stevens
 
-from nimble import cmds
+
+import nimble
 
 from pyaid.json.JSON import JSON
 
@@ -12,6 +13,8 @@ from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
+
+from cadence.mayan.trackway import GetSelectedUidList
 
 #___________________________________________________________________________________________________ TrackwayManagerWidget
 class TrackwayManagerWidget(PyGlassWidget):
@@ -29,21 +32,15 @@ class TrackwayManagerWidget(PyGlassWidget):
         # in Edit Track tab:
         self.selectPriorBtn.clicked.connect(self.selectPrecursors)
         self.selectLaterBtn.clicked.connect(self.selectSuccessors)
-
         self.selectSeriesBtn.clicked.connect(self.selectSeries)
-        self.deleteBtn.clicked.connect(self.deleteSelected)
-
         self.linkBtn.clicked.connect(self.linkSelectedTracks)
         self.unlinkBtn.clicked.connect(self.unlinkSelectedTracks)
-
         self.renameBtn.clicked.connect(self.renameSelected)
         self.setSelectedBtn.clicked.connect(self.setSelected)
-
         self.firstBtn.clicked.connect(self.goToFirstTrack)
         self.prevBtn.clicked.connect(self.goToPrevTrack)
         self.nextBtn.clicked.connect(self.goToNextTrack)
         self.lastBtn.clicked.connect(self.goToLastTrack)
-
         self.addBtn.clicked.connect(self.addTrack)
         self.findBtn.clicked.connect(self.findTrack)
 
@@ -55,16 +52,23 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.hideAllTrackwaysBtn.clicked.connect(self.hideAllTrackways)
         self.selectAllTrackwaysBtn.clicked.connect(self.selectAllTrackways)
         self.setSelectedTrackwayBtn.clicked.connect(self.setSelectedTrackway)
-        self.initBtn.clicked.connect(self.initializeTrackway)
         self.repairBtn.clicked.connect(self.repair)
 
 #===================================================================================================
 #                                                                                     P U B L I C
 #
 
-#___________________________________________________________________________________________________ isTrackNode
-    def isTrackNode(self, n):
-        return cmds.hasAttr(n + '.' + TrackPropEnum.UID.maya)
+#___________________________________________________________________________________________________ getSelected
+    def getSelected(self):
+        """ This runs a remote script to get a list of UIDs for those track nodes that are selected.
+        Note that it returns an empty list in the case no track node was selecetd. The track models
+        associated with these UIDs are then assembled into a list and returned. """
+        conn = nimble.getConnection()
+        result = conn.runPythonModule(GetSelectedUidList)
+        tracks = list()
+        for uid in result.selectedUidList:
+            tracks.append(Tracks_Track.getByUid(uid))
+        return tracks
 
 #___________________________________________________________________________________________________ getAllTracks
     def getAllTracks(self):
@@ -78,17 +82,6 @@ class TrackwayManagerWidget(PyGlassWidget):
             if self.isTrackNode(n):
                 tracks.append(None) # Track(n)
         return tracks if len(tracks) > 0 else None
-
-#___________________________________________________________________________________________________ getSelected
-    def getSelected(self):
-        selectedNodes = cmds.ls(selection=True, exactType='transform')
-        if len(selectedNodes) == 0:
-            return None
-        tracks = list()
-        for n in selectedNodes:
-            if self.isTrackNode(n):
-                tracks.append() # Track(n)
-        return tracks
 
 #___________________________________________________________________________________________________ getFirstTrack
     def getFirstTrack(self):
@@ -509,16 +502,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         if v is not None:
             self.addTrackwayToCB(v)
 
-#___________________________________________________________________________________________________ renameSelected
-    def renameSelected(self):
-        selectedTracks = self.getSelected()
-        if selectedTracks is None:
-             return None
-        name = self.getNameFromUI()
-        for t in selectedTracks:
-             t.name = name
-             name   = None # Track.incrementName(name)
-
 #___________________________________________________________________________________________________ selectSuccessors
     def selectSuccessors(self):
         t = self.getLastSelectedTrack()
@@ -553,17 +536,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         for t in tracks:
             nodes.append(t.node)
         cmds.select(nodes)
-
-#___________________________________________________________________________________________________ deleteSelected
-    def deleteSelected(self):
-        tracks = self.getSelected()
-        if tracks is None:
-            return
-        self.unlinkSelectedTracks()
-        nodes = list()
-        for t in tracks:
-            nodes.append(t.node)
-        cmds.delete(nodes)
 
 #___________________________________________________________________________________________________ selectAllTracks
     def selectAllTracks(self):

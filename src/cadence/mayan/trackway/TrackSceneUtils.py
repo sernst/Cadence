@@ -35,19 +35,27 @@ class TrackSceneUtils(object):
 
         a    = 2.0*cls.TRACK_RADIUS
         node = cmds.polyCylinder(
-            r=cls.TRACK_RADIUS,
-            h=5,
-            sx=40,
-            sy=1,
-            sz=1,
-            ax=cls.Y_VEC,
-            rcp=0,
-            cuv=2,
-            ch=1,
-            n='track0')[0]
+            radius=cls.TRACK_RADIUS,
+            height=5,
+            subdivisionsX=40,
+            subdivisionsY=1,
+            subdivisionsZ=1,
+            axis=cls.Y_VEC,
+            roundCap=0,
+            createUVs=2,
+            constructionHistory=1,
+            name='track0')[0]
 
         p = cmds.polyPrism(
-            l=4, w=a, ns=3, sh=1, sc=0, ax=cls.Y_VEC, cuv=3, ch=1, n='pointer')[0]
+            length=4,
+            sideLength=a,
+            numberOfSides=3,
+            subdivisionsHeight=1,
+            subdivisionsCaps=0,
+            axis=cls.Y_VEC,
+            createUVs=3,
+            constructionHistory=1,
+            name='pointer')[0]
 
         cmds.rotate(0.0, -90.0, 0.0)
         cmds.scale(1.0/math.sqrt(3.0), 1.0, 1.0)
@@ -92,11 +100,18 @@ class TrackSceneUtils(object):
 
         return None
 
+
+#___________________________________________________________________________________________________ getUid
+    @classmethod
+    def getUid(cls, node):
+        """ This returns the UID, but presumes that the node is a valid track node.zz """
+        return cmds.getAttr(node + '.' + TrackPropEnum.UID.maya)
+
 #___________________________________________________________________________________________________ checkNodeUidMatch
     @classmethod
     def checkNodeUidMatch(cls, uid, node):
         try:
-            return uid == cmds.getAttr(node + '.' + TrackPropEnum.UID.maya)
+            return uid == cls.getUid(node)
         except Exception, err:
             return False
 
@@ -159,3 +174,9 @@ class TrackSceneUtils(object):
             return cmds.sets(name=CadenceEnvironment.TRACKWAY_SET_NODE_NAME, empty=True)
 
         return None
+
+#___________________________________________________________________________________________________ isTrackNode
+    @classmethod
+    def isTrackNode(cls, node):
+        """ Returns True iff the given Maya node is in fact a track node. """
+        return cmds.hasAttr(node + '.' + TrackPropEnum.UID.maya)

@@ -16,7 +16,7 @@ from cadence.util.shading.ShadingUtils import ShadingUtils
 #___________________________________________________________________________________________________ Tracks_Track
 class Tracks_Track(TracksDefault):
     """ Database model representation of a track with all the attributes and information for a
-        specific track as well as a connectivity information for the track within its series. """
+        specific track as well connectivity information for the track within its series. """
 
 #===================================================================================================
 #                                                                                       C L A S S
@@ -94,7 +94,7 @@ class Tracks_Track(TracksDefault):
 
 #___________________________________________________________________________________________________ colorTrack
     def colorTrack(self):
-        """ TODO: Kent... """
+        """ THIS WILL BE REWORKED FOR MORE GENERALITY, TO BE PASSED IN SHADERS AS ARGS. """
         if not self.nodeName:
             return False
 
@@ -112,7 +112,9 @@ class Tracks_Track(TracksDefault):
 
 #___________________________________________________________________________________________________ setCadenceCamFocus
     def setCadenceCamFocus(self):
-        """ TODO: Kent... """
+        """ Positions the CadenceCam to be centered upon this track node (and initializes the
+         camera if no camera already exists with that name). Note that the camera is initially
+         100 m above the plane, but that can be subsequently adjusted in Maya. """
         if self.nodeName is None:
             return
 
@@ -121,18 +123,12 @@ class Tracks_Track(TracksDefault):
         height = cmds.xform('CadenceCam', query=True, translation=True)[1]
         cmds.move(self.x, height, self.z, 'CadenceCam', absolute=True)
 
-#___________________________________________________________________________________________________ incrementName
-    @classmethod
-    def incrementName(cls, name):
-        """ TODO: Kent... """
-        prefix = name[:2]
-        number = int(name[2:])
-        return prefix + str(number + 1)
-
 #___________________________________________________________________________________________________ initializeCadenceCam
     @classmethod
     def initializeCadenceCam(cls):
-        """ TODO: Kent... """
+        """ This creates an orthographic camera that looks down the Y axis onto the XZ plane,
+        and rotated so that the AI file track labels are legible.  This camera will then be
+        positioned so that the given track node is centered in its field by setCadenceCamFocus. """
         c = cmds.camera(
             orthographic=True,
             nearClipPlane=1,

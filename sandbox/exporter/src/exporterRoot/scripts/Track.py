@@ -94,7 +94,7 @@ class Track(object):
 #___________________________________________________________________________________________________ GS: number
     @property
     def number(self):
-        return self._getTrackAttr(TrackPropEnum.NUMBER)
+        return self._getTrackAttr(TrackPropEnum.NUMBER).lstrip('0')
 
 #___________________________________________________________________________________________________ GS: pes
     @property
@@ -137,7 +137,8 @@ class Track(object):
 #___________________________________________________________________________________________________ GS: sector
     @property
     def sector(self):
-        return self._getTrackAttr(TrackPropEnum.SECTOR)
+        #return self._getTrackAttr(TrackPropEnum.SECTOR)
+        return '1'
 
 #___________________________________________________________________________________________________ GS: trackwayType
     @property
@@ -147,12 +148,13 @@ class Track(object):
 #___________________________________________________________________________________________________ GS: trackwayNumber
     @property
     def trackwayNumber(self):
-        return self._getTrackAttr(TrackPropEnum.TRACKWAY_NUMBER)
+        return self._getTrackAttr(TrackPropEnum.TRACKWAY_NUMBER).lstrip('0')
 
 #___________________________________________________________________________________________________ GS: year
     @property
     def year(self):
-        return self._getTrackAttr(TrackPropEnum.YEAR)
+    #    return self._getTrackAttr(TrackPropEnum.YEAR)
+        return '2009'
 
 #___________________________________________________________________________________________________ GS: width
     @property

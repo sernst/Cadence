@@ -34,7 +34,7 @@ class UpdateTrackNode(NimbleScriptBase):
 
         trackSetNode = TrackSceneUtils.getTrackSetNode()
         if not trackSetNode:
-            self.puts(succes=False, error=True, message='Scene not initialized for Cadence')
+            self.puts(success=False, error=True, message='Scene not initialized for Cadence')
             return
 
         for node in cmds.sets(trackSetNode, query=True):

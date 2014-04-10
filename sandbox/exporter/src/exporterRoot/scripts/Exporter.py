@@ -36,7 +36,7 @@ class Exporter(NimbleScriptBase):
             if self.isTrackNode(n):
                 tracks.append(Track(n))
 
-        print "number tracks = %s"%len(tracks)
+        print "number tracks = %s" % len(tracks)
 
         dicts = list()
         for t in tracks:

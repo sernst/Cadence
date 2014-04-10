@@ -5,7 +5,7 @@
 from cadence.models.tracks.TracksDefault import TracksDefault
 
 #___________________________________________________________________________________________________ Tracks_TrackStore
-class Tracks_TrackStore(TracksDefault):
+class Tracks_TrackStore():
     """ Database model representation of a track with all the attributes and information for a
         specific track as well as a connectivity information for the track within its series. """
 
