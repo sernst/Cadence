@@ -2,8 +2,9 @@
 # (C)2012-2014
 # Scott Ernst and Kent A. Stevens
 
-
 import nimble
+
+from nimble import cmds
 
 from pyaid.json.JSON import JSON
 
@@ -18,7 +19,12 @@ from cadence.mayan.trackway import GetSelectedUidList
 
 #___________________________________________________________________________________________________ TrackwayManagerWidget
 class TrackwayManagerWidget(PyGlassWidget):
-
+    """ This widget is the primary GUI for interacting with the Maya scene representation of a
+     trackway.  It permits selection of tracks interactively in Maya and display and editing of
+     their attributes.  Tracks in Maya are reepresented by track nodes, each a transform node with
+     an additional attribute specifying the UID of that track.  The transform's scale, position, and
+     rotation (about Y) are used to intrinsically represent track dimensions, position, and
+     orientation.  Track models are accessed by query based on the UID, and for a given session. """
 #===================================================================================================
 #                                                                                       C L A S S
     RESOURCE_FOLDER_PREFIX = ['tools']
@@ -30,9 +36,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.refreshBtn.clicked.connect(self.refreshUI)
 
         # in Edit Track tab:
-        self.selectPriorBtn.clicked.connect(self.selectPrecursors)
-        self.selectLaterBtn.clicked.connect(self.selectSuccessors)
-        self.selectSeriesBtn.clicked.connect(self.selectSeries)
+        self.selectPriorBtn.clicked.connect(self.selectPrecursorTracks)
+        self.selectLaterBtn.clicked.connect(self.selectSuccessorTracks)
+        self.selectSeriesBtn.clicked.connect(self.selectTrackSeries)
         self.linkBtn.clicked.connect(self.linkSelectedTracks)
         self.unlinkBtn.clicked.connect(self.unlinkSelectedTracks)
         self.renameBtn.clicked.connect(self.renameSelected)
@@ -41,7 +47,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.prevBtn.clicked.connect(self.goToPrevTrack)
         self.nextBtn.clicked.connect(self.goToNextTrack)
         self.lastBtn.clicked.connect(self.goToLastTrack)
-        self.addBtn.clicked.connect(self.addTrack)
         self.findBtn.clicked.connect(self.findTrack)
 
         # in Edit Trackway tab:
@@ -52,84 +57,106 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.hideAllTrackwaysBtn.clicked.connect(self.hideAllTrackways)
         self.selectAllTrackwaysBtn.clicked.connect(self.selectAllTrackways)
         self.setSelectedTrackwayBtn.clicked.connect(self.setSelectedTrackway)
-        self.repairBtn.clicked.connect(self.repair)
+
+        self._model   = None
+        self._session = None
+        self.createSession()
 
 #===================================================================================================
 #                                                                                     P U B L I C
 #
 
-#___________________________________________________________________________________________________ getSelected
-    def getSelected(self):
-        """ This runs a remote script to get a list of UIDs for those track nodes that are selected.
-        Note that it returns an empty list in the case no track node was selecetd. The track models
-        associated with these UIDs are then assembled into a list and returned. """
+#___________________________________________________________________________________________________ createSession
+    def createSession(self):
+        """ Access to model instances is based on the current model and session, stored in two
+         local instance variables so that multiple operations can be performed before closing this
+         given session."""
+        if self._session is not None:
+            self._model   = Tracks_Track.MASTER
+            self._session = self._model.createSession()
+
+#___________________________________________________________________________________________________ closeSession
+    def closeSession(self):
+        """ Closing a session and indicating such by nulling out model and session. """
+        if self._session is not None:
+            self._session.close()
+
+        self._model   = None
+        self._session = None
+
+#__________________________________________________________________________________________________ getSelectedTracks
+    def getSelectedTracks(self):
+        """ This runs a remote script to get a list of the track UID from the selected Maya track
+         nodes. The track model instances associated with those UIDs are then assembled into a
+         list and returned. """
         conn = nimble.getConnection()
         result = conn.runPythonModule(GetSelectedUidList)
         tracks = list()
         for uid in result.selectedUidList:
-            tracks.append(Tracks_Track.getByUid(uid))
+            tracks.append(Tracks_Track.getByUid(uid, self._session))
         return tracks
 
 #___________________________________________________________________________________________________ getAllTracks
     def getAllTracks(self):
-        nodes = cmds.ls('track*') # all track nodes are presumed to start with 'track'
-
-        if nodes is None:
+        """ This returns a list of all track nodes (or None). """
+        trackSetNode = self._getTrackSetNode()
+        if not trackSetNode:
             return None
-
-        tracks = list()
-        for n in nodes:
-            if self.isTrackNode(n):
-                tracks.append(None) # Track(n)
-        return tracks if len(tracks) > 0 else None
+        trackNodes = cmds.sets(trackSetNode, q=True )
+        return trackNodes if len(trackNodes) > 0 else None
 
 #___________________________________________________________________________________________________ getFirstTrack
     def getFirstTrack(self):
-        selectedTracks = self.getSelected()
+        """ Returns the track model of the first track in a series. """
+        selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
         t = selectedTracks[0]
-        while t.prevTrack is not None:
-            t = t.prevTrack
+        while t.getPreviousTrack(self._session) is not None:
+            t = t.getPreviousTrack(self._session)
         return t
 
 #___________________________________________________________________________________________________ getLastTrack
     def getLastTrack(self):
-        selectedTracks = self.getSelected()
+        """ Returns the track model of the last track in a series. """
+        selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
         t = selectedTracks[-1]
-        while t.nextTrack is not None:
-            t = t.nextTrack
+        while t.getNextTrack(self._session) is not None:
+            t = t.getNextTrack(self._session)
         return t
 
 #___________________________________________________________________________________________________ getFirstSelectedTrack
     def getFirstSelectedTrack(self):
-        selectedTracks = self.getSelected()
+        """ Returns the track model of the first track in a series of selected tracks. """
+        selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
         s = selectedTracks[0]
-        while s.prevTrack in selectedTracks:
-            s = s.prevTrack
+        while s.getPreviousTrack(self._session) in selectedTracks:
+            s = s.getPreviousTrack(self._session)
         return s
 
 #___________________________________________________________________________________________________ getLastSelectedTrack
     def getLastSelectedTrack(self):
-        selectedTracks = self.getSelected()
+        """ Returns the track model of the last track in a series of selected tracks. """
+        selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
         s = selectedTracks[-1]
-        while s.nextTrack in selectedTracks:
-            s = s.nextTrack
+        while s.getNextTrack(self._session) in selectedTracks:
+            s = s.getNextTrack(self._session)
         return s
 
  #__________________________________________________________________________________________________ getTrackSeries
     def getTrackSeries(self):
+        """ Steps back to the first track then lists all track models in a given series. """
         series = list()
         t = self.getFirstTrack()
         while t:
             series.append(t)
-            t = t.nextTrack
+            t = t.getNextTrack()
         return series
 
 #___________________________________________________________________________________________________ selectTrack
@@ -173,148 +200,39 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ linkSelectedTracks
     def linkSelectedTracks(self):
-        selected = self.getSelected()
-        if selected is None:
+        selectedTracks = self.getSelectedTracks()
+        if selectedTracks is None:
             return
         i = 0
-        while i < len(selected) - 1:
-            selected[i+1].link(selected[i])
+        while i < len(selectedTracks) - 1:
+            selectedTracks[i].next = selectedTracks[i + 1]
             i += 1
-        cmds.select(selected[-1].node)
+        cmds.select(selectedTracks[-1].node) # the last selected Maya node is selected
         self.refreshUI()
 
 #___________________________________________________________________________________________________ unlinkSelectedTracks
     def unlinkSelectedTracks(self):
-        selected = self.getSelected()
-        if selected is None:
+        selectedTracks = self.getSelectedTracks()
+        if selectedTracks is None:
             return
 
         s1 = self.getFirstSelectedTrack()
         s2 = self.getLastSelectedTrack()
-        p = s1.prevTrackNode
-        n = s2.nextTrackNode
+        p = s1.getPreviousTrack()
+        n = s2.getNextTrack()
 
         if p and n:              # if track(s) to be unlinked are within
-            s1.unlink()          # disconnect previous track from first selected track
-            n.link(p)            # connect previous to next, bypassing the selected track(s)
+            p.next = n            # connect previous to next, bypassing the selected track(s)
             cmds.select(p.node)  # select the track just prior to the removed track(s)
         elif n and not p:        # selection includes the first track
-            n.unlink()
             cmds.select(n.node)  # and select the track just after the selection
         elif p and not n:        # selection includes the last track
-            s2.unlink()
+            s2.next = ''
             cmds.select(p.node)  # and bump selection back to the previous track
-        for s in selected[0:-1]:
-            s.unlink()
+        for s in selectedTracks:
+            s.next = ''
         self.refreshUI()
 
-#___________________________________________________________________________________________________ initializeTrackway
-    def initializeTrackway(self):
-        """  This creates the initial two tracks for each of the four series of a trackway.
-        Select the eight initial tracks and then set series information"""
-
-        trackProperties = self.getTrackPropertiesFromUI()
-        # load up a new dictionary for this
-
-        lp1 = None # Track(Track.createNode())
-        lp1.left   = True
-        lp1.pes    = True
-        lp1.number = 1
-        lp1.x      = 200.0
-        lp1.z      = 100.0
-        lp1.width  = 0.4
-        lp1.length = 0.6
-
-        rp1 = None # Track(Track.createNode())
-        rp1.left   = False
-        rp1.pes    = True
-        rp1.number = 1
-        rp1.x      = 100.0
-        rp1.z      = 100.0
-        rp1.width  = 0.4
-        rp1.length = 0.6
-
-        lm1 = None # Track(Track.createNode())
-        lm1.left   = True
-        lm1.pes    = False
-        lm1.number = 1
-        lm1.x      = 200.0
-        lm1.z      = 200.0
-        lm1.width  = 0.25
-        lm1.length = 0.2
-
-        rm1 = None # Track(Track.createNode())
-        rm1.left   = False
-        rm1.pes    = False
-        rm1.number = 1
-        rm1.x      = 100.0
-        rm1.z      = 200.0
-        rm1.width  = 0.25
-        rm1.length = 0.2
-
-        lp2 = None # Track(Track.createNode())
-        lp2.left   = True
-        lp2.pes    = True
-        lp2.number = 2
-        lp2.x      = 200.0
-        lp2.z      = 400.0
-        lp2.width  = 0.4
-        lp2.length = 0.6
-
-        rp2 = None # Track(Track.createNode())
-        rp2.left   = False
-        rp2.pes    = True
-        rp2.number = 2
-        rp2.x      = 100.0
-        rp2.z      = 400.0
-        rp2.width  = 0.4
-        rp2.length = 0.6
-
-        lm2 = None # Track(Track.createNode())
-        lm2.left   = True
-        lm2.pes    = False
-        lm2.number = 1
-        lm2.x      = 200.0
-        lm2.z      = 500.0
-        lm2.width  = 0.25
-        lm2.length = 0.2
-
-        rm2 = None # Track(Track.createNode())
-        rm2.left   = False
-        rm2.pes    = False
-        rm2.number = 1
-        rm2.x      = 100.0
-        rm2.z      = 500.0
-        rm2.width  = 0.25
-        rm2.length = 0.2
-
-        lp2.prev = lp1
-        rp2.prev = rp1
-        lm2.prev = lm1
-        rm2.prev = rm1
-
-        cmds.select([
-            lp1.node, rp1.node, lm1.node, rm1.node,
-            lp2.node, rp2.node, lm2.node, rm2.node] )
-        lp1.setCadenceCamFocus()
-        self.setSelected()
-
-#___________________________________________________________________________________________________ addTrack
-    def addTrack(self):
-        lastTrack = self.getLastTrack()
-        if lastTrack is None:
-            return
-        prevTrackNode = lastTrack.prevTrackNode
-        nextTrack = None # Track(cmds.duplicate(lastTrack.node)[0])
-        nextName  = None # Track.incrementName(lastTrack.name)
-        nextTrack.name = nextName
-        dx = lastTrack.x - prevTrackNode.x
-        dz = lastTrack.z - prevTrackNode.z
-        nextTrack.x = lastTrack.x + dx
-        nextTrack.z = lastTrack.z + dz
-        nextTrack.link(lastTrack)
-        nextTrack.setCadenceCamFocus()
-        self.refreshUI()
 #___________________________________________________________________________________________________ getNamefromUI
     def getNameFromUI(self):
         return self.rightLeftLE.text() + self.manusPesLE.text() + self.numberLE.text()
@@ -358,7 +276,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ setSelected
     def setSelected(self):
-        selectedTracks = self.getSelected()
+        selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return
 
@@ -410,7 +328,12 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ refreshUI
     def refreshUI(self):
-        selectedTracks = self.getSelected()
+        """ Updates the UI to reflect the attributes of the selected track or tracks in Maya.  Note
+        that if more than one track is selected, only the trackway attributes are updated; the
+        individual track attributes are cleared to empty strings. Note that if multiple tracks are
+        selected, they could be from multiple independent trackways, but the trackway parameters are
+        based on those of ht efirst selected track. """
+        selectedTracks = self.getSelectedTracks()
         self.clearUI()
 
         if selectedTracks is None:
@@ -502,35 +425,42 @@ class TrackwayManagerWidget(PyGlassWidget):
         if v is not None:
             self.addTrackwayToCB(v)
 
-#___________________________________________________________________________________________________ selectSuccessors
-    def selectSuccessors(self):
+#___________________________________________________________________________________________________ selectSuccessorTracks
+    def selectSuccessorTracks(self):
+        """ Selects in Maya all nodes in the given track series after the last selected track. """
         t = self.getLastSelectedTrack()
         if t is None:
             return
-        successor = list()
-        t = t.nextTrack
-        while t:
-            successor.append(t.node)
-            t = t.nextTrack
-        cmds.select(successor)
 
-#___________________________________________________________________________________________________ selectPrecursors
-    def selectPrecursors(self):
+        successorNodes = list()
+        t = t.getNextTrack(self._session)
+        while t:
+            successorNodes.append(t.node)
+            t = t.getNextTrack(self._session)
+        cmds.select(successorNodes)
+
+#___________________________________________________________________________________________________ selectPrecursorTracks
+    def selectPrecursorTracks(self):
+         """ Selects in Maya all nodes in the given track series up to but not including the first
+          selected track. """
          t = self.getFirstSelectedTrack()
          if t is None:
              return
-         precursors = list()
-         t = t.prevTrack
-         while t:
-            precursors.append(t.node)
-            t = t.prevTrack
-         cmds.select(precursors)
 
-#___________________________________________________________________________________________________ selectSeries
-    def selectSeries(self):
+         precursorNodes = list()
+         t = t.getPrevTrack(self._session)
+         while t:
+            precursorNodes.append(t.node)
+            t = t.prevTrack(self._session)
+         cmds.select(precursorNodes)
+
+#___________________________________________________________________________________________________ selectTrackSeries
+    def selectTrackSeries(self):
+        """ Select in Maya the nodes for the entire track series based on the given selection. """
         tracks = self.getTrackSeries()
         if tracks is None:
             return
+
         print "Selected series consists of %s tracks" % len(tracks)
         nodes = list()
         for t in tracks:
@@ -539,9 +469,11 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ selectAllTracks
     def selectAllTracks(self):
+        """ Select in Maya the nodes for all the tracks in the scene. """
         tracks = self.getAllTracks()
         if len(tracks) == 0:
             return
+
         nodes = list()
         for t in tracks:
             nodes.append(t.node)
@@ -549,7 +481,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ exportSelected
     def exportSelected(self):
-        tracks = self.getSelected()
+        tracks = self.getSelectedTracks()
 
         if tracks is None:
             return
@@ -644,61 +576,6 @@ class TrackwayManagerWidget(PyGlassWidget):
     def setSelectedTrackway(self):
         print 'setSelectedTrackway: clicked!'
 
-#___________________________________________________________________________________________________ test
-    def test(self):
-        pass
-
-#___________________________________________________________________________________________________ repair
-    def repair(self):
-        tracks = self.getSelected()
-#        tracks = self.getAllTracks()
-        if tracks is None:
-            return
-
-        for t in tracks:
-            print 'repairing track %s' % t.node
-            t.category = TrackPropEnum.UNCATALOGED
-            t.name = ''
-            #if t.nodeHasAttribute('left'):
-            #    cmds.deleteAttr(t.node + '.left')
-            #
-            #if t.nodeHasAttribute('pes'):
-            #    v = cmds.getAttr(t.node + '.pes')
-            #
-            #if t.nodeHasAttribute('next'):
-            #    cmds.deleteAttr(t.node + '.next')
-            #if t.nodeHasAttribute('prev'):
-            #    cmds.deleteAttr(t.node + '.prev')
-            #
-            #if t.nodeHasAttribute('width'):
-            #    cmds.deleteAttr(t.node + '.width')
-            #if t.nodeHasAttribute('length'):
-            #    cmds.deleteAttr(t.node + '.prev')
-            #
-            #if t.nodeHasAttribute('rotation'):
-            #    cmds.deleteAttr(t.node + '.rotation')
-            #if t.nodeHasAttribute('rotationUncertainty'):
-            #    cmds.deleteAttr(t.node + '.rotationUncertainty')
-            #
-            #if t.nodeHasAttribute('widthUncertainty'):
-            #    cmds.deleteAttr(t.node + '.widthUncertainty')
-            #if t.nodeHasAttribute('lengthUncertainty'):
-            #    cmds.deleteAttr(t.node + '.lengthUncertainty')
-            #if t.nodeHasAttribute('depth'):
-            #    cmds.deleteAttr(t.node + '.depth')
-            #if t.nodeHasAttribute('depthUncertainty'):
-            #    cmds.deleteAttr(t.node + '.depthUncertainty')
-            #
-            #if t.nodeHasAttribute('depthMeasured'):
-            #    cmds.deleteAttr(t.node + '.depthMeasured')
-            #if t.nodeHasAttribute('widthMeasured'):
-            #    cmds.deleteAttr(t.node + '.widthMeasured')
-            #if t.nodeHasAttribute('lengthMeasured'):
-            #    cmds.deleteAttr(t.node + '.lengthMeasured')
-
-        print 'done'
-        self.mainWindow.updateStatusBar('done', 4000)
-
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
@@ -714,3 +591,12 @@ class TrackwayManagerWidget(PyGlassWidget):
             header=u'No Nimble Connection',
             message=u'This tool requires an active Nimble server connection running in Maya',
             windowTitle=u'Tool Error')
+
+#___________________________________________________________________________________________________ _getTrackSetNode
+    def _getTrackSetNode(cls):
+        """ This is redundunt with the version in TrackSceneUtils, but running locally. Note that
+        if no TrackSetNode is found, it does not create one. """
+        for node in cmds.ls(exactType='objectSet'):
+            if node == CadenceEnvironment.TRACKWAY_SET_NODE_NAME:
+                return node
+        return None

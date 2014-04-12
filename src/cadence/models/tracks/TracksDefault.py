@@ -110,7 +110,7 @@ class TracksDefault(PyGlassModelsDefault):
 #___________________________________________________________________________________________________ getPreviousTrack
     def getPreviousTrack(self, session):
         """ Returns the previous track in the series if such a track exists """
-        model  = self.__class__
+        model = self.__class__
         try:
             return session.query(self.__class__).filter(model.next == self.uid).first()
         except Exception, err:
@@ -150,7 +150,7 @@ class TracksDefault(PyGlassModelsDefault):
 
 #___________________________________________________________________________________________________ toMayaNodeDict
     def toMayaNodeDict(self):
-        """ Creates a dictionary representation of the properties that can be controlled directly
+        """ Creates a dictionary representation of those properties that can be controlled directly
             within the Maya scene. """
         out = dict()
         for enum in Reflection.getReflectionList(TrackPropEnum):
@@ -174,7 +174,7 @@ class TracksDefault(PyGlassModelsDefault):
 #___________________________________________________________________________________________________ getByUid
     @classmethod
     def getByUid(cls, uid, session):
-        """ Returns the Tracks_Track model instance for the specified track universally unique id. """
+        """ Returns the Tracks_Track model instance for the given UID (universally unique id). """
         return session.query(cls).filter(cls.uid == uid).first()
 
 #___________________________________________________________________________________________________ getByProperties

@@ -26,16 +26,17 @@ class Tracks_Track(TracksDefault):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: nodeName
+#___________________________________________________________________________________________________ GS: node
     @property
-    def nodeName(self):
+    """ This property was renamed from nodeName to just node, and hopefully that is ok. """
+    def node(self):
         """ A cached value for the name of the Maya node representing this track if one exists,
             which is updated each time a create/update operation on the node occurs. Can be
             incorrect if the node was renamed between such operations. """
-        return self.fetchTransient('nodeName')
-    @nodeName.setter
-    def nodeName(self, value):
-        self.putTransient('nodeName', value)
+        return self.fetchTransient('node')
+    @node.setter
+    def node(self, value):
+        self.putTransient('node', value)
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -45,11 +46,10 @@ class Tracks_Track(TracksDefault):
         """ Create an elliptical cylinder (disk) plus a superimposed triangular pointer to signify
             the position, dimensions, and rotation of a manus or pes print.  The cylinder has a
             diameter of one meter so that the scale in x and z equates to the width and length of
-            the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The pointer is locked to
-            not be non-selectable (reference) and the marker is prohibited from changing y
-            (elevation) or rotation about either x or z.  The color of the cylinder indicates manus
-            versus pes, and the color of the pointer on top of the cylinder indicates left versus
-            right."""
+            the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The pointer is made
+            non-selectable (reference) and the marker is prohibited from changing y (elevation) or
+            to rotate about either x or z.  The color of the cylinder indicates manus versus pes,
+            and the color of the pointer on top of the cylinder indicates left versus right."""
 
         conn = nimble.getConnection()
         out  = conn.runPythonModule(CreateTrackNode, uid=self.uid, props=self.toMayaNodeDict())
@@ -57,9 +57,9 @@ class Tracks_Track(TracksDefault):
             print 'CREATE NODE ERROR:', out.error
             return None
 
-        self.nodeName = out.payload['node']
+        self.node = out.payload['node']
 
-        return self.nodeName
+        return self.node
 
 #___________________________________________________________________________________________________ updateNode
     def updateNode(self):
@@ -70,23 +70,22 @@ class Tracks_Track(TracksDefault):
         if not result.success:
             return False
 
-        self.nodeName = result.payload.get('node')
+        self.node = result.payload.get('node')
         return True
 
 #___________________________________________________________________________________________________ updateFromNode
     def updateFromNode(self):
         """ Retrieves Maya values from the node representation of the track and updates this
             model instance with those values. """
-
         conn = nimble.getConnection()
-        result = conn.runPythonModule(GetTrackNodeData, uid=self.uid, node=self.nodeName)
+        result = conn.runPythonModule(GetTrackNodeData, uid=self.uid, node=self.node)
         if result.payload.get('error'):
             print 'NODE ERROR:', result.payload.get('message')
             return False
 
-        self.nodeName = result.payload.get('node')
+        self.node = result.payload.get('node')
 
-        if self.nodeName:
+        if self.node:
             self.fromDict(result.payload.get('props'))
             return True
 
@@ -95,18 +94,18 @@ class Tracks_Track(TracksDefault):
 #___________________________________________________________________________________________________ colorTrack
     def colorTrack(self):
         """ THIS WILL BE REWORKED FOR MORE GENERALITY, TO BE PASSED IN SHADERS AS ARGS. """
-        if not self.nodeName:
+        if not self.node:
             return False
 
         if self.pes:
-            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.nodeName)
+            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.node)
         else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.nodeName)
+            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.node)
 
         if self.left:
-            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.nodeName + '|pointer')
+            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.node + '|pointer')
         else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.nodeName + '|pointer')
+            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.node + '|pointer')
 
         return True
 
@@ -115,7 +114,7 @@ class Tracks_Track(TracksDefault):
         """ Positions the CadenceCam to be centered upon this track node (and initializes the
          camera if no camera already exists with that name). Note that the camera is initially
          100 m above the plane, but that can be subsequently adjusted in Maya. """
-        if self.nodeName is None:
+        if self.node is None:
             return
 
         if not cmds.objExists('CadenceCam'):

@@ -84,7 +84,7 @@ class TrackSceneUtils(object):
 #___________________________________________________________________________________________________ getTrackNode
     @classmethod
     def getTrackNode(cls, uid, trackSetNode =None):
-        trackSetNode = TrackSceneUtils.getTrackSetNode() if not trackSetNode else trackSetNode
+        trackSetNode = cls.getTrackSetNode() if not trackSetNode else trackSetNode
         if not trackSetNode:
             return None
 
@@ -100,12 +100,19 @@ class TrackSceneUtils(object):
 
         return None
 
-
 #___________________________________________________________________________________________________ getUid
     @classmethod
     def getUid(cls, node):
-        """ This returns the UID, but presumes that the node is a valid track node.zz """
-        return cmds.getAttr(node + '.' + TrackPropEnum.UID.maya)
+        """ This returns the UID (or None if the node is not a track node). """
+        trackSetNode = cls.getTrackSetNode()
+        if not trackSetNode:
+            return None
+        if not cmds.sets(node, isMember=trackSetNode):
+            return None
+        try:
+            return cmds.getAttr(node + '.' + TrackPropEnum.UID.maya)
+        except Exception, err:
+            return None
 
 #___________________________________________________________________________________________________ checkNodeUidMatch
     @classmethod
@@ -174,9 +181,3 @@ class TrackSceneUtils(object):
             return cmds.sets(name=CadenceEnvironment.TRACKWAY_SET_NODE_NAME, empty=True)
 
         return None
-
-#___________________________________________________________________________________________________ isTrackNode
-    @classmethod
-    def isTrackNode(cls, node):
-        """ Returns True iff the given Maya node is in fact a track node. """
-        return cmds.hasAttr(node + '.' + TrackPropEnum.UID.maya)

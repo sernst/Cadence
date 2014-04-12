@@ -1,4 +1,4 @@
-# GetSelectedTracks.py
+# GetSelectedUidList.py
 # (C)2013
 # Kent A. Stevens
 
@@ -31,7 +31,8 @@ class GetSelectedUidList(NimbleScriptBase):
             return
 
         for n in selectedNodes:
-            if TrackSceneUtils.isTrackNode(n):
-                selectedUidList.append(TrackSceneUtils.getUid(n))
+            uid = TrackSceneUtils.getUid(n)
+            if uid is not None:
+                selectedUidList.append(uid)
         self.puts(success=True, selectedUidList=selectedUidList)
         return
