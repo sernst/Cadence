@@ -9,8 +9,8 @@ from cadence.enum.TrackPropEnum import TrackPropEnum
 
 #___________________________________________________________________________________________________ Track
 class Track(object):
-    """ A track object wraps a reference to a Maya node (it's string name). A track has properties
-        that are stored in the node, as string attributes, or floats, or directly by the values of
+    """ A track object wraps a reference to a Maya nodeName (it's string name). A track has properties
+        that are stored in the nodeName, as string attributes, or floats, or directly by the values of
         the transforms."""
 
 #===================================================================================================

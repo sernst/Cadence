@@ -12,12 +12,12 @@ class GetTrackNodeData(NimbleScriptBase):
         property data.
 
         uid:        UID to find within the Maya scene nodes.
-        [node]:     Name of the node for the specified uid if one has been cached.
+        [nodeName]:     Name of the nodeName for the specified uid if one has been cached.
 
-        <- success      | Boolean specifying if the find operation was able to locate a node with
+        <- success      | Boolean specifying if the find operation was able to locate a nodeName with
                             the specified uid argument.
-        <- [node]       | Node name of the transform node found with the matching uid if such a
-                            node was found. """
+        <- [nodeName]       | Node name of the transform nodeName found with the matching uid if such a
+                            nodeName was found. """
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -25,7 +25,7 @@ class GetTrackNodeData(NimbleScriptBase):
 #___________________________________________________________________________________________________ run
     def run(self, *args, **kwargs):
         uid  = self.fetch('uid', None)
-        node = self.fetch('node', None)
+        node = self.fetch('nodeName', None)
 
         if not uid:
             self.puts(success=False, error=True, message='Invalid or missing UID')

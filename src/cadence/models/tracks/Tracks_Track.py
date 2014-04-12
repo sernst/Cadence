@@ -26,17 +26,17 @@ class Tracks_Track(TracksDefault):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: node
+#___________________________________________________________________________________________________ GS: nodeName
     @property
-    """ This property was renamed from nodeName to just node, and hopefully that is ok. """
-    def node(self):
-        """ A cached value for the name of the Maya node representing this track if one exists,
-            which is updated each time a create/update operation on the node occurs. Can be
-            incorrect if the node was renamed between such operations. """
-        return self.fetchTransient('node')
-    @node.setter
-    def node(self, value):
-        self.putTransient('node', value)
+    def nodeName(self):
+
+        """ A cached value for the name of the Maya nodeName representing this track if one exists,
+            which is updated each time a create/update operation on the nodeName occurs. Can be
+            incorrect if the nodeName was renamed between such operations. """
+        return self.fetchTransient('nodeName')
+    @nodeName.setter
+    def nodeName(self, value):
+        self.putTransient('nodeName', value)
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -57,35 +57,35 @@ class Tracks_Track(TracksDefault):
             print 'CREATE NODE ERROR:', out.error
             return None
 
-        self.node = out.payload['node']
+        self.nodeName = out.payload['nodeName']
 
-        return self.node
+        return self.nodeName
 
 #___________________________________________________________________________________________________ updateNode
     def updateNode(self):
-        """ Sends values to Maya node representation of the track to synchronize the values in the
-            model and the node. """
+        """ Sends values to Maya nodeName representation of the track to synchronize the values in the
+            model and the nodeName. """
         conn = nimble.getConnection()
         result = conn.runPythonModule(UpdateTrackNode, uid=self.uid, props=self.toMayaNodeDict())
         if not result.success:
             return False
 
-        self.node = result.payload.get('node')
+        self.nodeName = result.payload.get('nodeName')
         return True
 
 #___________________________________________________________________________________________________ updateFromNode
     def updateFromNode(self):
-        """ Retrieves Maya values from the node representation of the track and updates this
+        """ Retrieves Maya values from the nodeName representation of the track and updates this
             model instance with those values. """
         conn = nimble.getConnection()
-        result = conn.runPythonModule(GetTrackNodeData, uid=self.uid, node=self.node)
+        result = conn.runPythonModule(GetTrackNodeData, uid=self.uid, node=self.nodeName)
         if result.payload.get('error'):
             print 'NODE ERROR:', result.payload.get('message')
             return False
 
-        self.node = result.payload.get('node')
+        self.nodeName = result.payload.get('nodeName')
 
-        if self.node:
+        if self.nodeName:
             self.fromDict(result.payload.get('props'))
             return True
 
@@ -94,27 +94,27 @@ class Tracks_Track(TracksDefault):
 #___________________________________________________________________________________________________ colorTrack
     def colorTrack(self):
         """ THIS WILL BE REWORKED FOR MORE GENERALITY, TO BE PASSED IN SHADERS AS ARGS. """
-        if not self.node:
+        if not self.nodeName:
             return False
 
         if self.pes:
-            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.node)
+            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.nodeName)
         else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.node)
+            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.nodeName)
 
         if self.left:
-            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.node + '|pointer')
+            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.nodeName + '|pointer')
         else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.node + '|pointer')
+            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.nodeName + '|pointer')
 
         return True
 
 #___________________________________________________________________________________________________ setCadenceCamFocus
     def setCadenceCamFocus(self):
-        """ Positions the CadenceCam to be centered upon this track node (and initializes the
+        """ Positions the CadenceCam to be centered upon this track nodeName (and initializes the
          camera if no camera already exists with that name). Note that the camera is initially
          100 m above the plane, but that can be subsequently adjusted in Maya. """
-        if self.node is None:
+        if self.nodeName is None:
             return
 
         if not cmds.objExists('CadenceCam'):
@@ -127,7 +127,7 @@ class Tracks_Track(TracksDefault):
     def initializeCadenceCam(cls):
         """ This creates an orthographic camera that looks down the Y axis onto the XZ plane,
         and rotated so that the AI file track labels are legible.  This camera will then be
-        positioned so that the given track node is centered in its field by setCadenceCamFocus. """
+        positioned so that the given track nodeName is centered in its field by setCadenceCamFocus. """
         c = cmds.camera(
             orthographic=True,
             nearClipPlane=1,

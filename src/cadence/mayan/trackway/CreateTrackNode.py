@@ -17,7 +17,7 @@ class CreateTrackNode(NimbleScriptBase):
     def run(self, *args, **kwargs):
         uid  = self.fetch('uid', None)
         if uid is None:
-            self.putErrorResult(u'Invalid or missing UID. Unable to create track node.')
+            self.putErrorResult(u'Invalid or missing UID. Unable to create track nodeName.')
             return
         node = TrackSceneUtils.createTrackNode(uid)
         self.puts(node=node, props=TrackSceneUtils.getTrackProps(node))

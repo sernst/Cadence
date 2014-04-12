@@ -21,7 +21,7 @@ from cadence.mayan.trackway import GetSelectedUidList
 class TrackwayManagerWidget(PyGlassWidget):
     """ This widget is the primary GUI for interacting with the Maya scene representation of a
      trackway.  It permits selection of tracks interactively in Maya and display and editing of
-     their attributes.  Tracks in Maya are reepresented by track nodes, each a transform node with
+     their attributes.  Tracks in Maya are represented by track nodes, each a transform nodeName with
      an additional attribute specifying the UID of that track.  The transform's scale, position, and
      rotation (about Y) are used to intrinsically represent track dimensions, position, and
      orientation.  Track models are accessed by query based on the UID, and for a given session. """
@@ -100,9 +100,10 @@ class TrackwayManagerWidget(PyGlassWidget):
     def getAllTracks(self):
         """ This returns a list of all track nodes (or None). """
         trackSetNode = self._getTrackSetNode()
+        trackNodes = list()
         if not trackSetNode:
-            return None
-        trackNodes = cmds.sets(trackSetNode, q=True )
+            return trackNodes
+        trackNodes = cmds.sets(trackSetNode, query=True)
         return trackNodes if len(trackNodes) > 0 else None
 
 #___________________________________________________________________________________________________ getFirstTrack
@@ -111,21 +112,25 @@ class TrackwayManagerWidget(PyGlassWidget):
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
-        t = selectedTracks[0]
-        while t.getPreviousTrack(self._session) is not None:
-            t = t.getPreviousTrack(self._session)
-        return t
+        prev = selectedTracks[0].getPreviousTrack(self._session)
+        while prev is not None:
+            p = prev.getPreviousTrack(self._session)
+            if p is None:
+                return prev
+            prev = p
+        return None
 
 #___________________________________________________________________________________________________ getLastTrack
     def getLastTrack(self):
         """ Returns the track model of the last track in a series. """
         selectedTracks = self.getSelectedTracks()
-        if not selectedTracks:
-            return None
-        t = selectedTracks[-1]
-        while t.getNextTrack(self._session) is not None:
-            t = t.getNextTrack(self._session)
-        return t
+        # if not selectedTracks:
+        #     return None
+        # t = selectedTracks[-1]
+        # n = t.getNextTrack(self._session)
+        # while n is not None:
+        #     n = n.getNextTrack(self._session)
+        # return n
 
 #___________________________________________________________________________________________________ getFirstSelectedTrack
     def getFirstSelectedTrack(self):
@@ -133,10 +138,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
-        s = selectedTracks[0]
-        while s.getPreviousTrack(self._session) in selectedTracks:
-            s = s.getPreviousTrack(self._session)
-        return s
+        # s = selectedTracks[0]
+        # while s.getPreviousTrack(self._session) in selectedTracks:
+        #     s = s.getPreviousTrack(self._session)
+        # return s
 
 #___________________________________________________________________________________________________ getLastSelectedTrack
     def getLastSelectedTrack(self):
@@ -144,10 +149,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
-        s = selectedTracks[-1]
-        while s.getNextTrack(self._session) in selectedTracks:
-            s = s.getNextTrack(self._session)
-        return s
+        # s = selectedTracks[-1]
+        # while s.getNextTrack(self._session) in selectedTracks:
+        #     s = s.getNextTrack(self._session)
+        # return s
 
  #__________________________________________________________________________________________________ getTrackSeries
     def getTrackSeries(self):
@@ -162,7 +167,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ selectTrack
     def selectTrack(self, track):
        track.setCadenceCamFocus()
-       cmds.select(track.node)
+       cmds.select(track.nodeName)
 
 # __________________________________________________________________________________________________ goToFirstTrack
     def goToFirstTrack(self):
@@ -207,7 +212,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         while i < len(selectedTracks) - 1:
             selectedTracks[i].next = selectedTracks[i + 1]
             i += 1
-        cmds.select(selectedTracks[-1].node) # the last selected Maya node is selected
+        cmds.select(selectedTracks[-1].nodeName) # the last selected Maya nodeName is selected
         self.refreshUI()
 
 #___________________________________________________________________________________________________ unlinkSelectedTracks
@@ -223,12 +228,12 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         if p and n:              # if track(s) to be unlinked are within
             p.next = n            # connect previous to next, bypassing the selected track(s)
-            cmds.select(p.node)  # select the track just prior to the removed track(s)
+            cmds.select(p.nodeName)  # select the track just prior to the removed track(s)
         elif n and not p:        # selection includes the first track
-            cmds.select(n.node)  # and select the track just after the selection
+            cmds.select(n.nodeName)  # and select the track just after the selection
         elif p and not n:        # selection includes the last track
             s2.next = ''
-            cmds.select(p.node)  # and bump selection back to the previous track
+            cmds.select(p.nodeName)  # and bump selection back to the previous track
         for s in selectedTracks:
             s.next = ''
         self.refreshUI()
@@ -435,7 +440,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         successorNodes = list()
         t = t.getNextTrack(self._session)
         while t:
-            successorNodes.append(t.node)
+            successorNodes.append(t.nodeName)
             t = t.getNextTrack(self._session)
         cmds.select(successorNodes)
 
@@ -450,7 +455,7 @@ class TrackwayManagerWidget(PyGlassWidget):
          precursorNodes = list()
          t = t.getPrevTrack(self._session)
          while t:
-            precursorNodes.append(t.node)
+            precursorNodes.append(t.nodeName)
             t = t.prevTrack(self._session)
          cmds.select(precursorNodes)
 
@@ -464,7 +469,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         print "Selected series consists of %s tracks" % len(tracks)
         nodes = list()
         for t in tracks:
-            nodes.append(t.node)
+            nodes.append(t.nodeName)
         cmds.select(nodes)
 
 #___________________________________________________________________________________________________ selectAllTracks
@@ -476,7 +481,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         nodes = list()
         for t in tracks:
-            nodes.append(t.node)
+            nodes.append(t.nodeName)
         cmds.select(nodes)
 
 #___________________________________________________________________________________________________ exportSelected
@@ -534,7 +539,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                 name = cmds.getAttr('%s.name' % node)
                 trackway = cmds.getAttr('%s.trackway' % node)
                 if name == targetName and trackway == targetTrackway:
-                    t = None # Track(node)
+                    t = None # Track(nodeName)
                     self.selectTrack(t)
                     return
 
@@ -551,7 +556,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         nodes = list()
         for t in tracks:
             if t.trackwayType == targetType and t.trackwayNumber == targetNumber:
-                nodes.append(t.node)
+                nodes.append(t.nodeName)
         print "and now nodes has %s instances" % len(nodes)
         cmds.select(nodes, add=True)
 

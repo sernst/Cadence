@@ -13,7 +13,7 @@ class GetSelectedUidList(NimbleScriptBase):
     """ A remote script class for returning a list of the UIDs for the track nodes currently
      selected in Maya.
          --- RETURNS ---
-        success:           True if at least one valid track node selected, else False
+        success:           True if at least one valid track nodeName selected, else False
         selectedUidList:   (string[]) (default: []) The UIDs of the selected nodes. """
 
 #===================================================================================================

@@ -10,7 +10,7 @@ from pyaid.reflection.Reflection import Reflection
 # A custom data type for track property enumerations that contain the following information:
 #   * name      | Key for the track property in both the database and in Maya
 #   * type      | The type of attribute for the track property within Maya
-#   * intrinsic | True if the track property mirrors an existing property of a Maya transform node
+#   * intrinsic | True if the track property mirrors an existing property of a Maya transform nodeName
 #   * unique    | Boolean specifying whether or not the property should be included in uniquely
 #                 identified tracks within the database
 TRACK_PROP_NT = namedtuple('TRACK_PROP_NT', ['name', 'type', 'maya', 'unique' ])
@@ -18,7 +18,7 @@ TRACK_PROP_NT = namedtuple('TRACK_PROP_NT', ['name', 'type', 'maya', 'unique' ])
 #___________________________________________________________________________________________________ TrackPropEnum
 class TrackPropEnum(object):
     """ A class for all track properties encoded either as additional attributes of the Maya
-        transform node which represents a track (of type string or float) or computed from other
+        transform nodeName which represents a track (of type string or float) or computed from other
         'intrinsic' transform attributes such as scale, rotation, or translation. """
 
 #===================================================================================================
@@ -64,7 +64,7 @@ class TrackPropEnum(object):
     PES = TRACK_PROP_NT('pes', 'bool', None, True)
 
     # rotation is measured relative to North (the world coordinates z-axis in the scene), and
-    # increases counterclockwise.  It is an intrinsic attribute of the node transform (rotation
+    # increases counterclockwise.  It is an intrinsic attribute of the nodeName transform (rotation
     # about the 'vertical' y axis).
     ROTATION             = TRACK_PROP_NT('rotation',            'float', 'ry', False)
     ROTATION_MEASURED    = TRACK_PROP_NT('rotationMeasured',    'float', None, False)
@@ -98,13 +98,13 @@ class TrackPropEnum(object):
     WIDTH_MEASURED    = TRACK_PROP_NT('widthMeasured',    'float', None,     False)
     WIDTH_UNCERTAINTY = TRACK_PROP_NT('widthUncertainty', 'float', None,     False)
 
-    # the x coordinate of a given track (relative to tracksite's map origin) encoded in node
+    # the x coordinate of a given track (relative to tracksite's map origin) encoded in nodeName
     X = TRACK_PROP_NT('x', 'float', 'translateX', False)
 
     # the year of excavation of the tracksite of which this track belongs
     YEAR = TRACK_PROP_NT('year', 'string', None, False)
 
-    # the z coordinate of a given track (relative to tracksite's map origin) encoded in node
+    # the z coordinate of a given track (relative to tracksite's map origin) encoded in nodeName
     Z = TRACK_PROP_NT('z', 'float', 'translateZ', False)
 
 #___________________________________________________________________________________________________ TrackPropEnumOps

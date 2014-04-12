@@ -20,7 +20,7 @@ class UpdateTrackNode(NimbleScriptBase):
 #___________________________________________________________________________________________________ run
     def run(self, *args, **kwargs):
         uid   = self.fetch('uid', None)
-        node  = self.fetch('node', None)
+        node  = self.fetch('nodeName', None)
         props = self.fetch('props', dict())
 
         if not uid:

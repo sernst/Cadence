@@ -73,7 +73,7 @@ class TrackSceneUtils(object):
             dataType='string',
             niceName='Unique ID')
 
-        # Add the new node to the Cadence track scene set
+        # Add the new nodeName to the Cadence track scene set
         cmds.sets(node, add=trackSetNode)
 
         if props:
@@ -103,7 +103,7 @@ class TrackSceneUtils(object):
 #___________________________________________________________________________________________________ getUid
     @classmethod
     def getUid(cls, node):
-        """ This returns the UID (or None if the node is not a track node). """
+        """ This returns the UID (or None if the nodeName is not a track nodeName). """
         trackSetNode = cls.getTrackSetNode()
         if not trackSetNode:
             return None
@@ -145,13 +145,13 @@ class TrackSceneUtils(object):
 #___________________________________________________________________________________________________ getTrackManagerNode
     @classmethod
     def getTrackManagerNode(cls, trackSetNode =None, createIfMissing =False):
-        """ Returns the name of the track manager node for the current Cadence scene.
+        """ Returns the name of the track manager nodeName for the current Cadence scene.
 
-            trackSetNode: The track set node on which to find the track manager node. If no node
+            trackSetNode: The track set nodeName on which to find the track manager nodeName. If no nodeName
                     is specified the method will look it up internally.
 
-            createIfMissing: If true and no track manager node is found one will be created and
-                    connected to the track set node, which will also be created if one does
+            createIfMissing: If true and no track manager nodeName is found one will be created and
+                    connected to the track set nodeName, which will also be created if one does
                     not exist. """
 
         if not trackSetNode:

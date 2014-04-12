@@ -64,7 +64,7 @@ class ShadingUtils(object):
 #___________________________________________________________________________________________________ getAllShaded
     @classmethod
     def getAllShaded(cls, shaderConfig):
-        """ Returns the list of transform nodes that have a geometry node shaded by the specified
+        """ Returns the list of transform nodes that have a geometry nodeName shaded by the specified
             shader configuration data
         """
 

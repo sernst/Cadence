@@ -104,7 +104,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
             CadenceEnvironment.NIMBLE_IS_ACTIVE = False
         else:
             try:
-                # Run an ls command looking for the time node (to prevent large returns)
+                # Run an ls command looking for the time nodeName (to prevent large returns)
                 nimble.cmds.ls(exactType='time')
 
                 self._colors = ThemeColorBundle(ColorSchemes.GREEN)
