@@ -210,7 +210,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
         i = 0
         while i < len(selectedTracks) - 1:
-            selectedTracks[i].next = selectedTracks[i + 1]
+            selectedTracks[i].next = selectedTracks[i + 1].uid
             i += 1
         cmds.select(selectedTracks[-1].nodeName) # the last selected Maya nodeName is selected
         self.refreshUI()
@@ -227,15 +227,15 @@ class TrackwayManagerWidget(PyGlassWidget):
         n = s2.getNextTrack()
 
         if p and n:              # if track(s) to be unlinked are within
-            p.next = n            # connect previous to next, bypassing the selected track(s)
+            p.next = n.uid            # connect previous to next, bypassing the selected track(s)
             cmds.select(p.nodeName)  # select the track just prior to the removed track(s)
         elif n and not p:        # selection includes the first track
             cmds.select(n.nodeName)  # and select the track just after the selection
         elif p and not n:        # selection includes the last track
-            s2.next = ''
+            s2.next = u''
             cmds.select(p.nodeName)  # and bump selection back to the previous track
         for s in selectedTracks:
-            s.next = ''
+            s.next = u''
         self.refreshUI()
 
 #___________________________________________________________________________________________________ getNamefromUI
