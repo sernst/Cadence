@@ -12,7 +12,7 @@ PyGlassEnvironment.initializeExplicitAppSettings(
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 model   = Tracks_Track.MASTER
-session = model.createSession()
+session = model.getSession()
 for value in session.query(model.trackway).distinct():
     print value
 
