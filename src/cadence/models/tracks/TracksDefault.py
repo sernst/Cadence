@@ -80,7 +80,7 @@ class TracksDefault(PyGlassModelsDefault):
 #___________________________________________________________________________________________________ GS: name
     @property
     def name(self):
-        """ Human-readable display name for the track based of its properties """
+        """ Human-readable display name for the track, based of its properties """
         number = unicode(int(self.number)) if self.number else u'-'
         return (u'L' if self.left else u'R') + (u'P' if self.pes else u'M') + number
     @name.setter
@@ -139,7 +139,7 @@ class TracksDefault(PyGlassModelsDefault):
 
 #___________________________________________________________________________________________________ toDict
     def toDict(self, uniqueOnly =False):
-        """ Returns a dictionary containing the keys and current values of the the track object
+        """ Returns a dictionary containing the keys and current values of the track object
             with no dependency on a database session object. """
         out = dict(id=self.id)
         for enum in Reflection.getReflectionList(TrackPropEnum):
