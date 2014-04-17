@@ -554,7 +554,7 @@
           <cursorShape>ArrowCursor</cursorShape>
          </property>
          <attribute name="title">
-          <string>Edit Track</string>
+          <string>Tracks</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_24" stretch="0,1,0,0">
           <property name="spacing">
@@ -1328,7 +1328,7 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QPushButton" name="fromMayaBtn">
+                 <widget class="QPushButton" name="getBtn">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1343,7 +1343,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Import from Maya</string>
+                   <string>Get Selected Track</string>
                   </property>
                   <property name="checkable">
                    <bool>false</bool>
@@ -1366,7 +1366,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Set</string>
+                   <string>Set Selected Track</string>
                   </property>
                  </widget>
                 </item>
@@ -2194,7 +2194,7 @@
           <bool>true</bool>
          </property>
          <attribute name="title">
-          <string>Edit Trackway</string>
+          <string>Trackways</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_16">
           <property name="spacing">
