@@ -54,7 +54,7 @@ class TracksDefault(PyGlassModelsDefault):
     _lengthUncertainty   = sqla.Column(sqla.Float,        default=5.0)
     _depthMeasured       = sqla.Column(sqla.Float,        default=0.0)
     _depthUncertainty    = sqla.Column(sqla.Float,        default=5.0)
-    _rotationMeasured    = sqla.Column(sqla.Float,        default=0.0)
+  #  _rotationMeasured    = sqla.Column(sqla.Float,        default=0.0) # might not want this
     _rotationUncertainty = sqla.Column(sqla.Float,        default=5.0)
 
     _flags               = sqla.Column(sqla.Integer,      default=0)
@@ -80,7 +80,7 @@ class TracksDefault(PyGlassModelsDefault):
 #___________________________________________________________________________________________________ GS: name
     @property
     def name(self):
-        """ Human-readable display name for the track, based of its properties """
+        """ Human-readable display name for the track, based of its properties. """
         number = unicode(int(self.number)) if self.number else u'-'
         return (u'L' if self.left else u'R') + (u'P' if self.pes else u'M') + number
     @name.setter

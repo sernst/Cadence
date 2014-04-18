@@ -126,6 +126,7 @@ class TrackwayIoWidget(PyGlassWidget):
             self.mainWindow.hideLoading(self)
             return
 
+
         conn = nimble.getConnection()
         result = conn.runPythonModule(CreateTrackNodes, trackList=trackList)
         if not result.success:

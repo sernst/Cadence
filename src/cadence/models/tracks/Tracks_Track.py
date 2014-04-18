@@ -29,7 +29,6 @@ class Tracks_Track(TracksDefault):
 #___________________________________________________________________________________________________ GS: nodeName
     @property
     def nodeName(self):
-
         """ A cached value for the name of the Maya nodeName representing this track if one exists,
             which is updated each time a create/update operation on the nodeName occurs. Can be
             incorrect if the nodeName was renamed between such operations. """
@@ -50,7 +49,6 @@ class Tracks_Track(TracksDefault):
             non-selectable (reference) and the marker is prohibited from changing y (elevation) or
             to rotate about either x or z.  The color of the cylinder indicates manus versus pes,
             and the color of the pointer on top of the cylinder indicates left versus right."""
-
         conn = nimble.getConnection()
         out  = conn.runPythonModule(CreateTrackNode, uid=self.uid, props=self.toMayaNodeDict())
         if not out.success:
@@ -63,8 +61,8 @@ class Tracks_Track(TracksDefault):
 
 #___________________________________________________________________________________________________ updateNode
     def updateNode(self):
-        """ Sends values to Maya nodeName representation of the track to synchronize the values in the
-            model and the nodeName. """
+        """ Sends values to Maya nodeName representation of the track to synchronize the values in
+            the model and the nodeName. """
         conn = nimble.getConnection()
         result = conn.runPythonModule(UpdateTrackNode, uid=self.uid, props=self.toMayaNodeDict())
         if not result.success:
@@ -112,8 +110,8 @@ class Tracks_Track(TracksDefault):
 #___________________________________________________________________________________________________ setCadenceCamFocus
     def setCadenceCamFocus(self):
         """ Positions the CadenceCam to be centered upon this track nodeName (and initializes the
-         camera if no camera already exists with that name). Note that the camera is initially
-         100 m above the plane, but that can be subsequently adjusted in Maya. """
+            camera if no camera already exists with that name). Note that the camera is initially
+            100 m above the plane, but that can be subsequently adjusted in Maya. """
         if self.nodeName is None:
             return
 
@@ -126,8 +124,9 @@ class Tracks_Track(TracksDefault):
     @classmethod
     def initializeCadenceCam(cls):
         """ This creates an orthographic camera that looks down the Y axis onto the XZ plane,
-        and rotated so that the AI file track labels are legible.  This camera will then be
-        positioned so that the given track nodeName is centered in its field by setCadenceCamFocus. """
+            and rotated so that the AI file track labels are legible.  This camera will then be
+            positioned so that the given track nodeName is centered in its field by
+            setCadenceCamFocus. """
         c = cmds.camera(
             orthographic=True,
             nearClipPlane=1,
