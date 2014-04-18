@@ -54,7 +54,7 @@ class TracksDefault(PyGlassModelsDefault):
     _lengthUncertainty   = sqla.Column(sqla.Float,        default=5.0)
     _depthMeasured       = sqla.Column(sqla.Float,        default=0.0)
     _depthUncertainty    = sqla.Column(sqla.Float,        default=5.0)
-  #  _rotationMeasured    = sqla.Column(sqla.Float,        default=0.0) # might not want this
+    _rotationMeasured    = sqla.Column(sqla.Float,        default=0.0)
     _rotationUncertainty = sqla.Column(sqla.Float,        default=5.0)
 
     _flags               = sqla.Column(sqla.Integer,      default=0)
