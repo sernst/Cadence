@@ -84,8 +84,9 @@ class TrackwayManagerWidget(PyGlassWidget):
                 'Unable to get selected UID list from Maya', 'Error')
             return tracks
 
+        model = Tracks_Track.MASTER
         for uid in result.payload['selectedUidList']:
-            tracks.append(Tracks_Track.getByUid(uid, self._getSession()))
+            tracks.append(model.getByUid(uid, self._getSession()))
         return tracks
 
 #___________________________________________________________________________________________________ getFirstTrack
