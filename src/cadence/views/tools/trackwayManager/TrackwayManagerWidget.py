@@ -73,7 +73,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ This runs a remote script to get a list of the track UID from the selected Maya track
             nodes. A list of the corresponding track models with those UIDs is returned. """
         conn = nimble.getConnection()
-        result = conn.runPythonModule(GetSelectedUidList, runInMaya=False)
+        result = conn.runPythonModule(GetSelectedUidList)
         tracks = list()
 
         # Check to see if the remote command execution was successful
@@ -198,22 +198,16 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.indexLE.setText(u'')
 
 #___________________________________________________________________________________________________ refreshTrackwayUI
-    def refreshTrackwayUI(self):
+    def _refreshTrackwayUI(self, track):
         """ The trackway properties UI display is updated using the values of the currently-
             selected track. If more than one track is selected, the first track is used."""
-        selectedTracks = self.getSelectedTracks()
-        if not selectedTracks:
-            self.clearTrackwayUI()
-            return
-
-        t = selectedTracks[0]
-        self.communityLE.setText(t.community)
-        self.siteLE.setText(t.site)
-        self.yearLE.setText(t.year)
-        self.sectorLE.setText(t.sector)
-        self.levelLE.setTextt(t.level)
-        self.trackwayTypeLE.setText(t.trackwayType)
-        self.trackwayNumberLE.setText(t.trackwayNumber)
+        self.communityLE.setText(track.community)
+        self.siteLE.setText(track.site)
+        self.yearLE.setText(track.year)
+        self.sectorLE.setText(track.sector)
+        self.levelLE.setTextt(track.level)
+        self.trackwayTypeLE.setText(track.trackwayType)
+        self.trackwayNumberLE.setText(track.trackwayNumber)
 
 #___________________________________________________________________________________________________ refreshTrackUI
     def refreshTrackUI(self):
@@ -313,9 +307,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             return
 
-        t = selectedTracks[0]
-        self._getSession()
-        Tracks_Track.updateFromNode()
+        t = selectedTracks[-1]
+        t.updateFromNode()
+        self._refreshTrackwayUI(t)
         self.closeSession(commit=True)
 
 
