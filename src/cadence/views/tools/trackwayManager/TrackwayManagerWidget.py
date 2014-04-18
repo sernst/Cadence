@@ -76,7 +76,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         result = conn.runPythonModule(GetSelectedUidList, runInMaya=True)
         tracks = list()
         for uid in result.selectedUidList:
-            tracks.append(Tracks_Track.getByUid(uid, self.getSession()))
+            tracks.append(Tracks_Track.getByUid(uid, self._getSession()))
         return tracks
 
 #___________________________________________________________________________________________________ getFirstTrack
@@ -86,10 +86,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             return None
         t = selectedTracks[0]
-        p = t.getPreviousTrack(self.getSession())
+        p = t.getPreviousTrack(self._getSession())
         while p is not None:
             t = p
-            p = p.getPreviousTrack(self.getSession())
+            p = p.getPreviousTrack(self._getSession())
         return t
 
 #___________________________________________________________________________________________________ getLastTrack
@@ -100,10 +100,10 @@ class TrackwayManagerWidget(PyGlassWidget):
             return None
 
         t = selectedTracks[-1]
-        n = t.getNextTrack(self.getSession())
+        n = t.getNextTrack(self._getSession())
         while n is not None:
             t = n
-            n = t.getNextTrack(self.getSession())
+            n = t.getNextTrack(self._getSession())
         return t
 
 #___________________________________________________________________________________________________ getFirstSelectedTrack
@@ -114,10 +114,10 @@ class TrackwayManagerWidget(PyGlassWidget):
             return None
 
         t = selectedTracks[0]
-        p = t.getPreviousTrack(self.getSession())
+        p = t.getPreviousTrack(self._getSession())
         while p in selectedTracks:
             t = p
-            p =t.getPreviousTrack(self.getSession())
+            p =t.getPreviousTrack(self._getSession())
         return t
 
 #___________________________________________________________________________________________________ getLastSelectedTrack
@@ -128,10 +128,10 @@ class TrackwayManagerWidget(PyGlassWidget):
             return None
 
         t = selectedTracks[-1]
-        n = t.getNextTrack(self.getSession())
+        n = t.getNextTrack(self._getSession())
         while n in selectedTracks:
             t = n
-            n = t.getNextTrack(self.getSession())
+            n = t.getNextTrack(self._getSession())
         return t
 
  #__________________________________________________________________________________________________ getTrackSeries
@@ -305,7 +305,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         t = selectedTracks[0]
-        self.getSession()
+        self._getSession()
         Tracks_Track.updateFromNode()
         self.closeSession(commit=True)
 
@@ -319,7 +319,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         if len(selectedTracks) == 1:
-            self.getSession()
+            self._getSession()
             Tracks_Track.fromDict(self.getTrackwayPropertiesFromUI())
             Tracks_Track.updateNode()
             self.closeSession(commit=True)
@@ -379,7 +379,7 @@ class TrackwayManagerWidget(PyGlassWidget):
              return
 
          precursorNodes = list()
-         t = t.getPrevTrack(self.getSession())
+         t = t.getPrevTrack(self._getSession())
          while t:
             precursorNodes.append(t.nodeName)
             t = t.prevTrack(self.getSession())
@@ -393,10 +393,10 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         successorNodes = list()
-        t = t.getNextTrack(self.getSession())
+        t = t.getNextTrack(self._getSession())
         while t:
             successorNodes.append(t.nodeName)
-            t = t.getNextTrack(self.getSession())
+            t = t.getNextTrack(self._getSession())
         cmds.select(successorNodes)
 
 #___________________________________________________________________________________________________ _handleSelectSeriesBtn
@@ -515,7 +515,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         if self._session is not None:
             return self._session
 
-        self._session = Tracks_Track.MASTER.getSession()
+        self._session = Tracks_Track.MASTER.createSession()
         return self._session
 
 #___________________________________________________________________________________________________ _closeSession
