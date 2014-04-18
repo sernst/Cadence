@@ -73,9 +73,18 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ This runs a remote script to get a list of the track UID from the selected Maya track
             nodes. A list of the corresponding track models with those UIDs is returned. """
         conn = nimble.getConnection()
-        result = conn.runPythonModule(GetSelectedUidList, runInMaya=True)
+        result = conn.runPythonModule(GetSelectedUidList, runInMaya=False)
         tracks = list()
-        for uid in result.selectedUidList:
+
+        # Check to see if the remote command execution was successful
+        if not result.success:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                'Failed UID Query',
+                'Unable to get selected UID list from Maya', 'Error')
+            return tracks
+
+        for uid in result.payload['selectedUidList']:
             tracks.append(Tracks_Track.getByUid(uid, self._getSession()))
         return tracks
 
