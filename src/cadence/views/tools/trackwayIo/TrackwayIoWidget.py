@@ -73,7 +73,7 @@ class TrackwayIoWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _activateWidgetDisplayImpl
     def _activateWidgetDisplayImpl(self, **kwargs):
         model   = Tracks_Track.MASTER
-        session = model.getSession()
+        session = model.createSession()
         for filterDef in self._filterList:
             self._updateFilterList(filterDef, session)
         session.close()
@@ -106,7 +106,7 @@ class TrackwayIoWidget(PyGlassWidget):
         self.mainWindow.showLoading(self, u'Loading Tracks')
 
         model   = Tracks_Track.MASTER
-        session = model.getSession()
+        session = model.createSession()
         query   = session.query(model)
 
         for filterDef in self._filterList:
@@ -208,7 +208,7 @@ class TrackwayIoWidget(PyGlassWidget):
         if current is None:
             return
 
-        session = Tracks_Track.MASTER.getSession()
+        session = Tracks_Track.MASTER.createSession()
 
         filterDef   = None
         filterDict = dict()

@@ -32,7 +32,7 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
 #___________________________________________________________________________________________________ _internalMethod
     def _runImpl(self):
         model   = Tracks_Track.MASTER
-        session = self._session if self._session else model.getSession()
+        session = self._session if self._session else model.createSession()
 
         try:
             if self._importType == self.CSV:
