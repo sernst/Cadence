@@ -72,12 +72,13 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.hideAllTrackwaysBtn.clicked.connect(self._handleHideAllTrackwaysBtn)
         self.selectAllTrackwaysBtn.clicked.connect(self._handleSelectAllTrackwaysBtn)
 
+        self._clearTrackwayUI()
+        self._clearTrackUI()
         self._session = None
 
 #===================================================================================================
 #                                                                                     P U B L I C
 #
-
 #__________________________________________________________________________________________________  getSelectedTracks
     def getSelectedTracks(self):
         """ This runs a remote script to get a list of the track UID from the selected Maya track
@@ -185,9 +186,9 @@ class TrackwayManagerWidget(PyGlassWidget):
     def _clearTrackUI(self):
         """ Clears out the text fields associated with the track parameters in the UI. """
 
-        self.lengthLbl.setText(u'')
-        self.widthLbl.setText(u'')
-        self.rotationLbl.setText(u'')
+        self.lengthLbl.setText(u'---.-- (---.--)')
+        self.widthLbl.setText(u'---.-- (---.--)')
+        self.rotationLbl.setText(u'---.--')
 
         #self.dimensionalUncertainty. ?? clear all radio buttons
         #self.rotationalUncertainty ?? clear all radio buttons
@@ -197,9 +198,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.trackIndexLE.setText(u'')
 #___________________________________________________________________________________________________ refreshTrackwayUI
     def _refreshTrackwayUI(self, track):
-        """ The trackway UI display is updated using the values of the (single) passed track
-            model instance. """
-
+        """ The trackway UI is updated using the values of the passed track model instance. """
         s = ''
         if track.community:
             s += 'community = ' + track.community
@@ -232,6 +231,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.widthLbl.setText(('%.2f (%.2f)') % (d[TrackPropEnum.WIDTH.name],
                                                   d[TrackPropEnum.WIDTH_MEASURED.name]))
 
+        print 'rotation =', d[TrackPropEnum.ROTATION.name]
         self.rotationLbl.setText(('%.2f') % (d[TrackPropEnum.ROTATION.name]))
 
         #self.dimensionalUncertainty ?? set the appropriate radio button
@@ -330,11 +330,6 @@ class TrackwayManagerWidget(PyGlassWidget):
             the Maya scene representation.  For instance, multiple track nodes can be selected, and
             their rotational uncertainty set to all by clicking a given uncertainty radio button
             then this push button.  One can also link multiple (or unlink multiple) by this method.
-            In the case that some c????????????????
-
-            ?????????????
-
-
             The data specific to an instance of track model is updated with data extracted from the
             UI then the track model is used to update the node, and the session is closed. """
         selectedTracks = self.getSelectedTracks()
@@ -386,7 +381,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.importFromMaya()
 
 #___________________________________________________________________________________________________ _handleSelectBtn
-# CB
     def _handleSelectBtn(self):
         pass
     # def _handleSelectPriorBtn(self):

@@ -67,6 +67,12 @@ class TrackSceneUtils(object):
         cmds.parent(p, node)
 
         cmds.select(node)
+
+        cmds.setAttr(node + '.rotateX', lock=True)
+        cmds.setAttr(node + '.rotateZ', lock=True)
+        cmds.setAttr(node + '.scaleY', lock=True)
+        cmds.setAttr(node + '.translateY', lock=True)
+
         cmds.addAttr(
             longName='cadence_uniqueId',
             shortName=TrackPropEnum.UID.maya,
