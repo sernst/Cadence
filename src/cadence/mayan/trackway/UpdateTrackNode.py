@@ -5,7 +5,6 @@
 from nimble import cmds
 from nimble import NimbleScriptBase
 
-from pyaid.reflection.Reflection import Reflection
 from cadence.enum.TrackPropEnum import TrackPropEnum
 
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
@@ -29,7 +28,7 @@ class UpdateTrackNode(NimbleScriptBase):
 
         if node and TrackSceneUtils.checkNodeUidMatch(uid, node):
             TrackSceneUtils.setTrackProps(node, props)
-            self.puts(success=True, node=node)
+            self.puts(success=True, nodeName=node)
             return
 
         trackSetNode = TrackSceneUtils.getTrackSetNode()
@@ -42,7 +41,7 @@ class UpdateTrackNode(NimbleScriptBase):
                 continue
             if uid == cmds.getAttr(node + '.' + TrackPropEnum.UID.maya):
                 TrackSceneUtils.setTrackProps(node, props)
-                self.puts(success=True, node=node)
+                self.puts(success=True, nodeName=node)
                 return
 
         self.response.puts(success=False)

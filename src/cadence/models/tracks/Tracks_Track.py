@@ -4,6 +4,7 @@
 
 import nimble
 from nimble import cmds
+from pyaid.dict.DictUtils import DictUtils
 
 from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
 
@@ -55,7 +56,7 @@ class Tracks_Track(TracksDefault):
             print 'CREATE NODE ERROR:', out.error
             return None
 
-        self.nodeName = out.payload['nodeName']
+        self.nodeName = out.payload.get('nodeName')
 
         return self.nodeName
 
@@ -76,11 +77,12 @@ class Tracks_Track(TracksDefault):
         """ Retrieves Maya values from the nodeName representation of the track and updates this
             model instance with those values. """
         conn = nimble.getConnection()
-        result = conn.runPythonModule(GetTrackNodeData, uid=self.uid, node=self.nodeName)
+        result = conn.runPythonModule(GetTrackNodeData, uid=self.uid, nodeName=self.nodeName)
         if result.payload.get('error'):
             print 'NODE ERROR:', result.payload.get('message')
             return False
 
+        print 'UpdateFromNode:', DictUtils.prettyPrint(result.payload)
         self.nodeName = result.payload.get('nodeName')
 
         if self.nodeName:

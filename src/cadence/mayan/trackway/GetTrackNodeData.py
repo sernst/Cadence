@@ -32,12 +32,12 @@ class GetTrackNodeData(NimbleScriptBase):
             return
 
         if node and TrackSceneUtils.checkNodeUidMatch(uid, node):
-            self.puts(success=True, node=node, props=TrackSceneUtils.getTrackProps(node))
+            self.puts(success=True, nodeName=node, props=TrackSceneUtils.getTrackProps(node))
             return
 
         node = TrackSceneUtils.getTrackNode(uid)
         if node:
-            self.puts(success=True, node=node, props=TrackSceneUtils.getTrackProps(node))
+            self.puts(success=True, nodeName=node, props=TrackSceneUtils.getTrackProps(node))
             return
 
         self.response.puts(success=False)

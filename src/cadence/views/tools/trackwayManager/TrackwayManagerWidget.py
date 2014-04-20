@@ -232,7 +232,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.widthLbl.setText(('%.2f (%.2f)') % (d[TrackPropEnum.WIDTH.name],
                                                   d[TrackPropEnum.WIDTH_MEASURED.name]))
 
-        print 'rotation =', d[TrackPropEnum.ROTATION.name]
         self.rotationLbl.setText(('%.2f') % (d[TrackPropEnum.ROTATION.name]))
 
         #self.dimensionalUncertainty ?? set the appropriate radio button
