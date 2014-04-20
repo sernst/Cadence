@@ -30,7 +30,6 @@ class GetSelectedUidList(NimbleScriptBase):
             self.puts(success=False, selectedUidList=selectedUidList)
             return
 
-        print "hi there"
         for n in selectedNodes:
             uid = TrackSceneUtils.getUid(n)
             if uid is not None:
