@@ -302,7 +302,7 @@
          <number>0</number>
         </property>
         <property name="text">
-         <string>trackway:</string>
+         <string>Trackway:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>

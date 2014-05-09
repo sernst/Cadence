@@ -96,6 +96,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.clearTrackwayUI()
         self.clearTrackUI()
         Tracks_Track.initializeCadenceCam()
+        cmds.select(clear=True)
         self._session = None
 
 #===================================================================================================
