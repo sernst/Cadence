@@ -103,22 +103,25 @@ class TrackwayManagerWidget(PyGlassWidget):
 #
 #
 #___________________________________________________________________________________________________ getTrack
-    def getTrack(self, v, uid =True):
-        """ This gets the track model instance, where v is either a given uid or name. """
+    def getTrack(self, uid):
+        """ This gets the track model instance, corresponding to a given uid. """
         model = Tracks_Track.MASTER
-        if uid:
-            return model.getByUid(v, self._getSession())
-        else:
-            return model.getByName(v, self._getSession())
+        return model.getByUid(uid, self._getSession())
+
+#___________________________________________________________________________________________________ getTrackByProperties
+    def getTrackByName(self, name, **kwargs):
+        """ This gets the track model instance by name plus trackway properties. """
+        model = Tracks_Track.MASTER
+        return model.getByName(name, self._getSession(), **kwargs)
 
 #___________________________________________________________________________________________________ getPreviousTrack
     def getPreviousTrack(self, track):
-        """ This encapsulates the session getter. """
+        """ This method just encapsulates the session getter. """
         return track.getPreviousTrack(self._getSession())
 
 #___________________________________________________________________________________________________ getNextTrack
     def getNextTrack(self, track):
-        """ This encapsulates the session getter. """
+        """ This method just encapsulates the session getter. """
         return track.getNextTrack(self._getSession())
 
 #___________________________________________________________________________________________________ getNode
@@ -228,7 +231,13 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ clearTrackwayUI
     def clearTrackwayUI(self):
         """ Clears the banner at the top of the UI. """
-        self.trackwayLbl.setText('[No Trackway Selected]')
+        self.commLE.setText('')
+        self.siteLE.setText('')
+        self.yearLE.setText('')
+        self.sectorLE.setText('')
+        self.levelLE.setText('')
+        self.trackwayTypeLE.setText('')
+        self.trackwayNumberLE.setText('')
 
 #___________________________________________________________________________________________________ clearTrackUI
     def clearTrackUI(self):
@@ -247,26 +256,25 @@ class TrackwayManagerWidget(PyGlassWidget):
         s = ''
         community = dict[TrackPropEnum.COMM.name]
         if community:
-            s += 'community = ' + community
+            self.commLE.setText(community)
         site = dict[TrackPropEnum.SITE.name]
         if site:
-            s += '    site = ' + site
+            self.siteLE.setText(site)
         year = dict[TrackPropEnum.YEAR.name]
         if year:
-            s += '    year = ' + year
+            self.yearLE.setText(year)
         sector = dict[TrackPropEnum.SECTOR.name]
         if sector:
-            s += '    sector = ' + sector
+            self.sectorLE.setText(sector)
         level = dict[TrackPropEnum.LEVEL.name]
         if level:
-            s += '    level = ' + level
+            self.levelLE.setText(level)
         type = dict[TrackPropEnum.TRACKWAY_TYPE.name]
         if type:
-            s += '    trackway = ' + type
+            self.trackwayTypeLE.setText(type)
         number = dict[TrackPropEnum.TRACKWAY_NUMBER.name]
         if number:
-            s += number
-        self.trackwayLbl.setText(s)
+            self.trackwayNumberLE.setText(number)
 
 #___________________________________________________________________________________________________ refreshTrackUI
     def refreshTrackUI(self, dict):
@@ -293,7 +301,7 @@ class TrackwayManagerWidget(PyGlassWidget):
     def getTrackwayPropertiesFromUI(self):
         """ Returns a dictionary of trackway properties, extracted from the UI. """
         d = dict()
-        d[TrackPropEnum.COMM.name]            = self.communityLE.text()
+        d[TrackPropEnum.COMM.name]            = self.commLE.text()
         d[TrackPropEnum.SITE.name]            = self.siteLE.text()
         d[TrackPropEnum.YEAR.name]            = self.yearLE.text()
         d[TrackPropEnum.SECTOR.name]          = self.sectorLE.text()
@@ -356,7 +364,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _handleWidthSbx
     def _handleWidthSbx(self):
         """ The width of the selected track is adjusted. """
-        print 'entering _handleWidthbx'
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return
@@ -365,14 +372,13 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._getSession()
             t = selectedTracks[0]
             t.width = self.widthSbx.value()
-            print 'current width value = %s ' % t.width
+            print 'in _handleWidthSbx: current width value = %s ' % t.width
             t.updateNode()
             self._closeSession(commit=True)
 
  #___________________________________________________________________________________________________ _handleLengthSbx
     def _handleLengthSbx(self):
         """ The length of the selected track is adjusted. """
-        print 'entering _handleLengthSbx'
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return
@@ -381,14 +387,13 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._getSession()
             t = selectedTracks[0]
             t.length = self.lengthSbx.value()
-            print 'current length value = %s ' % t.length
+            print 'in _handleLengthSbx: current length value = %s ' % t.length
             t.updateNode()
             self._closeSession(commit=True)
 
 #___________________________________________________________________________________________________ _handleRotationSpinBox
     def _handleRotationSbx(self):
         """ The rotation of the selected track (manus or pes) is adjusted. """
-        print 'entering _handleRotationSbx'
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return
@@ -397,7 +402,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._getSession()
             t = selectedTracks[0]
             t.rotation = self.rotationSbx.value()
-            print 'current rotation value = %s ' % t.rotation
+            print 'in _handleRotationSbx: current rotation value = %s ' % t.rotation
             t.updateNode()
             self._closeSession(commit=True)
 
@@ -412,7 +417,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._getSession()
             t = selectedTracks[0]
             t.x = self.xSbx.value()
-            print 'current x value = %s ' % t.x
+            print 'in _handleXSbx: current x value = %s ' % t.x
             t.updateNode()
             self._closeSession(commit=True)
 
@@ -529,13 +534,17 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _handleSelectBtn
     def _handleSelectBtn(self):
         if self.selectionMethodCB.currentText() == self.SELECT_BY_NAME:
-            print 'selected' + self.SELECT_BY_NAME
-            print 'track name =' + self.trackNameLE.text()
-            track = self.getTrack(self.trackNameLE.text(), False)[0]
-            print 'UID = ' + track.name
-            self.selectTrack(track)
-        elif self.selectionMethodCB.currentText() == self.SELECT_BY_INDEX:
-            print 'selected' + self.SELECT_BY_INDEX
+            name = self.trackNameLE.text()
+            print 'in _handleSelectBtn: requested track name =' + name
+            print "trackway properties from UI are:"
+            print self.getTrackwayPropertiesFromUI()
+            tracks = self.getTrackByName(name, self.getTrackwayPropertiesFromUI())
+            if len(tracks) == 1:
+                track = tracks[0]
+                print 'UID = ' + track.name
+                self.selectTrack(track)
+        elif self.selectTrackB.currentText() == self.SELECT_BY_INDEX:
+          print 'selected' + self.SELECT_BY_INDEX
         elif self.selectionMethodCB.currentText() == self.SELECT_ALL_BEFORE:
             print 'selected' + self.SELECT_ALL_BEFORE
         elif self.selectionMethodCB.currentText() == self.SELECT_ALL_AFTER:

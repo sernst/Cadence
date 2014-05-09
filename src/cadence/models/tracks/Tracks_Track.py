@@ -139,6 +139,7 @@ class Tracks_Track(TracksDefault):
             nearClipPlane=1,
             farClipPlane=100000,
             orthographicWidth=500)
+        cmds.setAttr(c[0] + '.visibility', False)
         cmds.rename(c[0], 'CadenceCam')
         cmds.rotate(-90, 180, 0)
         cmds.move(0, 100, 0, 'CadenceCam', absolute=True)
