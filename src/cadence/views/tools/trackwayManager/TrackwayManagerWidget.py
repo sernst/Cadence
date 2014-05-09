@@ -32,6 +32,12 @@ class TrackwayManagerWidget(PyGlassWidget):
 #                                                                                       C L A S S
     RESOURCE_FOLDER_PREFIX = ['tools']
 
+    SELECT_BY_NAME    = 'Select by Name'
+    SELECT_BY_INDEX   = 'Select by Index'
+    SELECT_ALL_BEFORE = 'Select All Before'
+    SELECT_ALL_AFTER  = 'Select All After'
+    SELECT_ALL        = 'Select All'
+
 #___________________________________________________________________________________________________ __init__
     def __init__(self, parent, **kwargs):
         super(TrackwayManagerWidget, self).__init__(parent, **kwargs)
@@ -42,6 +48,21 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.lastBtn.setIcon(QtGui.QIcon(self.getResourcePath('mediaIcons', 'last.png')))
 
         # in Track tab:
+        self.widthSbx.valueChanged.connect(self._handleWidthSbx)
+        self.widthSbx.setAccelerated(True)
+
+        self.lengthSbx.valueChanged.connect(self._handleLengthSbx)
+        self.lengthSbx.setAccelerated(True)
+
+        self.rotationSbx.valueChanged.connect(self._handleRotationSbx)
+        self.rotationSbx.setAccelerated(True)
+
+        self.xSbx.valueChanged.connect(self._handleXSbx)
+        self.xSbx.setAccelerated(True)
+
+        self.zSbx.valueChanged.connect(self._handleZSbx)
+        self.zSbx.setAccelerated(True)
+
         self.pullBtn.clicked.connect(self._handlePullBtn)
         self.pushBtn.clicked.connect(self._handlePushBtn)
 
@@ -54,11 +75,11 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.unlinkBtn.clicked.connect(self._handleUnlinkBtn)
 
         trackSelectionMethods = ('<Selection Method>',
-                                 'Select by Name',
-                                 'Select by Index',
-                                 'Select Previous',
-                                 'Select Subsequent',
-                                 'Select All')
+                                  self.SELECT_BY_NAME,
+                                  self.SELECT_BY_INDEX,
+                                  self.SELECT_ALL_BEFORE,
+                                  self.SELECT_ALL_AFTER,
+                                  self.SELECT_ALL)
 
         self.selectionMethodCB.addItems(trackSelectionMethods)
         self.selectBtn.clicked.connect(self._handleSelectBtn)
@@ -72,14 +93,44 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.hideAllTrackwaysBtn.clicked.connect(self._handleHideAllTrackwaysBtn)
         self.selectAllTrackwaysBtn.clicked.connect(self._handleSelectAllTrackwaysBtn)
 
-        self._clearTrackwayUI()
-        self._clearTrackUI()
+        self.clearTrackwayUI()
+        self.clearTrackUI()
+        Tracks_Track.initializeCadenceCam()
         self._session = None
 
 #===================================================================================================
 #                                                                                     P U B L I C
 #
-#__________________________________________________________________________________________________  getSelectedTracks
+#
+#___________________________________________________________________________________________________ getTrack
+    def getTrack(self, v, uid =True):
+        """ This gets the track model instance, where v is either a given uid or name. """
+        model = Tracks_Track.MASTER
+        if uid:
+            return model.getByUid(v, self._getSession())
+        else:
+            return model.getByName(v, self._getSession())
+
+#___________________________________________________________________________________________________ getPreviousTrack
+    def getPreviousTrack(self, track):
+        """ This encapsulates the session getter. """
+        return track.getPreviousTrack(self._getSession())
+
+#___________________________________________________________________________________________________ getNextTrack
+    def getNextTrack(self, track):
+        """ This encapsulates the session getter. """
+        return track.getNextTrack(self._getSession())
+
+#___________________________________________________________________________________________________ getNode
+    def getNode(self, track):
+        """ This gets the transient node name for this track. """
+        if track is None:
+            return None
+        if track.nodeName is None:
+            track.createNode()
+        return track.nodeName
+
+# __________________________________________________________________________________________________ getSelectedTracks
     def getSelectedTracks(self):
         """ This runs a remote script to get a list of the track UID from the selected Maya track
             nodes. A list of the corresponding track models with those UIDs is returned. """
@@ -95,64 +146,63 @@ class TrackwayManagerWidget(PyGlassWidget):
                 'Unable to get selected UID list from Maya', 'Error')
             return tracks
 
-        model = Tracks_Track.MASTER
         for uid in result.payload['selectedUidList']:
-            tracks.append(model.getByUid(uid, self._getSession()))
+            tracks.append(self.getTrack(uid))
         return tracks
 
-#___________________________________________________________________________________________________ getFirstTrack
-    def getFirstTrack(self):
+#___________________________________________________________________________________________________ getFirstTrackInSeries
+    def getFirstTrackInSeries(self):
         """ Returns the track model corresponding to the first track in a series. """
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
         t = selectedTracks[0]
-        p = t.getPreviousTrack(self._getSession())
+        p = self.getPreviousTrack(t)
         while p is not None:
             t = p
-            p = p.getPreviousTrack(self._getSession())
+            p = self.getPreviousTrack(p)
         return t
 
-#___________________________________________________________________________________________________ getLastTrack
-    def getLastTrack(self):
+#___________________________________________________________________________________________________ getLastTrackInSeries
+    def getLastTrackInSeries(self):
         """ Returns the track model corresponding to the last track in a series. """
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
 
         t = selectedTracks[-1]
-        n = t.getNextTrack(self._getSession())
+        n = self.getNextTrack(t)
         while n is not None:
             t = n
-            n = t.getNextTrack(self._getSession())
+            n = self.getNextTrack(n)
         return t
 
-#___________________________________________________________________________________________________ getFirstSelectedTrack
-    def getFirstSelectedTrack(self):
+#___________________________________________________________________________________________________ getFirstTrackInSelection
+    def getFirstTrackInSelection(self):
         """ Returns the track model corresponding to the first of a series of selected tracks. """
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
 
         t = selectedTracks[0]
-        p = t.getPreviousTrack(self._getSession())
+        p = self.getPreviousTrack(t)
         while p in selectedTracks:
             t = p
-            p =t.getPreviousTrack(self._getSession())
+            p = self.getPreviousTrack(p)
         return t
 
-#___________________________________________________________________________________________________ getLastSelectedTrack
-    def getLastSelectedTrack(self):
+#___________________________________________________________________________________________________ getLastTrackInSelection
+    def getLastTrackInSelection(self):
         """ Returns the track model corresponding to the last of a series of selected tracks. """
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
 
         t = selectedTracks[-1]
-        n = t.getNextTrack(self._getSession())
+        n = self.getNextTrack(t)
         while n in selectedTracks:
             t = n
-            n = t.getNextTrack(self._getSession())
+            n = self.getNextTrack(n)
         return t
 
  #__________________________________________________________________________________________________ getTrackSeries
@@ -160,116 +210,114 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ Steps backward from any selected track to the first track, then creates a list of all
             track models in a given series, in order. """
         series = list()
-        t = self.getFirstTrack()
+        t = self.getFirstTrackInSeries()
         while t:
             series.append(t)
-            t = t.getNextTrack()
+            t = self.getNextTrack(t)
         return series
 
 #___________________________________________________________________________________________________ selectTrack
     def selectTrack(self, track):
-        """ Select then focus the CadenceCam on the corresponding track node. """
-        cmds.select(track.nodeName)
+        """ Select the node corresponding to this track model instance, then focus the CadenceCam
+            upon this node. """
+        print 'in selectTrack, track node is %s' % self.getNode(track)
+        cmds.select(self.getNode(track))
         track.setCadenceCamFocus()
+        track.colorTrack()
 
-
-#===================================================================================================
-#                                                                               P R O T E C T E D
-
-
-#___________________________________________________________________________________________________ _clearTrackwayUI
-    def _clearTrackwayUI(self):
+#___________________________________________________________________________________________________ clearTrackwayUI
+    def clearTrackwayUI(self):
         """ Clears the banner at the top of the UI. """
         self.trackwayLbl.setText('[No Trackway Selected]')
 
-#___________________________________________________________________________________________________ _clearTrackUI
-    def _clearTrackUI(self):
+#___________________________________________________________________________________________________ clearTrackUI
+    def clearTrackUI(self):
         """ Clears out the text fields associated with the track parameters in the UI. """
 
-        self.lengthLbl.setText(u'---.-- (---.--)')
-        self.widthLbl.setText(u'---.-- (---.--)')
-        self.rotationLbl.setText(u'---.--')
-
-        #self.dimensionalUncertainty. ?? clear all radio buttons
-        #self.rotationalUncertainty ?? clear all radio buttons
+        self.lengthSbx.setValue(0)
+        self.widthSbx.setValue(0)
+        self.rotationSbx.setValue(0)
 
         self.noteTE.setText(u'')
         self.trackNameLE.setText(u'')
         self.trackIndexLE.setText(u'')
 #___________________________________________________________________________________________________ refreshTrackwayUI
-    def _refreshTrackwayUI(self, track):
+    def refreshTrackwayUI(self, dict):
         """ The trackway UI is updated using the values of the passed track model instance. """
         s = ''
-        if track.community:
-            s += 'community = ' + track.community
-        if track.site:
-            s += '    site = ' + track.site
-        if track.year:
-            s += '    year = ' + track.year
-        if track.sector:
-            s += '    sector = ' + track.sector
-        if track.level:
-            s += '    level = ' + track.level
-        if track.trackwayType:
-            s += '    trackway = ' + track.trackwayType
-        if track.trackwayNumber:
-            s += track.trackwayNumber
+        community = dict[TrackPropEnum.COMM.name]
+        if community:
+            s += 'community = ' + community
+        site = dict[TrackPropEnum.SITE.name]
+        if site:
+            s += '    site = ' + site
+        year = dict[TrackPropEnum.YEAR.name]
+        if year:
+            s += '    year = ' + year
+        sector = dict[TrackPropEnum.SECTOR.name]
+        if sector:
+            s += '    sector = ' + sector
+        level = dict[TrackPropEnum.LEVEL.name]
+        if level:
+            s += '    level = ' + level
+        type = dict[TrackPropEnum.TRACKWAY_TYPE.name]
+        if type:
+            s += '    trackway = ' + type
+        number = dict[TrackPropEnum.TRACKWAY_NUMBER.name]
+        if number:
+            s += number
         self.trackwayLbl.setText(s)
 
-#___________________________________________________________________________________________________ _refreshTrackUI
-    def _refreshTrackUI(self, track):
-        """ The track properties UI display is updated based on the passed track model instance.
-            The format for length is the fitted length (based on the node) and in parentheses is
-            the value from the catalog, with two decimal place precision e.g., 123.12 (123.12).
-            Note that there is length, width, rotation, and estimates of dimensional and
-            rotational uncertainty. """
+#___________________________________________________________________________________________________ refreshTrackUI
+    def refreshTrackUI(self, dict):
+        """ The track properties aspect of the UI display is updated based on a dictionary derived
+            from a given track model instance. """
+        self.widthSbx.setValue(dict[TrackPropEnum.WIDTH.name])
+        self.lengthSbx.setValue(dict[TrackPropEnum.LENGTH.name])
 
-        d = track.toDict()
+        self.rotationSbx.setValue(dict[TrackPropEnum.ROTATION.name])
 
-        self.lengthLbl.setText(('%.2f (%.2f)') % (d[TrackPropEnum.LENGTH.name],
-                                                  d[TrackPropEnum.LENGTH_MEASURED.name]))
-        self.widthLbl.setText(('%.2f (%.2f)') % (d[TrackPropEnum.WIDTH.name],
-                                                  d[TrackPropEnum.WIDTH_MEASURED.name]))
+        self.xSbx.setValue(dict[TrackPropEnum.X.name])
+        self.zSbx.setValue(dict[TrackPropEnum.Z.name])
+        self.noteTE.setText(dict[TrackPropEnum.NOTE.name])
 
-        print 'rotation =', d[TrackPropEnum.ROTATION.name]
-        self.rotationLbl.setText(('%.2f') % (d[TrackPropEnum.ROTATION.name]))
+        left   = dict[TrackPropEnum.LEFT.name]
+        pes    = dict[TrackPropEnum.PES.name]
+        number = dict[TrackPropEnum.NUMBER.name]
 
-        #self.dimensionalUncertainty ?? set the appropriate radio button
-        #self.rotationalUncertainty  ?? set the appropriate radio button
-
-        self.noteTE.setText(d[TrackPropEnum.NOTE.name])
-        self.trackNameLE.setText(track.name)
+        name = (u'L' if left else u'R') + (u'P' if pes else u'M') + number if number else u'-'
+        self.trackNameLE.setText(name)
         self.trackIndexLE.setText(unicode([TrackPropEnum.INDEX.name]))
 
-#___________________________________________________________________________________________________ _getTrackwayPropertiesFromUI
-    def _getTrackwayPropertiesFromUI(self):
+#___________________________________________________________________________________________________ getTrackwayPropertiesFromUI
+    def getTrackwayPropertiesFromUI(self):
         """ Returns a dictionary of trackway properties, extracted from the UI. """
-        out = dict()
-        out[TrackPropEnum.COMM.name] = self.communityLE.text()
-        out[TrackPropEnum.SITE.name] = self.siteLE.text()
-        out[TrackPropEnum.YEAR.name] = self.yearLE.text()
-        out[TrackPropEnum.SECTOR.name] = self.sectorLE.text()
-        out[TrackPropEnum.LEVEL.name] = self.levelLE.text()
-        out[TrackPropEnum.TRACKWAY_TYPE.name] = self.trackwayTypeLE.text()
-        out[TrackPropEnum.TRACKWAY_NUMBER.name] = self.trackwayNumberLE.text()
-        return out
-#___________________________________________________________________________________________________ _getTrackPropertiesFromUI
-    def _getTrackPropertiesFromUI(self):
+        d = dict()
+        d[TrackPropEnum.COMM.name]            = self.communityLE.text()
+        d[TrackPropEnum.SITE.name]            = self.siteLE.text()
+        d[TrackPropEnum.YEAR.name]            = self.yearLE.text()
+        d[TrackPropEnum.SECTOR.name]          = self.sectorLE.text()
+        d[TrackPropEnum.LEVEL.name]           = self.levelLE.text()
+        d[TrackPropEnum.TRACKWAY_TYPE.name]   = self.trackwayTypeLE.text()
+        d[TrackPropEnum.TRACKWAY_NUMBER.name] = self.trackwayNumberLE.text()
+        return d
+#___________________________________________________________________________________________________ getTrackPropertiesFromUI
+    def getTrackPropertiesFromUI(self):
         """ Returns a dictionary of track properties, extracted from the UI. """
         d = dict()
-        d[TrackPropEnum.X.name] = self.xLE.text()
-        d[TrackPropEnum.Z.name] = self.zLE.text()
-        d[TrackPropEnum.WIDTH.name] = self.widthLE.text()
-        d[TrackPropEnum.WIDTH_MEASURED.name] = self.widthMeasuredLE.text()
-        d[TrackPropEnum.WIDTH_UNCERTAINTY.name] = self.widthUncertaintyLE.text()
-        d[TrackPropEnum.LENGTH.name] = self.lengthLE.text()
-        d[TrackPropEnum.LENGTH_MEASURED.name] = self.lengthMeasuredLE.text()
-        d[TrackPropEnum.LENGTH_UNCERTAINTY.name] = self.lengthUncertaintyLE.text()
-        d[TrackPropEnum.DEPTH_MEASURED.name] = self.depthMeasuredLE.text()
-        d[TrackPropEnum.DEPTH_UNCERTAINTY.name] = self.depthUncertaintyLE.text()
-        d[TrackPropEnum.ROTATION.name] = self.rotationLE.text()
-        d[TrackPropEnum.ROTATION_UNCERTAINTY.name] = self.rotationUncertaintyLE.text()
-        d[TrackPropEnum.NOTE.name] = self.noteTE.text()
+        d[TrackPropEnum.X.name]                    = self.xLE.value()
+        d[TrackPropEnum.Z.name]                    = self.zLE.value()
+        d[TrackPropEnum.WIDTH.name]                = self.widthLE.value()
+        d[TrackPropEnum.WIDTH_MEASURED.name]       = self.widthMeasuredLE.value()
+        d[TrackPropEnum.WIDTH_UNCERTAINTY.name]    = self.widthUncertaintyLE.value()
+        d[TrackPropEnum.LENGTH.name]               = self.lengthLE.value()
+        d[TrackPropEnum.LENGTH_MEASURED.name]      = self.lengthMeasuredLE.value()
+        d[TrackPropEnum.LENGTH_UNCERTAINTY.name]   = self.lengthUncertaintyLE.value()
+        d[TrackPropEnum.DEPTH_MEASURED.name]       = self.depthMeasuredLE.float()
+        d[TrackPropEnum.DEPTH_UNCERTAINTY.name]    = self.depthUncertaintyLE.float()
+        d[TrackPropEnum.ROTATION.name]             = self.rotationLE.float()
+        d[TrackPropEnum.ROTATION_UNCERTAINTY.name] = self.rotationUncertaintyLE.float()
+        d[TrackPropEnum.NOTE.name]                 = self.noteTE.text()
         return d
 
 #___________________________________________________________________________________________________ exportSelected
@@ -300,6 +348,89 @@ class TrackwayManagerWidget(PyGlassWidget):
     #     i = self.trackwayCB.findText(trackway)
     #     self.trackwayCB.setCurrentIndex(i)
 
+
+#===================================================================================================
+#                                                                               P R O T E C T E D
+
+
+#___________________________________________________________________________________________________ _handleWidthSbx
+    def _handleWidthSbx(self):
+        """ The width of the selected track is adjusted. """
+        print 'entering _handleWidthbx'
+        selectedTracks = self.getSelectedTracks()
+        if not selectedTracks:
+            return
+
+        if len(selectedTracks) == 1:
+            self._getSession()
+            t = selectedTracks[0]
+            t.width = self.widthSbx.value()
+            print 'current width value = %s ' % t.width
+            t.updateNode()
+            self._closeSession(commit=True)
+
+ #___________________________________________________________________________________________________ _handleLengthSbx
+    def _handleLengthSbx(self):
+        """ The length of the selected track is adjusted. """
+        print 'entering _handleLengthSbx'
+        selectedTracks = self.getSelectedTracks()
+        if not selectedTracks:
+            return
+
+        if len(selectedTracks) == 1:
+            self._getSession()
+            t = selectedTracks[0]
+            t.length = self.lengthSbx.value()
+            print 'current length value = %s ' % t.length
+            t.updateNode()
+            self._closeSession(commit=True)
+
+#___________________________________________________________________________________________________ _handleRotationSpinBox
+    def _handleRotationSbx(self):
+        """ The rotation of the selected track (manus or pes) is adjusted. """
+        print 'entering _handleRotationSbx'
+        selectedTracks = self.getSelectedTracks()
+        if not selectedTracks:
+            return
+
+        if len(selectedTracks) == 1:
+            self._getSession()
+            t = selectedTracks[0]
+            t.rotation = self.rotationSbx.value()
+            print 'current rotation value = %s ' % t.rotation
+            t.updateNode()
+            self._closeSession(commit=True)
+
+#___________________________________________________________________________________________________ _handleXSbx
+    def _handleXSbx(self):
+        """ The x coordinate of the selected track (manus or pes) is adjusted. """
+        selectedTracks = self.getSelectedTracks()
+        if not selectedTracks:
+            return
+
+        if len(selectedTracks) == 1:
+            self._getSession()
+            t = selectedTracks[0]
+            t.x = self.xSbx.value()
+            print 'current x value = %s ' % t.x
+            t.updateNode()
+            self._closeSession(commit=True)
+
+#___________________________________________________________________________________________________ _handleZSbx
+    def _handleZSbx(self):
+        """ The x coordinate of the selected track (manus or pes) is adjusted. """
+        selectedTracks = self.getSelectedTracks()
+        if not selectedTracks:
+            return
+
+        if len(selectedTracks) == 1:
+            self._getSession()
+            t = selectedTracks[0]
+            t.z = self.zSbx.value()
+            print 'current z value = %s ' % t.z
+            t.updateNode()
+            self._closeSession(commit=True)
+
 #___________________________________________________________________________________________________ _handlePullBtn
     def _handlePullBtn(self):
         """ The transform data in the selected track node(s) is used to populate the UI. Note that
@@ -308,28 +439,29 @@ class TrackwayManagerWidget(PyGlassWidget):
             trackway UI) is cleared. """
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
-            print 'clearing both UIs'
-            self._clearTrackwayUI()
-            self._clearTrackUI()
+            self.clearTrackwayUI()
+            self.clearTrackUI()
             return
 
         for t in selectedTracks:
             t.updateFromNode()
 
         t = selectedTracks[-1]
+        print 'in _handlePullBtn, t = %s' % t.name
 
-        self._refreshTrackwayUI(t)
+        dict = t.toDict()
+        self.refreshTrackwayUI(dict)
         if len(selectedTracks) == 1:
-            self._refreshTrackUI(t)
+            self.refreshTrackUI(dict)
         else:
-            self._clearTrackUI()
+            self.clearTrackUI()
         self._closeSession(commit=True)
 #___________________________________________________________________________________________________ _handlePushBtn
     def _handlePushBtn(self):
         """ The UI can be used to set some (but not all) attributes in both the database and in
             the Maya scene representation.  For instance, multiple track nodes can be selected, and
             their rotational uncertainty set to all by clicking a given uncertainty radio button
-            then this push button.  One can also link multiple (or unlink multiple) by this method.
+            then this push button.  One can also link (or unlink) multiple tracks by this method.
             The data specific to an instance of track model is updated with data extracted from the
             UI then the track model is used to update the node, and the session is closed. """
         selectedTracks = self.getSelectedTracks()
@@ -338,55 +470,86 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         if len(selectedTracks) == 1:
             self._getSession()
-            Tracks_Track.fromDict(self._getTrackwayPropertiesFromUI())
-            Tracks_Track.updateNode()
+            t = selectedTracks[0]
+            t.updateNode()
+#            Tracks_Track.fromDict(self.getTrackwayPropertiesFromUI())
+#            Tracks_Track.updateNode()
             self._closeSession(commit=True)
 
 # __________________________________________________________________________________________________ _handleFirstBtn
     def _handleFirstBtn(self):
         """ Get the first track, select the corresponding node, and focus the camera on it. """
-        t = self.getFirstTrack()
+        t = self.getFirstTrackInSeries()
         if t is None:
             return
+
         self.selectTrack(t)
-        self.importFromMaya()
+        self.refreshTrackUI(t.toDict())
 
 #___________________________________________________________________________________________________ gotoPrevTrack
     def _handlePrevBtn(self):
-        """ Get the previous track, select the corresponding node, and focus the camera on it. """
-        t = self.getFirstSelectedTrack()
+        """ Get the previous track, select its corresponding node, and focus the camera on it. If
+            there is no previous node, just leave the current node selected. """
+        t = self.getFirstTrackInSelection()
         if t is None:
             return
-        p = t.prevTrack
-        self.selectTrack(p if p else t)
-        self.importFromMaya()
+
+        t = self.getPreviousTrack(t)
+        if t is None:
+            return
+
+        self.selectTrack(t)
+        self.refreshTrackUI(t.toDict())
 
 #___________________________________________________________________________________________________ _handleNextBtn
     def _handleNextBtn(self):
-        """ Get the next track, select the corresponding node, and focus the camera on it. """
-        t = self.getLastSelectedTrack()
+        """ Get the next track, select its corresponding node, and focus the camera on it. If
+            there is no next node, just leave the current node selected. """
+        t = self.getLastTrackInSelection()
         if t is None:
             return
-        n = t.nextTrack
-        self.selectTrack(n if n else t)
-        self.importFromMaya()
+
+        t = self.getNextTrack(t)
+        if t is None:
+            return
+
+        self.selectTrack(t)
+        self.refreshTrackUI(t.toDict())
 
 #___________________________________________________________________________________________________ _handleLastBtn
     def _handleLastBtn(self):
         """ Get the last track, select the corresponding node, and focus the camera on it. """
-        t = self.getLastTrack()
+        t = self.getLastTrackInSeries()
         if t is None:
             return
+
         self.selectTrack(t)
-        self.importFromMaya()
+        self.refreshTrackUI(t.toDict())
 
 #___________________________________________________________________________________________________ _handleSelectBtn
     def _handleSelectBtn(self):
-        pass
+        if self.selectionMethodCB.currentText() == self.SELECT_BY_NAME:
+            print 'selected' + self.SELECT_BY_NAME
+            print 'track name =' + self.trackNameLE.text()
+            track = self.getTrack(self.trackNameLE.text(), False)[0]
+            print 'UID = ' + track.name
+            self.selectTrack(track)
+        elif self.selectionMethodCB.currentText() == self.SELECT_BY_INDEX:
+            print 'selected' + self.SELECT_BY_INDEX
+        elif self.selectionMethodCB.currentText() == self.SELECT_ALL_BEFORE:
+            print 'selected' + self.SELECT_ALL_BEFORE
+        elif self.selectionMethodCB.currentText() == self.SELECT_ALL_AFTER:
+            print 'selected' + self.SELECT_ALL_AFTER
+        elif self.selectionMethodCB.currentText() == self.SELECT_ALL:
+            print 'selected' + self.SELECT_ALL
+        else:
+            print 'choose a method by which to select a track or tracks then click select'
+
+
     # def _handleSelectPriorBtn(self):
     #      """ Selects in Maya all nodes in the given track series up to but not including the first
     #       selected track. """
-    #      t = self.getFirstSelectedTrack()
+    #      t = self.getFirstTrackInSelection()
     #      if t is None:
     #          return
     #
@@ -399,7 +562,7 @@ class TrackwayManagerWidget(PyGlassWidget):
     #
     # def _handleSelectLaterBtn(self):
     #     """ Selects in Maya all nodes in the given track series after the last selected track. """
-    #     t = self.getLastSelectedTrack()
+    #     t = self.getLastTrackInSelection()
     #     if t is None:
     #         return
     #

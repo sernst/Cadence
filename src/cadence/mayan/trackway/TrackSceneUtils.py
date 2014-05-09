@@ -13,13 +13,79 @@ from cadence.enum.TrackPropEnum import TrackPropEnum
 
 #___________________________________________________________________________________________________ TrackSceneUtils
 class TrackSceneUtils(object):
-    """A class for..."""
+    """ A class for supporting Maya-side operations such as creating visual representations of Track
+        nodes (createTrackNode), and getting and setting those values.  Used by remote scripts that
+        extend NimbleScriptBase. """
 
 #===================================================================================================
 #                                                                                       C L A S S
 
-    TRACK_RADIUS = 50
-    Y_VEC  = (0, 1, 0)
+    DISK_RADIUS = 10
+#___________________________________________________________________________________________________ createTrackNode
+    # @classmethod
+    # def createTrackNode(cls, uid, trackSetNode =None, props =None):
+    #     if not trackSetNode:
+    #         trackSetNode = TrackSceneUtils.getTrackSetNode()
+    #     if not trackSetNode:
+    #         return None
+    #
+    #     node = cls.getTrackNode(uid, trackSetNode=trackSetNode)
+    #     if node:
+    #         return node
+    #
+    #     a    = 2.0*cls.TRACK_RADIUS
+    #     node = cmds.polyCylinder(
+    #         radius=cls.TRACK_RADIUS,
+    #         height=5,
+    #         subdivisionsX=40,
+    #         subdivisionsY=1,
+    #         subdivisionsZ=1,
+    #         axis=cls.Y_VEC,
+    #         roundCap=0,
+    #         createUVs=2,
+    #         constructionHistory=1,
+    #         name='track0')[0]
+    #
+    #     p = cmds.polyPrism(
+    #         length=4,
+    #         sideLength=a,
+    #         numberOfSides=3,
+    #         subdivisionsHeight=1,
+    #         subdivisionsCaps=0,
+    #         axis=cls.Y_VEC,
+    #         createUVs=3,
+    #         constructionHistory=1,
+    #         name='pointer')[0]
+    #
+    #     cmds.rotate(0.0, -90.0, 0.0)
+    #     cmds.scale(1.0/math.sqrt(3.0), 1.0, 1.0)
+    #     cmds.move(0, 5, a/6.0)
+    #
+    #     cmds.setAttr(p + '.overrideEnabled', 1)
+    #     cmds.setAttr(p + '.overrideDisplayType', 2)
+    #
+    #     cmds.parent(p, node)
+    #
+    #     cmds.select(node)
+    #
+    #     cmds.setAttr(node + '.rotateX', lock=True)
+    #     cmds.setAttr(node + '.rotateZ', lock=True)
+    #     cmds.setAttr(node + '.scaleY', lock=True)
+    #     cmds.setAttr(node + '.translateY', lock=True)
+    #
+    #     cmds.addAttr(
+    #         longName='cadence_uniqueId',
+    #         shortName=TrackPropEnum.UID.maya,
+    #         dataType='string',
+    #         niceName='Unique ID')
+    #
+    #     # Add the new nodeName to the Cadence track scene set
+    #     cmds.sets(node, add=trackSetNode)
+    #
+    #     if props:
+    #         cls.setTrackProps(node, props)
+    #
+    #     return node
 
 #___________________________________________________________________________________________________ createTrackNode
     @classmethod
@@ -33,51 +99,93 @@ class TrackSceneUtils(object):
         if node:
             return node
 
-        a    = 2.0*cls.TRACK_RADIUS
-        node = cmds.polyCylinder(
-            radius=cls.TRACK_RADIUS,
-            height=5,
-            subdivisionsX=40,
-            subdivisionsY=1,
-            subdivisionsZ=1,
-            axis=cls.Y_VEC,
-            roundCap=0,
-            createUVs=2,
-            constructionHistory=1,
-            name='track0')[0]
-
-        p = cmds.polyPrism(
-            length=4,
+        a = 100
+        node = cmds.polyPrism(
+            length=0.5,
             sideLength=a,
             numberOfSides=3,
             subdivisionsHeight=1,
             subdivisionsCaps=0,
-            axis=cls.Y_VEC,
+            axis=(0,1,0),
             createUVs=3,
             constructionHistory=1,
-            name='pointer')[0]
-
+            name='Track0')[0]
+        cmds.scale(2.0/math.sqrt(3.0), 1.0, 1.0)
         cmds.rotate(0.0, -90.0, 0.0)
-        cmds.scale(1.0/math.sqrt(3.0), 1.0, 1.0)
-        cmds.move(0, 5, a/6.0)
 
-        cmds.setAttr(p + '.overrideEnabled', 1)
-        cmds.setAttr(p + '.overrideDisplayType', 2)
+        cmds.move(0, 0, a/3.0)
+        cmds.move(0, 0, 0, node + ".scalePivot", node + ".rotatePivot", absolute=True)
+        cmds.makeIdentity(
+            apply=True,
+            translate=True,
+            rotate=True,
+            scale=True,
+            normal=False)
+        cmds.move(0, -1.0, 0)
 
-        cmds.parent(p, node)
+        tail = cmds.polyCube(
+            axis=(0,1,0),
+            width=10.0,
+            height=0.5,
+            depth=100.0,
+            subdivisionsX=1,
+            subdivisionsY=1,
+            createUVs=3,
+            constructionHistory=1,
+            name='Tail')[0]
+        cmds.move(0, 0, -50)
+        cmds.move(0, 0, 0, tail + ".scalePivot", tail + ".rotatePivot", absolute=True)
+        cmds.makeIdentity(
+            apply=True,
+            translate=True,
+            rotate=True,
+            scale=True,
+            normal=False)
+        cmds.move(0, -1.0, 0)
+        cmds.setAttr(tail + '.overrideEnabled', 1)
+        cmds.setAttr(tail + '.overrideDisplayType', 2)
+        cmds.parent(tail, node)
 
         cmds.select(node)
-
         cmds.setAttr(node + '.rotateX', lock=True)
         cmds.setAttr(node + '.rotateZ', lock=True)
         cmds.setAttr(node + '.scaleY', lock=True)
         cmds.setAttr(node + '.translateY', lock=True)
-
         cmds.addAttr(
             longName='cadence_uniqueId',
             shortName=TrackPropEnum.UID.maya,
             dataType='string',
             niceName='Unique ID')
+
+        cmds.addAttr(
+            longName='cadence_length',
+#            shortName=TrackPropEnum.LENGTH,
+            shortName='length',
+            niceName='Length')
+
+        cmds.addAttr(
+            longName='cadence_width',
+#            shortName=TrackPropEnum.WIDTH,
+            shortName='width',
+            niceName='Width')
+
+        cmds.addAttr(
+            longName='cadence_widthUncertainty',
+#            shortName=TrackPropEnum.WIDTH_UNCERTAINTY,
+            shortName='widthUncertainty',
+            niceName='WidthUncertainty')
+
+        cmds.addAttr(
+            longName='cadence_lengthUncertainty',
+#            shortName=TrackPropEnum.LENGTH_UNCERTAINTY,
+            shortName='lengthUncertainty',
+            niceName='LengthUncertainty')
+
+# these are just for now, until they are being computed correctly
+        cmds.setAttr(node + '.width', .3)
+        cmds.setAttr(node + '.length', .4)
+        cmds.setAttr(node + '.widthUncertainty', 0.01)
+        cmds.setAttr(node + '.lengthUncertainty', 0.01)
 
         # Add the new nodeName to the Cadence track scene set
         cmds.sets(node, add=trackSetNode)

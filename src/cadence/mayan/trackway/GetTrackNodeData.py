@@ -16,7 +16,7 @@ class GetTrackNodeData(NimbleScriptBase):
 
         <- success      | Boolean specifying if the find operation was able to locate a nodeName with
                             the specified uid argument.
-        <- [nodeName]       | Node name of the transform nodeName found with the matching uid if such a
+        <- [nodeName]   | Node name of the transform nodeName found with the matching uid if such a
                             nodeName was found. """
 
 #===================================================================================================

@@ -190,6 +190,26 @@ class TracksDefault(PyGlassModelsDefault):
 
         return query.all()
 
+#___________________________________________________________________________________________________ getByName
+    @classmethod
+    def getByName(cls, name, session):
+        """ Returns the Tracks_Track model instance for the specified name (e.g., 'LM3'). """
+        name = name.strip()
+        print 'in getByName, name is now %s' % name
+        if not name:
+            return 'fooie, name is empty'
+
+        if StringUtils.begins(name.upper(), [u'M', u'P']):
+            left = name[1].upper() == u'L'
+            pes  = name[0].upper() == u'P'
+        else:
+            left = name[0].upper() == u'L'
+            pes  = name[1].upper() == u'P'
+        number = name[2:].upper()
+        results = cls.getByProperties(session, left=left, pes=pes, number=number)
+        print results
+        return results
+
 #===================================================================================================
 #                                                                               P R O T E C T E D
 

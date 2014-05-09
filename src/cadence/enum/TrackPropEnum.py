@@ -43,10 +43,17 @@ class TrackPropEnum(object):
     # a boolean indicating left versus right track, defaults to false if unknown
     LEFT = TRACK_PROP_NT('left', 'bool', None, True)
 
-    # the length of a given track (as fitted by an ellipse, as previously measured, and uncertainty)
-    LENGTH             = TRACK_PROP_NT('length',            'float', 'scaleZ', False)
-    LENGTH_MEASURED    = TRACK_PROP_NT('lengthMeasured',    'float', None,     False)
-    LENGTH_UNCERTAINTY = TRACK_PROP_NT('lengthUncertainty', 'float', None,     False)
+    # the length of a given track estimated from map, as previously measured, and uncertainty)
+    # the center of the track is defined by the point of maximum width and length.  Note that the
+    # length is measured from anterior to posterior intersection with inner margin of the track,
+    # and in hoof-shaped manus tracks the length is mostly anterior to the center, while in pes
+    # tracks, the track has a longer heal region posterior to the point of maximum width.  The
+    # center is thus offset a fraction (0.0 to 1.0) of the length measurement measured anteriorly,
+    # and >0.5 for manus tracks, <0.5 for pes.  In terms of the Maya track node, the length measure
+    # is offset in object-coordintes z by this fraction of the length (which is scaleZ).
+    LENGTH             = TRACK_PROP_NT('length',            'float', 'length', False)
+    LENGTH_MEASURED    = TRACK_PROP_NT('lengthMeasured',    'float',  None, False)
+    LENGTH_UNCERTAINTY = TRACK_PROP_NT('lengthUncertainty', 'float',  'lengthUncertainty', False)
 
     # a given tracksite has multiple levels
     LEVEL = TRACK_PROP_NT('level', 'string', None, True)
@@ -84,7 +91,7 @@ class TrackPropEnum(object):
 
     # a trackway is numbered at a given site/level, and consists of four (for quadrupedal) or
     # two (bipedal) track series.
-    TRACKWAY_NUMBER = TRACK_PROP_NT('trackwayNumber',  'string', None, True)
+    TRACKWAY_NUMBER = TRACK_PROP_NT('trackwayNumber', 'string', None, True)
 
     # trackways are 'S' for sauropod, 'T' for theropod, 'tr' for tridactyl, and 'U' for unclassified
     TRACKWAY_TYPE = TRACK_PROP_NT('trackwayType', 'string', None, True)
@@ -93,10 +100,10 @@ class TrackPropEnum(object):
     # for the lifetime of the track. The UID has no dependence upon any other track property
     UID = TRACK_PROP_NT('uid', 'string', 'track_uid', False)
 
-    # the width of a given track (as fitted by an ellipse, as previously measured, and uncertainty)
-    WIDTH             = TRACK_PROP_NT('width',            'float', 'scaleX', False)
-    WIDTH_MEASURED    = TRACK_PROP_NT('widthMeasured',    'float', None,     False)
-    WIDTH_UNCERTAINTY = TRACK_PROP_NT('widthUncertainty', 'float', None,     False)
+    # the width of a given track, the value previously measured, and the uncertainty
+    WIDTH             = TRACK_PROP_NT('width',            'float', 'sx', False)
+    WIDTH_MEASURED    = TRACK_PROP_NT('widthMeasured',    'float', None, False)
+    WIDTH_UNCERTAINTY = TRACK_PROP_NT('widthUncertainty', 'float', 'widthUncertainty', False)
 
     # the x coordinate of a given track (relative to tracksite's map origin) encoded in nodeName
     X = TRACK_PROP_NT('x', 'float', 'translateX', False)

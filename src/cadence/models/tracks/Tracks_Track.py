@@ -43,15 +43,18 @@ class Tracks_Track(TracksDefault):
 
 #___________________________________________________________________________________________________ createNode
     def createNode(self):
-        """ Create an elliptical cylinder (disk) plus a superimposed triangular pointer to signify
-            the position, dimensions, and rotation of a manus or pes print.  The cylinder has a
-            diameter of one meter so that the scale in x and z equates to the width and length of
-            the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The pointer is made
-            non-selectable (reference) and the marker is prohibited from changing y (elevation) or
-            to rotate about either x or z.  The color of the cylinder indicates manus versus pes,
-            and the color of the pointer on top of the cylinder indicates left versus right."""
+        """ Create a visual representation of a track, to signify the position, dimensions (length
+            and width), and rotation of either a manus or pes print.  The representation has
+            basic dimensions of one meter so that the scale in x and z equates to the width and
+            length of the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  Individual
+            components within the track node are made non-selectable (reference) and the marker is
+            prohibited from changing y (elevation) or to rotate about either x or z. """
         conn = nimble.getConnection()
-        out  = conn.runPythonModule(CreateTrackNode, uid=self.uid, props=self.toMayaNodeDict())
+        out  = conn.runPythonModule(
+            CreateTrackNode,
+            uid=self.uid,
+            props=self.toMayaNodeDict(),
+            runInMaya=False)
         if not out.success:
             print 'CREATE NODE ERROR:', out.error
             return None
@@ -97,15 +100,16 @@ class Tracks_Track(TracksDefault):
         if not self.nodeName:
             return False
 
-        if self.pes:
-            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.nodeName)
-        else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.nodeName)
-
         if self.left:
-            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.nodeName + '|pointer')
+            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.nodeName)
         else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.nodeName + '|pointer')
+            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.nodeName)
+
+        if self.pes:
+            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.nodeName + '|Tail')
+        else:
+            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.nodeName + '|Tail')
+
 
         return True
 
@@ -118,6 +122,7 @@ class Tracks_Track(TracksDefault):
             return
 
         if not cmds.objExists('CadenceCam'):
+            print 'hmmm, no CadenceCam'
             self.initializeCadenceCam()
         height = cmds.xform('CadenceCam', query=True, translation=True)[1]
         cmds.move(self.x, height, self.z, 'CadenceCam', absolute=True)
