@@ -74,12 +74,13 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.linkBtn.clicked.connect(self._handleLinkBtn)
         self.unlinkBtn.clicked.connect(self._handleUnlinkBtn)
 
-        trackSelectionMethods = ('<Selection Method>',
-                                  self.SELECT_BY_NAME,
-                                  self.SELECT_BY_INDEX,
-                                  self.SELECT_ALL_BEFORE,
-                                  self.SELECT_ALL_AFTER,
-                                  self.SELECT_ALL)
+        trackSelectionMethods = (
+            '<Selection Method>',
+            self.SELECT_BY_NAME,
+            self.SELECT_BY_INDEX,
+            self.SELECT_ALL_BEFORE,
+            self.SELECT_ALL_AFTER,
+            self.SELECT_ALL)
 
         self.selectionMethodCB.addItems(trackSelectionMethods)
         self.selectBtn.clicked.connect(self._handleSelectBtn)
@@ -251,6 +252,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.noteTE.setText(u'')
         self.trackNameLE.setText(u'')
         self.trackIndexLE.setText(u'')
+
 #___________________________________________________________________________________________________ refreshTrackwayUI
     def refreshTrackwayUI(self, dict):
         """ The trackway UI is updated using the values of the passed track model instance. """
@@ -539,12 +541,12 @@ class TrackwayManagerWidget(PyGlassWidget):
             print 'in _handleSelectBtn: requested track name =' + name
             print "trackway properties from UI are:"
             print self.getTrackwayPropertiesFromUI()
-            tracks = self.getTrackByName(name, self.getTrackwayPropertiesFromUI())
+            tracks = self.getTrackByName(name, **self.getTrackwayPropertiesFromUI())
             if len(tracks) == 1:
                 track = tracks[0]
                 print 'UID = ' + track.name
                 self.selectTrack(track)
-        elif self.selectTrackB.currentText() == self.SELECT_BY_INDEX:
+        elif self.selectTrack.currentText() == self.SELECT_BY_INDEX:
           print 'selected' + self.SELECT_BY_INDEX
         elif self.selectionMethodCB.currentText() == self.SELECT_ALL_BEFORE:
             print 'selected' + self.SELECT_ALL_BEFORE
