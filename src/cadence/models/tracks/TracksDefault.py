@@ -203,9 +203,9 @@ class TracksDefault(PyGlassModelsDefault):
             left = name[0].upper() == u'L'
             pes  = name[1].upper() == u'P'
         number = name[2:].upper()
-        kwargs[left] = left
-        kwargs[pes] = pes
-        kwargs[number] = number
+        kwargs[TrackPropEnum.LEFT.name] = left
+        kwargs[TrackPropEnum.PES.name] = pes
+        kwargs[TrackPropEnum.NUMBER.name] = number
         results = cls.getByProperties(session, **kwargs)
         print results
         return results
