@@ -21,71 +21,6 @@ class TrackSceneUtils(object):
 #                                                                                       C L A S S
 
     DISK_RADIUS = 10
-#___________________________________________________________________________________________________ createTrackNode
-    # @classmethod
-    # def createTrackNode(cls, uid, trackSetNode =None, props =None):
-    #     if not trackSetNode:
-    #         trackSetNode = TrackSceneUtils.getTrackSetNode()
-    #     if not trackSetNode:
-    #         return None
-    #
-    #     node = cls.getTrackNode(uid, trackSetNode=trackSetNode)
-    #     if node:
-    #         return node
-    #
-    #     a    = 2.0*cls.TRACK_RADIUS
-    #     node = cmds.polyCylinder(
-    #         radius=cls.TRACK_RADIUS,
-    #         height=5,
-    #         subdivisionsX=40,
-    #         subdivisionsY=1,
-    #         subdivisionsZ=1,
-    #         axis=cls.Y_VEC,
-    #         roundCap=0,
-    #         createUVs=2,
-    #         constructionHistory=1,
-    #         name='track0')[0]
-    #
-    #     p = cmds.polyPrism(
-    #         length=4,
-    #         sideLength=a,
-    #         numberOfSides=3,
-    #         subdivisionsHeight=1,
-    #         subdivisionsCaps=0,
-    #         axis=cls.Y_VEC,
-    #         createUVs=3,
-    #         constructionHistory=1,
-    #         name='pointer')[0]
-    #
-    #     cmds.rotate(0.0, -90.0, 0.0)
-    #     cmds.scale(1.0/math.sqrt(3.0), 1.0, 1.0)
-    #     cmds.move(0, 5, a/6.0)
-    #
-    #     cmds.setAttr(p + '.overrideEnabled', 1)
-    #     cmds.setAttr(p + '.overrideDisplayType', 2)
-    #
-    #     cmds.parent(p, node)
-    #
-    #     cmds.select(node)
-    #
-    #     cmds.setAttr(node + '.rotateX', lock=True)
-    #     cmds.setAttr(node + '.rotateZ', lock=True)
-    #     cmds.setAttr(node + '.scaleY', lock=True)
-    #     cmds.setAttr(node + '.translateY', lock=True)
-    #
-    #     cmds.addAttr(
-    #         longName='cadence_uniqueId',
-    #         shortName=TrackPropEnum.UID.maya,
-    #         dataType='string',
-    #         niceName='Unique ID')
-    #
-    #     # Add the new nodeName to the Cadence track scene set
-    #     cmds.sets(node, add=trackSetNode)
-    #
-    #     if props:
-    #         cls.setTrackProps(node, props)
-    #
-    #     return node
 
 #___________________________________________________________________________________________________ createTrackNode
     @classmethod
@@ -123,6 +58,28 @@ class TrackSceneUtils(object):
             normal=False)
         cmds.move(0, -1.0, 0)
 
+# set up additional attributes to map from track data to node attributes
+        cmds.addAttr(
+            longName='cadence_length',
+#            shortName=TrackPropEnum.LENGTH,
+            shortName='length',
+            niceName='Length')
+        cmds.addAttr(
+            longName='cadence_width',
+#            shortName=TrackPropEnum.WIDTH,
+            shortName='width',
+            niceName='Width')
+        cmds.addAttr(
+            longName='cadence_widthUncertainty',
+#           shortName=TrackPropEnum.WIDTH_UNCERTAINTY,
+            shortName='widthUncertainty',
+            niceName='WidthUncertainty')
+        cmds.addAttr(
+            longName='cadence_lengthUncertainty',
+#           shortName=TrackPropEnum.LENGTH_UNCERTAINTY,
+            shortName='lengthUncertainty',
+            niceName='LengthUncertainty')
+
         tail = cmds.polyCube(
             axis=(0,1,0),
             width=10.0,
@@ -144,6 +101,18 @@ class TrackSceneUtils(object):
         cmds.move(0, -1.0, 0)
         cmds.setAttr(tail + '.overrideEnabled', 1)
         cmds.setAttr(tail + '.overrideDisplayType', 2)
+
+        # the tail length is the track length (node.length) minus the head length (node.scaleZ)
+        tailLength = cmds.createNode('plusMinusAverage', name='tailLength')
+        cmds.setAttr(tailLength + '.operation', 2)
+        cmds.connectAttr(node + '.length', tailLength + '.input1D[0]')
+        cmds.connectAttr(node + '.sz', tailLength + '.input1D[1]')
+        normalizeScale = cmds.createNode('multiplyDivide', name='normalizeScale')
+        cmds.setAttr(normalizeScale + '.operation', 2)
+        cmds.connectAttr(tailLength + '.output1D', normalizeScale + '.input1X')
+        cmds.connectAttr(node + '.sz', normalizeScale + '.input2X')
+        cmds.connectAttr(normalizeScale + '.outputX', tail + '.sz')
+
         cmds.parent(tail, node)
 
         cmds.select(node)
@@ -157,35 +126,11 @@ class TrackSceneUtils(object):
             dataType='string',
             niceName='Unique ID')
 
-        cmds.addAttr(
-            longName='cadence_length',
-#            shortName=TrackPropEnum.LENGTH,
-            shortName='length',
-            niceName='Length')
-
-        cmds.addAttr(
-            longName='cadence_width',
-#            shortName=TrackPropEnum.WIDTH,
-            shortName='width',
-            niceName='Width')
-
-        cmds.addAttr(
-            longName='cadence_widthUncertainty',
-#            shortName=TrackPropEnum.WIDTH_UNCERTAINTY,
-            shortName='widthUncertainty',
-            niceName='WidthUncertainty')
-
-        cmds.addAttr(
-            longName='cadence_lengthUncertainty',
-#            shortName=TrackPropEnum.LENGTH_UNCERTAINTY,
-            shortName='lengthUncertainty',
-            niceName='LengthUncertainty')
-
-# these are just for now, until they are being computed correctly
+# initialize the values of the attributes (this is for testing only)
         cmds.setAttr(node + '.width', .3)
-        cmds.setAttr(node + '.length', .4)
-        cmds.setAttr(node + '.widthUncertainty', 0.01)
-        cmds.setAttr(node + '.lengthUncertainty', 0.01)
+        cmds.setAttr(node + '.length', .5)
+#       cmds.setAttr(node + '.widthUncertainty', 0.01)
+#       cmds.setAttr(node + '.lengthUncertainty', 0.01)
 
         # Add the new nodeName to the Cadence track scene set
         cmds.sets(node, add=trackSetNode)

@@ -45,15 +45,15 @@ class TrackPropEnum(object):
 
     # the length of a given track estimated from map, as previously measured, and uncertainty)
     # the center of the track is defined by the point of maximum width and length.  Note that the
-    # length is measured from anterior to posterior intersection with inner margin of the track,
+    # length is measured from anterior to posterior intersection with the inner margin of the track,
     # and in hoof-shaped manus tracks the length is mostly anterior to the center, while in pes
     # tracks, the track has a longer heal region posterior to the point of maximum width.  The
     # center is thus offset a fraction (0.0 to 1.0) of the length measurement measured anteriorly,
     # and >0.5 for manus tracks, <0.5 for pes.  In terms of the Maya track node, the length measure
     # is offset in object-coordintes z by this fraction of the length (which is scaleZ).
-    LENGTH             = TRACK_PROP_NT('length',            'float', 'length', False)
-    LENGTH_MEASURED    = TRACK_PROP_NT('lengthMeasured',    'float',  None, False)
-    LENGTH_UNCERTAINTY = TRACK_PROP_NT('lengthUncertainty', 'float',  'lengthUncertainty', False)
+    LENGTH             = TRACK_PROP_NT('length',            'float', 'length',            False)
+    LENGTH_MEASURED    = TRACK_PROP_NT('lengthMeasured',    'float',  None,               False)
+    LENGTH_UNCERTAINTY = TRACK_PROP_NT('lengthUncertainty', 'float', 'lengthUncertainty', False)
 
     # a given tracksite has multiple levels
     LEVEL = TRACK_PROP_NT('level', 'string', None, True)

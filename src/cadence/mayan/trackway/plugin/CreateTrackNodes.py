@@ -10,7 +10,8 @@ from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 
 #___________________________________________________________________________________________________ CreateTrackNodes
 class CreateTrackNodes(NimbleScriptBase):
-    """ TODO: Kent... """
+    """ This is the core script for creating first the TrackSet node then all the individual
+        track nodes based on the list that is passed in. """
 
 #===================================================================================================
 #                                                                                       C L A S S
@@ -35,7 +36,7 @@ class CreateTrackNodes(NimbleScriptBase):
             uid = track.get(TrackPropEnum.UID.maya)
             if not uid:
                 continue
-            print 'TRACK:', DictUtils.prettyPrint(track)
+#           print 'TRACK:', DictUtils.prettyPrint(track)
             trackNodeList[uid] = TrackSceneUtils.createTrackNode(uid, trackSetNode, track)
         self.put('nodes', trackNodeList)
 

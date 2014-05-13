@@ -46,15 +46,15 @@ class Tracks_Track(TracksDefault):
         """ Create a visual representation of a track, to signify the position, dimensions (length
             and width), and rotation of either a manus or pes print.  The representation has
             basic dimensions of one meter so that the scale in x and z equates to the width and
-            length of the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  Individual
-            components within the track node are made non-selectable (reference) and the marker is
-            prohibited from changing y (elevation) or to rotate about either x or z. """
+            length of the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The head of the
+            node is selectable but the  made non-selectable (reference) and the marker is
+            prohibited from changing in y (elevation) or to rotate about either x or z. """
         conn = nimble.getConnection()
         out  = conn.runPythonModule(
             CreateTrackNode,
             uid=self.uid,
             props=self.toMayaNodeDict(),
-            runInMaya=False)
+            runInMaya=True)
         if not out.success:
             print 'CREATE NODE ERROR:', out.error
             return None
@@ -96,7 +96,8 @@ class Tracks_Track(TracksDefault):
 
 #___________________________________________________________________________________________________ colorTrack
     def colorTrack(self):
-        """ THIS WILL BE REWORKED FOR MORE GENERALITY, TO BE PASSED IN SHADERS AS ARGS. """
+        """ Currently, this only has one option:  To color the head of the arrow either red (left)
+            or green (right) and the tail of the arrow either dark (pes) or light (manus) gray. """
         if not self.nodeName:
             return False
 
@@ -110,22 +111,17 @@ class Tracks_Track(TracksDefault):
         else:
             ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.nodeName + '|Tail')
 
-
         return True
 
 #___________________________________________________________________________________________________ setCadenceCamFocus
     def setCadenceCamFocus(self):
-        """ Positions the CadenceCam to be centered upon this track nodeName (and initializes the
-            camera if no camera already exists with that name). Note that the camera is initially
-            100 m above the plane, but that can be subsequently adjusted in Maya. """
+        """ If a CadenceCam exists, this centers it above this track's node. """
         if self.nodeName is None:
             return
 
-        if not cmds.objExists('CadenceCam'):
-            print 'hmmm, no CadenceCam'
-            self.initializeCadenceCam()
-        height = cmds.xform('CadenceCam', query=True, translation=True)[1]
-        cmds.move(self.x, height, self.z, 'CadenceCam', absolute=True)
+        if cmds.objExists('CadenceCam'):
+            height = cmds.xform('CadenceCam', query=True, translation=True)[1]
+            cmds.move(self.x, height, self.z, 'CadenceCam', absolute=True)
 
 #___________________________________________________________________________________________________ initializeCadenceCam
     @classmethod
@@ -134,6 +130,8 @@ class Tracks_Track(TracksDefault):
             and rotated so that the AI file track labels are legible.  This camera will then be
             positioned so that the given track nodeName is centered in its field by
             setCadenceCamFocus. """
+        if cmds.objExists('CadenceCam'):
+            return
         c = cmds.camera(
             orthographic=True,
             nearClipPlane=1,
