@@ -130,7 +130,7 @@ class TrackwayIoWidget(PyGlassWidget):
         result = conn.runPythonModule(
             CreateTrackNodes,
             trackList=trackList,
-            runInMaya=False)
+            runInMaya=True)
         if not result.success:
             PyGlassBasicDialogManager.openOk(
                 parent=self, header=u'Load Error', message=u'Unable to load tracks')
