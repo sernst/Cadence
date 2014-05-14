@@ -48,7 +48,7 @@ class TracksDefault(PyGlassModelsDefault):
     _rotation            = sqla.Column(sqla.Float,        default=0.0)
     _x                   = sqla.Column(sqla.Float,        default=0.0)
     _z                   = sqla.Column(sqla.Float,        default=0.0)
-    _forwardLengthRatio  = sqla.Column(sqla.Float,        default=0.5)
+    _lengthRatio         = sqla.Column(sqla.Float,        default=0.5)
     _widthMeasured       = sqla.Column(sqla.Float,        default=0.0)
     _widthUncertainty    = sqla.Column(sqla.Float,        default=5.0)
     _lengthMeasured      = sqla.Column(sqla.Float,        default=0.0)
