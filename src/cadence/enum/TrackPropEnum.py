@@ -24,6 +24,9 @@ class TrackPropEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    # Fractional value specifying the front to center length over the total track length
+    FORWARD_LENGTH_RATIO = TRACK_PROP_NT('forwardLengthRatio', 'float', None, False)
+
     # Community, site, year, level, sector, trackway
     COMM = TRACK_PROP_NT('community', 'string', None, True)
 
