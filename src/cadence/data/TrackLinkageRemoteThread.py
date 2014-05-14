@@ -1,30 +1,24 @@
-# TrackImporterRemoteThread.py
-# (C)2013-2014
+# TrackLinkageRemoteThread.py
+# (C)2014
 # Scott Ernst
+from cadence.data.TrackLinkConnector import TrackLinkConnector
+
+from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
 
-from cadence.data.TrackCsvImporter import TrackCsvImporter
-from cadence.data.TrackJsonImporter import TrackJsonImporter
-from cadence.models.tracks.Tracks_Track import Tracks_Track
-
-#___________________________________________________________________________________________________ TrackImporterRemoteThread
-class TrackImporterRemoteThread(RemoteExecutionThread):
+#___________________________________________________________________________________________________ TrackLinkageRemoteThread
+class TrackLinkageRemoteThread(RemoteExecutionThread):
     """A class for..."""
 
 #===================================================================================================
 #                                                                                       C L A S S
 
-    CSV  = 'csv'
-    JSON = 'json'
-
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, parent, path, importType, session =None, **kwargs):
-        """Creates a new instance of TrackImporterRemoteThread."""
+    def __init__(self, parent, session =None, **kwargs):
+        """Creates a new instance of TrackLinkageRemoteThread."""
         RemoteExecutionThread.__init__(self, parent, **kwargs)
-        self._path       = path
-        self._session    = session
-        self._importType = importType
+        self._session = session
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -35,18 +29,14 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
         session = self._session if self._session else model.createSession()
 
         try:
-            if self._importType == self.CSV:
-                importer = TrackCsvImporter(self._path, logger=self._log)
-            else:
-                importer = TrackJsonImporter(self._path, logger=self._log)
-
-            self._log.write(u'<h1>Beginning Import...</h1>')
-            importer.read(session)
+            tlc = TrackLinkConnector(logger=self._log)
+            self._log.write(u'<h1>Beginning Linkage Reset...</h1>')
+            tlc.runAll(session)
         except Exception, err:
             if not self._session:
                 session.close()
 
-            self._log.writeError(u'ERROR: Track CSV Parsing Error', err)
+            self._log.writeError(u'Track linkage update failed', err)
             return 1
 
         if not self._session:

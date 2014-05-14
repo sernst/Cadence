@@ -2,19 +2,29 @@
 # (C)2014
 # Scott Ernst
 
-#___________________________________________________________________________________________________ TrackLinkConnector
+import re
+from pyaid.debug.Logger import Logger
+from pyaid.dict.DictUtils import DictUtils
+
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 
+#___________________________________________________________________________________________________ TrackLinkConnector
 class TrackLinkConnector(object):
     """A class for..."""
 
 #===================================================================================================
 #                                                                                       C L A S S
 
+    _TRACK_NUMBER_RE = re.compile('(?P<prefix>[^0-9]*)(?P<number>[0-9]+)(?P<suffix>[^0-9]*)')
+
 #___________________________________________________________________________________________________ __init__
-    def __init__(self):
+    def __init__(self, logger =None):
         """Creates a new instance of TrackLinkConnector."""
+        self.logger = logger
+        if not logger:
+            self.logger = Logger(self, printOut=True)
+
         self.searchNext         = True
         self.searchPrev         = True
         self.overrideExisting   = False
@@ -54,42 +64,75 @@ class TrackLinkConnector(object):
 
         model = source.__class__
         trackSeries = session.query(model).filter(
-            model.site == source.site).filter(
-            model.sector == source.sector).filter(
-            model.level == source.level).filter(
-            model.trackwayType == source.trackwayType).filter(
-            model.trackwayNumber == source.trackwayNumber).filter(
-            model.pes == source.pes).filter(
+            model.site == source.site,
+            model.sector == source.sector,
+            model.level == source.level,
+            model.trackwayType == source.trackwayType,
+            model.trackwayNumber == source.trackwayNumber,
+            model.pes == source.pes,
             model.left == source.left).order_by(model.number.asc()).all()
 
         if not trackSeries:
             return False
 
-        self.operatedTracks += trackSeries
+        #-------------------------------------------------------------------------------------------
+        # TRACK ORDERING
+        #       Tracks numbers are strings to support naming conventions like 10b or 12c, where the
+        #       number is possibly followed by a non-numeric set of characters. To establish track
+        #       ordering the sequence should be sorted primarily by the numeric sequence and
+        #       secondarily by the suffix first numerically and then alphabetically respectively.
+
+        trackNumbers = dict()
+        for track in trackSeries:
+            result = self._TRACK_NUMBER_RE.search(track.number)
+            if not result or result.group('prefix'):
+                self.logger.write([
+                    u'ERROR: Unable to parse track number: ' + unicode(track.number),
+                    u'TRACK: ' + DictUtils.prettyPrint(track.toDict()) ])
+                continue
+
+            number = result.group('number')
+            suffix = result.group('suffix')
+
+            if number not in trackNumbers:
+                trackNumbers[number] = {'track':None, 'extras':{}, 'number':int(number)}
+            entry = trackNumbers[number]
+
+            if number == track.number and not suffix:
+                entry['track'] = track
+            elif not suffix:
+                self.logger.write([
+                    u'ERROR: Invalid track number: ' + unicode(track.number),
+                    u'TRACK: ' + DictUtils.prettyPrint(track.toDict()) ])
+                continue
+            else:
+                entry['extras'][suffix] = track
+
+            if track not in self.operatedTracks:
+                self.operatedTracks.append(track)
 
         prev = None
-        for track in trackSeries:
-            try:
-                number = int(track.number)
-            except Exception, err:
-                continue
+        entries = list(trackNumbers.values())
+        entries.sort(key=lambda x: x['number'])
+        for entry in entries:
+            track = entry['track']
+            tracks = [] if track is None else [track]
+            for key in sorted(entry['extras']):
+                tracks.append(entry['extras'][key])
 
-            if not prev:
+            for track in tracks:
+                if not prev:
+                    prev = track
+                    continue
+
+                # If the previous entry has an existing next that doesn't match
+                if not self.overrideExisting and prev.next and prev.next != track.uid:
+                    continue
+
+                prev.next = track.uid
+                self.modifiedTracks.append(prev)
+                self.trackLinkages.append((prev, track))
                 prev = track
-                continue
-
-            # If the previous entry has an existing next that doesn't match
-            if not self.overrideExisting and prev.next and prev.next != track.uid:
-                continue
-
-            prev.next = track.uid
-            self.modifiedTracks.append(prev)
-            self.trackLinkages.append((prev, track))
-            prev = track
-
-#___________________________________________________________________________________________________ _linkNext
-    def _linkNext(self, track):
-        pass
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

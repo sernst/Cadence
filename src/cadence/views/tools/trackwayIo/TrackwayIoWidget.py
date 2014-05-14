@@ -14,6 +14,7 @@ from pyglass.elements.DataListWidgetItem import DataListWidgetItem
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
 import nimble
+from cadence.data.TrackLinkageRemoteThread import TrackLinkageRemoteThread
 
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.enum.UserConfigEnum import UserConfigEnum
@@ -21,7 +22,7 @@ from cadence.data.TrackImporterRemoteThread import TrackImporterRemoteThread
 from cadence.mayan.trackway.plugin import CreateTrackNodes
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
-#___________________________________________________________________________________________________ Viewer
+#___________________________________________________________________________________________________ TrackwayIoWidget
 class TrackwayIoWidget(PyGlassWidget):
     """ User interface class for handling track data IO from any of the possible sources and
         saving them to, or loading them from the database. """
@@ -40,6 +41,7 @@ class TrackwayIoWidget(PyGlassWidget):
         self.loadBtn.clicked.connect(self._handleLoadTracks)
         self.importCsvBtn.clicked.connect(self._handleImport)
         self.importJsonBtn.clicked.connect(self._handleImport)
+        self.updateLinksBtn.clicked.connect(self._handleUpdateLinks)
         self._thread = None
 
         self._getLayout(self.filterBox, QtGui.QHBoxLayout, True)
@@ -153,7 +155,7 @@ class TrackwayIoWidget(PyGlassWidget):
         self.mainWindow.showLoading(
             self,
             u'Browsing for Track File',
-            u'Choose the %s file to import into the database')
+            u'Choose the %s file to import into the database' % label)
 
         path = PyGlassBasicDialogManager.browseForFileOpen(
             parent=self,
@@ -181,6 +183,29 @@ class TrackwayIoWidget(PyGlassWidget):
         self._thread.execute(
             callback=self._handleImportComplete,
             logCallback=self._handleImportStatusUpdate)
+
+#___________________________________________________________________________________________________ _handleUpdateLinks
+    def _handleUpdateLinks(self):
+
+        result = PyGlassBasicDialogManager.openYesNo(
+            self,
+            u'Confirm Linkages Reset',
+            u'Are you sure you want to reset all track linkages within the current database?',
+            False)
+
+        if not result:
+            return
+
+        self.mainWindow.showStatus(
+            self,
+            u'Resetting Linkages',
+            u'Updating linkages to their default values')
+
+        self._thread = TrackLinkageRemoteThread(parent=self)
+        self._thread.execute(
+            callback=self._handleImportComplete,
+            logCallback=self._handleImportStatusUpdate)
+
 
 #___________________________________________________________________________________________________ _handleImportStatusUpdate
     def _handleImportStatusUpdate(self, message):

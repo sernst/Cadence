@@ -9,15 +9,12 @@ from pyaid.debug.Logger import Logger
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
 from pyaid.reflection.Reflection import Reflection
-from cadence.data.TrackLinkConnector import TrackLinkConnector
 
 from cadence.enum.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
-
-#___________________________________________________________________________________________________ TrackCsvImporter
 from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
 
-
+#___________________________________________________________________________________________________ TrackCsvImporter
 class TrackCsvImporter(object):
     """ Imports track data from CSV formatted spreadsheets into the local Cadence database. """
 
@@ -71,15 +68,24 @@ class TrackCsvImporter(object):
 
         session.flush()
 
-        linker = TrackLinkConnector()
-        linker.run(self.created, session)
-
         return True
 
 #___________________________________________________________________________________________________ fromSpreadsheetEntry
     def fromSpreadsheetEntry(self, csvRowData, session):
         """ From the spreadsheet data dictionary representing raw track data, this method creates
             a track entry in the database. """
+
+        #-------------------------------------------------------------------------------------------
+        # MISSING
+        #       Try to determine if the missing value has been set for this row data. If so and it
+        #       has been marked missing, skip the track during import to prevent importing tracks
+        #       with no data.
+        try:
+            missingValue = csvRowData[TrackCsvColumnEnum.MISSING.name].strip()
+            if missingValue:
+                return False
+        except Exception, err:
+            pass
 
         try:
             csvIndex = int(csvRowData[TrackCsvColumnEnum.INDEX.name])
@@ -89,7 +95,8 @@ class TrackCsvImporter(object):
                 'data':csvRowData })
             return False
 
-        ts = Tracks_TrackStore.MASTER()
+        model = Tracks_TrackStore.MASTER
+        ts = model()
 
         try:
             ts.site  = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip().upper()
@@ -165,6 +172,32 @@ class TrackCsvImporter(object):
                 'index':csvIndex })
             return False
 
+
+        #-------------------------------------------------------------------------------------------
+        # MEASUREMENTS
+        #       Parse the length, width, and depth measurements
+        if ts.pes:
+            wide      = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_WIDTH)
+            wideGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_WIDTH_GUESS)
+            longVal   = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_LENGTH)
+            longGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_LENGTH_GUESS)
+            deep      = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_DEPTH)
+            deepGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_DEPTH_GUESS)
+        else:
+            wide      = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_WIDTH)
+            wideGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_WIDTH_GUESS)
+            longVal   = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_LENGTH)
+            longGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_LENGTH_GUESS)
+            deep      = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_DEPTH)
+            deepGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_DEPTH_GUESS)
+
+        if not wide and not wideGuess and not longVal and not longGuess:
+            self._writeError({
+                'message':u'No length or width measurements found',
+                'data':csvRowData,
+                'index':csvIndex })
+            return False
+
         #-------------------------------------------------------------------------------------------
         # FIND EXISTING
         #       Use data set above to attempt to load the track database entry
@@ -188,48 +221,51 @@ class TrackCsvImporter(object):
             session.add(ts)
             session.flush()
 
-        ts.index     = csvIndex
-        ts.snapshot  = JSON.asString(csvRowData)
+        ts.index = csvIndex
+        ts.snapshot = JSON.asString(csvRowData)
 
-        if ts.pes:
-            wide      = csvRowData.get(TrackCsvColumnEnum.PES_WIDTH.name)
-            wideGuess = csvRowData.get(TrackCsvColumnEnum.PES_WIDTH_GUESS.name)
-            longVal   = csvRowData.get(TrackCsvColumnEnum.PES_LENGTH.name)
-            longGuess = csvRowData.get(TrackCsvColumnEnum.PES_LENGTH_GUESS.name)
-            deep      = csvRowData.get(TrackCsvColumnEnum.PES_DEPTH.name)
-            deepGuess = csvRowData.get(TrackCsvColumnEnum.PES_DEPTH_GUESS.name)
-        else:
-            wide      = csvRowData.get(TrackCsvColumnEnum.MANUS_WIDTH.name)
-            wideGuess = csvRowData.get(TrackCsvColumnEnum.MANUS_WIDTH_GUESS.name)
-            longVal   = csvRowData.get(TrackCsvColumnEnum.MANUS_LENGTH.name)
-            longGuess = csvRowData.get(TrackCsvColumnEnum.MANUS_LENGTH_GUESS.name)
-            deep      = csvRowData.get(TrackCsvColumnEnum.MANUS_DEPTH.name)
-            deepGuess = csvRowData.get(TrackCsvColumnEnum.MANUS_DEPTH_GUESS.name)
-
+        #-------------------------------------------------------------------------------------------
+        # WIDTH
+        #       Parse the width into a numerical value and assign appropriate default uncertainty
         try:
             ts.widthMeasured     = float(wide if wide else wideGuess)
-            ts.widthUncertainty  = 5.0 if wideGuess else 4.0
+            ts.widthUncertainty  = 5.0 if wideGuess else 3.0
         except Exception, err:
+            self._writeError({
+                'message':u'Width parse error: ' + unicode(wide if wide else wideGuess),
+                'data':csvRowData,
+                'index':csvIndex })
             ts.widthMeasured    = 0.0
             ts.widthUncertainty = 5.0
 
+        #-------------------------------------------------------------------------------------------
+        # LENGTH
+        #       Parse the length into a numerical value and assign appropriate default uncertainty
         try:
-            ts.lengthMeasured    = float(long if longVal else longGuess)
-            ts.lengthUncertainty = 5.0 if longGuess else 4.0
+            ts.lengthMeasured    = float(longVal if longVal else longGuess)
+            ts.lengthUncertainty = 5.0 if longGuess else 3.0
         except Exception, err:
+            self._writeError({
+                'message':u'Length parse error: ' + unicode(longVal if longVal else longGuess),
+                'data':csvRowData,
+                'index':csvIndex })
             ts.lengthMeasured    = 0.0
             ts.lengthUncertainty = 5.0
 
+        #-------------------------------------------------------------------------------------------
+        # DEPTH
+        #       Parse the depth into a numerical value and assign appropriate default uncertainty
         try:
             ts.depthMeasured     = float(deep if deep else deepGuess)
-            ts.depthUncertainty  = 5.0 if deepGuess else 4.0
+            ts.depthUncertainty  = 5.0 if deepGuess else 3.0
         except Exception, err:
             ts.depthMeasured    = 0.0
             ts.depthUncertainty = 5.0
 
         t = ts.getMatchingTrack(session)
         if t is None:
-            t     = Tracks_Track()
+            model = Tracks_Track.MASTER
+            t     = model()
             t.uid = ts.uid
             t.fromDict(ts.toDict())
             session.add(t)
@@ -262,6 +298,15 @@ class TrackCsvImporter(object):
             self._logger.writeError(result, data['error'])
         else:
             self._logger.write(result)
+
+#___________________________________________________________________________________________________ _getStrippedRowData
+    @classmethod
+    def _getStrippedRowData(cls, source, trackCsvEnum):
+        out = source.get(trackCsvEnum.name)
+        try:
+            return out.strip()
+        except Exception, err:
+            return out
 
 #===================================================================================================
 #                                                                               I N T R I N S I C
