@@ -49,7 +49,19 @@ class TrackCsvImporter(object):
             return False
 
         with open(self._path, 'rU') as f:
-            reader = csv.reader(f, delimiter=',', quotechar='"')
+            try:
+                reader = csv.reader(f, delimiter=',', quotechar='"')
+            except Exception, err:
+                self._writeError({
+                    'message':u'ERROR: Unable to read CSV file "%s"' % self._path,
+                    'error':err })
+                return
+
+            if reader is None:
+                self._writeError({
+                    'message':u'ERROR: Failed to create CSV reader for file "%s"' % self._path })
+                return
+
             for row in reader:
                 # Skip any rows that don't start with the proper numeric index value, which
                 # includes the header row (if it exists) with the column names
@@ -281,11 +293,17 @@ class TrackCsvImporter(object):
     def _writeError(self, data):
         """ Writes import error data to the logger, formatting it for human readable display. """
         source = {}
-        for n,v in data['data'].iteritems():
-            source[u' '.join(n.split(u'_')).title()] = v
+
+        if 'data' in data:
+            for n,v in data['data'].iteritems():
+                source[u' '.join(n.split(u'_')).title()] = v
+
+        indexPrefix = u''
+        if 'index' in data:
+            indexPrefix = u' [INDEX: %s]:' % data.get('index', u'Unknown')
 
         result  = [
-            u'IMPORT ERROR [INDEX: %s]: %s' % (data.get('index', u'Unknown'), data['message']),
+            u'IMPORT ERROR%s: %s' % (indexPrefix, data['message']),
             u'DATA: ' + DictUtils.prettyPrint(source)]
 
         if 'existing' in data:
