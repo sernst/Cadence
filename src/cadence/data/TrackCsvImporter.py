@@ -184,7 +184,6 @@ class TrackCsvImporter(object):
                 'index':csvIndex })
             return False
 
-
         #-------------------------------------------------------------------------------------------
         # MEASUREMENTS
         #       Parse the length, width, and depth measurements
@@ -240,39 +239,39 @@ class TrackCsvImporter(object):
         # WIDTH
         #       Parse the width into a numerical value and assign appropriate default uncertainty
         try:
-            ts.widthMeasured     = float(wide if wide else wideGuess)
-            ts.widthUncertainty  = 5.0 if wideGuess else 3.0
+            ts.widthMeasured     = 0.01*float(wide if wide else wideGuess)
+            ts.widthUncertainty  = 0.05 if wideGuess else 0.03
         except Exception, err:
             self._writeError({
                 'message':u'Width parse error: ' + unicode(wide if wide else wideGuess),
                 'data':csvRowData,
                 'index':csvIndex })
             ts.widthMeasured    = 0.0
-            ts.widthUncertainty = 5.0
+            ts.widthUncertainty = 0.05
 
         #-------------------------------------------------------------------------------------------
         # LENGTH
         #       Parse the length into a numerical value and assign appropriate default uncertainty
         try:
-            ts.lengthMeasured    = float(longVal if longVal else longGuess)
-            ts.lengthUncertainty = 5.0 if longGuess else 3.0
+            ts.lengthMeasured    = 0.01*float(longVal if longVal else longGuess)
+            ts.lengthUncertainty = 0.05 if longGuess else 0.05
         except Exception, err:
             self._writeError({
                 'message':u'Length parse error: ' + unicode(longVal if longVal else longGuess),
                 'data':csvRowData,
                 'index':csvIndex })
             ts.lengthMeasured    = 0.0
-            ts.lengthUncertainty = 5.0
+            ts.lengthUncertainty = 0.05
 
         #-------------------------------------------------------------------------------------------
         # DEPTH
         #       Parse the depth into a numerical value and assign appropriate default uncertainty
         try:
-            ts.depthMeasured     = float(deep if deep else deepGuess)
-            ts.depthUncertainty  = 5.0 if deepGuess else 3.0
+            ts.depthMeasured     = 0.01*float(deep if deep else deepGuess)
+            ts.depthUncertainty  = 0.05 if deepGuess else 0.03
         except Exception, err:
             ts.depthMeasured    = 0.0
-            ts.depthUncertainty = 5.0
+            ts.depthUncertainty = 0.05
 
         t = ts.getMatchingTrack(session)
         if t is None:
