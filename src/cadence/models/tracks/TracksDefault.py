@@ -124,7 +124,7 @@ class TracksDefault(PyGlassModelsDefault):
                     self.getByUid(self.next, session=session))
         if self.next is None:
             return None
-        return self.getByUid(self.next, session=session)--
+        return self.getByUid(self.next, session=session)
 
 #___________________________________________________________________________________________________ fromDict
     def fromDict(self, data):
