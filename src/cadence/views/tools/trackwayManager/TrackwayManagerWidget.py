@@ -67,6 +67,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.lengthSbx.valueChanged.connect(self._handleLengthSbx)
         self.lengthSbx.setAccelerated(True)
 
+        self.widthUncertaintySbx.valueChanged.connect(self._handleWidthUncertaintySbx)
+        self.lengthUncertaintySbx.valueChanged.connect(self._handleLengthUncertaintySbx)
+
         self.rotationSbx.valueChanged.connect(self._handleRotationSbx)
         self.rotationSbx.setAccelerated(True)
 
@@ -75,6 +78,9 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self.zSbx.valueChanged.connect(self._handleZSbx)
         self.zSbx.setAccelerated(True)
+
+
+        self.lengthRatioSbx.valueChanged.connect(self._handleLengthRatioSbx)
 
         self.pullBtn.clicked.connect(self._handlePullBtn)
 
@@ -272,8 +278,12 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ clearTrackUI
     def clearTrackUI(self):
         """ Clears out the text fields associated with the track parameters in the UI. """
-        self.lengthSbx.setValue(0)
+        self.widthLbl.setText('Width  [%4s]' % '')
         self.widthSbx.setValue(0)
+
+        self.lengthLbl.setText('Length [%4s]' % '')
+        self.lengthSbx.setValue(0)
+
         self.rotationSbx.setValue(0)
         self.noteTE.setText(u'')
         self.trackNameLE.setText(u'')
@@ -308,8 +318,18 @@ class TrackwayManagerWidget(PyGlassWidget):
     def refreshTrackUI(self, dict):
         """ The track properties aspect of the UI display is updated based on a dictionary derived
             from a given track model instance. """
-        self.widthSbx.setValue(dict[TrackPropEnum.WIDTH.name])
-        self.lengthSbx.setValue(dict[TrackPropEnum.LENGTH.name])
+        self.widthSbx.setValue(100.0*dict[TrackPropEnum.WIDTH.name])
+        self.widthLbl.setText('Width  [%2.0f]' % (100.0*dict[TrackPropEnum.WIDTH_MEASURED.name]))
+
+        self.lengthSbx.setValue(100.0*dict[TrackPropEnum.LENGTH.name])
+        self.lengthLbl.setText('Length [%2.0f]' % (100.0*dict[TrackPropEnum.LENGTH_MEASURED.name]))
+
+        print 'in refreshTrackUI, width is %f' % dict[TrackPropEnum.WIDTH.name]
+        print 'in refreshTrackUI, length is %f' % dict[TrackPropEnum.LENGTH.name]
+        print 'in refreshTrackUI, length measured is %f' % dict[TrackPropEnum.LENGTH_MEASURED.name]
+
+        self.widthUncertaintySbx.setValue(100.0*dict[TrackPropEnum.WIDTH_UNCERTAINTY.maya])
+        self.lengthUncertaintySbx.setValue(100.0*dict[TrackPropEnum.LENGTH_UNCERTAINTY.maya])
 
         self.rotationSbx.setValue(dict[TrackPropEnum.ROTATION.name])
 
@@ -336,24 +356,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         d[TrackPropEnum.LEVEL.name]           = self.levelLE.text()
         d[TrackPropEnum.TRACKWAY_TYPE.name]   = self.trackwayTypeLE.text()
         d[TrackPropEnum.TRACKWAY_NUMBER.name] = self.trackwayNumberLE.text()
-        return d
-#___________________________________________________________________________________________________ getTrackPropertiesFromUI
-    def getTrackPropertiesFromUI(self):
-        """ Returns a dictionary of track properties, extracted from the UI. """
-        d = dict()
-        d[TrackPropEnum.X.name]                    = self.xLE.value()
-        d[TrackPropEnum.Z.name]                    = self.zLE.value()
-        d[TrackPropEnum.WIDTH.name]                = self.widthLE.value()
-        d[TrackPropEnum.WIDTH_MEASURED.name]       = self.widthMeasuredLE.value()
-        d[TrackPropEnum.WIDTH_UNCERTAINTY.name]    = self.widthUncertaintyLE.value()
-        d[TrackPropEnum.LENGTH.name]               = self.lengthLE.value()
-        d[TrackPropEnum.LENGTH_MEASURED.name]      = self.lengthMeasuredLE.value()
-        d[TrackPropEnum.LENGTH_UNCERTAINTY.name]   = self.lengthUncertaintyLE.value()
-        d[TrackPropEnum.DEPTH_MEASURED.name]       = self.depthMeasuredLE.float()
-        d[TrackPropEnum.DEPTH_UNCERTAINTY.name]    = self.depthUncertaintyLE.float()
-        d[TrackPropEnum.ROTATION.name]             = self.rotationLE.float()
-        d[TrackPropEnum.ROTATION_UNCERTAINTY.name] = self.rotationUncertaintyLE.float()
-        d[TrackPropEnum.NOTE.name]                 = self.noteTE.text()
         return d
 
 #___________________________________________________________________________________________________ exportSelected
@@ -390,33 +392,71 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _handleWidthSbx
     def _handleWidthSbx(self):
-        """ The width of the selected track is adjusted. """
+        """ The width of the selected track is adjusted. Width is stored in the database in
+            fractional meters but send to Maya in cm and displayed in integer cm units."""
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return
 
-        if len(selectedTracks) == 1:
-            self._getSession()
-            t = selectedTracks[0]
-            t.updateFromNode()
-            t.width = self.widthSbx.value()
-            t.updateNode()
-            self._closeSession(commit=True)
+        if len(selectedTracks) != 1:
+            return
+
+        self._getSession()
+        t = selectedTracks[0]
+        t.width = self.widthSbx.value()/100.0
+        t.updateNode()
+        self._closeSession(commit=True)
 
  #___________________________________________________________________________________________________ _handleLengthSbx
     def _handleLengthSbx(self):
-        """ The length of the selected track is adjusted. """
+        """ The length of the selected track is adjusted. Length is stored in the database in
+            fractional meters but send to Maya in cm and displayed in integer cm units."""
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return
 
-        if len(selectedTracks) == 1:
-            self._getSession()
-            t = selectedTracks[0]
-            t.updateFromNode()
-            t.length = self.lengthSbx.value()
-            t.updateNode()
-            self._closeSession(commit=True)
+        if len(selectedTracks) != 1:
+            return
+
+        self._getSession()
+        t = selectedTracks[0]
+        t.length = self.lengthSbx.value()/100.0
+        t.updateNode()
+        self._closeSession(commit=True)
+
+#___________________________________________________________________________________________________ _handleWidthUncertaintySbx
+    def _handleWidthUncertaintySbx(self):
+        """ The width uncertainty of the selected track is adjusted. """
+        selectedTracks = self.getSelectedTracks()
+        if not selectedTracks:
+            return
+
+        if len(selectedTracks) != 1:
+            return
+
+
+        self._getSession()
+        t = selectedTracks[0]
+        t.widthUncertainty = self.widthUncertaintySbx.value()/100.0
+        print 'in _handleWIdthUncertaintySbx, value is %s' % t.widthUncertainty
+        t.updateNode()
+        self._closeSession(commit=True)
+
+#___________________________________________________________________________________________________ _handlengthUncertaintySbx
+    def _handleLengthUncertaintySbx(self):
+        """ The length uncertainty of the selected track is adjusted. """
+        selectedTracks = self.getSelectedTracks()
+        if not selectedTracks:
+            return
+
+        if len(selectedTracks) != 1:
+            return
+
+        self._getSession()
+        t = selectedTracks[0]
+        t.lengthUncertainty = self.lengthUncertaintySbx.value()/100.0
+        t.updateNode()
+        self._closeSession(commit=True)
 
 #___________________________________________________________________________________________________ _handleRotationSBox
     def _handleRotationSbx(self):
@@ -425,13 +465,15 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             return
 
-        if len(selectedTracks) == 1:
-            self._getSession()
-            t = selectedTracks[0]
-            t.updateFromNode()
-            t.rotation = self.rotationSbx.value()
-            t.updateNode()
-            self._closeSession(commit=True)
+        if len(selectedTracks) != 1:
+            return
+
+        self._getSession()
+        t = selectedTracks[0]
+        t.updateFromNode()
+        t.rotation = self.rotationSbx.value()
+        t.updateNode()
+        self._closeSession(commit=True)
 
 #___________________________________________________________________________________________________ _handleXSbx
     def _handleXSbx(self):
@@ -440,13 +482,15 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             return
 
-        if len(selectedTracks) == 1:
-            self._getSession()
-            t = selectedTracks[0]
-            t.updateFromNode()
-            t.x = self.xSbx.value()
-            t.updateNode()
-            self._closeSession(commit=True)
+        if len(selectedTracks) != 1:
+            return
+
+        self._getSession()
+        t = selectedTracks[0]
+        t.updateFromNode()
+        t.x = self.xSbx.value()
+        t.updateNode()
+        self._closeSession(commit=True)
 
 #___________________________________________________________________________________________________ _handleZSbx
     def _handleZSbx(self):
@@ -455,20 +499,40 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             return
 
-        if len(selectedTracks) == 1:
-            self._getSession()
-            t = selectedTracks[0]
-            t.updateFromNode()
-            t.z = self.zSbx.value()
-            t.updateNode()
-            self._closeSession(commit=True)
+        if len(selectedTracks) != 1:
+            return
+
+        self._getSession()
+        t = selectedTracks[0]
+        t.updateFromNode()
+        t.z = self.zSbx.value()
+        t.updateNode()
+        self._closeSession(commit=True)
+
+#___________________________________________________________________________________________________ _handleLengthRatioSbx
+    def _handleLengthRatioSbx(self):
+        """ The ratio from 0.0 to 1.0 representing fraction of distance from the 'anterior' extreme
+            of the track to the 'center' (point of greatest width). """
+        selectedTracks = self.getSelectedTracks()
+        if not selectedTracks:
+            return
+
+        if len(selectedTracks) != 1:
+            return
+
+        self._getSession()
+        t = selectedTracks[0]
+        t.updateFromNode()
+        t.lengthRatio = self.lengthRatioSbx.value()
+        print 'in _handleLengthRatioSbx, length ratio (t.lengthRatio) = %s' % t.lengthRatio
+        t.updateNode()
+        self._closeSession(commit=True)
 
 #___________________________________________________________________________________________________ _handlePullBtn
     def _handlePullBtn(self):
         """ The transform data in the selected track node(s) is used to populate the UI. Note that
             if multiple track nodes are selected, the last such track node is used to extract data
-            for the trackway UI. For multiple selections, however, the track UI (but not the
-            trackway UI) is cleared. """
+            for the trackway UI (but the fields of the track UI are cleared). """
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             self.clearTrackwayUI()
@@ -479,28 +543,14 @@ class TrackwayManagerWidget(PyGlassWidget):
             t.updateFromNode()
 
         t = selectedTracks[-1]
-
         dict = t.toDict()
         self.refreshTrackwayUI(dict)
+
         if len(selectedTracks) == 1:
             self.refreshTrackUI(dict)
         else:
             self.clearTrackUI()
         self._closeSession(commit=True)
-#___________________________________________________________________________________________________ _handlePushBtn
-    def _handlePushBtn(self):
-        """ The UI set attributes in both the database and in the Maya scene representation. """
-        selectedTracks = self.getSelectedTracks()
-        if not selectedTracks:
-            return
-
-        if len(selectedTracks) == 1:
-            self._getSession()
-            t = selectedTracks[0]
-            t.updateNode()
-            t.fromDict(self.getTrackwayPropertiesFromUI())
-#            Tracks_Track.updateNode()
-            self._closeSession(commit=True)
 
 # __________________________________________________________________________________________________ _handleFirstBtn
     def _handleFirstBtn(self):
@@ -676,9 +726,12 @@ class TrackwayManagerWidget(PyGlassWidget):
         deltaX = t.x - p.x
         deltaZ = t.z - p.z
         self._getSession()
-        n.x        = t.x + deltaX
-        n.z        = t.z + deltaZ
-        n.rotation = t.rotation
+        n.x           = t.x + deltaX
+        n.z           = t.z + deltaZ
+        n.width       = t.widthMeasured
+        n.length      = t.lengthMeasured
+        n.rotation    = t.rotation
+        n.lengthRatio = t.lengthRatio
 
         # provide n with t's uncertainties as well?
 

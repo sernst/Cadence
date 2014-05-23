@@ -422,7 +422,7 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="0,2,0,1,0,1">
+            <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="0,0,0,0">
              <property name="spacing">
               <number>-1</number>
              </property>
@@ -430,7 +430,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QLabel" name="lbl_10">
+              <widget class="QLabel" name="widthLbl">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -448,7 +448,7 @@
                 <enum>QFrame::NoFrame</enum>
                </property>
                <property name="text">
-                <string>Width:</string>
+                <string>Width</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -457,29 +457,14 @@
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="widthSbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
                </property>
                <property name="decimals">
-                <number>2</number>
-               </property>
-               <property name="minimum">
-                <double>0.000000000000000</double>
+                <number>0</number>
                </property>
                <property name="maximum">
-                <double>2.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.010000000000000</double>
-               </property>
-               <property name="value">
-                <double>0.000000000000000</double>
+                <double>100.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -498,7 +483,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Plus</string>
+                <string>+/-</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -506,68 +491,12 @@
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="widthMaxSbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
+              <widget class="QDoubleSpinBox" name="widthUncertaintySbx">
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
                </property>
                <property name="decimals">
-                <number>2</number>
-               </property>
-               <property name="maximum">
-                <double>1.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.010000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="lbl_12">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Minus</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QDoubleSpinBox" name="widthMinSbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <property name="decimals">
-                <number>2</number>
-               </property>
-               <property name="maximum">
-                <double>1.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.010000000000000</double>
+                <number>0</number>
                </property>
               </widget>
              </item>
@@ -582,7 +511,7 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_11" stretch="0,2,0,1,0,1">
+            <layout class="QHBoxLayout" name="horizontalLayout_11" stretch="0,0,0,0">
              <property name="spacing">
               <number>-1</number>
              </property>
@@ -590,7 +519,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QLabel" name="lbl_13">
+              <widget class="QLabel" name="lengthLbl">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -605,7 +534,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Length:</string>
+                <string>Length</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -614,29 +543,14 @@
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="lengthSbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
                </property>
                <property name="decimals">
-                <number>2</number>
-               </property>
-               <property name="minimum">
-                <double>0.000000000000000</double>
+                <number>0</number>
                </property>
                <property name="maximum">
-                <double>2.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.010000000000000</double>
-               </property>
-               <property name="value">
-                <double>0.000000000000000</double>
+                <double>100.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -655,7 +569,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Plus</string>
+                <string>+/-</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -663,68 +577,12 @@
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="lengthMaxSbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
+              <widget class="QDoubleSpinBox" name="lengthUncertaintySbx">
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
                </property>
                <property name="decimals">
-                <number>2</number>
-               </property>
-               <property name="maximum">
-                <double>1.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.010000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="lbl_15">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Minus</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QDoubleSpinBox" name="lengthMinSbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <property name="decimals">
-                <number>2</number>
-               </property>
-               <property name="maximum">
-                <double>1.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.010000000000000</double>
+                <number>0</number>
                </property>
               </widget>
              </item>
@@ -739,7 +597,7 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,1,0,1,0,1">
+            <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,0,0,0,0,0">
              <property name="margin">
               <number>0</number>
              </property>
@@ -767,11 +625,8 @@
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="rotationSbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
+               <property name="wrapping">
+                <bool>true</bool>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -780,7 +635,7 @@
                 <number>0</number>
                </property>
                <property name="maximum">
-                <double>362.000000000000000</double>
+                <double>359.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -799,7 +654,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Plus</string>
+                <string>+</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -808,14 +663,8 @@
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="rotationMaxSbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="contextMenuPolicy">
-                <enum>Qt::ActionsContextMenu</enum>
+               <property name="wrapping">
+                <bool>true</bool>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -824,7 +673,7 @@
                 <number>0</number>
                </property>
                <property name="maximum">
-                <double>98.000000000000000</double>
+                <double>359.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -843,7 +692,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Minus</string>
+                <string>-</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -852,11 +701,8 @@
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="rotationMinSbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
+               <property name="wrapping">
+                <bool>true</bool>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -865,7 +711,7 @@
                 <number>0</number>
                </property>
                <property name="maximum">
-                <double>98.000000000000000</double>
+                <double>359.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -918,6 +764,9 @@
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
                </property>
+               <property name="accelerated">
+                <bool>true</bool>
+               </property>
                <property name="decimals">
                 <number>0</number>
                </property>
@@ -966,6 +815,9 @@
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
                </property>
+               <property name="accelerated">
+                <bool>true</bool>
+               </property>
                <property name="decimals">
                 <number>0</number>
                </property>
@@ -996,7 +848,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>dZ:</string>
+                <string>lengthRatio:</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1004,27 +856,33 @@
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="dzSbx">
+              <widget class="QDoubleSpinBox" name="lengthRatioSbx">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="cursor">
+                <cursorShape>ArrowCursor</cursorShape>
+               </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
                </property>
                <property name="decimals">
-                <number>0</number>
+                <number>2</number>
                </property>
                <property name="minimum">
-                <double>-100.000000000000000</double>
+                <double>0.000000000000000</double>
                </property>
                <property name="maximum">
-                <double>100.000000000000000</double>
+                <double>1.000000000000000</double>
                </property>
                <property name="singleStep">
-                <double>1.000000000000000</double>
+                <double>0.010000000000000</double>
+               </property>
+               <property name="value">
+                <double>0.500000000000000</double>
                </property>
               </widget>
              </item>

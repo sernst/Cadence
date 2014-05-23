@@ -43,8 +43,8 @@ class TracksDefault(PyGlassModelsDefault):
     _left                = sqla.Column(sqla.Boolean,      default=True)
     _pes                 = sqla.Column(sqla.Boolean,      default=True)
     _index               = sqla.Column(sqla.Integer,      default=0)
-    _width               = sqla.Column(sqla.Float,        default=0.0)
-    _length              = sqla.Column(sqla.Float,        default=0.0)
+    _width               = sqla.Column(sqla.Float,        default=0.5)
+    _length              = sqla.Column(sqla.Float,        default=0.5)
     _rotation            = sqla.Column(sqla.Float,        default=0.0)
     _x                   = sqla.Column(sqla.Float,        default=0.0)
     _z                   = sqla.Column(sqla.Float,        default=0.0)
@@ -120,9 +120,11 @@ class TracksDefault(PyGlassModelsDefault):
 #___________________________________________________________________________________________________ getNextTrack
     def getNextTrack(self, session):
         """ Returns the next track in the series if such a track exists """
+        print 'in getNextTrack: self.next = %s (and getByUid returns %s)' % (self.next,
+                    self.getByUid(self.next, session=session))
         if self.next is None:
             return None
-        return self.getByUid(self.next, session=session)
+        return self.getByUid(self.next, session=session)--
 
 #___________________________________________________________________________________________________ fromDict
     def fromDict(self, data):
@@ -151,12 +153,29 @@ class TracksDefault(PyGlassModelsDefault):
 
 #___________________________________________________________________________________________________ toMayaNodeDict
     def toMayaNodeDict(self):
-        """ Creates a dictionary representation of those properties that can be controlled directly
-            within the Maya scene. """
+        """ Creates a dictionary representation of those properties required for the Maya node. """
         out = dict()
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if enum.maya:
                 out[enum.maya] = getattr(self, enum.name)
+#       and in case the Maya node width and length attributes are still zero, initialize them to the
+#       corresponding measured values from the spreadsheet. But then, if a measured value for width
+#       or length is zero (usually due to poor quality track preservation), then assign it a nominal
+#       (and visually obvious) small value of 0.10 m (10 cm in UI display).
+
+        if out[TrackPropEnum.WIDTH.maya] == 0.0:
+            print 'in toMayaNodeDict:  width is zero'
+            w = getattr(self, TrackPropEnum.WIDTH_MEASURED.name)
+            out[TrackPropEnum.WIDTH.maya] = 0.25 if w == 0.0 else w
+            print 'in toMayaNodeDict:  now width is %s' % out[TrackPropEnum.WIDTH.maya]
+
+        if out[TrackPropEnum.LENGTH.maya] == 0.0:
+            print 'in toMayaNodeDict:  length is zero'
+            w = getattr(self, TrackPropEnum.LENGTH_MEASURED.name)
+            out[TrackPropEnum.LENGTH.maya] = 0.25 if w == 0.0 else w
+            print 'in toMayaNodeDict:  now length is %s' % out[TrackPropEnum.LENGTH.maya]
+
+        print out
         return out
 
 #___________________________________________________________________________________________________ findExistingTracks
@@ -164,7 +183,6 @@ class TracksDefault(PyGlassModelsDefault):
         """ Searches the database for an existing track that matches the current values of the
             unique properties in this track instance and returns a result list of any duplicates
             found. """
-
         query = session.query(self.__class__)
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if enum.unique:

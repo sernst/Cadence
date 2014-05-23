@@ -46,15 +46,14 @@ class Tracks_Track(TracksDefault):
         """ Create a visual representation of a track, to signify the position, dimensions (length
             and width), and rotation of either a manus or pes print.  The representation has
             basic dimensions of one meter so that the scale in x and z equates to the width and
-            length of the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The head of the
-            node is selectable but the  made non-selectable (reference) and the marker is
+            length of the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The node is
             prohibited from changing in y (elevation) or to rotate about either x or z. """
         conn = nimble.getConnection()
         out  = conn.runPythonModule(
             CreateTrackNode,
             uid=self.uid,
             props=self.toMayaNodeDict(),
-            runInMaya=True)
+            runInMaya=False)
         if not out.success:
             print 'CREATE NODE ERROR:', out.error
             return None
@@ -101,15 +100,21 @@ class Tracks_Track(TracksDefault):
         if not self.nodeName:
             return False
 
-        if self.left:
-            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.nodeName)
-        else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.nodeName)
-
         if self.pes:
-            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.nodeName + '|Tail')
+            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.nodeName)
         else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.nodeName + '|Tail')
+            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.nodeName)
+
+        if self.left:
+            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.nodeName + '|Pointer')
+        else:
+            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.nodeName + '|Pointer')
+
+        ShadingUtils.applyShader(TrackwayShaderConfig.BLACK_COLOR, self.nodeName + '|Ruler')
+        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR, self.nodeName + '|PadN')
+        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR, self.nodeName + '|PadS')
+        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR, self.nodeName + '|PadW')
+        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR, self.nodeName + '|PadE')
 
         return True
 
