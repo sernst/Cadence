@@ -1,18 +1,14 @@
 # Tracks_Track.py
 # (C)2013-2014
-# Scott Ernst
+# Scott Ernst and Kent A. Stevens
 
 import nimble
 from nimble import cmds
-from pyaid.dict.DictUtils import DictUtils
-
-from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
 
 from cadence.mayan.trackway import GetTrackNodeData
 from cadence.mayan.trackway import UpdateTrackNode
 from cadence.mayan.trackway import CreateTrackNode
 from cadence.models.tracks.TracksDefault import TracksDefault
-from cadence.util.shading.ShadingUtils import ShadingUtils
 
 #___________________________________________________________________________________________________ Tracks_Track
 class Tracks_Track(TracksDefault):
@@ -53,9 +49,9 @@ class Tracks_Track(TracksDefault):
             CreateTrackNode,
             uid=self.uid,
             props=self.toMayaNodeDict(),
-            runInMaya=False)
+            runInMaya=True)
         if not out.success:
-            print 'CREATE NODE ERROR:', out.error
+            print 'Error in CreateNode:', out.error
             return None
 
         self.nodeName = out.payload.get('nodeName')
@@ -81,10 +77,9 @@ class Tracks_Track(TracksDefault):
         conn = nimble.getConnection()
         result = conn.runPythonModule(GetTrackNodeData, uid=self.uid, nodeName=self.nodeName)
         if result.payload.get('error'):
-            print 'NODE ERROR:', result.payload.get('message')
+            print 'Error in updateFromNode:', result.payload.get('message')
             return False
 
-        print 'UpdateFromNode:', DictUtils.prettyPrint(result.payload)
         self.nodeName = result.payload.get('nodeName')
 
         if self.nodeName:
@@ -93,40 +88,13 @@ class Tracks_Track(TracksDefault):
 
         return False
 
-#___________________________________________________________________________________________________ colorTrack
-    def colorTrack(self):
-        """ Currently, this only has one option:  To color the head of the arrow either red (left)
-            or green (right) and the tail of the arrow either dark (pes) or light (manus) gray. """
-        if not self.nodeName:
-            return False
-
-        if self.pes:
-            ShadingUtils.applyShader(TrackwayShaderConfig.DARK_GRAY_COLOR, self.nodeName)
-        else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.LIGHT_GRAY_COLOR, self.nodeName)
-
-        if self.left:
-            ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, self.nodeName + '|Pointer')
-        else:
-            ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, self.nodeName + '|Pointer')
-
-        ShadingUtils.applyShader(TrackwayShaderConfig.BLACK_COLOR, self.nodeName + '|Ruler')
-        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR, self.nodeName + '|PadN')
-        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR, self.nodeName + '|PadS')
-        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR, self.nodeName + '|PadW')
-        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR, self.nodeName + '|PadE')
-
-        return True
-
-#___________________________________________________________________________________________________ setCadenceCamFocus
-    def setCadenceCamFocus(self):
-        """ If a CadenceCam exists, this centers it above this track's node. """
+#___________________________________________________________________________________________________ setCameraFocus
+    def setCameraFocus(self):
+        """ Center the current camera (CadenceCam or persp) on the selected node. """
         if self.nodeName is None:
             return
 
-        if cmds.objExists('CadenceCam'):
-            height = cmds.xform('CadenceCam', query=True, translation=True)[1]
-            cmds.move(self.x, height, self.z, 'CadenceCam', absolute=True)
+        cmds.viewFit(fitFactor=0.25, animate=True)
 
 #___________________________________________________________________________________________________ initializeCadenceCam
     @classmethod
@@ -134,9 +102,10 @@ class Tracks_Track(TracksDefault):
         """ This creates an orthographic camera that looks down the Y axis onto the XZ plane,
             and rotated so that the AI file track labels are legible.  This camera will then be
             positioned so that the given track nodeName is centered in its field by
-            setCadenceCamFocus. """
+            setCameraFocus. """
         if cmds.objExists('CadenceCam'):
             return
+
         c = cmds.camera(
             orthographic=True,
             nearClipPlane=1,

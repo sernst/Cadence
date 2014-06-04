@@ -75,18 +75,22 @@ class TrackPropEnum(object):
     # a text note associated with a given track
     NOTE = TRACK_PROP_NT('note', 'string', None, False)
 
-    # each track has a number (part of the 'name', such as the 3 in LM3 or the 15 in RP1)5
+    # each track has a number (part of the 'name', such as the 3 in LM3 or the 15 in RP15)
     NUMBER = TRACK_PROP_NT('number', 'string', None, True)
 
-    # a boolean, true if the track is a pes (hind) print, not a manus, default is false if unknown
+    # a boolean, true if the track is a pes rather than a manus track, default is false if unknown
     PES = TRACK_PROP_NT('pes', 'bool', None, True)
 
     # rotation is measured relative to North (the world coordinates z-axis in the scene), and
     # increases counterclockwise.  It is an intrinsic attribute of the nodeName transform (rotation
     # about the 'vertical' y axis).
-    ROTATION             = TRACK_PROP_NT('rotation',            'float', 'rotateY', False)
-    ROTATION_MEASURED    = TRACK_PROP_NT('rotationMeasured',    'float', None,      False)
-    ROTATION_UNCERTAINTY = TRACK_PROP_NT('rotationUncertainty', 'float', None,      False)
+    ROTATION             = TRACK_PROP_NT('rotation',         'float', 'rotateY', False)
+    ROTATION_MEASURED    = TRACK_PROP_NT('rotationMeasured', 'float',  None,     False)
+    ROTATION_UNCERTAINTY = TRACK_PROP_NT(
+        'rotationUncertainty',
+        'float',
+        'rotationUncertainty',
+        False)
 
     # the specified sector for this track, at this site
     SECTOR = TRACK_PROP_NT('sector', 'string', None, True)

@@ -34,6 +34,10 @@ class ShadingUtils(object):
                 name=shaderConfig['uid'],
                 asShader=True)
             cmds.setAttr(shader + '.color', *shaderConfig['color'], type='double3')
+            if 'transparency' in shaderConfig:
+                cmds.setAttr(
+                    shader + '.transparency',
+                    *shaderConfig['transparency'], type='double3')
 
             shaderEngine = cmds.sets(
                 renderable=True,
@@ -64,9 +68,8 @@ class ShadingUtils(object):
 #___________________________________________________________________________________________________ getAllShaded
     @classmethod
     def getAllShaded(cls, shaderConfig):
-        """ Returns the list of transform nodes that have a geometry nodeName shaded by the specified
-            shader configuration data
-        """
+        """ Returns the list of transform nodes that have a geometry nodeName shaded by the
+            specified shader configuration data. """
 
         engine = cls.createShaderFromConfig(shaderConfig)[1]
         geos   = cmds.ls(geometry=True)

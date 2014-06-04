@@ -48,9 +48,9 @@ class TrackwayIoWidget(PyGlassWidget):
         self._filterList = []
 
         filterDefs = [
-            {'enum':TrackPropEnum.SITE, 'label':'Site'},
-            {'enum':TrackPropEnum.LEVEL, 'label':'Level'},
-            {'enum':TrackPropEnum.SECTOR, 'label':'Sector'},
+            {'enum':TrackPropEnum.SITE,            'label':'Site'},
+            {'enum':TrackPropEnum.LEVEL,           'label':'Level'},
+            {'enum':TrackPropEnum.SECTOR,          'label':'Sector'},
             {'enum':TrackPropEnum.TRACKWAY_NUMBER, 'label':'Trackway'} ]
 
         index = 0

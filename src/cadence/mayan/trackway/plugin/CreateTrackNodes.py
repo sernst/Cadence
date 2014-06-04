@@ -3,7 +3,6 @@
 # Kent A. Stevens and Scott Ernst
 
 from nimble import NimbleScriptBase
-from pyaid.dict.DictUtils import DictUtils
 from cadence.enum.TrackPropEnum import TrackPropEnum
 
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
@@ -36,7 +35,6 @@ class CreateTrackNodes(NimbleScriptBase):
             uid = track.get(TrackPropEnum.UID.maya)
             if not uid:
                 continue
-#           print 'TRACK:', DictUtils.prettyPrint(track)
             trackNodeList[uid] = TrackSceneUtils.createTrackNode(uid, trackSetNode, track)
         self.put('nodes', trackNodeList)
 

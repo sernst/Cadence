@@ -169,13 +169,9 @@ class CadenceNimbleStatusElement(PyGlassElement):
     def _handleInitializeSceneClick(self):
         conn   = nimble.getConnection()
         result = conn.runPythonModule(InitializeTrackwayScene)
-        if result.success:
-            header = u'Success'
-            message = u'Your current scene has been initialized for use with Cadence'
-        else:
+        if not result.success:
             header = u'Failed'
             message = u'Unable to initialize your Maya scene'
-
-        PyGlassBasicDialogManager.openOk(self.mainWindow, header, message, u'Initialize Scene')
+            PyGlassBasicDialogManager.openOk(self.mainWindow, header, message, u'Initialize Scene')
         self._iniBtn.setText(u'Reinitialize')
 

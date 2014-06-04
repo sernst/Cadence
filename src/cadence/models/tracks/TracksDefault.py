@@ -120,8 +120,6 @@ class TracksDefault(PyGlassModelsDefault):
 #___________________________________________________________________________________________________ getNextTrack
     def getNextTrack(self, session):
         """ Returns the next track in the series if such a track exists """
-        print 'in getNextTrack: self.next = %s (and getByUid returns %s)' % (self.next,
-                    self.getByUid(self.next, session=session))
         if self.next is None:
             return None
         return self.getByUid(self.next, session=session)
@@ -136,7 +134,6 @@ class TracksDefault(PyGlassModelsDefault):
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if enum == TrackPropEnum.UID:
                 continue
-
             if enum.name in data:
                 setattr(self, enum.name, data[enum.name])
 
@@ -158,36 +155,31 @@ class TracksDefault(PyGlassModelsDefault):
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if enum.maya:
                 out[enum.maya] = getattr(self, enum.name)
-#       and in case the Maya node width and length attributes are still zero, initialize them to the
-#       corresponding measured values from the spreadsheet. But then, if a measured value for width
-#       or length is zero (usually due to poor quality track preservation), then assign it a nominal
-#       (and visually obvious) small value of 0.10 m (10 cm in UI display).
 
+        # load up the attributes left and pes so that they can be used in assigning shaders
+        out[TrackPropEnum.LEFT.name] = getattr(self, TrackPropEnum.LEFT.name)
+        out[TrackPropEnum.PES.name]  = getattr(self, TrackPropEnum.PES.name)
+
+        # If the width and length attributes are still zero, initialize them to the corresponding
+        # measured values from the spreadsheet. But then, if a measured value for width or length
+        # is zero (usually due to poor quality track preservation), then assign it a nominal (and
+        # visually obvious) small value of 0.10 m (10 cm in UI display).
         if out[TrackPropEnum.WIDTH.maya] == 0.0:
-            print 'in toMayaNodeDict:  width is zero'
             w = getattr(self, TrackPropEnum.WIDTH_MEASURED.name)
-            out[TrackPropEnum.WIDTH.maya] = 0.25 if w == 0.0 else w
-            print 'in toMayaNodeDict:  now width is %s' % out[TrackPropEnum.WIDTH.maya]
-
+            out[TrackPropEnum.WIDTH.maya] = 0.1 if w == 0.0 else w
         if out[TrackPropEnum.LENGTH.maya] == 0.0:
-            print 'in toMayaNodeDict:  length is zero'
             w = getattr(self, TrackPropEnum.LENGTH_MEASURED.name)
-            out[TrackPropEnum.LENGTH.maya] = 0.25 if w == 0.0 else w
-            print 'in toMayaNodeDict:  now length is %s' % out[TrackPropEnum.LENGTH.maya]
-
-        print out
+            out[TrackPropEnum.LENGTH.maya] = 0.1 if w == 0.0 else w
         return out
 
 #___________________________________________________________________________________________________ findExistingTracks
     def findExistingTracks(self, session):
-        """ Searches the database for an existing track that matches the current values of the
-            unique properties in this track instance and returns a result list of any duplicates
-            found. """
+        """ Searches the database for an existing track that matches the current values of the UID
+            in this track instance and returns a result list of any duplicates found. """
         query = session.query(self.__class__)
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if enum.unique:
                 query = query.filter(getattr(self.__class__, enum.name) == getattr(self, enum.name))
-
         return query.all()
 
 #___________________________________________________________________________________________________ getByUid
@@ -201,12 +193,9 @@ class TracksDefault(PyGlassModelsDefault):
     def getByProperties(cls, session, **kwargs):
         """ Loads based on the current values set for the track. This form of loading is useful
             when the uid is not available, e.g. when importing data from the spreadsheet. """
-
         query = session.query(cls)
-
         for key,value in kwargs.iteritems():
             query = query.filter(getattr(cls, key) == value)
-
         return query.all()
 
 #___________________________________________________________________________________________________ getByName
