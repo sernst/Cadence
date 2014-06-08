@@ -88,30 +88,4 @@ class Tracks_Track(TracksDefault):
 
         return False
 
-#___________________________________________________________________________________________________ setCameraFocus
-    def setCameraFocus(self):
-        """ Center the current camera (CadenceCam or persp) on the selected node. """
-        if self.nodeName is None:
-            return
 
-        cmds.viewFit(fitFactor=0.25, animate=True)
-
-#___________________________________________________________________________________________________ initializeCadenceCam
-    @classmethod
-    def initializeCadenceCam(cls):
-        """ This creates an orthographic camera that looks down the Y axis onto the XZ plane,
-            and rotated so that the AI file track labels are legible.  This camera will then be
-            positioned so that the given track nodeName is centered in its field by
-            setCameraFocus. """
-        if cmds.objExists('CadenceCam'):
-            return
-
-        c = cmds.camera(
-            orthographic=True,
-            nearClipPlane=1,
-            farClipPlane=100000,
-            orthographicWidth=500)
-        cmds.setAttr(c[0] + '.visibility', False)
-        cmds.rename(c[0], 'CadenceCam')
-        cmds.rotate(-90, 180, 0)
-        cmds.move(0, 100, 0, 'CadenceCam', absolute=True)
