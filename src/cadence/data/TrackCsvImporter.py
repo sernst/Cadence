@@ -186,7 +186,8 @@ class TrackCsvImporter(object):
 
         #-------------------------------------------------------------------------------------------
         # MEASUREMENTS
-        #       Parse the length, width, and depth measurements
+        #       Parse the length, width, and depth measurements. If any are missing then assign
+        #       zero values as the default, which will be adjusted later in Maya
         if ts.pes:
             wide      = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_WIDTH)
             wideGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_WIDTH_GUESS)
@@ -202,12 +203,17 @@ class TrackCsvImporter(object):
             deep      = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_DEPTH)
             deepGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_DEPTH_GUESS)
 
-        if not wide and not wideGuess and not longVal and not longGuess:
-            self._writeError({
-                'message':u'No length or width measurements found',
-                'data':csvRowData,
-                'index':csvIndex })
-            return False
+        if not wide and not wideGuess:
+            wide = 0
+            wideGuess = 0
+
+        if not longVal and not longGuess:
+            longVal = 0
+            longGuess = 0
+
+        if not deep and not deepGuess:
+            deep = 0
+            deepGuess = 0
 
         #-------------------------------------------------------------------------------------------
         # FIND EXISTING
