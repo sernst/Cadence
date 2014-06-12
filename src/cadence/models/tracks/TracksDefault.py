@@ -182,6 +182,15 @@ class TracksDefault(PyGlassModelsDefault):
                 query = query.filter(getattr(self.__class__, enum.name) == getattr(self, enum.name))
         return query.all()
 
+#___________________________________________________________________________________________________ equivalentProps
+    def equivalentProps(self, **kwargs):
+        """ Iterates through the kwargs and checks whether or not the values for each kwarg
+            property to see if it matches the value for this track instance. """
+        for n,v in kwargs.iteritems():
+            if getattr(self, n) != v:
+                return False
+        return True
+
 #___________________________________________________________________________________________________ getByUid
     @classmethod
     def getByUid(cls, uid, session):

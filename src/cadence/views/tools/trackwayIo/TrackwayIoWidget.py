@@ -51,7 +51,8 @@ class TrackwayIoWidget(PyGlassWidget):
             {'enum':TrackPropEnum.SITE,            'label':'Site'},
             {'enum':TrackPropEnum.LEVEL,           'label':'Level'},
             {'enum':TrackPropEnum.SECTOR,          'label':'Sector'},
-            {'enum':TrackPropEnum.TRACKWAY_NUMBER, 'label':'Trackway'} ]
+            {'enum':TrackPropEnum.TRACKWAY_NUMBER, 'label':'Trackway'},
+            {'enum':TrackPropEnum.YEAR,            'label':'Year'} ]
 
         index = 0
         for f in filterDefs:

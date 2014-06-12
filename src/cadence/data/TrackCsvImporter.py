@@ -9,6 +9,7 @@ from pyaid.debug.Logger import Logger
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
 from pyaid.reflection.Reflection import Reflection
+from pyaid.string.StringUtils import StringUtils
 
 from cadence.enum.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
@@ -73,6 +74,10 @@ class TrackCsvImporter(object):
                 rowDict = dict()
                 for column in Reflection.getReflectionList(TrackCsvColumnEnum):
                     value = row[column.index]
+
+                    if not isinstance(value, unicode):
+                        value = StringUtils.strToUnicode(value)
+
                     if value != u'' or value is None:
                         rowDict[column.name] = value
 
@@ -120,8 +125,16 @@ class TrackCsvImporter(object):
             return False
 
         try:
-            #ts.year = csvRowData.get(TrackCsvColumnEnum.CAST_DATE.name).strip().split('_')[-1]
-            pass
+            year = csvRowData.get(TrackCsvColumnEnum.CAST_DATE.name)
+            if not year:
+                year = u'2014'
+            else:
+                year = int(re.compile('[^0-9]+').sub(u'', year.strip().split('_')[-1]))
+                if year < 2000:
+                    year += 2000
+                year = unicode(year)
+
+            ts.year = year
         except Exception, err:
             self._writeError({
                 'message':u'Missing cast date',
@@ -214,6 +227,15 @@ class TrackCsvImporter(object):
         if not deep and not deepGuess:
             deep = 0
             deepGuess = 0
+
+        #-------------------------------------------------------------------------------------------
+        # SKIP
+        #       Redundant tracks are skipped
+        doSkip = ts.equivalentProps(
+            site=u'BEB', level=u'515', trackwayType=u'S', trackwayNumber=u'3', year=u'2006')
+        if doSkip and (ts.number == u'1' or (ts.number == u'2' and ts.left and ts.pes)):
+            self._logger.write(u'SKIPPED: ' + DictUtils.prettyPrint(ts.toDict()))
+            return False
 
         #-------------------------------------------------------------------------------------------
         # FIND EXISTING

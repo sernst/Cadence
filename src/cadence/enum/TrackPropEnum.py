@@ -123,8 +123,8 @@ class TrackPropEnum(object):
     # the x coordinate of a given track (relative to tracksite's map origin) encoded in nodeName
     X = TRACK_PROP_NT('x', 'float', 'translateX', False)
 
-    # the year of excavation of the tracksite of which this track belongs
-    YEAR = TRACK_PROP_NT('year', 'string', None, False)
+    # Year of cast for the track
+    YEAR = TRACK_PROP_NT('year', 'string', None, True)
 
     # the z coordinate of a given track (relative to tracksite's map origin) encoded in nodeName
     Z = TRACK_PROP_NT('z', 'float', 'translateZ', False)
