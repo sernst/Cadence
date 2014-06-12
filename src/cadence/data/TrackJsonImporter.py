@@ -5,7 +5,6 @@
 from pyaid.debug.Logger import Logger
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
-from pyaid.reflection.Reflection import Reflection
 from cadence.enum.TrackPropEnum import TrackPropEnumOps
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
@@ -59,23 +58,26 @@ class TrackJsonImporter(object):
 #___________________________________________________________________________________________________ _parseTrackEntry
     def _parseTrackEntry(self, data, session):
         """Doc..."""
-        searchData = dict()
-        for name,value in data.iteritems():
-            enum = TrackPropEnumOps.getTrackPropEnumByName(name)
-            if not enum:
-                continue
-            if enum.unique:
-                searchData[name] = value
+        model = Tracks_Track.MASTER
+        result = None
 
-        result = Tracks_Track.MASTER.getByProperties(session, **searchData)
+        # If a UID is present in the data use that to retrieve the track instance
+        if TrackPropEnum.UID.name in data:
+            result = model.getByUid(data[TrackPropEnum.UID.name], session)
+
+        # If no UID or no track with the specified UID exists attempt to find the track by its
+        # uniquely identifying properties
+        if result is None:
+            result = self._getTrackByProps(data, session)
+
         if not result:
             self._logger.write(
-                'WARNING: Missing track for data:\n    ' + DictUtils.prettyPrint(searchData))
+                u'WARNING: Missing track for data:\n    ' + DictUtils.prettyPrint(data))
             self._missing.append(data)
             return
 
         if len(result) > 1:
-            msg = ['WARNING: Ambiguous track data: ' + DictUtils.prettyPrint(searchData)]
+            msg = [u'WARNING: Ambiguous track data: ' + DictUtils.prettyPrint(data)]
             for r in result:
                 msg.append('    ' + DictUtils.prettyPrint(r.toDict(uniqueOnly=True)))
             self._logger.write('\n'.join(msg))
@@ -84,6 +86,20 @@ class TrackJsonImporter(object):
 
         track = result[0]
         track.fromDict(data)
+
+#___________________________________________________________________________________________________ _getTrackByProps
+    def _getTrackByProps(self, data, session):
+        model = Tracks_Track.MASTER
+        searchData = dict()
+
+        for name,value in data.iteritems():
+            enum = TrackPropEnumOps.getTrackPropEnumByName(name)
+            if not enum:
+                continue
+            if enum.unique:
+                searchData[name] = value
+
+        return model.getByProperties(session, **searchData)
 
 #===================================================================================================
 #                                                                               I N T R I N S I C
