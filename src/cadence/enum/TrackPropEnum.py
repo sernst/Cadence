@@ -24,9 +24,6 @@ class TrackPropEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    # Community, site, year, level, sector, trackway
-    COMM = TRACK_PROP_NT('community', 'string', None, False)
-
     # the depth of a given track (in cm) as originally measured
     DEPTH_MEASURED    = TRACK_PROP_NT('depthMeasured',    'float', None, False)
     DEPTH_UNCERTAINTY = TRACK_PROP_NT('depthUncertainty', 'float', None, False)

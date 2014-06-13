@@ -299,9 +299,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ refreshTrackwayUI
     def refreshTrackwayUI(self, dict):
         """ The trackway UI is updated using the values of the passed track model instance. """
-        community = dict[TrackPropEnum.COMM.name]
-        if community:
-            self.commLE.setText(community)
+
         site = dict[TrackPropEnum.SITE.name]
         if site:
             self.siteLE.setText(site)
@@ -352,15 +350,13 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ getTrackwayPropertiesFromUI
     def getTrackwayPropertiesFromUI(self):
         """ Returns a dictionary of trackway properties, extracted from the UI. """
-        d = dict()
-        d[TrackPropEnum.COMM.name]            = self.commLE.text()
-        d[TrackPropEnum.SITE.name]            = self.siteLE.text()
-        d[TrackPropEnum.YEAR.name]            = self.yearLE.text()
-        d[TrackPropEnum.SECTOR.name]          = self.sectorLE.text()
-        d[TrackPropEnum.LEVEL.name]           = self.levelLE.text()
-        d[TrackPropEnum.TRACKWAY_TYPE.name]   = self.trackwayTypeLE.text()
-        d[TrackPropEnum.TRACKWAY_NUMBER.name] = self.trackwayNumberLE.text()
-        return d
+        return {
+            TrackPropEnum.SITE.name:self.siteLE.text(),
+            TrackPropEnum.YEAR.name:self.yearLE.text(),
+            TrackPropEnum.SECTOR.name:self.sectorLE.text(),
+            TrackPropEnum.LEVEL.name:self.levelLE.text(),
+            TrackPropEnum.TRACKWAY_TYPE.name:self.trackwayTypeLE.text(),
+            TrackPropEnum.TRACKWAY_NUMBER.name:self.trackwayNumberLE.text() }
 
 #___________________________________________________________________________________________________ setCameraFocus
     def setCameraFocus(self):

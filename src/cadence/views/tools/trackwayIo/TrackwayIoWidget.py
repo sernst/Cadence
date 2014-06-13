@@ -73,16 +73,22 @@ class TrackwayIoWidget(PyGlassWidget):
             self._filterList.append(f)
             index += 1
 
+        self.tabWidget.currentChanged.connect(self._handleTabChanged)
+
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
-    def _activateWidgetDisplayImpl(self, **kwargs):
+#___________________________________________________________________________________________________ _activateLoadTab
+    def _activateLoadTab(self):
         model   = Tracks_Track.MASTER
         session = model.createSession()
         for filterDef in self._filterList:
             self._updateFilterList(filterDef, session)
         session.close()
+
+#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
+    def _activateWidgetDisplayImpl(self, **kwargs):
+        self._activateLoadTab()
 
 #___________________________________________________________________________________________________ _updateFilterList
     def _updateFilterList(self, filterDef, session, filterDict =None):
@@ -271,3 +277,10 @@ class TrackwayIoWidget(PyGlassWidget):
 
         session.close()
         self._processingFilters = False
+
+#___________________________________________________________________________________________________ _handleTabChanged
+    QtCore.Signal(int)
+    def _handleTabChanged(self, index):
+        if index == 0:
+            self._activateLoadTab()
+

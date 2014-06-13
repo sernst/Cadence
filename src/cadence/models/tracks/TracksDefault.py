@@ -29,7 +29,6 @@ class TracksDefault(PyGlassModelsDefault):
     _TRACKWAY_PATTERN = re.compile('(?P<type>[A-Za-z]+)[\s\t]*(?P<number>[0-9]+)')
 
     _uid                 = sqla.Column(sqla.Unicode,      default=u'')
-    _community           = sqla.Column(sqla.Unicode,      default=u'')
     _site                = sqla.Column(sqla.Unicode,      default=u'')
     _year                = sqla.Column(sqla.Unicode,      default=u'')
     _level               = sqla.Column(sqla.Unicode,      default=u'')

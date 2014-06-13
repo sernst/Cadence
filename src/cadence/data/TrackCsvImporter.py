@@ -129,9 +129,15 @@ class TrackCsvImporter(object):
             if not year:
                 year = u'2014'
             else:
+
                 year = int(re.compile('[^0-9]+').sub(u'', year.strip().split('_')[-1]))
-                if year < 2000:
+                if year > 2999:
+                    # When multiple year entries combine into a single large number
+                    year = int(unicode(year)[-4:])
+                elif year < 2000:
+                    # When two digit years (e.g. 09) are used instead of four digit years
                     year += 2000
+
                 year = unicode(year)
 
             ts.year = year
