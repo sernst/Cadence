@@ -46,6 +46,7 @@ class TrackwayIoWidget(PyGlassWidget):
 
         self._getLayout(self.filterBox, QtGui.QHBoxLayout, True)
         self._filterList = []
+        self._processingFilters = False
 
         filterDefs = [
             {'enum':TrackPropEnum.SITE,            'label':'Site'},
@@ -63,7 +64,9 @@ class TrackwayIoWidget(PyGlassWidget):
             flBoxLayout.addWidget(label)
 
             fl = QtGui.QListWidget(self)
-            fl.currentItemChanged.connect(self._handleFilterChange)
+            fl.itemSelectionChanged.connect(self._handleFilterChange)
+            fl.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+            fl.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
             flBoxLayout.addWidget(fl)
             f['index']  = index
             f['widget'] = fl
@@ -88,11 +91,15 @@ class TrackwayIoWidget(PyGlassWidget):
 
         if filterDict:
             for key,value in filterDict.iteritems():
-                query = query.filter(getattr(model, key) == value)
+                if isinstance(value, basestring):
+                    query = query.filter(getattr(model, key) == value)
+                else:
+                    query = query.filter(getattr(model, key).in_(value))
 
         result = query.all()
 
         fl = filterDef['widget']
+        fl.itemSelectionChanged.disconnect(self._handleFilterChange)
         fl.clear()
         for item in result:
             DataListWidgetItem(str(item[0]), fl, id=str(item[0]), data=item[0])
@@ -100,6 +107,7 @@ class TrackwayIoWidget(PyGlassWidget):
         first = DataListWidgetItem('(All)', id='ALL', data=None)
         fl.insertItem(0, first)
         first.setSelected(True)
+        fl.itemSelectionChanged.connect(self._handleFilterChange)
 
 #===================================================================================================
 #                                                                                 H A N D L E R S
@@ -231,25 +239,35 @@ class TrackwayIoWidget(PyGlassWidget):
         self.mainWindow.showStatusDone(self)
 
 #___________________________________________________________________________________________________ _handleFilterChange
-    @QtCore.Slot(QtGui.QListWidgetItem, QtGui.QListWidgetItem)
-    def _handleFilterChange(self, current, previous):
-        if current is None:
+    def _handleFilterChange(self):
+        if self._processingFilters:
             return
+        self._processingFilters = True
 
-        session = Tracks_Track.MASTER.createSession()
-
-        filterDef   = None
+        sender = self.sender()
+        model = Tracks_Track.MASTER
+        session = model.createSession()
+        filterDef = None
         filterDict = dict()
+
         for fd in self._filterList:
             if filterDef:
                 self._updateFilterList(fd, session, filterDict=filterDict)
-            elif current.listWidget() == fd['widget']:
+                continue
+
+            if sender == fd['widget']:
                 filterDef = fd
-                if current.itemData:
-                    filterDict[fd['enum'].name] = current.itemData
-            else:
-                items = fd['widget'].selectedItems()
-                if items and items[0].itemData:
-                    filterDict[fd['enum'].name] = items[0].itemData
+
+            items = fd['widget'].selectedItems()
+            if not items or not len(items):
+                continue
+
+            entries = []
+            for item in items:
+                if item and item.itemData:
+                    entries.append(item.itemData)
+            if entries:
+                filterDict[fd['enum'].name] = entries
 
         session.close()
+        self._processingFilters = False
