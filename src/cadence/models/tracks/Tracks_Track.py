@@ -37,8 +37,8 @@ class Tracks_Track(TracksDefault):
 #===================================================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ createNode
-    def createNode(self):
+#___________________________________________________________________________________________________ createTrackNode
+    def createTrackNode(self):
         """ Create a visual representation of a track, to signify the position, dimensions (length
             and width), and rotation of either a manus or pes print.  The representation has
             basic dimensions of one meter so that the scale in x and z equates to the width and

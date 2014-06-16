@@ -42,8 +42,8 @@ class TracksDefault(PyGlassModelsDefault):
     _left                = sqla.Column(sqla.Boolean,      default=True)
     _pes                 = sqla.Column(sqla.Boolean,      default=True)
     _index               = sqla.Column(sqla.Integer,      default=0)
-    _width               = sqla.Column(sqla.Float,        default=0.5)
-    _length              = sqla.Column(sqla.Float,        default=0.5)
+    _width               = sqla.Column(sqla.Float,        default=0.0)
+    _length              = sqla.Column(sqla.Float,        default=0.0)
     _rotation            = sqla.Column(sqla.Float,        default=0.0)
     _x                   = sqla.Column(sqla.Float,        default=0.0)
     _z                   = sqla.Column(sqla.Float,        default=0.0)
@@ -118,7 +118,8 @@ class TracksDefault(PyGlassModelsDefault):
 
 #___________________________________________________________________________________________________ getNextTrack
     def getNextTrack(self, session):
-        """ Returns the next track in the series if such a track exists """
+        """ Returns the next track in the series if such a track exists.  Unlike getPreviousTrack,
+            the next track's uid is explicitly stored in the attribute next, waiting to be used. """
         if self.next is None:
             return None
         return self.getByUid(self.next, session=session)
@@ -159,10 +160,10 @@ class TracksDefault(PyGlassModelsDefault):
         out[TrackPropEnum.LEFT.name] = getattr(self, TrackPropEnum.LEFT.name)
         out[TrackPropEnum.PES.name]  = getattr(self, TrackPropEnum.PES.name)
 
-        # If the width and length attributes are still zero, initialize them to the corresponding
-        # measured values from the spreadsheet. But then, if a measured value for width or length
-        # is zero (usually due to poor quality track preservation), then assign it a nominal (and
-        # visually obvious) small value of 0.10 m (10 cm in UI display).
+        # If the width and length attributes are either still zero, initialize them to the
+        # corresponding measured values from the spreadsheet. But then, if a measured value for
+        # width or length is itself still zero (usually due to poor quality track preservation),
+        # then assign it a nominal (and visually obvious) small value of 10 cm in UI display.
         if out[TrackPropEnum.WIDTH.maya] == 0.0:
             w = getattr(self, TrackPropEnum.WIDTH_MEASURED.name)
             out[TrackPropEnum.WIDTH.maya] = 0.1 if w == 0.0 else w
@@ -213,6 +214,10 @@ class TracksDefault(PyGlassModelsDefault):
             that one filters on other properties as specified by the kwargs. """
         name = name.strip()
 
+        if len(name) < 3:
+            return None
+
+        # confusingly, the name might be found in one of two formats, e.g., either LM3 or ML3
         if StringUtils.begins(name.upper(), [u'M', u'P']):
             left = name[1].upper() == u'L'
             pes  = name[0].upper() == u'P'
