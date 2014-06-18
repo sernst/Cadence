@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="loadTabWidget">
       <attribute name="title">
@@ -294,6 +294,20 @@
               <widget class="QPushButton" name="exportBtn">
                <property name="text">
                 <string>Export</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="exportCompressCheck">
+               <property name="text">
+                <string>Compressed</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="exportPrettyCheck">
+               <property name="text">
+                <string>Formatted</string>
                </property>
               </widget>
              </item>

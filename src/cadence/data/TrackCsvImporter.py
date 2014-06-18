@@ -310,7 +310,7 @@ class TrackCsvImporter(object):
         t = ts.getMatchingTrack(session)
         if t is None:
             model = Tracks_Track.MASTER
-            t     = model()
+            t = model()
             t.uid = ts.uid
             t.fromDict(ts.toDict())
             session.add(t)

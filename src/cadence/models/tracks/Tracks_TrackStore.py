@@ -3,6 +3,7 @@
 # Scott Ernst
 
 from cadence.models.tracks.TracksDefault import TracksDefault
+# AS NEEDED: from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ Tracks_TrackStore
 class Tracks_TrackStore(TracksDefault):
@@ -22,11 +23,16 @@ class Tracks_TrackStore(TracksDefault):
         """ Compares the dictionary of properties against the properties of this track store
             instance and returns a dictionary of only the properties that differ. This is used
             to export changes made in a database to serial format for storage. """
+
         out = dict()
         for key,value in comparison.iteritems():
             if getattr(self, key, value) != value:
                 out[key] = value
 
+        if len(out.keys()) == 0:
+            return None
+
+        out['uid'] = self.uid
         return out
 
 #___________________________________________________________________________________________________ getMatchingTrack
@@ -37,3 +43,20 @@ class Tracks_TrackStore(TracksDefault):
         model  = Tracks_Track.MASTER
         result = session.query(model).filter(model.uid == self.uid).all()
         return result[0] if result else None
+
+#___________________________________________________________________________________________________ getOrCreateMatchingTrack
+    def getOrCreateMatchingTrack(self, session):
+        t = self.getMatchingTrack(session)
+
+        from cadence.models.tracks.Tracks_Track import Tracks_Track
+
+        if t is None:
+            model = Tracks_Track.MASTER
+            t = model()
+            t.uid = self.uid
+            t.fromDict(self.toDict())
+            session.add(t)
+        else:
+            t.fromDict(self.toDiffDict(t.toDict()))
+
+        return t

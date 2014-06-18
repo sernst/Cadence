@@ -1,6 +1,7 @@
 # TrackwayIoWidget.py
 # (C)2013-2014
 # Scott Ernst
+from pyglass.elements.PyGlassElementUtils import PyGlassElementUtils
 
 import sqlalchemy as sqla
 
@@ -14,6 +15,7 @@ from pyglass.elements.DataListWidgetItem import DataListWidgetItem
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
 import nimble
+from cadence.data.TrackExporterRemoteThread import TrackExporterRemoteThread
 from cadence.data.TrackLinkageRemoteThread import TrackLinkageRemoteThread
 
 from cadence.enum.TrackPropEnum import TrackPropEnum
@@ -38,11 +40,18 @@ class TrackwayIoWidget(PyGlassWidget):
     def __init__(self, parent, **kwargs):
         super(TrackwayIoWidget, self).__init__(parent, **kwargs)
 
+        self._thread = None
+
         self.loadBtn.clicked.connect(self._handleLoadTracks)
         self.importCsvBtn.clicked.connect(self._handleImport)
         self.importJsonBtn.clicked.connect(self._handleImport)
+        self.exportBtn.clicked.connect(self._handleExport)
         self.updateLinksBtn.clicked.connect(self._handleUpdateLinks)
-        self._thread = None
+
+        PyGlassElementUtils.registerCheckBox(
+            self, self.exportPrettyCheck, configSetting=UserConfigEnum.EXPORT_PRETTY)
+        PyGlassElementUtils.registerCheckBox(
+            self, self.exportCompressCheck, configSetting=UserConfigEnum.EXPORT_COMPRESSED)
 
         self._getLayout(self.filterBox, QtGui.QHBoxLayout, True)
         self._filterList = []
@@ -228,19 +237,21 @@ class TrackwayIoWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _handleImportComplete
     def _handleImportComplete(self, response):
+        actionType = 'Export' if isinstance(self._thread, TrackExporterRemoteThread) else 'Import'
+
         if response['response']:
-            print 'ERROR: Import Failed'
+            print 'ERROR: %s Failed' % actionType
             print '  OUTPUT:', response['output']
             print '  ERROR:', response['error']
             PyGlassBasicDialogManager.openOk(
                 parent=self,
                 header='ERROR',
-                message='Import operation failed')
+                message=actionType + ' operation failed')
         else:
             PyGlassBasicDialogManager.openOk(
                 parent=self,
                 header='Success',
-                message='Import operation complete')
+                message=actionType + ' operation complete')
 
         self.mainWindow.showStatusDone(self)
 
@@ -284,3 +295,44 @@ class TrackwayIoWidget(PyGlassWidget):
         if index == 0:
             self._activateLoadTab()
 
+#___________________________________________________________________________________________________ _handleExport
+    def _handleExport(self):
+
+        self.mainWindow.showLoading(
+            self,
+            u'Browsing for Exporting File',
+            u'Choose the file location to save the export')
+
+        defaultPath = self.mainWindow.appConfig.get(UserConfigEnum.LAST_SAVE_PATH)
+        if not defaultPath:
+            defaultPath = self.mainWindow.appConfig.get(UserConfigEnum.LAST_BROWSE_PATH)
+
+        path = PyGlassBasicDialogManager.browseForFileSave(
+            parent=self, caption=u'Specify Export File', defaultPath=defaultPath)
+        self.mainWindow.hideLoading(self)
+
+        if not path:
+            self.mainWindow.toggleInteractivity(True)
+            return
+
+        # Store directory location as the last save directory
+        self.mainWindow.appConfig.set(
+            UserConfigEnum.LAST_SAVE_PATH,
+            FileUtils.getDirectoryOf(path) )
+
+        if not path.endswith('.json'):
+            path += '.json'
+
+        self.mainWindow.showStatus(
+            self,
+            u'Exporting Tracks',
+            u'Writing track information from database')
+
+        self._thread = TrackExporterRemoteThread(
+            self, path=path,
+            pretty=self.exportPrettyCheck.isChecked(),
+            gzipped=self.exportCompressCheck.isChecked())
+
+        self._thread.execute(
+            callback=self._handleImportComplete,
+            logCallback=self._handleImportStatusUpdate)

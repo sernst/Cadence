@@ -8,6 +8,7 @@ from pyaid.json.JSON import JSON
 from cadence.enum.TrackPropEnum import TrackPropEnumOps
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
+from cadence.data.TrackExporter import TrackExporter
 
 #___________________________________________________________________________________________________ TrackJsonImporter
 class TrackJsonImporter(object):
@@ -48,12 +49,26 @@ class TrackJsonImporter(object):
             return False
 
         for trackEntry in tracksData:
-            self._parseTrackEntry(trackEntry, session)
+            if TrackExporter.DELETED_IDENTIFIER in trackEntry:
+                self._deleteTrackEntry(trackEntry, session)
+            else:
+                self._parseTrackEntry(trackEntry, session)
 
         return True
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _deleteTrackEntry
+    def _deleteTrackEntry(self, data, session):
+        model = Tracks_Track.MASTER
+
+        track = model.getByUid(data['uid'], session)
+        if track is None:
+            return True
+
+        session.delete(track)
+        return True
 
 #___________________________________________________________________________________________________ _parseTrackEntry
     def _parseTrackEntry(self, data, session):
