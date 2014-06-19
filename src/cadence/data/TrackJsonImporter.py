@@ -87,7 +87,7 @@ class TrackJsonImporter(object):
             tracks = model.getByUid(uid, session)
             tracks = [tracks] if tracks else None
 
-            trackStores = model.getByUid(uid, session)
+            trackStores = storageModel.getByUid(uid, session)
             trackStores = [trackStores] if trackStores else None
 
         # If no UID or no track with the specified UID exists attempt to find the track by its
@@ -113,8 +113,20 @@ class TrackJsonImporter(object):
 
         tracks[0].fromDict(data)
         trackStores[0].fromDict(data)
+
+        displayData = DictUtils.clone(data)
+        if 'uid' in displayData:
+            del displayData['uid']
+
         self._logger.write(
-            u'UPDATED: ' + DictUtils.prettyPrint(trackStores[0].toDict(uniqueOnly=True)))
+            (u'<div style="background-color:#FFFFFF;">'
+             + u'<span style="font-size:18px;color:#333333;font-weight:bold;">UPDATED:</span> '
+             + u'<span style="color:#AA3333;">[uid: %s]</span> '
+             + u'<span style="color:#33AA33;">[fingerprint: %s]</span>'
+             + u'\n\t* %s</div>') % (
+                trackStores[0].uid,
+                trackStores[0].fingerprint,
+                DictUtils.prettyPrint(displayData, u'\n\t* ')) )
 
 #___________________________________________________________________________________________________ _getTrackByProps
     def _getTrackByProps(self, data, session, model):

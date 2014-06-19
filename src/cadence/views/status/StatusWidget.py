@@ -3,6 +3,7 @@
 # Scott Ernst
 
 from PySide import QtGui
+from pyaid.string.StringUtils import StringUtils
 
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
@@ -22,6 +23,8 @@ class StatusWidget(PyGlassWidget):
         self.iconLabel.setMovie(self._animatedIcon)
 
         self.statusText.setReadOnly(True)
+        self.statusText.setWordWrapMode(QtGui.QTextOption.NoWrap)
+        self.statusText.setStyleSheet('body{background-color:#FFFFFF;}')
 
         self.target    = None
         self.isShowing = False
@@ -61,7 +64,17 @@ class StatusWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ append
     def append(self, text):
-        self.statusText.append(text)
+        #self.statusText.moveCursor(QtGui.QTextCursor.End)
+        #self.statusText.insertHtml(StringUtils.strToUnicode(text))
+        self.statusText.append(StringUtils.strToUnicode(text))
+
+        self.statusText.moveCursor(QtGui.QTextCursor.End)
+        self.statusText.moveCursor(QtGui.QTextCursor.StartOfLine)
+
+        print u'\n' + 60*u'-'
+        print text
+        print u'--- RESULT ---'
+        print self.statusText.toHtml()
 
 #___________________________________________________________________________________________________ showStatusDone
     def showStatusDone(self):

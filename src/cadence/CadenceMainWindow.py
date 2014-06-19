@@ -111,9 +111,10 @@ class CadenceMainWindow(PyGlassWindow):
         if formatAsHtml:
             parts = []
             for p in message.strip().split(u'\n'):
-                parts.append(
-                    p.replace(u'\t', u'&nbsp;&nbsp;&nbsp;&nbsp;').replace(u' ', u'&nbsp;'))
-            message = u'<div>' + u'<br />'.join(parts) + u'</div>'
+                parts.append(p.replace(u'\t', u'&nbsp;&nbsp;&nbsp;&nbsp;'))
+            message = u'<br/>'.join(parts)
+        else:
+            message = u'<div>' + message + u'</div>'
 
         self._statusWidget.append(message)
         self.refreshGui()

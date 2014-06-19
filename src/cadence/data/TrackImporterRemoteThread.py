@@ -29,7 +29,7 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _internalMethod
+#___________________________________________________________________________________________________ _runImpl
     def _runImpl(self):
         model   = Tracks_Track.MASTER
         session = self._session if self._session else model.createSession()
@@ -50,7 +50,7 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
             self._log.writeError(u'ERROR: Track CSV Parsing Error', err)
             return 1
 
-        if not self._session:
+        if self._session is None:
             session.commit()
             session.close()
 

@@ -98,11 +98,18 @@ class TracksDefault(PyGlassModelsDefault):
 #___________________________________________________________________________________________________ GS: fingerprint
     @property
     def fingerprint(self):
-        out = []
-        for enum in Reflection.getReflectionList(TrackPropEnum):
-            if enum.unique:
-                out.append(unicode(getattr(self, enum.name)))
-        return u'|'.join(out)
+        """ String created from the uniquely identifying track properties. """
+
+        return u'-'.join([
+            getattr(self, TrackPropEnum.SITE.name, u''),
+            getattr(self, TrackPropEnum.LEVEL.name, u''),
+            getattr(self, TrackPropEnum.SECTOR.name, u''),
+            getattr(self, TrackPropEnum.TRACKWAY_TYPE.name, u''),
+            getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, u'0'),
+            getattr(self, TrackPropEnum.YEAR.name, u''),
+            u'LEFT' if getattr(self, TrackPropEnum.LEFT.name, False) else u'RIGHT',
+            u'PES' if getattr(self, TrackPropEnum.PES.name, False) else u'MAN',
+            getattr(self, TrackPropEnum.NUMBER.name, u'0') ])
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -238,3 +245,11 @@ class TracksDefault(PyGlassModelsDefault):
     def _createDict(self, **kwargs):
         kwargs['id'] = self.id
         return kwargs
+
+#===================================================================================================
+#                                                                               I N T R I N S I C
+
+#___________________________________________________________________________________________________ __unicode__
+    def __unicode__(self):
+        return u'<%s[%s] uid[%s] %s>' % (
+            self.__class__.__name__, unicode(self.i), unicode(self.uid), unicode(self.fingerprint))

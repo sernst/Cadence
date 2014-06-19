@@ -234,7 +234,7 @@ class TrackwayIoWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _handleImportStatusUpdate
     def _handleImportStatusUpdate(self, message):
-        self.mainWindow.appendStatus(self, '<div>' + message + '</div>')
+        self.mainWindow.appendStatus(self, message)
 
 #___________________________________________________________________________________________________ _handleImportComplete
     def _handleImportComplete(self, response):
