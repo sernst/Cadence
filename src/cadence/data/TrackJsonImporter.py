@@ -11,6 +11,9 @@ from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.data.TrackExporter import TrackExporter
 
 #___________________________________________________________________________________________________ TrackJsonImporter
+from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
+
+
 class TrackJsonImporter(object):
     """A class for..."""
 
@@ -74,37 +77,47 @@ class TrackJsonImporter(object):
     def _parseTrackEntry(self, data, session):
         """Doc..."""
         model = Tracks_Track.MASTER
-        result = None
+        storageModel = Tracks_TrackStore.MASTER
+        tracks = None
+        trackStores = None
 
         # If a UID is present in the data use that to retrieve the track instance
         if TrackPropEnum.UID.name in data:
-            result = model.getByUid(data[TrackPropEnum.UID.name], session)
+            uid = data[TrackPropEnum.UID.name]
+            tracks = model.getByUid(uid, session)
+            tracks = [tracks] if tracks else None
+
+            trackStores = model.getByUid(uid, session)
+            trackStores = [trackStores] if trackStores else None
 
         # If no UID or no track with the specified UID exists attempt to find the track by its
         # uniquely identifying properties
-        if result is None:
-            result = self._getTrackByProps(data, session)
+        if tracks is None:
+            tracks = self._getTrackByProps(data, session, model)
+        if trackStores is None:
+            trackStores = self._getTrackByProps(data, session, storageModel)
 
-        if not result:
+        if not tracks or not trackStores:
             self._logger.write(
                 u'WARNING: Missing track for data:\n    ' + DictUtils.prettyPrint(data))
             self._missing.append(data)
             return
 
-        if len(result) > 1:
+        if len(tracks) > 1 or len(trackStores) > 1:
             msg = [u'WARNING: Ambiguous track data: ' + DictUtils.prettyPrint(data)]
-            for r in result:
+            for r in tracks:
                 msg.append('    ' + DictUtils.prettyPrint(r.toDict(uniqueOnly=True)))
             self._logger.write('\n'.join(msg))
             self._unresolvable.append(data)
             return
 
-        track = result[0]
-        track.fromDict(data)
+        tracks[0].fromDict(data)
+        trackStores[0].fromDict(data)
+        self._logger.write(
+            u'UPDATED: ' + DictUtils.prettyPrint(trackStores[0].toDict(uniqueOnly=True)))
 
 #___________________________________________________________________________________________________ _getTrackByProps
-    def _getTrackByProps(self, data, session):
-        model = Tracks_Track.MASTER
+    def _getTrackByProps(self, data, session, model):
         searchData = dict()
 
         for name,value in data.iteritems():

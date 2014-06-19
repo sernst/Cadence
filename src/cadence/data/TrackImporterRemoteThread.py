@@ -44,6 +44,7 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
             importer.read(session)
         except Exception, err:
             if not self._session:
+                session.rollback()
                 session.close()
 
             self._log.writeError(u'ERROR: Track CSV Parsing Error', err)

@@ -185,6 +185,8 @@ class TrackwayIoWidget(PyGlassWidget):
             parent=self,
             caption=u'Select %s File to Import' % label,
             defaultPath=self.mainWindow.appConfig.get(UserConfigEnum.LAST_BROWSE_PATH) )
+
+        self.mainWindow.hideLoading(self)
         if not path or not isinstance(path, basestring):
             self.mainWindow.toggleInteractivity(True)
             return
@@ -194,7 +196,6 @@ class TrackwayIoWidget(PyGlassWidget):
             UserConfigEnum.LAST_BROWSE_PATH,
             FileUtils.getDirectoryOf(path) )
 
-        self.mainWindow.hideLoading(self)
         self.mainWindow.showStatus(
             self,
             u'Importing Tracks',

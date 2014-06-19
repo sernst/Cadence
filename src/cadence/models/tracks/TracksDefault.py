@@ -141,7 +141,7 @@ class TracksDefault(PyGlassModelsDefault):
     def toDict(self, uniqueOnly =False):
         """ Returns a dictionary containing the keys and current values of the track object
             with no dependency on a database session object. """
-        out = dict(id=self.id)
+        out = dict(id=self.id, uid=self.uid)
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if uniqueOnly and not enum.unique:
                 continue
