@@ -40,7 +40,7 @@ class TrackCsvImporter(object):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ read
-    def read(self, session, path =None):
+    def read(self, session, path =None, compressed =False):
         """ Reads from the spreadsheet located at the absolute path argument and adds each row
             to the tracks in the database. """
 
@@ -236,12 +236,14 @@ class TrackCsvImporter(object):
 
         #-------------------------------------------------------------------------------------------
         # SKIP
-        #       Redundant tracks are skipped
-        doSkip = ts.equivalentProps(
-            site=u'BEB', level=u'515', trackwayType=u'S', trackwayNumber=u'3', year=u'2006')
-        if doSkip and (ts.number == u'1' or (ts.number == u'2' and ts.left and ts.pes)):
-            self._logger.write(u'SKIPPED: ' + DictUtils.prettyPrint(ts.toDict()))
-            return False
+        #       Redundant tracks are skipped. This has been disabled to keep the database record
+        #       aligned with the original spreadsheet. Skipping will be handled internally instead
+        #       of at import time.
+        ##doSkip = ts.equivalentProps(
+        ##    site=u'BEB', level=u'515', trackwayType=u'S', trackwayNumber=u'3', year=u'2006')
+        ##if doSkip and (ts.number == u'1' or (ts.number == u'2' and ts.left and ts.pes)):
+        ##    self._logger.write(u'SKIPPED: ' + DictUtils.prettyPrint(ts.toDict()))
+        ##    return False
 
         #-------------------------------------------------------------------------------------------
         # FIND EXISTING

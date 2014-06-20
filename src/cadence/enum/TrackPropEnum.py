@@ -126,6 +126,10 @@ class TrackPropEnum(object):
     # the z coordinate of a given track (relative to tracksite's map origin) encoded in nodeName
     Z = TRACK_PROP_NT('z', 'float', 'translateZ', False)
 
+    # Specifies whether or not the track has been hidden from view. Hidden tracks will not be
+    # loaded during analysis or visualization.
+    HIDDEN = TRACK_PROP_NT('hidden', 'bool', None, False)
+
 #___________________________________________________________________________________________________ TrackPropEnumOps
 class TrackPropEnumOps(object):
     """ Support class for helper operations related to the TrackPropEnum class. """

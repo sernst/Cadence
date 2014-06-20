@@ -20,7 +20,8 @@ class TrackExporterRemoteThread(RemoteExecutionThread):
     def __init__(self, parent, path, session =None, **kwargs):
         """Creates a new instance of TrackImporterRemoteThread."""
         self._pretty = ArgsUtils.extract('pretty', False, kwargs)
-        self._gzipped = ArgsUtils.extract('gzipped', True, kwargs)
+        self._gzipped = ArgsUtils.extract('compressed', True, kwargs)
+        self._difference = ArgsUtils.extract('difference', True, kwargs)
 
         RemoteExecutionThread.__init__(self, parent, **kwargs)
 
@@ -42,7 +43,8 @@ class TrackExporterRemoteThread(RemoteExecutionThread):
                 session=session,
                 path=self._path,
                 pretty=self._pretty,
-                gzipped=self._gzipped)
+                gzipped=self._gzipped,
+                difference=self._difference)
         except Exception, err:
             if not self._session:
                 session.rollback()

@@ -1,7 +1,6 @@
 # TrackwayIoWidget.py
 # (C)2013-2014
 # Scott Ernst
-from pyglass.elements.PyGlassElementUtils import PyGlassElementUtils
 
 import sqlalchemy as sqla
 
@@ -10,6 +9,7 @@ from PySide import QtGui
 
 from pyaid.file.FileUtils import FileUtils
 
+from pyglass.elements.PyGlassElementUtils import PyGlassElementUtils
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from pyglass.elements.DataListWidgetItem import DataListWidgetItem
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
@@ -52,6 +52,10 @@ class TrackwayIoWidget(PyGlassWidget):
             self, self.exportPrettyCheck, configSetting=UserConfigEnum.EXPORT_PRETTY)
         PyGlassElementUtils.registerCheckBox(
             self, self.exportCompressCheck, configSetting=UserConfigEnum.EXPORT_COMPRESSED)
+        PyGlassElementUtils.registerCheckBox(
+            self, self.exportDiffCheck, configSetting=UserConfigEnum.EXPORT_DIFF)
+        PyGlassElementUtils.registerCheckBox(
+            self, self.importCompressCheck, configSetting=UserConfigEnum.IMPORT_COMPRESSED)
 
         self._getLayout(self.filterBox, QtGui.QHBoxLayout, True)
         self._filterList = []
@@ -141,6 +145,9 @@ class TrackwayIoWidget(PyGlassWidget):
                 continue
             query = query.filter(getattr(model, filterDef['enum'].name) == items[0].itemData)
 
+        # Prevents tracks that have been "hidden" from being loaded into the scene
+        query = query.filter(model.hidden == False)
+
         entries   = query.all()
         count     = len(entries)
         trackList = []
@@ -204,7 +211,8 @@ class TrackwayIoWidget(PyGlassWidget):
         self._thread = TrackImporterRemoteThread(
             parent=self,
             path=path,
-            importType=importType)
+            importType=importType,
+            compressed=self.importCompressCheck.isChecked())
         self._thread.execute(
             callback=self._handleImportComplete,
             logCallback=self._handleImportStatusUpdate)
@@ -332,7 +340,8 @@ class TrackwayIoWidget(PyGlassWidget):
         self._thread = TrackExporterRemoteThread(
             self, path=path,
             pretty=self.exportPrettyCheck.isChecked(),
-            gzipped=self.exportCompressCheck.isChecked())
+            compressed=self.exportCompressCheck.isChecked(),
+            difference=self.exportDiffCheck.isChecked())
 
         self._thread.execute(
             callback=self._handleImportComplete,

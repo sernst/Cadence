@@ -41,6 +41,7 @@ class TracksDefault(PyGlassModelsDefault):
     _next                = sqla.Column(sqla.Unicode,      default=u'')
     _left                = sqla.Column(sqla.Boolean,      default=True)
     _pes                 = sqla.Column(sqla.Boolean,      default=True)
+    _hidden              = sqla.Column(sqla.Boolean,      default=False)
     _index               = sqla.Column(sqla.Integer,      default=0)
     _width               = sqla.Column(sqla.Float,        default=0.0)
     _length              = sqla.Column(sqla.Float,        default=0.0)

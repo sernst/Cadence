@@ -35,7 +35,7 @@ class TrackJsonImporter(object):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ read
-    def read(self, session, path =None, gzipped =False):
+    def read(self, session, path =None, compressed =False):
         """ Reads from the spreadsheet located at the absolute path argument and adds each row
             to the tracks in the database. """
 
@@ -46,7 +46,7 @@ class TrackJsonImporter(object):
             return False
 
         try:
-            tracksData = JSON.fromFile(self._path, gzipped=gzipped)
+            tracksData = JSON.fromFile(self._path, gzipped=compressed)
         except Exception, err:
             self._logger.writeError('ERROR: Unable to read JSON import file', err)
             return False

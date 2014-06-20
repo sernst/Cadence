@@ -31,7 +31,7 @@ class TrackExporter(object):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ process
-    def process(self, session):
+    def process(self, session, difference =True):
         """Doc..."""
 
         if self.results is not None:
@@ -58,14 +58,17 @@ class TrackExporter(object):
                     u'<div>DELETED: %s</div>' %  DictUtils.prettyPrint(
                         trackStore.toDict(uniqueOnly=True)))
             else:
-                diff = trackStore.toDiffDict(track.toDict())
-                if diff is not None:
-                    self.modifications += 1
-                    results.append(diff)
+                if difference:
+                    diff = trackStore.toDiffDict(track.toDict())
+                    if diff is not None:
+                        self.modifications += 1
+                        results.append(diff)
 
-                    self.logger.write(
-                        u'<div>MODIFIED: %s</div>' % DictUtils.prettyPrint(
-                            trackStore.toDict(uniqueOnly=True)))
+                        self.logger.write(
+                            u'<div>MODIFIED: %s</div>' % DictUtils.prettyPrint(
+                                trackStore.toDict(uniqueOnly=True)))
+                else:
+                    results.append(trackStore.toDict())
 
             index += 1
             if index in indices:
@@ -79,8 +82,8 @@ class TrackExporter(object):
         return True
 
 #___________________________________________________________________________________________________ write
-    def write(self, session, path, pretty =False, gzipped =True):
-        if self.results is None and not self.process(session):
+    def write(self, session, path, pretty =False, gzipped =True, difference =True):
+        if self.results is None and not self.process(session, difference):
             return False
 
         try:

@@ -1,6 +1,7 @@
 # TrackImporterRemoteThread.py
 # (C)2013-2014
 # Scott Ernst
+from pyaid.ArgsUtils import ArgsUtils
 
 from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
 
@@ -21,6 +22,8 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, parent, path, importType, session =None, **kwargs):
         """Creates a new instance of TrackImporterRemoteThread."""
+        self._compressed = ArgsUtils.extract('compressed', False, kwargs)
+
         RemoteExecutionThread.__init__(self, parent, **kwargs)
         self._path       = path
         self._session    = session
@@ -41,13 +44,13 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
                 importer = TrackJsonImporter(self._path, logger=self._log)
 
             self._log.write(u'<h1>Beginning Import...</h1>')
-            importer.read(session)
+            importer.read(session, compressed=self._compressed)
         except Exception, err:
             if not self._session:
                 session.rollback()
                 session.close()
 
-            self._log.writeError(u'ERROR: Track CSV Parsing Error', err)
+            self._log.writeError(u'ERROR: Track Importing Error', err)
             return 1
 
         if self._session is None:
