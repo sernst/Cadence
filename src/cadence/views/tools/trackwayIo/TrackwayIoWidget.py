@@ -2,12 +2,15 @@
 # (C)2013-2014
 # Scott Ernst
 
+import os
 import sqlalchemy as sqla
 
 from PySide import QtCore
 from PySide import QtGui
 
 from pyaid.file.FileUtils import FileUtils
+from pyaid.OsUtils import OsUtils
+from pyaid.system.SystemUtils import SystemUtils
 
 from pyglass.elements.PyGlassElementUtils import PyGlassElementUtils
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
@@ -47,15 +50,20 @@ class TrackwayIoWidget(PyGlassWidget):
         self.importJsonBtn.clicked.connect(self._handleImport)
         self.exportBtn.clicked.connect(self._handleExport)
         self.updateLinksBtn.clicked.connect(self._handleUpdateLinks)
+        self.databaseReplaceBtn.clicked.connect(self._handleReplaceDatabase)
 
         PyGlassElementUtils.registerCheckBox(
-            self, self.exportPrettyCheck, configSetting=UserConfigEnum.EXPORT_PRETTY)
+            self, self.exportPrettyCheck,
+            configSetting=UserConfigEnum.EXPORT_PRETTY)
         PyGlassElementUtils.registerCheckBox(
-            self, self.exportCompressCheck, configSetting=UserConfigEnum.EXPORT_COMPRESSED)
+            self, self.exportCompressCheck,
+            configSetting=UserConfigEnum.EXPORT_COMPRESSED)
         PyGlassElementUtils.registerCheckBox(
-            self, self.exportDiffCheck, configSetting=UserConfigEnum.EXPORT_DIFF)
+            self, self.exportDiffCheck,
+            configSetting=UserConfigEnum.EXPORT_DIFF)
         PyGlassElementUtils.registerCheckBox(
-            self, self.importCompressCheck, configSetting=UserConfigEnum.IMPORT_COMPRESSED)
+            self, self.importCompressCheck,
+            configSetting=UserConfigEnum.IMPORT_COMPRESSED)
 
         self._getLayout(self.filterBox, QtGui.QHBoxLayout, True)
         self._filterList = []
@@ -346,3 +354,72 @@ class TrackwayIoWidget(PyGlassWidget):
         self._thread.execute(
             callback=self._handleImportComplete,
             logCallback=self._handleImportStatusUpdate)
+
+#___________________________________________________________________________________________________ _handleReplaceDatabase
+    def _handleReplaceDatabase(self):
+
+        self.mainWindow.showLoading(
+            self,
+            u'Browsing for Database File',
+            u'Choose a valid database (*.vcd) file')
+
+        defaultPath = self.appConfig.get(UserConfigEnum.DATABASE_IMPORT_PATH)
+        if not defaultPath:
+            defaultPath = self.appConfig.get(UserConfigEnum.LAST_BROWSE_PATH)
+
+        path = PyGlassBasicDialogManager.browseForFileOpen(
+            parent=self,
+            caption=u'Select Database File',
+            defaultPath=defaultPath)
+        self.mainWindow.hideLoading(self)
+
+        if not path:
+            self.mainWindow.toggleInteractivity(True)
+            return
+
+        # Store directory for later use
+        self.appConfig.set(
+            UserConfigEnum.DATABASE_IMPORT_PATH,
+            FileUtils.getDirectoryOf(path) )
+
+        self.mainWindow.showStatus(
+            self,
+            u'Replacing Database File',
+            u'Removing existing database file and replacing it with selection')
+
+        sourcePath = getattr(Tracks_Track, 'URL')[len(u'sqlite:'):].lstrip(u'/')
+        if not OsUtils.isWindows():
+            sourcePath = u'/' + sourcePath
+
+        savePath = sourcePath + u'.store'
+        try:
+            if os.path.exists(savePath):
+                SystemUtils.remove(savePath, throwError=True)
+        except Exception, err:
+            self.mainWindow.appendStatus(
+                self, u'<span style="color:#CC3333">ERROR: Unable to access database save location.</span>')
+            self.mainWindow.showStatusDone(self)
+            return
+
+        try:
+            SystemUtils.move(sourcePath, savePath)
+        except Exception, err:
+            self.mainWindow.appendStatus(
+                self, u'<span style="color:#CC3333;">ERROR: Unable to modify existing database file.</span>')
+            self.mainWindow.showStatusDone(self)
+            return
+
+        try:
+            SystemUtils.copy(path, sourcePath)
+        except Exception, err:
+            SystemUtils.move(savePath, sourcePath)
+            self.mainWindow.appendStatus(
+                self, u'<span style="color:#CC3333;">ERROR: Unable to copy new database file.</span>')
+            self.mainWindow.showStatusDone(self)
+            return
+
+        if os.path.exists(savePath):
+            SystemUtils.remove(savePath)
+
+        self.mainWindow.appendStatus(self, u'<span style="color:#33CC33;">Database Replaced</span>')
+        self.mainWindow.showStatusDone(self)

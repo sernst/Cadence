@@ -102,7 +102,7 @@ class CadenceMainWindow(PyGlassWindow):
         self._statusWidget.activateWidgetDisplay()
         self.refreshGui()
 
-#___________________________________________________________________________________________________ updateStatus
+#___________________________________________________________________________________________________ appendStatus
     def appendStatus(self, target, message, formatAsHtml =True):
         if not self._statusWidget.isShowing or self._statusWidget.target != target:
             return
