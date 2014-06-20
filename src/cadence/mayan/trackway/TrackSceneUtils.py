@@ -26,15 +26,15 @@ class TrackSceneUtils(object):
 #___________________________________________________________________________________________________ createTrackNode
     @classmethod
     def createTrackNode(cls, uid, trackSetNode =None, props =None):
-        """ A track node consists of a triangular pointer (left= red, right= green) which is
-            selectable but only allows rotateY, translateX, and translateZ. Tne node has a child, a
+        """ A track node consists of a triangular pointer (left = red, right = green) which is
+            selectable but only allows rotateY, translateX, and translateZ. The node has a child, a
             transform called inverter, which serves to counteract the scaling in x and z that is
             applied to the triangular node.  There are two orthogonal rulers (width and length), the
             intersection of which markes the 'track center'.  In each cardinal direction is an
             'error bar' arrayed.  The pair of error bars are placed at the ends of the width ruler,
              for width are translated in X by width/2 and have a width of widthUncertainty
             while the pair of error bars for height are translated in Z relative to the track
-            center.  The track center is offset longitudinally (in Z), as specified by the quantity
+            center.  The track center is offset longitudinally (along Z), according to the quantity
             lengthRatio (the ratio of the fraction of the length 'anterior' to the center over the
             overall length).  Width, length, and lengthRatio can only be adjusted through the UI,
             not in Maya.  In Maya one can adjust the track position (translateX and translateZ) and
@@ -52,12 +52,11 @@ class TrackSceneUtils(object):
 
         # Set up dimensional constants for the track node
         nodeThickness  = 1.0
-        thetaLength    = 1.0
         thetaBreadth   = 0.1
         thetaThickness = 0.5
-        barBreadth     = 2.0
+        barBreadth     = 1.0
         barThickness   = 0.5
-        rulerBreadth   = 4.0
+        rulerBreadth   = 1.0
         rulerThickness = 0.25
         epsilon        = 1.0
 
@@ -262,7 +261,7 @@ class TrackSceneUtils(object):
         cmds.connectAttr(length + '.outputX', hl + '.input1X')
         cmds.setAttr(hl + '.input2X', 2.0)
 
-        # Translate the length ruler in z by zL = (zN - hl) (centimeters)
+        # Translate the length ruler along z by zL = (zN - hl) (centimeters)
         zL = cmds.createNode('plusMinusAverage', name='zL')
         cmds.setAttr(zL + '.operation', 2)
         cmds.connectAttr(zN + '.outputX',  zL + '.input1D[0]')
@@ -282,14 +281,13 @@ class TrackSceneUtils(object):
             axis=(0,1,0),
             width=thetaBreadth,
             height=thetaThickness,
-            depth=thetaLength,
+            depth=100.0,
             subdivisionsX=1,
             subdivisionsY=1,
             createUVs=3,
             constructionHistory=1,
             name='ThetaPlus')[0]
-        cmds.move(0, -thetaThickness/2.0, thetaLength/2.0)
-        cmds.move(0, 0, 0, thetaPlus + ".scalePivot", thetaPlus + ".rotatePivot", absolute=True)
+        cmds.move(0, -thetaThickness/2.0, 0)
         cmds.setAttr(thetaPlus + '.overrideEnabled',     1)
         cmds.setAttr(thetaPlus + '.overrideDisplayType', 2)
 
@@ -298,16 +296,19 @@ class TrackSceneUtils(object):
             axis=(0,1,0),
             width=thetaBreadth,
             height=thetaThickness,
-            depth=thetaLength,
+            depth=100.0,
             subdivisionsX=1,
             subdivisionsY=1,
             createUVs=3,
             constructionHistory=1,
             name='ThetaMinus')[0]
-        cmds.move(0, -thetaThickness/2.0, thetaLength/2.0)
-        cmds.move(0, 0, 0, thetaMinus + ".scalePivot", thetaMinus + ".rotatePivot", absolute=True)
+        cmds.move(0, -thetaThickness/2.0, 0)
         cmds.setAttr(thetaMinus + '.overrideEnabled',     1)
         cmds.setAttr(thetaMinus + '.overrideDisplayType', 2)
+
+        # Translate the thetaPlus and thetaMinus indicators along z by zL = (zN - hl) (centimeters)
+        cmds.connectAttr(zL + '.output1D', thetaPlus  + '.translateZ')
+        cmds.connectAttr(zL + '.output1D', thetaMinus + '.translateZ')
 
         # Rotate these two indicators about the Y axis to indicate rotational uncertainty
         cmds.connectAttr(
@@ -337,7 +338,7 @@ class TrackSceneUtils(object):
         cmds.connectAttr(node + '.scaleZ', sz + '.input2X')
         cmds.connectAttr(sz + '.outputX', inverter + '.scaleZ')
 
-        # Assemble the parts to the inverter
+        # Assemble the parts as children under the scale inverter node
         cmds.parent(inverter,    node)
         cmds.parent(lengthRuler, node + "|" + inverter)
         cmds.parent(widthRuler,  node + "|" + inverter)
@@ -357,18 +358,18 @@ class TrackSceneUtils(object):
         # Now, the width of the triangle will be driven by its width attribute (driving .scaleX)
         cmds.connectAttr(node + '.width',  node + '.scaleX')
 
-        # The quantity zN is used to scale length of the triangle and two theta indictor
+        # The quantity zN is used to scale length of the triangle
         cmds.connectAttr(zN + '.outputX',  node + '.scaleZ')
-        cmds.connectAttr(zN + '.outputX',  node + '|' + inverter + '|ThetaPlus.scaleZ')
-        cmds.connectAttr(zN + '.outputX',  node + '|' + inverter + '|ThetaMinus.scaleZ')
 
         # Now is a good time to scale the width of the width ruler
         cmds.connectAttr(node + '.width',  node + '|' + inverter + '|WidthRuler.scaleX')
 
-        # The length of the ruler is directly driven by the node's length attribute
+        # Scale the length of the ruler and two theta indicators
         cmds.connectAttr(node + '.length', node + '|' + inverter + '|LengthRuler.scaleZ')
+        cmds.connectAttr(node + '.length', node + '|' + inverter + '|ThetaPlus.scaleZ')
+        cmds.connectAttr(node + '.length', node + '|' + inverter + '|ThetaMinus.scaleZ')
 
-        # Lower the track node a given epsilon below ground level (to clear the overlaid map)
+        # Translate the track node epsilon below ground level (to reveal the overlaid track map)
         cmds.move(0, -epsilon, 0, node)
 
         if props:

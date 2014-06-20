@@ -25,7 +25,7 @@ from cadence.mayan.trackway import GetSelectedUidList
 class TrackwayManagerWidget(PyGlassWidget):
     """ This widget is the primary GUI for interacting with the Maya scene representation of a
         trackway.  It permits selection of tracks interactively in Maya and display and editing of
-        their attributes.  Tracks in Maya are represented by track nodes, each a transform nodeName
+        their attributes.  Tracks in Maya are represented by track nodes, each a transform node
         with an additional attribute specifying the UID of that track.  The transform's scale,
         position, and rotation (about Y) are used to intrinsically represent track dimensions,
         position, and orientation.  Track models are accessed by query based on the UID, and for a
@@ -34,24 +34,29 @@ class TrackwayManagerWidget(PyGlassWidget):
 #                                                                                       C L A S S
     RESOURCE_FOLDER_PREFIX = ['tools']
 
-    SELECT_BY_NAME    = 'Select by Name'
-    SELECT_BY_INDEX   = 'Select by Index'
-    SELECT_ALL_BEFORE = 'Select All Before'
-    SELECT_ALL_AFTER  = 'Select All After'
-    SELECT_ALL        = 'Select All'
+    SELECT_BY_NAME       = 'Select by Name'
+    SELECT_BY_INDEX      = 'Select by Index'
+    SELECT_ALL_BEFORE    = 'Select All Before'
+    SELECT_ALL_AFTER     = 'Select All After'
+    SELECT_ALL           = 'Select All'
 
-    EXTRAPOLATE_TRACK = 'Extrapolate Next Track'
-    INTERPOLATE_TRACK = 'Interpolate Next Track'
-    LINK_SELECTED     = 'Link Selected Tracks'
-    UNLINK_SELECTED   = 'Unlink Selected Tracks'
-    SET_DIMENSIONS    = 'Set Dimensions of Selected'
-    SET_WIDTH         = 'Set Width of Selected'
-    SET_LENGTH        = 'Set Length of Selected'
-    SET_THETA         = 'Set Theta of Selected'
-    SET_ALL_UNC       = 'Set Uncertainties'
-    SET_WIDTH_UNC     = 'Set Width Uncertainty'
-    SET_LENGTH_UNC    = 'Set Length Uncertainty'
-    SET_ROTATION_UNC  = 'Set Rotation Uncertainty'
+    EXTRAPOLATE_TRACK    = 'Extrapolate Next Track'
+    INTERPOLATE_TRACK    = 'Interpolate This Track'
+    LINK_SELECTED        = 'Link Selected Tracks'
+    UNLINK_SELECTED      = 'Unlink Selected Tracks'
+    SET_TO_MEASURED      = 'Set to Measured Dimensions'
+
+    SET_LOW_DIM_UNCERT   = 'Set Dimension Uncertainties Low'
+    SET_HIGH_DIM_UNCERT  = 'Set Dimension Uncertainties High'
+
+    SET_LOW_ROT_UNCERT   = 'Set Rotation Uncertainty Low'
+    SET_HIGH_ROT_UNCERT  = 'Set Rotation Uncertainty High'
+
+    LOW_DIM_UNCERTAINTY  = .01
+    HIGH_DIM_UNCERTAINTY = .05
+
+    LOW_ROT_UNCERTAINTY  = 5.0
+    HIGH_ROT_UNCERTAINTY = 20.0
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, parent, **kwargs):
@@ -64,7 +69,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.nextBtn.setIcon(QtGui.QIcon(self.getResourcePath('mediaIcons', 'next.png')))
         self.lastBtn.setIcon(QtGui.QIcon(self.getResourcePath('mediaIcons', 'last.png')))
 
-        # in Track tab:
+        # in the Track tab:
         self.widthSbx.valueChanged.connect(self._handleWidthSbx)
         self.widthSbx.setAccelerated(True)
 
@@ -97,7 +102,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.selectPerspectiveBtn.clicked.connect(self._handleSelectPerspectiveBtn)
 
         trackSelectionMethods = (
-            '<Track Selection Method>',
             self.SELECT_BY_NAME,
             self.SELECT_BY_INDEX,
             self.SELECT_ALL_BEFORE,
@@ -109,25 +113,30 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.selectBtn.clicked.connect(self._handleSelectBtn)
 
         trackOperationMethods = (
-            '<Perform Operation >',
             self.EXTRAPOLATE_TRACK,
             self.INTERPOLATE_TRACK,
+            self.SET_TO_MEASURED,
+            self.SET_LOW_DIM_UNCERT,
+            self.SET_HIGH_DIM_UNCERT,
+            self.SET_LOW_ROT_UNCERT,
+            self.SET_HIGH_ROT_UNCERT,
             self.LINK_SELECTED,
-            self.UNLINK_SELECTED,
-            self.SET_DIMENSIONS,
-            self.SET_WIDTH,
-            self.SET_LENGTH,
-            self.SET_THETA,
-            self.SET_ALL_UNC,
-            self.SET_WIDTH_UNC,
-            self.SET_LENGTH_UNC,
-            self.SET_ROTATION_UNC)
+            self.UNLINK_SELECTED)
 
-        self.operationCB.addItems(trackOperationMethods)
-        self.operationCB.setCurrentIndex(1)
-        self.operateBtn.clicked.connect(self._handleOperateBtn)
+        # set up a bank of three combo boxes of operations
+        self.operation1CB.addItems(trackOperationMethods)
+        self.operation1CB.setCurrentIndex(2)
+        self.operation1Btn.clicked.connect(self._handleOperation1Btn)
 
-        # in Trackway tab:
+        self.operation2CB.addItems(trackOperationMethods)
+        self.operation2CB.setCurrentIndex(3)
+        self.operation2Btn.clicked.connect(self._handleOperation2Btn)
+
+        self.operation3CB.addItems(trackOperationMethods)
+        self.operation3CB.setCurrentIndex(4)
+        self.operation3Btn.clicked.connect(self._handleOperation3Btn)
+
+        # in the Trackway tab:
         self.showTrackwayBtn.clicked.connect(self._handleShowTrackwayBtn)
         self.hideTrackwayBtn.clicked.connect(self._handleHideTrackwayBtn)
         self.selectTrackwayBtn.clicked.connect(self._handleSelectTrackwayBtn)
@@ -153,6 +162,12 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ This gets the track model instance corresponding to a given uid. """
         model = Tracks_Track.MASTER
         return model.getByUid(uid, self._getSession())
+
+#___________________________________________________________________________________________________ getTrackByUid
+    def getTrackByProperties(self, **kwargs):
+        """ This gets the track model instances with specified properties. """
+        model = Tracks_Track.MASTER
+        return model.getByProperties(self._getSession(), **kwargs)
 
 #___________________________________________________________________________________________________ getTrackByName
     def getTrackByName(self, name, **kwargs):
@@ -347,10 +362,11 @@ class TrackwayManagerWidget(PyGlassWidget):
         left   = dict[TrackPropEnum.LEFT.name]
         pes    = dict[TrackPropEnum.PES.name]
         number = dict[TrackPropEnum.NUMBER.name]
+        index  = dict[TrackPropEnum.INDEX.name]
 
         name = (u'L' if left else u'R') + (u'P' if pes else u'M') + number if number else u'-'
         self.trackNameLE.setText(name)
-        self.trackIndexLE.setText(unicode([TrackPropEnum.INDEX.name]))
+        self.trackIndexLE.setText(unicode(index))
 
 #___________________________________________________________________________________________________ getTrackwayPropertiesFromUI
     def getTrackwayPropertiesFromUI(self):
@@ -384,7 +400,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ setCameraFocus
     def setCameraFocus(self):
         """ Center the current camera (CadenceCam or persp) on the currently selected node. """
-        cmds.viewFit(fitFactor=0.25, animate=True)
+        cmds.viewFit(fitFactor=0.5, animate=True)
 
 #___________________________________________________________________________________________________ _handleWidthSbx
     def _handleWidthSbx(self):
@@ -598,8 +614,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         p = self.getPreviousTrack(t)
         if p is None:
             return
-        print 'in _handlePrevBtn, t = %s (and %s) and previous = %s (and %s)' % (
-            t.name, t.nodeName, p.name, p.nodeName)
 
         p.updateFromNode()
         self.selectTrack(p)
@@ -643,7 +657,11 @@ class TrackwayManagerWidget(PyGlassWidget):
                 self.selectTrack(tracks[0])
 
         elif self.selectionMethodCB.currentText() == self.SELECT_BY_INDEX:
-          print 'selected' + self.SELECT_BY_INDEX + ' to be implemented'
+            tracks = self.getTrackByProperties(index=self.trackIndexLE.text())
+            if tracks is None:
+                return
+            if len(tracks) == 1:
+                self.selectTrack(tracks[0])
 
         elif self.selectionMethodCB.currentText() == self.SELECT_ALL_BEFORE:
             print 'selected' + self.SELECT_ALL_BEFORE
@@ -699,44 +717,50 @@ class TrackwayManagerWidget(PyGlassWidget):
             nodes.append(self.getTrackNode(t))
         cmds.select(nodes)
 
-#___________________________________________________________________________________________________ _handleOperateBtn
-    def _handleOperateBtn(self):
+#___________________________________________________________________________________________________ _handleOperation1Btn
+    def _handleOperation1Btn(self):
+        """ Passes the selected operation to be performed. """
+        self._handleOperation(self.operation1CB.currentText())
+
+#___________________________________________________________________________________________________ _handleOperation2Btn
+    def _handleOperation2Btn(self):
+        """ Passes the selected operation to be performed. """
+        self._handleOperation(self.operation2CB.currentText())
+
+#___________________________________________________________________________________________________ _handleOperation3Btn
+    def _handleOperation3Btn(self):
+        """ Passes the selected operation to be performed. """
+        self._handleOperation(self.operation3CB.currentText())
+
+#___________________________________________________________________________________________________ _handleOperation
+    def _handleOperation(self, op):
         """ A number of operations can be performed on one or more selected tracks. """
-        if self.operationCB.currentText() == self.EXTRAPOLATE_TRACK:
+        if op == self.EXTRAPOLATE_TRACK:
             self._handleExtrapolation()
-        if self.operationCB.currentText() == self.INTERPOLATE_TRACK:
-            print 'interpolating values of selected'
+
+        elif op == self.INTERPOLATE_TRACK:
             self._handleInterpolation()
-        if self.operationCB.currentText() == self.LINK_SELECTED:
-            print 'linking selected'
+
+        elif op == self.LINK_SELECTED:
             self._handleLink()
-        if self.operationCB.currentText() == self.UNLINK_SELECTED:
-            print 'unlinking selected'
+
+        elif op == self.UNLINK_SELECTED:
             self._handleUnlink()
-        if self.operationCB.currentText() == self.SET_DIMENSIONS:
-            print 'setting dimensions of selected'
-            pass
-        if self.operationCB.currentText() == self.SET_WIDTH:
-            print 'setting width of selected'
-            pass
-        if self.operationCB.currentText() == self.SET_LENGTH:
-            print 'setting length of selected'
-            pass
-        if self.operationCB.currentText() == self.SET_THETA:
-            print 'setting theta of selected'
-            pass
-        if self.operationCB.currentText() == self.SET_ALL_UNC:
-            print 'setting uncertainty values of selected'
-            pass
-        if self.operationCB.currentText() == self.SET_WIDTH_UNC:
-            print 'setting width uncertainty values of selected'
-            pass
-        if self.operationCB.currentText() == self.SET_LENGTH_UNC:
-            print 'setting length uncertainty values of selected'
-            pass
-        if self.operationCB.currentText() == self.SET_ROTATION_UNC:
-            print 'setting theta uncertainty values of selected'
-            pass
+
+        elif op == self.SET_TO_MEASURED:
+            self._handleSetToMeasuredDimensions()
+
+        elif op == self.SET_LOW_DIM_UNCERT:
+            self._handleSetLowDimensionalUncertainty()
+
+        if op == self.SET_HIGH_DIM_UNCERT:
+            self._handleSetHighDimensionalUncertainty()
+
+        elif op == self.SET_LOW_ROT_UNCERT:
+            self._handleSetLowRotationalUncertainty()
+
+        if op == self.SET_HIGH_ROT_UNCERT:
+            self._handleSetHighRotationalUncertainty()
 
 #___________________________________________________________________________________________________ _handleExtrapolation
     def _handleExtrapolation(self):
@@ -783,30 +807,24 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _handleInterpolation
     def _handleInterpolation(self):
-        """ Based on a (single) selected track node p, the next track t is interpolated based on
-            p and the next track n following t.  That is, t is an interpolate of p and n, where
-            p is selected. This requires both p and n be present, of course. """
+        """ Based on a (single) selected track node t, this track is interpolated based on the
+            previous p and the next track n. This requires both a p and n, of course. """
         self._getSession()
 
         selectedTracks = self.getSelectedTracks()
         if selectedTracks is None:
             return
 
-        p = selectedTracks[0]
-        p.updateFromNode()
+        t = selectedTracks[0]
+        t.updateFromNode()
 
-        t = self.getNextTrack(p)
-        if t is None:
+        p = self.getPreviousTrack(t)
+        if p is None:
             return
 
         n = self.getNextTrack(t)
         if n is None:
             return
-
-        if t.width == 0.0:
-            t.width = t.widthMeasured
-        if t.length == 0.0:
-            t.length = t.lengthMeasured
 
         t.x                 = (p.x + n.x)/2.0
         t.z                 = (p.z + n.z)/2.0
@@ -815,6 +833,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         t.widthUncertainty  = (p.widthUncertainty + n.widthUncertainty)/2.0
         t.lengthUncertainty = (p.lengthUncertainty + n. lengthUncertainty)/2.0
 
+        # update the Maya node and the UI
         t.updateNode()
         dict = t.toDict()
         self.selectTrack(t)
@@ -855,6 +874,82 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.importFromMaya()
         self._closeSession(commit=True)
 
+#___________________________________________________________________________________________________ _handleSetToMeasuredDimnensions
+    def _handleSetToMeasuredDimensions(self):
+        """ The selected tracks are assigned the length and width values that were measured in the
+        field. """
+        selectedTracks = self.getSelectedTracks()
+        if selectedTracks is None:
+            return
+
+        for t in selectedTracks:
+            t.length = t.lengthMeasured
+            t.width  = t.widthMeasured
+            t.updateNode()
+
+        self._closeSession(commit=True)
+
+#___________________________________________________________________________________________________ _handleSetLowDimensionalUncertainty
+    def _handleSetLowDimensionalUncertainty(self):
+        """ The selected tracks are assigned low uncertainty values. """
+        selectedTracks = self.getSelectedTracks()
+        if selectedTracks is None:
+            return
+
+        for t in selectedTracks:
+            t.updateFromNode() # use this opportunity to capture current state of the Maya node
+            t.lengthUncertainty   = self.LOW_DIM_UNCERTAINTY
+            t.widthUncertainty    = self.LOW_DIM_UNCERTAINTY
+            t.updateNode()
+
+        self._closeSession(commit=True)
+
+#___________________________________________________________________________________________________ _handleSetHighDimensionalUncertainty
+    def _handleSetHighDimensionalUncertainty(self):
+        """ The selected tracks are assigned high uncertainty values. """
+        selectedTracks = self.getSelectedTracks()
+        if selectedTracks is None:
+            return
+
+        for t in selectedTracks:
+            t.updateFromNode() # use this opportunity to capture current state of the Maya node
+            t.lengthUncertainty   = self.HIGH_DIM_UNCERTAINTY
+            t.widthUncertainty    = self.HIGH_DIM_UNCERTAINTY
+            print 'track %s has uncertainty %s' % (t.name, t.rotationUncertainty)
+            t.updateNode()
+
+        self._closeSession(commit=True)
+
+#___________________________________________________________________________________________________ _handleSetLowRotationalUncertainty
+    def _handleSetLowRotationalUncertainty(self):
+        """ The selected tracks are assigned low uncertainty values. """
+        selectedTracks = self.getSelectedTracks()
+        if selectedTracks is None:
+            return
+
+        for t in selectedTracks:
+            t.updateFromNode() # use this opportunity to capture current state of the Maya node
+            t.rotationUncertainty = self.LOW_ROT_UNCERTAINTY
+            t.updateNode()
+
+        self._closeSession(commit=True)
+
+#___________________________________________________________________________________________________ _handleSetHighRotationalUncertainty
+    def _handleSetHighRotationalUncertainty(self):
+        """ The selected tracks are assigned high uncertainty values. """
+        selectedTracks = self.getSelectedTracks()
+        if selectedTracks is None:
+            return
+
+        for t in selectedTracks:
+            t.updateFromNode() # use this opportunity to capture current state of the Maya node
+            t.rotationUncertainty = self.HIGH_ROT_UNCERTAINTY
+            print 'track %s has uncertainty %s' % (t.name, t.rotationUncertainty)
+            t.updateNode()
+
+        self._closeSession(commit=True)
+
+#
 #___________________________________________________________________________________________________ TRACKWAY METHODS
 
 #___________________________________________________________________________________________________ _handleShowTrackwayBtn
