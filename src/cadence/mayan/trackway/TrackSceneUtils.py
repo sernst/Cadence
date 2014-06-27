@@ -29,18 +29,10 @@ class TrackSceneUtils(object):
         """ A track node consists of a triangular pointer (left = red, right = green) which is
             selectable but only allows rotateY, translateX, and translateZ. The node has a child, a
             transform called inverter, which serves to counteract the scaling in x and z that is
-            applied to the triangular node.  There are two orthogonal rulers (width and length), the
-            intersection of which markes the 'track center'.  In each cardinal direction is an
-            'error bar' arrayed.  The pair of error bars are placed at the ends of the width ruler,
-             for width are translated in X by width/2 and have a width of widthUncertainty
-            while the pair of error bars for height are translated in Z relative to the track
-            center.  The track center is offset longitudinally (along Z), according to the quantity
-            lengthRatio (the ratio of the fraction of the length 'anterior' to the center over the
-            overall length).  Width, length, and lengthRatio can only be adjusted through the UI,
-            not in Maya.  In Maya one can adjust the track position (translateX and translateZ) and
-            orientation (rotationY). Initially, the width and length derives from the measured
-            values in the catalog (which, if 0.0, signifies that the measurement was indeterminate,
-            such as when the track perimeter is incomplete). """
+            applied to the triangular node.  There are two orthogonal rulers (width and length).
+            Width and length uncertainty is represented by rectangular bars at the ends of the
+            rulers.  In Maya one can directly adjust track position (translateX and translateZ) and
+            orientation (rotationY); other attributes are adjusted only through the UI. """
         if not trackSetNode:
             trackSetNode = TrackSceneUtils.getTrackSetNode()
         if not trackSetNode:
@@ -54,7 +46,7 @@ class TrackSceneUtils(object):
         nodeThickness  = 1.0
         thetaBreadth   = 0.1
         thetaThickness = 0.5
-        barBreadth     = 1.0
+        barBreadth     = 2.0
         barThickness   = 0.5
         rulerBreadth   = 1.0
         rulerThickness = 0.25
@@ -80,12 +72,10 @@ class TrackSceneUtils(object):
         # Point the triangle down the +Z axis
         cmds.rotate(0.0, -90.0, 0.0)
 
-        # push it down below ground level so that the four 'error bars' are just submerged and
+        # push it down below ground level so that the two rulers are just submerged, and
         # scale the triangle in Z to match its width (1 cm) so it is ready to be scaled
-        cmds.move(0,
-                  -(nodeThickness/2.0 + rulerThickness + barThickness/2.0),
-                  math.sqrt(3.0)/6.0)
-        # put the pivot at the base of the triangle so it grows from that point
+        cmds.move(0, -(nodeThickness/2.0 + rulerThickness), math.sqrt(3.0)/6.0)
+        # move the node's pivot to the 'base' of the triangle so it scales outward from that point
         cmds.move(0, 0, 0, node + ".scalePivot", node + ".rotatePivot", absolute=True)
         cmds.scale(2.0/math.sqrt(3.0), 1.0, 100.0)
         cmds.makeIdentity(
@@ -126,8 +116,8 @@ class TrackSceneUtils(object):
              dataType='string',
              niceName='Unique ID')
 
-        # Construct a ruler representing track width and push it down just below ground level,
-        # and make it non-selectable.  Drive its scale by the node's width attribute.
+        # Construct a ruler representing track width, then push it down just below ground level, and
+        # make it non-selectable.  Drive its scale by the node's width attribute.
         widthRuler = cmds.polyCube(
             axis=(0,1,0),
             width=100.0,
@@ -138,12 +128,13 @@ class TrackSceneUtils(object):
             createUVs=3,
             constructionHistory=1,
             name='WidthRuler')[0]
-        # Push it down so it is just resting on the triangular node (which is
-        cmds.move(0.0, -(barThickness/2.0 + rulerThickness/2.0), 0.0)
+        # Push it down so it is just resting on the triangular node (which is already submerged by
+        # the thickness of the ruler and half the node thickness.
+        cmds.move(0.0, -rulerThickness/2.0, 0.0)
         cmds.setAttr(widthRuler + '.overrideEnabled', 1)
         cmds.setAttr(widthRuler + '.overrideDisplayType', 2)
 
-        # Construct a ruler representing track length and push it down just below ground level,
+        # Construct a ruler representing track length and push it down the same as the width ruler,
         # and make it non-selectable.  Its length will be driven by the node's length attribute.
         lengthRuler = cmds.polyCube(
             axis=(0,1,0),
@@ -155,7 +146,7 @@ class TrackSceneUtils(object):
             createUVs=3,
             constructionHistory=1,
             name='LengthRuler')[0]
-        cmds.move(0.0, -(barThickness/2.0 + rulerThickness/2.0), 0.0)
+        cmds.move(0.0, -rulerThickness/2.0, 0.0)
         cmds.setAttr(lengthRuler + '.overrideEnabled', 1)
         cmds.setAttr(lengthRuler + '.overrideDisplayType', 2)
 
@@ -172,6 +163,7 @@ class TrackSceneUtils(object):
             createUVs=3,
             constructionHistory=1,
             name='BarN')[0]
+        cmds.move(0, -(barThickness/2 + rulerThickness), 0)
         cmds.setAttr(barN + '.overrideEnabled', 1)
         cmds.setAttr(barN + '.overrideDisplayType', 2)
 
@@ -185,6 +177,7 @@ class TrackSceneUtils(object):
             createUVs=3,
             constructionHistory=1,
             name='BarS')[0]
+        cmds.move(0, -(barThickness/2 + rulerThickness), 0)
         cmds.setAttr(barS + '.overrideEnabled', 1)
         cmds.setAttr(barS + '.overrideDisplayType', 2)
 
@@ -198,6 +191,7 @@ class TrackSceneUtils(object):
             createUVs=3,
             constructionHistory=1,
             name='BarW')[0]
+        cmds.move(0, -(barThickness/2 + rulerThickness), 0)
         cmds.setAttr(barW + '.overrideEnabled', 1)
         cmds.setAttr(barW + '.overrideDisplayType', 2)
 
@@ -211,35 +205,74 @@ class TrackSceneUtils(object):
             createUVs=3,
             constructionHistory=1,
             name='BarE')[0]
+        cmds.move(0, -(barThickness/2 + rulerThickness), 0)
         cmds.setAttr(barE + '.overrideEnabled', 1)
         cmds.setAttr(barE + '.overrideDisplayType', 2)
 
-        # These 'error bars' will be translated outward from the node center.  First the node width
-        # attribute is converted from meters (as it comes from the database) to centimeters
+        # Create two diverging lines that indicate rotation uncertainty (plus and minus), with
+        # their pivots placed so they extend from the node center, and each is made non-selectable.
+        # First make the indicator of maximum (counterclockwise) estimated track rotation
+        thetaPlus = cmds.polyCube(
+            axis=(0,1,0),
+            width=thetaBreadth,
+            height=thetaThickness,
+            depth=1.0,
+            subdivisionsX=1,
+            subdivisionsY=1,
+            createUVs=3,
+            constructionHistory=1,
+            name='ThetaPlus')[0]
+        cmds.move(0, -thetaThickness/2.0, 0)
+        cmds.setAttr(thetaPlus + '.overrideEnabled',     1)
+        cmds.setAttr(thetaPlus + '.overrideDisplayType', 2)
+
+        # Next, construct the indicator of the minimum (clockwise) estimate of track rotation
+        thetaMinus = cmds.polyCube(
+            axis=(0,1,0),
+            width=thetaBreadth,
+            height=thetaThickness,
+            depth=1.0,
+            subdivisionsX=1,
+            subdivisionsY=1,
+            createUVs=3,
+            constructionHistory=1,
+            name='ThetaMinus')[0]
+        cmds.move(0, -thetaThickness/2.0, 0)
+        cmds.setAttr(thetaMinus + '.overrideEnabled',     1)
+        cmds.setAttr(thetaMinus + '.overrideDisplayType', 2)
+
+        # The two width 'error bars' will be translated outward from the node center.  First, the
+        # width attribute is converted from meters (as it comes from the database) to
+        # centimeters; the computation is available in the output of the node 'width'.
         width = cmds.createNode('multiplyDivide', name='width')
         cmds.setAttr(width + '.operation', 1)
         cmds.setAttr(width + '.input1X', 100.0)
         cmds.connectAttr(node + '.' + TrackPropEnum.WIDTH.maya, width + '.input2X')
 
-        # Offset barW in x by width/2.0; output is in xW.outputX
+        # Translate barW in x by width/2.0; output is in xW.outputX
         xW = cmds.createNode('multiplyDivide', name = 'xW')
         cmds.setAttr(xW + '.operation', 2)
         cmds.connectAttr(width + '.outputX', xW + '.input1X')
         cmds.setAttr(xW + '.input2X', 2.0)
         cmds.connectAttr(xW + '.outputX', barW + '.translateX')
 
-        # Offset barE over in x by -width/2.0; output is in xE.outputX
+        # Translate barE in x by -width/2.0; output is in xE.outputX
         xE = cmds.createNode('multiplyDivide', name = 'xE')
         cmds.setAttr(xE + '.operation', 2) # division operation
         cmds.connectAttr(width + '.outputX', xE + '.input1X')
         cmds.setAttr(xE + '.input2X', -2.0)
         cmds.connectAttr(xE + '.outputX', barE + '.translateX')
 
-        # Now regarding length, first convert the node.length attribute from meters to centimeters
+        # Now regarding length, first convert the node.length attribute from meters to centimeters.
+        # This computation is available in the output of the node 'length'
         length = cmds.createNode('multiplyDivide', name='length')
         cmds.setAttr(length + '.operation', 1)
         cmds.setAttr(length + '.input1X', 100.0)
         cmds.connectAttr(node + '.' + TrackPropEnum.LENGTH.maya, length + '.input2X')
+
+        # scale thetaPlus and thetaMinus by length (since they are 1 cm, multiply by length in cm)
+        cmds.connectAttr(length + '.outputX', thetaPlus  + '.scaleZ')
+        cmds.connectAttr(length + '.outputX', thetaMinus + '.scaleZ')
 
         # Then barN is translated forward in z by zN = lengthRatio*length (centimeters)
         zN = cmds.createNode('multiplyDivide', name='zN')
@@ -261,7 +294,7 @@ class TrackSceneUtils(object):
         cmds.connectAttr(length + '.outputX', hl + '.input1X')
         cmds.setAttr(hl + '.input2X', 2.0)
 
-        # Translate the length ruler along z by zL = (zN - hl) (centimeters)
+        # Translate lengthRuler along z by zL = (zN - hl) (centimeters)
         zL = cmds.createNode('plusMinusAverage', name='zL')
         cmds.setAttr(zL + '.operation', 2)
         cmds.connectAttr(zN + '.outputX',  zL + '.input1D[0]')
@@ -274,58 +307,11 @@ class TrackSceneUtils(object):
         cmds.connectAttr(node + "." + TrackPropEnum.LENGTH_UNCERTAINTY.maya, barN + '.scaleZ')
         cmds.connectAttr(node + "." + TrackPropEnum.LENGTH_UNCERTAINTY.maya, barS + '.scaleZ')
 
-        # Create two diverging lines that indicate rotation uncertainty (plus and minus), with
-        # their pivots placed so they extend from the node center, and each is made non-selectable.
-        # First make the indicator of maximum (counterclockwise) estimated track rotation
-        thetaPlus = cmds.polyCube(
-            axis=(0,1,0),
-            width=thetaBreadth,
-            height=thetaThickness,
-            depth=100.0,
-            subdivisionsX=1,
-            subdivisionsY=1,
-            createUVs=3,
-            constructionHistory=1,
-            name='ThetaPlus')[0]
-        cmds.move(0, -thetaThickness/2.0, 0)
-        cmds.setAttr(thetaPlus + '.overrideEnabled',     1)
-        cmds.setAttr(thetaPlus + '.overrideDisplayType', 2)
-
-        # Next, construct the indicator of the minimum (clockwise) estimate of track rotation
-        thetaMinus = cmds.polyCube(
-            axis=(0,1,0),
-            width=thetaBreadth,
-            height=thetaThickness,
-            depth=100.0,
-            subdivisionsX=1,
-            subdivisionsY=1,
-            createUVs=3,
-            constructionHistory=1,
-            name='ThetaMinus')[0]
-        cmds.move(0, -thetaThickness/2.0, 0)
-        cmds.setAttr(thetaMinus + '.overrideEnabled',     1)
-        cmds.setAttr(thetaMinus + '.overrideDisplayType', 2)
-
-        # Translate the thetaPlus and thetaMinus indicators along z by zL = (zN - hl) (centimeters)
-        cmds.connectAttr(zL + '.output1D', thetaPlus  + '.translateZ')
-        cmds.connectAttr(zL + '.output1D', thetaMinus + '.translateZ')
-
-        # Rotate these two indicators about the Y axis to indicate rotational uncertainty
-        cmds.connectAttr(
-            node + '.' + TrackPropEnum.ROTATION_UNCERTAINTY.maya,
-            thetaPlus + '.rotateY')
-
-        neg = cmds.createNode('multiplyDivide', name="negative")
-        cmds.setAttr(neg + '.operation', 1)
-        cmds.setAttr(neg + '.input1X',  -1.0)
-        cmds.connectAttr(node + '.' + TrackPropEnum.ROTATION_UNCERTAINTY.maya, neg + '.input2X')
-        cmds.connectAttr(neg + '.outputX', thetaMinus + '.rotateY')
-
-        # create an 'inverter' transform under which all the other parts are hung as children,
+        # Create an 'inverter' transform under which all the other parts are hung as children,
         # which counteracts scaling applied to its parent triangular node.
         inverter = cmds.createNode('transform', name='inverter')
 
-        # drive its .scaleX and .scaleZ as the inverse of the node's scale values
+        # drive the inverter's .scaleX and .scaleZ as the inverse of the parent node's scale values
         sx = cmds.createNode('multiplyDivide', name='sx')
         cmds.setAttr(sx + '.operation', 2)
         cmds.setAttr(sx + '.input1X', 1.0)
@@ -339,15 +325,28 @@ class TrackSceneUtils(object):
         cmds.connectAttr(sz + '.outputX', inverter + '.scaleZ')
 
         # Assemble the parts as children under the scale inverter node
+
+        cmds.parent(lengthRuler, inverter)
+        cmds.parent(widthRuler,  inverter)
+        cmds.parent(barN,        inverter)
+        cmds.parent(barS,        inverter)
+        cmds.parent(barW,        inverter)
+        cmds.parent(barE,        inverter)
+        cmds.parent(thetaPlus,   inverter)
+        cmds.parent(thetaMinus,  inverter)
+
         cmds.parent(inverter,    node)
-        cmds.parent(lengthRuler, node + "|" + inverter)
-        cmds.parent(widthRuler,  node + "|" + inverter)
-        cmds.parent(thetaPlus,   node + "|" + inverter)
-        cmds.parent(thetaMinus,  node + "|" + inverter)
-        cmds.parent(barN,        node + "|" + inverter)
-        cmds.parent(barS,        node + "|" + inverter)
-        cmds.parent(barW,        node + "|" + inverter)
-        cmds.parent(barE,        node + "|" + inverter)
+
+        # Rotate thetaPlus and thetaMinus about the Y axis to indicate rotational uncertainty
+        cmds.connectAttr(
+            node + '.' + TrackPropEnum.ROTATION_UNCERTAINTY.maya,
+            node + '|' + inverter + '|' + thetaPlus + '.rotateY')
+
+        neg = cmds.createNode('multiplyDivide', name='negative')
+        cmds.setAttr(neg + '.operation', 1)
+        cmds.setAttr(neg + '.input1X',  -1.0)
+        cmds.connectAttr(node + '.' + TrackPropEnum.ROTATION_UNCERTAINTY.maya, neg + '.input2X')
+        cmds.connectAttr(neg + '.outputX', node + '|' + inverter + '|' + thetaMinus + '.rotateY')
 
         # Disable some transforms of the node
         cmds.setAttr(node + '.rotateX',    lock=True)
@@ -361,13 +360,11 @@ class TrackSceneUtils(object):
         # The quantity zN is used to scale length of the triangle
         cmds.connectAttr(zN + '.outputX',  node + '.scaleZ')
 
-        # Now is a good time to scale the width of the width ruler
+        # Scale the 'length' (in x) of the width ruler
         cmds.connectAttr(node + '.width',  node + '|' + inverter + '|WidthRuler.scaleX')
 
-        # Scale the length of the ruler and two theta indicators
+        # Scale the length of the length ruler
         cmds.connectAttr(node + '.length', node + '|' + inverter + '|LengthRuler.scaleZ')
-        cmds.connectAttr(node + '.length', node + '|' + inverter + '|ThetaPlus.scaleZ')
-        cmds.connectAttr(node + '.length', node + '|' + inverter + '|ThetaMinus.scaleZ')
 
         # Translate the track node epsilon below ground level (to reveal the overlaid track map)
         cmds.move(0, -epsilon, 0, node)
@@ -385,6 +382,7 @@ class TrackSceneUtils(object):
 
         return node
 
+#
 #___________________________________________________________________________________________________ getTrackNode
     @classmethod
     def getTrackNode(cls, uid, trackSetNode =None):
