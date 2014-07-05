@@ -404,9 +404,11 @@ class TrackSceneUtils(object):
 
 #___________________________________________________________________________________________________ getUid
     @classmethod
-    def getUid(cls, node):
+    def getUid(cls, node, trackSetNode =None):
         """ This returns the UID (or None if the nodeName is not a track nodeName). """
-        trackSetNode = cls.getTrackSetNode()
+        if not trackSetNode:
+            trackSetNode = cls.getTrackSetNode()
+
         if not trackSetNode:
             return None
         if not cmds.sets(node, isMember=trackSetNode):

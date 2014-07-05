@@ -23,7 +23,8 @@ class GetUidList(NimbleScriptBase):
     def run(self, *args, **kwargs):
         """ Fetches the nodes in the current trackSetNode, then for each such node, appends its UID
             to a list l which is then returned. """
-        nodes = cmds.sets(TrackSceneUtils.getTrackSetNode(), q=True)
+        setNode = TrackSceneUtils.getTrackSetNode()
+        nodes = cmds.sets(setNode, q=True)
 
         if len(nodes) == 0:
             self.puts(success=False, uidList=[])
@@ -31,7 +32,7 @@ class GetUidList(NimbleScriptBase):
 
         l = []
         for n in nodes:
-            uid = TrackSceneUtils.getUid(n)
+            uid = TrackSceneUtils.getUid(node=n, trackSetNode=setNode)
             if uid is not None:
                 l.append(uid)
 
