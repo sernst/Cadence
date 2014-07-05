@@ -8,7 +8,7 @@ from nimble import NimbleScriptBase
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 
 
-#___________________________________________________________________________________________________ GetSelectedTracks
+#___________________________________________________________________________________________________ GetSelectedUidList
 class GetSelectedUidList(NimbleScriptBase):
     """ A remote script class for returning a list of the UIDs for the track nodes currently
      selected in Maya.

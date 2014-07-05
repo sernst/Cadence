@@ -158,13 +158,13 @@ class TracksDefault(PyGlassModelsDefault):
 
 #___________________________________________________________________________________________________ toMayaNodeDict
     def toMayaNodeDict(self):
-        """ Creates a dictionary representation of those properties required for the Maya node. """
+        """ Creates a dictionary representation of those properties required for a Maya node. """
         out = dict()
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if enum.maya:
                 out[enum.maya] = getattr(self, enum.name)
 
-        # load up the attributes left and pes so that they can be used in assigning shaders
+        # load up the values of left and pes so that they can be used in assigning shaders
         out[TrackPropEnum.LEFT.name] = getattr(self, TrackPropEnum.LEFT.name)
         out[TrackPropEnum.PES.name]  = getattr(self, TrackPropEnum.PES.name)
 

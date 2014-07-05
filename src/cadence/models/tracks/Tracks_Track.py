@@ -3,7 +3,6 @@
 # Scott Ernst and Kent A. Stevens
 
 import nimble
-from nimble import cmds
 
 from cadence.mayan.trackway import GetTrackNodeData
 from cadence.mayan.trackway import UpdateTrackNode

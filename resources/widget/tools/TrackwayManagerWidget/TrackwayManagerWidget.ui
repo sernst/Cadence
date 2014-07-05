@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>766</width>
-    <height>430</height>
+    <width>752</width>
+    <height>463</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -28,27 +28,37 @@
   <property name="windowTitle">
    <string>Trackway Manager</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,2">
+  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0">
    <property name="margin">
     <number>8</number>
    </property>
    <item>
     <widget class="QWidget" name="trackwayWidget" native="true">
-     <layout class="QHBoxLayout" name="horizontalLayout_8">
-      <property name="margin">
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,2,1,2,1,2,1,1,1,2,1,2,1,2">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>8</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
        <number>8</number>
       </property>
       <item>
-       <widget class="QLabel" name="lbl_17">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
+       <widget class="QLabel" name="label_6">
         <property name="font">
          <font>
-          <family>Abadi MT Condensed Extra Bold</family>
+          <family>Abadi MT Condensed Light</family>
           <pointsize>12</pointsize>
           <weight>50</weight>
           <bold>false</bold>
@@ -56,9 +66,6 @@
         </property>
         <property name="text">
          <string>Site:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -72,8 +79,8 @@
         </property>
         <property name="font">
          <font>
-          <family>Abadi MT Condensed Extra Bold</family>
-          <pointsize>18</pointsize>
+          <family>Lucida Grande</family>
+          <pointsize>14</pointsize>
           <weight>75</weight>
           <bold>true</bold>
          </font>
@@ -90,118 +97,10 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="lbl_18">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
+       <widget class="QLabel" name="label_5">
         <property name="font">
          <font>
-          <family>Abadi MT Condensed Extra Bold</family>
-          <pointsize>12</pointsize>
-          <weight>50</weight>
-          <bold>false</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Year:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="yearLE">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <family>Abadi MT Condensed Extra Bold</family>
-          <pointsize>18</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="frame">
-         <bool>false</bool>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="lbl_19">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <family>Abadi MT Condensed Extra Bold</family>
-          <pointsize>12</pointsize>
-          <weight>50</weight>
-          <bold>false</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Sect:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="sectorLE">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <family>Abadi MT Condensed Extra Bold</family>
-          <pointsize>18</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="frame">
-         <bool>false</bool>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="lbl_20">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <family>Abadi MT Condensed Extra Bold</family>
+          <family>Abadi MT Condensed Light</family>
           <pointsize>12</pointsize>
           <weight>50</weight>
           <bold>false</bold>
@@ -209,9 +108,6 @@
         </property>
         <property name="text">
          <string>Level:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -225,8 +121,8 @@
         </property>
         <property name="font">
          <font>
-          <family>Abadi MT Condensed Extra Bold</family>
-          <pointsize>18</pointsize>
+          <family>Lucida Grande</family>
+          <pointsize>14</pointsize>
           <weight>75</weight>
           <bold>true</bold>
          </font>
@@ -243,7 +139,22 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="lbl_21">
+       <widget class="QLabel" name="label_4">
+        <property name="font">
+         <font>
+          <family>Abadi MT Condensed Light</family>
+          <pointsize>12</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Year:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="yearLE">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -252,20 +163,17 @@
         </property>
         <property name="font">
          <font>
-          <family>Abadi MT Condensed Extra Bold</family>
-          <pointsize>12</pointsize>
-          <weight>50</weight>
-          <bold>false</bold>
+          <family>Lucida Grande</family>
+          <pointsize>14</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
          </font>
         </property>
-        <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
-        </property>
-        <property name="lineWidth">
-         <number>0</number>
-        </property>
         <property name="text">
-         <string>Trackway:</string>
+         <string/>
+        </property>
+        <property name="frame">
+         <bool>false</bool>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -273,11 +181,68 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="trackwayTypeLE">
+       <widget class="QLabel" name="label_7">
         <property name="font">
          <font>
-          <family>Abadi MT Condensed Extra Bold</family>
-          <pointsize>18</pointsize>
+          <family>Abadi MT Condensed Light</family>
+          <pointsize>12</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Sector:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="sectorLE">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <family>Lucida Grande</family>
+          <pointsize>14</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="frame">
+         <bool>false</bool>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="font">
+         <font>
+          <family>Abadi MT Condensed Light</family>
+          <pointsize>12</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Trackway:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="trackwayLE">
+        <property name="font">
+         <font>
+          <family>Lucida Grande</family>
+          <pointsize>16</pointsize>
           <weight>75</weight>
           <bold>true</bold>
          </font>
@@ -288,17 +253,92 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="trackwayNumberLE">
+       <widget class="QLabel" name="label">
         <property name="font">
          <font>
-          <family>Abadi MT Condensed Extra Bold</family>
-          <pointsize>18</pointsize>
+          <family>Abadi MT Condensed Light</family>
+          <pointsize>12</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Track:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="trackNameLE">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <family>Lucida Grande</family>
+          <pointsize>16</pointsize>
           <weight>75</weight>
+          <italic>false</italic>
           <bold>true</bold>
          </font>
         </property>
+        <property name="focusPolicy">
+         <enum>Qt::WheelFocus</enum>
+        </property>
+        <property name="text">
+         <string>LP21</string>
+        </property>
         <property name="frame">
          <bool>false</bool>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="font">
+         <font>
+          <family>Abadi MT Condensed Light</family>
+          <pointsize>12</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Index:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="trackIndexLE">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <family>Lucida Grande</family>
+          <pointsize>12</pointsize>
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
+          <kerning>false</kerning>
+         </font>
+        </property>
+        <property name="text">
+         <string>123456</string>
+        </property>
+        <property name="frame">
+         <bool>false</bool>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -319,7 +359,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="trackEditorTab">
       <property name="sizePolicy">
@@ -396,7 +436,7 @@
                 <enum>QFrame::NoFrame</enum>
                </property>
                <property name="text">
-                <string>Width</string>
+                <string>Width:</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -463,11 +503,20 @@
                  <family>Abadi MT Condensed Extra Bold</family>
                 </font>
                </property>
+               <property name="contextMenuPolicy">
+                <enum>Qt::NoContextMenu</enum>
+               </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
                </property>
                <property name="decimals">
                 <number>0</number>
+               </property>
+               <property name="maximum">
+                <double>100.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>2.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -512,7 +561,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Length</string>
+                <string>Length:</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -579,11 +628,20 @@
                  <family>Abadi MT Condensed Extra Bold</family>
                 </font>
                </property>
+               <property name="contextMenuPolicy">
+                <enum>Qt::NoContextMenu</enum>
+               </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
                </property>
                <property name="decimals">
                 <number>0</number>
+               </property>
+               <property name="maximum">
+                <double>100.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>2.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -624,7 +682,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Rotation</string>
+                <string>Rotation:</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -712,6 +770,9 @@
                <property name="maximum">
                 <double>45.000000000000000</double>
                </property>
+               <property name="singleStep">
+                <double>5.000000000000000</double>
+               </property>
               </widget>
              </item>
             </layout>
@@ -735,116 +796,23 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QLabel" name="lbl_6">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>12</pointsize>
-                 <weight>50</weight>
-                 <bold>false</bold>
-                </font>
-               </property>
+              <widget class="QCheckBox" name="completedCkbx">
                <property name="text">
-                <string>X: </string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <string>Completed</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="xSbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Lucida Grande</family>
-                </font>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <property name="accelerated">
-                <bool>true</bool>
-               </property>
-               <property name="decimals">
-                <number>0</number>
-               </property>
-               <property name="minimum">
-                <double>-10000.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>10000.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>1.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="lbl_3">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>12</pointsize>
-                 <weight>50</weight>
-                 <bold>false</bold>
-                </font>
-               </property>
+              <widget class="QCheckBox" name="markedCkbx">
                <property name="text">
-                <string>Z: </string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <string>Marked</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="zSbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Abadi MT Condensed Extra Bold</family>
-                </font>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <property name="accelerated">
-                <bool>true</bool>
-               </property>
-               <property name="decimals">
-                <number>0</number>
-               </property>
-               <property name="minimum">
-                <double>-100000.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>100000.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>1.000000000000000</double>
+              <widget class="QCheckBox" name="missingCkbx">
+               <property name="text">
+                <string>Missing</string>
                </property>
               </widget>
              </item>
@@ -912,28 +880,142 @@
            </widget>
           </item>
           <item>
-           <widget class="QTextEdit" name="noteTE">
-            <property name="enabled">
-             <bool>true</bool>
+           <widget class="QLineEdit" name="noteLE"/>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
             </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="countsWidget" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <property name="contextMenuPolicy">
-             <enum>Qt::DefaultContextMenu</enum>
-            </property>
-            <property name="verticalScrollBarPolicy">
-             <enum>Qt::ScrollBarAlwaysOn</enum>
-            </property>
-            <property name="lineWrapMode">
-             <enum>QTextEdit::WidgetWidth</enum>
-            </property>
-            <property name="lineWrapColumnOrWidth">
-             <number>0</number>
-            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="1,2,1,2,2">
+             <item>
+              <widget class="QLabel" name="label_8">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>14</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Total:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="totalTrackCountLbl">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>14</pointsize>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_9">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>14</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
+                 <kerning>false</kerning>
+                </font>
+               </property>
+               <property name="text">
+                <string>Completed:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="completedTrackCountLbl">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>14</pointsize>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="countsBtn">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="contextMenuPolicy">
+                <enum>Qt::NoContextMenu</enum>
+               </property>
+               <property name="layoutDirection">
+                <enum>Qt::LeftToRight</enum>
+               </property>
+               <property name="text">
+                <string>Update</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
@@ -1051,7 +1133,7 @@
                   </property>
                   <property name="font">
                    <font>
-                    <family>Abadi MT Condensed Extra Bold</family>
+                    <family>Abadi MT Condensed Light</family>
                     <pointsize>13</pointsize>
                     <weight>75</weight>
                     <bold>true</bold>
@@ -1138,7 +1220,7 @@
                   </property>
                   <property name="font">
                    <font>
-                    <family>Abadi MT Condensed Extra Bold</family>
+                    <family>Abadi MT Condensed Light</family>
                     <pointsize>13</pointsize>
                     <weight>75</weight>
                     <bold>true</bold>
@@ -1225,7 +1307,7 @@
                   </property>
                   <property name="font">
                    <font>
-                    <family>Abadi MT Condensed Extra Bold</family>
+                    <family>Abadi MT Condensed Light</family>
                     <pointsize>13</pointsize>
                     <weight>75</weight>
                     <bold>true</bold>
@@ -1312,7 +1394,7 @@
                   </property>
                   <property name="font">
                    <font>
-                    <family>Abadi MT Condensed Extra Bold</family>
+                    <family>Abadi MT Condensed Light</family>
                     <pointsize>13</pointsize>
                     <weight>75</weight>
                     <bold>true</bold>
@@ -1351,69 +1433,13 @@
               <family>Lucida Grande</family>
              </font>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="1,1">
+            <layout class="QHBoxLayout" name="horizontalLayout_13">
              <property name="spacing">
               <number>-1</number>
              </property>
              <property name="margin">
               <number>0</number>
              </property>
-             <item>
-              <widget class="QLineEdit" name="trackNameLE">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>18</pointsize>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>LP21</string>
-               </property>
-               <property name="frame">
-                <bool>false</bool>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="trackIndexLE">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>12</pointsize>
-                 <weight>50</weight>
-                 <italic>true</italic>
-                 <bold>false</bold>
-                 <kerning>false</kerning>
-                </font>
-               </property>
-               <property name="text">
-                <string>123456</string>
-               </property>
-               <property name="frame">
-                <bool>false</bool>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
             </layout>
            </widget>
           </item>
@@ -1438,7 +1464,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QComboBox" name="selectionMethodCB">
+              <widget class="QComboBox" name="selectionMethodCmbx">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -1448,10 +1474,10 @@
                <property name="font">
                 <font>
                  <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>13</pointsize>
-                 <weight>75</weight>
+                 <pointsize>14</pointsize>
+                 <weight>50</weight>
                  <italic>false</italic>
-                 <bold>true</bold>
+                 <bold>false</bold>
                  <kerning>true</kerning>
                 </font>
                </property>
@@ -1471,7 +1497,7 @@
                <property name="font">
                 <font>
                  <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>13</pointsize>
+                 <pointsize>14</pointsize>
                  <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
@@ -1506,7 +1532,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QComboBox" name="operation1CB">
+              <widget class="QComboBox" name="operation1Cmbx">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -1516,10 +1542,10 @@
                <property name="font">
                 <font>
                  <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>13</pointsize>
-                 <weight>75</weight>
+                 <pointsize>14</pointsize>
+                 <weight>50</weight>
                  <italic>false</italic>
-                 <bold>true</bold>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="contextMenuPolicy">
@@ -1541,7 +1567,7 @@
                <property name="font">
                 <font>
                  <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>13</pointsize>
+                 <pointsize>14</pointsize>
                  <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
@@ -1576,7 +1602,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QComboBox" name="operation2CB">
+              <widget class="QComboBox" name="operation2Cmbx">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -1586,10 +1612,10 @@
                <property name="font">
                 <font>
                  <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>13</pointsize>
-                 <weight>75</weight>
+                 <pointsize>14</pointsize>
+                 <weight>50</weight>
                  <italic>false</italic>
-                 <bold>true</bold>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="currentIndex">
@@ -1608,7 +1634,7 @@
                <property name="font">
                 <font>
                  <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>13</pointsize>
+                 <pointsize>14</pointsize>
                  <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
@@ -1643,7 +1669,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QComboBox" name="operation3CB">
+              <widget class="QComboBox" name="operation3Cmbx">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -1653,10 +1679,10 @@
                <property name="font">
                 <font>
                  <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>13</pointsize>
-                 <weight>75</weight>
+                 <pointsize>14</pointsize>
+                 <weight>50</weight>
                  <italic>false</italic>
-                 <bold>true</bold>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="currentIndex">
@@ -1675,7 +1701,7 @@
                <property name="font">
                 <font>
                  <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>13</pointsize>
+                 <pointsize>14</pointsize>
                  <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
@@ -1770,7 +1796,7 @@
                  <family>Abadi MT Condensed Extra Bold</family>
                  <pointsize>16</pointsize>
                  <weight>75</weight>
-                 <italic>false</italic>
+                 <italic>true</italic>
                  <bold>true</bold>
                  <underline>false</underline>
                  <stylestrategy>PreferDefault</stylestrategy>
@@ -1852,19 +1878,6 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <spacer name="verticalSpacer_2">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>268</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
                  <widget class="QWidget" name="widget_13" native="true">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -1886,6 +1899,7 @@
                      </property>
                      <property name="font">
                       <font>
+                       <family>Abadi MT Condensed Light</family>
                        <pointsize>12</pointsize>
                       </font>
                      </property>
@@ -1904,6 +1918,7 @@
                      </property>
                      <property name="font">
                       <font>
+                       <family>Abadi MT Condensed Light</family>
                        <pointsize>12</pointsize>
                       </font>
                      </property>
@@ -1922,6 +1937,7 @@
                      </property>
                      <property name="font">
                       <font>
+                       <family>Abadi MT Condensed Light</family>
                        <pointsize>12</pointsize>
                       </font>
                      </property>
@@ -1937,6 +1953,19 @@
                   </layout>
                  </widget>
                 </item>
+                <item>
+                 <spacer name="verticalSpacer_2">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>268</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
                </layout>
               </widget>
              </item>
@@ -1951,26 +1980,13 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_18" stretch="20,1,0,0,0">
+            <layout class="QVBoxLayout" name="verticalLayout_18" stretch="1,0,0,0,0">
              <property name="topMargin">
               <number>0</number>
              </property>
              <property name="bottomMargin">
               <number>0</number>
              </property>
-             <item>
-              <spacer name="verticalSpacer">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>214</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
              <item>
               <widget class="QComboBox" name="trackwayCB">
                <property name="sizePolicy">
@@ -1981,6 +1997,7 @@
                </property>
                <property name="font">
                 <font>
+                 <family>Abadi MT Condensed Light</family>
                  <weight>75</weight>
                  <bold>true</bold>
                 </font>
@@ -2006,6 +2023,7 @@
                </property>
                <property name="font">
                 <font>
+                 <family>Abadi MT Condensed Light</family>
                  <pointsize>12</pointsize>
                 </font>
                </property>
@@ -2024,6 +2042,7 @@
                </property>
                <property name="font">
                 <font>
+                 <family>Abadi MT Condensed Light</family>
                  <pointsize>12</pointsize>
                 </font>
                </property>
@@ -2042,6 +2061,7 @@
                </property>
                <property name="font">
                 <font>
+                 <family>Abadi MT Condensed Light</family>
                  <pointsize>12</pointsize>
                 </font>
                </property>
@@ -2049,6 +2069,19 @@
                 <string>Select Trackway</string>
                </property>
               </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>214</height>
+                </size>
+               </property>
+              </spacer>
              </item>
             </layout>
            </widget>

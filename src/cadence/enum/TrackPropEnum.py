@@ -109,7 +109,7 @@ class TrackPropEnum(object):
     TRACKWAY_TYPE = TRACK_PROP_NT('trackwayType', 'string', None, True)
 
     # Unique identifier for the track, created when the track is first created and never changed
-    # for the lifetime of the track. The UID has no dependence upon any other track property
+    # for the lifetime of the track. The UID has no dependence upon any other track property.
     UID = TRACK_PROP_NT('uid', 'string', 'track_uid', False)
 
     # the width of a given track, the value previously measured, and the uncertainty

@@ -222,7 +222,7 @@ class TrackSceneUtils(object):
             createUVs=3,
             constructionHistory=1,
             name='ThetaPlus')[0]
-        cmds.move(0, -thetaThickness/2.0, 0)
+#        cmds.move(0, -thetaThickness/2.0, 0)
         cmds.setAttr(thetaPlus + '.overrideEnabled',     1)
         cmds.setAttr(thetaPlus + '.overrideDisplayType', 2)
 
@@ -237,7 +237,7 @@ class TrackSceneUtils(object):
             createUVs=3,
             constructionHistory=1,
             name='ThetaMinus')[0]
-        cmds.move(0, -thetaThickness/2.0, 0)
+#        cmds.move(0, -thetaThickness/2.0, 0)
         cmds.setAttr(thetaMinus + '.overrideEnabled',     1)
         cmds.setAttr(thetaMinus + '.overrideDisplayType', 2)
 
