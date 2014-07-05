@@ -29,7 +29,7 @@ class TrackPropEnum(object):
     DEPTH_UNCERTAINTY = TRACK_PROP_NT('depthUncertainty', 'float', None, False)
 
     # A 32bit integer containing enumerated flags for how the track should be displayed
-    DISPLAY_FLAGS = TRACK_PROP_NT('flags', 'long', None, False)
+    DISPLAY_FLAGS = TRACK_PROP_NT('displayFlags', 'long', None, False)
 
     # A 32bit integer containing enumerated flags related to the state and type of the track
     FLAGS = TRACK_PROP_NT('flags', 'long', None, False)
@@ -99,7 +99,7 @@ class TrackPropEnum(object):
     SNAPSHOT = TRACK_PROP_NT('snapshot', 'string', None, False)
 
     # A 32bit integer containing enumerated flags related to how the track data was imported
-    SOURCE_FLAGS = TRACK_PROP_NT('flags', 'long', None, False)
+    SOURCE_FLAGS = TRACK_PROP_NT('sourceFlags', 'long', None, False)
 
     # a trackway is numbered at a given site/level, and consists of four (for quadrupedal) or
     # two (bipedal) track series.
