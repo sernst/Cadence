@@ -16,7 +16,7 @@ from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enum.TrackPropEnum import TrackPropEnum
-from cadence.enum.FlagsEnum import FlagsEnum
+from cadence.enum.SourceFlagsEnum import SourceFlagsEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.util.maya.MayaUtils import MayaUtils
 
@@ -67,6 +67,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, parent, **kwargs):
         super(TrackwayManagerWidget, self).__init__(parent, **kwargs)
+
+        self._session = None
 
         priorSelection = MayaUtils.getSelectedTransforms()
 
@@ -210,7 +212,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             track UIDs from the selected Maya track nodes. A list of the corresponding track models
             is then returned. """
         conn   = nimble.getConnection()
-        result = conn.runPythonModule(GetSelectedUidList)
+        result = conn.runPythonModule(GetSelectedUidList, runInMaya=True)
 
         # Check to see if the remote command execution was successful
         if not result.success:
@@ -317,11 +319,11 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ clearTrackUI
     def clearTrackUI(self):
         """ Clears out the text fields associated with the track parameters in the UI. """
-        self.widthLbl.setText('Width  [%4s]' % '')
+        self.widthLbl.setText('Width:  [%4s]' % '')
         self.widthSbx.setValue(0)
         self.widthUncertaintySbx.setValue(0)
 
-        self.lengthLbl.setText('Length [%4s]' % '')
+        self.lengthLbl.setText('Length: [%4s]' % '')
         self.lengthSbx.setValue(0)
         self.lengthUncertaintySbx.setValue(0)
 
@@ -369,10 +371,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ The track properties aspect of the UI display is updated based on a dictionary derived
             from a given track model instance. """
         self.widthSbx.setValue(100.0*dict[TrackPropEnum.WIDTH.name])
-        self.widthLbl.setText('Width  [%2.0f]' % (100.0*dict[TrackPropEnum.WIDTH_MEASURED.name]))
+        self.widthLbl.setText('Width: [%2.0f]' % (100.0*dict[TrackPropEnum.WIDTH_MEASURED.name]))
 
         self.lengthSbx.setValue(100.0*dict[TrackPropEnum.LENGTH.name])
-        self.lengthLbl.setText('Length [%2.0f]' % (100.0*dict[TrackPropEnum.LENGTH_MEASURED.name]))
+        self.lengthLbl.setText('Length: [%2.0f]' % (100.0*dict[TrackPropEnum.LENGTH_MEASURED.name]))
 
         self.widthUncertaintySbx.setValue(100.0*dict[TrackPropEnum.WIDTH_UNCERTAINTY.maya])
         self.lengthUncertaintySbx.setValue(100.0*dict[TrackPropEnum.LENGTH_UNCERTAINTY.maya])
@@ -381,9 +383,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.rotationUncertaintySbx.setValue(dict[TrackPropEnum.ROTATION_UNCERTAINTY.name])
 
         # set the checkboxes 'Completed' and 'Marked'
-        f = dict[TrackPropEnum.DISPLAY_FLAGS.name]
-        self.completedCkbx.setChecked(FlagsEnum.get(f, FlagsEnum.COMPLETED))
-        self.markedCkbx.setChecked(FlagsEnum.get(f, FlagsEnum.MARKED))
+        f = dict[TrackPropEnum.SOURCE_FLAGS.name]
+        self.completedCkbx.setChecked(SourceFlagsEnum.get(f, SourceFlagsEnum.COMPLETED))
+        self.markedCkbx.setChecked(SourceFlagsEnum.get(f, SourceFlagsEnum.MARKED))
 
         self.missingCkbx.setChecked(dict[TrackPropEnum.HIDDEN.name])
 
@@ -410,6 +412,43 @@ class TrackwayManagerWidget(PyGlassWidget):
             TrackPropEnum.TRACKWAY_TYPE.name:self.trackwayLE.text()[0],
             TrackPropEnum.TRACKWAY_NUMBER.name:self.trackwayLE.text()[1:] }
 
+#___________________________________________________________________________________________________ refreshTrackCounts
+    def refreshTrackCounts(self):
+        """ Run a script to return a list of all Maya Track Nodes so we can get a count of both the
+            total number of tracks in the scene and of those that are completed. """
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(GetUidList, runInMaya=True)
+
+        # Check to see if the remote command execution was successful
+        if not result.success:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                'Failed UID Query',
+                'Unable to get UID list from Maya', 'Error')
+            return
+        # so we have a list of UIDs, the length of which is the totalTrackCount for this Maya scene
+        uidList = result.payload['uidList']
+        totalTrackCount = len(uidList)
+        print 'totalTrackCount = %s' % totalTrackCount
+        self.totalTrackCountLbl.setText(unicode(totalTrackCount))
+
+        # and we go back to query for those tracks which are members of this uidList (i.e., in the
+        # Maya scene, and also have their COMPLETED source flag set.
+        model   = Tracks_Track.MASTER
+        session = model.createSession()
+        query   = session.query(model)
+
+        self._getSession()
+        query = query.filter(model.uid.in_(uidList))
+        query = query.filter(model.sourceFlags.op('&')(SourceFlagsEnum.COMPLETED) == 1)
+
+        entries   = query.all()
+        count     = len(entries)
+
+        print entries
+
+        self.completedTrackCountLbl.setText(unicode(count))
+
 #___________________________________________________________________________________________________ initializeCadenceCam
     def initializeCadenceCam(self):
         """ This creates an orthographic camera that looks down the Y axis onto the XZ plane, and
@@ -433,34 +472,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ Center the current camera (CadenceCam or persp) on the currently selected node. """
         cmds.viewFit(fitFactor=0.2, animate=True)
 
-#___________________________________________________________________________________________________ getTrackCounts
-    def refreshTrackCounts(self):
-        """ Run a script to return a list of all Maya Track Nodes so we can get a count of the total
-            number of track nodes and the count of those that are completed. """
-        conn   = nimble.getConnection()
-        result = conn.runPythonModule(GetUidList, runInMaya=True)
-
-        # Check to see if the remote command execution was successful
-        if not result.success:
-            PyGlassBasicDialogManager.openOk(
-                self,
-                'Failed UID Query',
-                'Unable to get UID list from Maya', 'Error')
-            return
-
-        uidList = result.payload['uidList']
-        totalTrackCount = len(uidList)
-        print 'totalTrackCount = %s' % totalTrackCount
-        self.totalTrackCountLbl.setText(unicode(totalTrackCount))
-
-        self._session = None
-        self._getSession()
-
-        for uid in uidList:
-            track = self.getTrackByUid(uid)
-            if FlagsEnum.get(track.flags, FlagsEnum.COMPLETED):
-                self.completedTrackCount += 1
-        self.completedTrackCountLbl.setText(unicode(self.completedTrackCount))
 
 #===================================================================================================
 #                                                              H A N D L E R S - for the Track Tab
@@ -571,7 +582,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _handleCompletedCkbx
     def _handleCompletedCkbx(self):
-        """ The track has its COMPLETED flag set or cleared, based on the value of the checkbox. """
+        """ This track has its COMPLETED source flag set or cleared, based on the value of the
+            checkbox. """
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return
@@ -584,11 +596,11 @@ class TrackwayManagerWidget(PyGlassWidget):
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
 
         if self.completedCkbx.isChecked():
-            t.flags = FlagsEnum.set(t.flags, FlagsEnum.COMPLETED)
+            t.sourceFlags = SourceFlagsEnum.set(t.flags, SourceFlagsEnum.COMPLETED)
             self.completedTrackCount += 1
         else:
-            t.flags = FlagsEnum.clear(t.flags, FlagsEnum.COMPLETED)
-            self.completedTrackCOunt -= 1
+            t.sourceFlags = SourceFlagsEnum.clear(t.flags, SourceFlagsEnum.COMPLETED)
+            self.completedTrackCount -= 1
 
         t.updateNode()
         self._closeSession(commit=True)
@@ -596,7 +608,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _handleMarkedCkbx
     def _handleMarkedCkbx(self):
-        """ The track has its MARKED flag set or cleared, based on the value of the checkbox. """
+        """ This track has its MARKED source flag set or cleared, based on the value of the
+            checkbox. """
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return
@@ -609,9 +622,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
 
         if self.markedCkbx.isChecked():
-            t.flags = FlagsEnum.set(t.flags, FlagsEnum.MARKED)
+            t.sourceFlags = SourceFlagsEnum.set(t.flags, SourceFlagsEnum.MARKED)
         else:
-            t.flags = FlagsEnum.clear(t.flags, FlagsEnum.MARKED)
+            t.sourceFlags = SourceFlagsEnum.clear(t.flags, SourceFlagsEnum.MARKED)
 
         t.updateNode()
         self._closeSession(commit=True)
@@ -859,7 +872,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         tracks  = []
         for entry in entries:
            flags = entry.flags
-           if FlagsEnum.get(flags, FlagsEnum.COMPLETED):
+           if SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED):
               tracks.append(entry)
 
         nodes= []
@@ -1153,15 +1166,17 @@ class TrackwayManagerWidget(PyGlassWidget):
 #                                                          H A N D L E R S  - for the Trackway Tab
 #___________________________________________________________________________________________________ _handleShowTrackwayBtn
     def _handleShowTrackwayBtn(self, visible=True):
-        print '_handleShowTrackwayBtn pass'
+        """ The tracks comprising a trackway are grouped (e.g., into S18_group) and the group is
+            added to a corresponding display layer S18_Layer (created if not already available). """
+        trackway = self.trackwayCB.currentText()
+        print('trackway = %s' % trackway)
+        if trackway == '':
+            return
+        layer = trackway + '_Layer'
+        if not cmds.objExists(layer):
+            cmds.createDisplayLayer()
 
-        # trackway = self.trackwayCB.currentText()
-        # print('trackway = %s' % trackway)
-        # if trackway == '':
-        #     return
-        # layer = trackway + '_Layer'
-        # if cmds.objExists(layer):
-        #     cmds.setAttr('%s.visibility' % layer, visible)
+            cmds.setAttr('%s.visibility' % layer, visible)
 
 #___________________________________________________________________________________________________ _handleHideTrackwayBtn
     def _handleHideTrackwayBtn(self):

@@ -62,7 +62,11 @@ class Tracks_Track(TracksDefault):
         """ Sends values to Maya nodeName representation of the track to synchronize the values in
             the model and the nodeName. """
         conn = nimble.getConnection()
-        result = conn.runPythonModule(UpdateTrackNode, uid=self.uid, props=self.toMayaNodeDict())
+        result = conn.runPythonModule(
+            UpdateTrackNode,
+            uid=self.uid,
+            props=self.toMayaNodeDict(),
+            runInMaya=True)
         if not result.success:
             return False
 
@@ -74,7 +78,11 @@ class Tracks_Track(TracksDefault):
         """ Retrieves Maya values from the nodeName representation of the track and updates this
             model instance with those values. """
         conn = nimble.getConnection()
-        result = conn.runPythonModule(GetTrackNodeData, uid=self.uid, nodeName=self.nodeName)
+        result = conn.runPythonModule(
+            GetTrackNodeData,
+            uid=self.uid,
+            nodeName=self.nodeName,
+            runInMaya=True)
         if result.payload.get('error'):
             print 'Error in updateFromNode:', result.payload.get('message')
             return False

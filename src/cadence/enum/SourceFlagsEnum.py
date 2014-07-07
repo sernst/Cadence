@@ -1,11 +1,12 @@
-# FlagsEnum.py
+# SourceFlagsEnum.py
 # (C) 2014
 # Kent A. Stevens
 
-#___________________________________________________________________________________________________ FlagsEnum
-class FlagsEnum(object):
-    """ Boolean flags to signify states associated with individual tracks. The methods only
-        return new values to be assiged to the 'flags' property for a given track. """
+#___________________________________________________________________________________________________ SourceFlagsEnum
+class SourceFlagsEnum(object):
+    """ Boolean flags to signify states associated with the source data for individual tracks. The
+        methods only return new values to be assiged to the 'sourceFlags' property for a given
+        track. """
 
 #===================================================================================================
 #                                                                                       C L A S S
