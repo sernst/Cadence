@@ -75,6 +75,7 @@ class TrackSceneUtils(object):
         # push it down below ground level so that the two rulers are just submerged, and
         # scale the triangle in Z to match its width (1 cm) so it is ready to be scaled
         cmds.move(0, -(nodeThickness/2.0 + rulerThickness), math.sqrt(3.0)/6.0)
+
         # move the node's pivot to the 'base' of the triangle so it scales outward from that point
         cmds.move(0, 0, 0, node + ".scalePivot", node + ".rotatePivot", absolute=True)
         cmds.scale(2.0/math.sqrt(3.0), 1.0, 100.0)
@@ -128,6 +129,7 @@ class TrackSceneUtils(object):
             createUVs=3,
             constructionHistory=1,
             name='WidthRuler')[0]
+
         # Push it down so it is just resting on the triangular node (which is already submerged by
         # the thickness of the ruler and half the node thickness.
         cmds.move(0.0, -rulerThickness/2.0, 0.0)
@@ -222,7 +224,6 @@ class TrackSceneUtils(object):
             createUVs=3,
             constructionHistory=1,
             name='ThetaPlus')[0]
-#        cmds.move(0, -thetaThickness/2.0, 0)
         cmds.setAttr(thetaPlus + '.overrideEnabled',     1)
         cmds.setAttr(thetaPlus + '.overrideDisplayType', 2)
 
@@ -237,7 +238,6 @@ class TrackSceneUtils(object):
             createUVs=3,
             constructionHistory=1,
             name='ThetaMinus')[0]
-#        cmds.move(0, -thetaThickness/2.0, 0)
         cmds.setAttr(thetaMinus + '.overrideEnabled',     1)
         cmds.setAttr(thetaMinus + '.overrideDisplayType', 2)
 
@@ -325,7 +325,6 @@ class TrackSceneUtils(object):
         cmds.connectAttr(sz + '.outputX', inverter + '.scaleZ')
 
         # Assemble the parts as children under the scale inverter node
-
         cmds.parent(lengthRuler, inverter)
         cmds.parent(widthRuler,  inverter)
         cmds.parent(barN,        inverter)
@@ -334,7 +333,6 @@ class TrackSceneUtils(object):
         cmds.parent(barE,        inverter)
         cmds.parent(thetaPlus,   inverter)
         cmds.parent(thetaMinus,  inverter)
-
         cmds.parent(inverter,    node)
 
         # Rotate thetaPlus and thetaMinus about the Y axis to indicate rotational uncertainty
@@ -369,17 +367,16 @@ class TrackSceneUtils(object):
         # Translate the track node epsilon below ground level (to reveal the overlaid track map)
         cmds.move(0, -epsilon, 0, node)
 
+        # Initialize all the properties from the dictionary
         if props:
             cls.setTrackProps(node, props)
         else:
-            print 'Trying to create pointerSideLength node without props?  But we neeeeds them!'
-            return
+            print 'Trying to create track node without props?  But we neeeeds them!'
+            return node
 
-        # Add the new nodeName to the Cadence track scene set
+        # Add the new nodeName to the Cadence track scene set, color it, and we're done
         cmds.sets(node, add=trackSetNode)
-
         cls.colorNode(node, props)
-
         return node
 
 #
@@ -449,7 +446,9 @@ class TrackSceneUtils(object):
 #___________________________________________________________________________________________________ colorNode
     @classmethod
     def colorNode(cls, node, props):
+        # Save state of selected nodes to restore at end of this function
         priorSelection = MayaUtils.getSelectedTransforms()
+
         # Use red for left, green for right, in accordance with international maritime convention
         left = props[TrackPropEnum.LEFT.name]
         pes  = props[TrackPropEnum.PES.name]

@@ -154,7 +154,7 @@ class TrackwayIoWidget(PyGlassWidget):
             query = query.filter(getattr(model, filterDef['enum'].name) == items[0].itemData)
 
         # Prevents tracks that have been "hidden" from being loaded into the scene
-        query = query.filter(model.hidden == False)
+        # query = query.filter(model.hidden == False)
 
         entries   = query.all()
         count     = len(entries)

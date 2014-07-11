@@ -100,7 +100,6 @@ class TracksDefault(PyGlassModelsDefault):
     @property
     def fingerprint(self):
         """ String created from the uniquely identifying track properties. """
-
         return u'-'.join([
             getattr(self, TrackPropEnum.SITE.name, u''),
             getattr(self, TrackPropEnum.LEVEL.name, u''),
@@ -109,7 +108,7 @@ class TracksDefault(PyGlassModelsDefault):
             getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, u'0'),
             getattr(self, TrackPropEnum.YEAR.name, u''),
             u'LEFT' if getattr(self, TrackPropEnum.LEFT.name, False) else u'RIGHT',
-            u'PES' if getattr(self, TrackPropEnum.PES.name, False) else u'MAN',
+            u'PES' if getattr(self, TrackPropEnum.PES.name, False) else u'MANUS',
             getattr(self, TrackPropEnum.NUMBER.name, u'0') ])
 
 #===================================================================================================
@@ -136,9 +135,8 @@ class TracksDefault(PyGlassModelsDefault):
     def fromDict(self, data):
         """ Populates the track with the values specified by data dictionary argument. The keys of
             the data object should be valid names of the enumerated values in the TrackPropEnum
-            class and the values valid entries for each key in the database class.
-
-            This method can be used to load a track object from disk into a database model. """
+            class and the values valid entries for each key in the database class. This method can
+            be used to load a track object from disk into a database model. """
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if enum == TrackPropEnum.UID:
                 continue
@@ -167,6 +165,7 @@ class TracksDefault(PyGlassModelsDefault):
         # load up the values of left and pes so that they can be used in assigning shaders
         out[TrackPropEnum.LEFT.name] = getattr(self, TrackPropEnum.LEFT.name)
         out[TrackPropEnum.PES.name]  = getattr(self, TrackPropEnum.PES.name)
+        out[TrackPropEnum.HIDDEN.name] = getattr(self, TrackPropEnum.HIDDEN.name)
 
         # If the width (or length) attribute is still zero, initialize width (or length) to the
         # measured width (or length) from the spreadsheet. But then, if a measured value for
