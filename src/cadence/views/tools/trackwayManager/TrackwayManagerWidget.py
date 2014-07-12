@@ -45,7 +45,7 @@ class TrackwayManagerWidget(PyGlassWidget):
     SELECT_MARKED     = 'Select Marked'
     SELECT_ALL        = 'Select All'
 
-    EXTRAPOLATE_TRACK = 'Estimate Placement of Next Track'
+    EXTRAPOLATE_TRACK = 'Extrapolate Next Track'
     INTERPOLATE_TRACK = 'Interpolate This Track'
     LINK_SELECTED     = 'Link Selected Tracks'
     UNLINK_SELECTED   = 'Unlink Selected Tracks'
@@ -56,14 +56,12 @@ class TrackwayManagerWidget(PyGlassWidget):
     SET_UNCERTAINTY_HIGH     = 'Set Uncertainties High'
 
     DIMENSION_UNCERTAINTY_LOW      = 0.01
-    DIMENSION_UNCERTAINTY_MODERATE = 0.05
-    DIMENSION_UNCERTAINTY_HIGH     = 0.10
+    DIMENSION_UNCERTAINTY_MODERATE = 0.03
+    DIMENSION_UNCERTAINTY_HIGH     = 0.05
 
-    ROTATION_UNCERTAINTY_LOW      = 4.0
-    ROTATION_UNCERTAINTY_MODERATE = 20.0
-    ROTATION_UNCERTAINTY_HIGH     = 40.0
-
-    completedTrackCount           = 0
+    ROTATION_UNCERTAINTY_LOW      = 3.0
+    ROTATION_UNCERTAINTY_MODERATE = 5.0
+    ROTATION_UNCERTAINTY_HIGH     = 30.0
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, parent, **kwargs):
@@ -137,7 +135,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         # set up a bank of four combo boxes of operations for convenience access for common tasks
         self.operation1Cmbx.addItems(trackOperationMethods)
-        self.operation1Cmbx.setCurrentIndex(1)
+        self.operation1Cmbx.setCurrentIndex(0)
         self.operation1Btn.clicked.connect(self._handleOperation1Btn)
 
         self.operation2Cmbx.addItems(trackOperationMethods)
@@ -392,8 +390,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         # set the checkboxes 'Completed' and 'Marked'
         f = dict[TrackPropEnum.SOURCE_FLAGS.name]
         self.completedCkbx.setChecked(SourceFlagsEnum.get(f, SourceFlagsEnum.COMPLETED))
-        self.markedCkbx.setChecked(SourceFlagsEnum.get(f, SourceFlagsEnum.MARKED))
 
+        self.markedCkbx.setChecked(SourceFlagsEnum.get(f, SourceFlagsEnum.MARKED))
         self.missingCkbx.setChecked(dict[TrackPropEnum.HIDDEN.name])
 
         self.lengthRatioSbx.setValue(dict[TrackPropEnum.LENGTH_RATIO.name])
@@ -419,34 +417,36 @@ class TrackwayManagerWidget(PyGlassWidget):
             TrackPropEnum.TRACKWAY_TYPE.name:self.trackwayLE.text()[0],
             TrackPropEnum.TRACKWAY_NUMBER.name:self.trackwayLE.text()[1:] }
 
-#___________________________________________________________________________________________________ getCompletedTracks
-    def getCompletedTracks(self, uidList, set=True):
-        """ Creates a list of all tracks that have their completed bit either set or cleared,
-            based on the boolean argument. """
+#___________________________________________________________________________________________________ getFlaggedTracks
+    def getFlaggedTracks(self, uidList, flag, set=True):
+        """ Creates a list of all tracks that have a given source flag either set or cleared,
+            based on the boolean argument set. """
         model   = Tracks_Track.MASTER
-        session = model.createSession()
-        query   = session.query(model)
-        state   = 1 if set else 0
-
-        self._getSession()
-
-        size    = 1000
+        state   = flag if set else 0
+        size    = 200
         iMax    = len(uidList)/size
         i       = 0
         entries = []
 
         while i < iMax:
-            batch    = uidList[i*size : (i + 1)*size]
-            query    = query.filter(model.uid.in_(batch))
-            query    = query.filter(model.sourceFlags.op('&')(SourceFlagsEnum.COMPLETED) == state)
+            self._getSession()
+            session = model.createSession()
+            query   = session.query(model)
+            batch   = uidList[i*size : (i + 1)*size]
+            query   = query.filter(model.uid.in_(batch))
+            query   = query.filter(model.sourceFlags.op('&')(flag) == state)
             entries += query.all()
             i       += 1
+            self._closeSession(commit=False)
 
         if i*size < len(uidList):
-            batch    = uidList[i*size : (i + 1)*size]
-            query    = query.filter(model.uid.in_(batch))
-            query    = query.filter(model.sourceFlags.op('&')(SourceFlagsEnum.COMPLETED) == state)
+            session = model.createSession()
+            query   = session.query(model)
+            batch   = uidList[i*size :]
+            query   = query.filter(model.uid.in_(batch))
+            query   = query.filter(model.sourceFlags.op('&')(SourceFlagsEnum.COMPLETED) == state)
             entries += query.all()
+            self._closeSession(commit=False)
 
         return entries
 #___________________________________________________________________________________________________ refreshTrackCountsUI
@@ -471,9 +471,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.totalTrackCountLbl.setText(unicode(totalTrackCount))
 
         # Now determine how many tracks have their COMPLETED source flag set.
-        entries = self.getCompletedTracks(uidList, True)
-        count = len(entries)
-        self.completedTrackCountLbl.setText(unicode(count))
+        entries = self.getFlaggedTracks(uidList, SourceFlagsEnum.COMPLETED, True)
+        self.completedTrackCountLbl.setText(unicode(len(entries)))
 
 #===================================================================================================
 #                                                              H A N D L E R S - for the Track Tab
@@ -494,15 +493,18 @@ class TrackwayManagerWidget(PyGlassWidget):
             # when any leftovers of the first use of flags (not the source flags) are purged.
             t.flags = 0
 
-            if self.completedCkbx.isChecked():
-                t.sourceFlags = SourceFlagsEnum.set(t.flags, SourceFlagsEnum.COMPLETED)
-            else:
-                t.sourceFlags = SourceFlagsEnum.clear(t.flags, SourceFlagsEnum.COMPLETED)
+            # preserve the other flags
+            flags = t.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
+            if self.completedCkbx.isChecked():
+                f = SourceFlagsEnum.set(flags, SourceFlagsEnum.COMPLETED)
+            else:
+                f = SourceFlagsEnum.clear(flags, SourceFlagsEnum.COMPLETED)
+
+            t.sourceFlags = flags | f
             t.updateNode()
 
         self._closeSession(commit=True)
-        self.completedTrackCountLbl.setText(unicode(self.completedTrackCount))
         self.refreshTrackCountsUI()
 
 #___________________________________________________________________________________________________ _handleCountsBtn
@@ -569,9 +571,9 @@ class TrackwayManagerWidget(PyGlassWidget):
             n.lengthUncertainty   = self.DIMENSION_UNCERTAINTY_MODERATE
             n.rotationUncertainty = self.ROTATION_UNCERTAINTY_MODERATE
 
-        # assign the next track the length ratio and rotation values of the previous two tracks
-        n.lengthRatio = 0.5*(p.lengthRatio + t.lengthRatio)
-        n.rotation    = 0.5*(p.rotation + t.rotation)
+        # assign to the next track the length ratio and rotation of the current track
+        n.lengthRatio = t.lengthRatio
+        n.rotation    = t.rotation
 
         # now assign dimensions use n's measured values or use those from t's values as a backup
         n.width  = t.width  if n.widthMeasured  == 0.0 else n.widthMeasured
@@ -599,8 +601,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _handleInterpolation
     def _handleInterpolation(self):
-        """ Based on a (single) selected track node t, this track is interpolated based on the
-            previous p and the next track n. This requires both two tracks, p and n, of course. """
+        """ Based on a previous and next tracks to a given (single) selected track node t, the
+            parameters are interpolated. """
         self._getSession()
 
         selectedTracks = self.getSelectedTracks()
@@ -760,11 +762,15 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
 
-        if self.markedCkbx.isChecked():
-            t.sourceFlags = SourceFlagsEnum.set(t.flags, SourceFlagsEnum.MARKED)
-        else:
-            t.sourceFlags = SourceFlagsEnum.clear(t.flags, SourceFlagsEnum.MARKED)
+        # preserve the other flags
+        flags = t.sourceFlags & ~SourceFlagsEnum.MARKED
 
+        if self.markedCkbx.isChecked():
+            f = SourceFlagsEnum.set(flags, SourceFlagsEnum.MARKED)
+        else:
+            f = SourceFlagsEnum.clear(flags, SourceFlagsEnum.MARKED)
+
+        t.sourceFlags = flags | f
         t.updateNode()
         self._closeSession(commit=True)
 
@@ -790,6 +796,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             False)
 
         if not result:
+            self.missingCkbx.setChecked(False)
             return
 
         # if a track is regarded as missing, unlink it's previous track (if any), setting it adrift
@@ -1014,6 +1021,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _handleSelectBtn
     def _handleSelectBtn(self):
         """ The various options for track selection are dispatched from here. """
+        self._getSession()
+
         if self.selectionMethodCmbx.currentText() == self.SELECT_BY_NAME:
             name   = self.trackNameLE.text()
             tracks = self.getTrackByName(name, **self.getTrackwayPropertiesFromUI())
@@ -1048,7 +1057,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._handleSelectCompleted(False)
 
         elif self.selectionMethodCmbx.currentText() == self.SELECT_MARKED:
-            self._handleSelectMarked()
+            self._handleSelectMarked(True)
 
         elif self.selectionMethodCmbx.currentText() == self.SELECT_ALL:
             print 'selected' + self.SELECT_ALL
@@ -1087,7 +1096,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _handleSelectCompleted
     def _handleSelectCompleted(self, completed=True):
         """ Selects all completed track nodes (those with UIDs in the scene that have their
-        COMPLETED source flag set.  Batch this task into sublists due to limitations. This is also
+        COMPLETED source flag set).  Batch this task into sublists due to limitations. This is also
         used with False passed in to select those tracks that are not yet completed. """
 
         conn   = nimble.getConnection()
@@ -1103,12 +1112,40 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         # so we have a list of UIDs of those track currently in the Maya scene
         uidList = result.payload['uidList']
-        tracks = self.getCompletedTracks(uidList, completed)
+        tracks = self.getFlaggedTracks(uidList, SourceFlagsEnum.COMPLETED, completed)
 
         nodes= []
         for t in tracks:
             nodes.append(self.getTrackNode(t))
-        cmds.select(nodes)
+
+        if nodes:
+            cmds.select(nodes)
+
+#___________________________________________________________________________________________________ _handleSelectMarked
+    def _handleSelectMarked(self, marked=True):
+        """ Selects all marked track nodes (those with UIDs in the scene that have their
+        MARKED source flag set).  Batch this task into sublists due to limitations. """
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(GetUidList, runInMaya=True)
+
+        # Check to see if the remote command execution was successful
+        if not result.success:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                'Failed UID Query',
+                'Unable to get UID list from Maya', 'Error')
+            return
+
+        # so we have a list of UIDs of those track currently in the Maya scene
+        uidList = result.payload['uidList']
+        tracks = self.getFlaggedTracks(uidList, SourceFlagsEnum.MARKED, marked)
+
+        nodes= []
+        for t in tracks:
+            nodes.append(self.getTrackNode(t))
+
+        if nodes:
+            cmds.select(nodes)
 
 #___________________________________________________________________________________________________ _handleSelectPerspectiveBtn
     def _handleSelectPerspectiveBtn(self):
@@ -1345,7 +1382,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ setCameraFocus
     def setCameraFocus(self):
         """ Center the current camera (CadenceCam or persp) on the currently selected node. """
-        cmds.viewFit(fitFactor=0.3, animate=True)
+        cmds.viewFit(fitFactor=0.2, animate=True)
 
 #___________________________________________________________________________________________________ _activateWidgetDisplayImpl
     def _activateWidgetDisplayImpl(self, **kwargs):
