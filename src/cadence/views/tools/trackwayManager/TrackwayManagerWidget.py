@@ -58,10 +58,10 @@ class TrackwayManagerWidget(PyGlassWidget):
 
     DIMENSION_UNCERTAINTY_LOW      = 0.01
     DIMENSION_UNCERTAINTY_MODERATE = 0.03
-    DIMENSION_UNCERTAINTY_HIGH     = 0.05
+    DIMENSION_UNCERTAINTY_HIGH     = 0.08
 
     ROTATION_UNCERTAINTY_LOW      = 3.0
-    ROTATION_UNCERTAINTY_MODERATE = 5.0
+    ROTATION_UNCERTAINTY_MODERATE = 6.0
     ROTATION_UNCERTAINTY_HIGH     = 30.0
 
 #___________________________________________________________________________________________________ __init__
@@ -580,9 +580,15 @@ class TrackwayManagerWidget(PyGlassWidget):
         n.lengthRatio = t.lengthRatio
         n.rotation    = t.rotation
 
-        # now assign dimensions use n's measured values or use those from t's values as a backup
+        # now assign dimensions, using n's measured values or use those from t's values as a backup
         n.width  = t.width  if n.widthMeasured  == 0.0 else n.widthMeasured
         n.length = t.length if n.lengthMeasured == 0.0 else n.lengthMeasured
+
+        # these are reasonable defaults to work from for the pes and manus rotation uncertainty
+        if n.pes:
+            n.rotationUncertainty = 2*self.ROTATION_UNCERTAINTY_MODERATE
+        else:
+            n.rotationUncertainty = self.ROTATION_UNCERTAINTY_MODERATE
 
         # update the Maya node and the UI
         n.updateNode()
@@ -634,7 +640,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.selectTrack(t)
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
 
-        self.refreshTrackUI(t.toDict())
+        dict = t.toDict()
+
+        self.refreshTrackUI(dict)
+        self.refreshTrackwayUI(dict)
 
 #___________________________________________________________________________________________________ _handleInterpolation
     def _handleInterpolation(self):
@@ -683,7 +692,9 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         self.selectTrack(t)
-        self.refreshTrackUI(t.toDict())
+        dict = t.toDict()
+        self.refreshTrackUI(dict)
+        self.refreshTrackwayUI(dict)
 
 #___________________________________________________________________________________________________ _handleLengthSbx
     def _handleLengthSbx(self):
@@ -866,8 +877,9 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self.selectTrack(n)
         n.updateFromNode() # use this opportunity to capture the current state of the Maya node
-
-        self.refreshTrackUI(n.toDict())
+        dict = n.toDict()
+        self.refreshTrackUI(dict)
+        self.refreshTrackwayUI(dict)
 
 #___________________________________________________________________________________________________ _handleNoteLE
     def _handleNoteLE(self):
@@ -951,7 +963,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.selectTrack(p)
         p.updateFromNode() # use this opportunity to capture the current state of the Maya node
 
-        self.refreshTrackUI(p.toDict())
+        dict = p.toDict()
+        self.refreshTrackUI(dict)
+        self.refreshTrackwayUI(dict)
 
 #___________________________________________________________________________________________________ _handlePullBtn
     def _handlePullBtn(self):
@@ -974,7 +988,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         if len(selectedTracks) == 1:
             self.refreshTrackUI(dict)
-            self.setCameraFocus()
         else:
             self.clearTrackUI()
 
@@ -1039,7 +1052,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         while track:
              nodes.append(self.getTrackNode(track))
              track = self.getNextTrack(track)
-        cmds.select(nodes)
+
+        if len(nodes) > 0:
+            cmds.select(nodes)
 
 #___________________________________________________________________________________________________ _handleSelectAllBefore
     def _handleSelectAllBefore(self):
@@ -1053,7 +1068,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         while track:
             nodes.append(self.getTrackNode(track))
             track = self.getPreviousTrack(track)
-        cmds.select(nodes)
+
+        if len(nodes) > 0:
+            cmds.select(nodes)
 
 #___________________________________________________________________________________________________ _handleSelectBtn
     def _handleSelectBtn(self):
