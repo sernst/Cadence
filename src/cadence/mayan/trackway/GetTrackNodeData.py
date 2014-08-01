@@ -11,11 +11,11 @@ class GetTrackNodeData(NimbleScriptBase):
     """ A remote script class for locating a track based on its uid property and returning its
         property data.
 
-        uid:        UID to find within the Maya scene nodes.
+        uid:            UID to find within the Maya scene nodes.
         [nodeName]:     Name of the nodeName for the specified uid if one has been cached.
 
-        <- success      | Boolean specifying if the find operation was able to locate a nodeName with
-                            the specified uid argument.
+        <- success      | Boolean specifying if the find operation was able to locate a nodeName
+                            with the specified uid argument.
         <- [nodeName]   | Node name of the transform nodeName found with the matching uid if such a
                             nodeName was found. """
 

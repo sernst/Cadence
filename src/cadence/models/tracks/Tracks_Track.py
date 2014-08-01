@@ -33,6 +33,15 @@ class Tracks_Track(TracksDefault):
     def nodeName(self, value):
         self.putTransient('nodeName', value)
 
+#___________________________________________________________________________________________________ inMaya
+    @property
+    def inMaya(self):
+        """ A boolean that returns true if the track is loaded into Maya (i.e., there is a track
+            node with that UID). """
+        return
+
+
+
 #===================================================================================================
 #                                                                                     P U B L I C
 
@@ -61,7 +70,7 @@ class Tracks_Track(TracksDefault):
     def updateNode(self):
         """ Sends values to Maya nodeName representation of the track to synchronize the values in
             the model and the nodeName. """
-        conn = nimble.getConnection()
+        conn   = nimble.getConnection()
         result = conn.runPythonModule(
             UpdateTrackNode,
             uid=self.uid,
@@ -77,7 +86,7 @@ class Tracks_Track(TracksDefault):
     def updateFromNode(self):
         """ Retrieves Maya values from the nodeName representation of the track and updates this
             model instance with those values. """
-        conn = nimble.getConnection()
+        conn   = nimble.getConnection()
         result = conn.runPythonModule(
             GetTrackNodeData,
             uid=self.uid,

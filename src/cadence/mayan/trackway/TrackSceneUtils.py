@@ -35,6 +35,7 @@ class TrackSceneUtils(object):
             orientation (rotationY); other attributes are adjusted only through the UI. """
         if not trackSetNode:
             trackSetNode = TrackSceneUtils.getTrackSetNode()
+
         if not trackSetNode:
             return None
 
@@ -371,7 +372,7 @@ class TrackSceneUtils(object):
         if props:
             cls.setTrackProps(node, props)
         else:
-            print 'Trying to create track node without props?  But we neeeeds them!'
+            print 'in createTrackNode:  no properties provided'
             return node
 
         # Add the new nodeName to the Cadence track scene set, color it, and we're done

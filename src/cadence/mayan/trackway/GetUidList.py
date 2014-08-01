@@ -24,7 +24,7 @@ class GetUidList(NimbleScriptBase):
         """ Fetches the nodes in the current trackSetNode, then for each such node, appends its UID
             to a list l which is then returned. """
         setNode = TrackSceneUtils.getTrackSetNode()
-        nodes = cmds.sets(setNode, q=True)
+        nodes   = cmds.sets(setNode, q=True)
 
         if len(nodes) == 0:
             self.puts(success=False, uidList=[])

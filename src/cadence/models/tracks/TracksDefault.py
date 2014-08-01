@@ -63,7 +63,7 @@ class TracksDefault(PyGlassModelsDefault):
     _displayFlags        = sqla.Column(sqla.Integer,     default=0)
 
     # Entry is dead for deletion during cleanup/export
-    _dead                = sqla.Column(sqla.Boolean,      default=False)
+    _dead                = sqla.Column(sqla.Boolean,     default=False)
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
@@ -163,8 +163,8 @@ class TracksDefault(PyGlassModelsDefault):
                 out[enum.maya] = getattr(self, enum.name)
 
         # load up the values of left and pes so that they can be used in assigning shaders
-        out[TrackPropEnum.LEFT.name] = getattr(self, TrackPropEnum.LEFT.name)
-        out[TrackPropEnum.PES.name]  = getattr(self, TrackPropEnum.PES.name)
+        out[TrackPropEnum.LEFT.name]   = getattr(self, TrackPropEnum.LEFT.name)
+        out[TrackPropEnum.PES.name]    = getattr(self, TrackPropEnum.PES.name)
         out[TrackPropEnum.HIDDEN.name] = getattr(self, TrackPropEnum.HIDDEN.name)
 
         # If the width (or length) attribute is still zero, initialize width (or length) to the
