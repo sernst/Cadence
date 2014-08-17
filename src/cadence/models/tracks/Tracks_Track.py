@@ -4,6 +4,8 @@
 
 import nimble
 
+from cadence.enum.SourceFlagsEnum import SourceFlagsEnum
+
 from cadence.mayan.trackway import GetTrackNodeData
 from cadence.mayan.trackway import UpdateTrackNode
 from cadence.mayan.trackway import CreateTrackNode
@@ -33,13 +35,33 @@ class Tracks_Track(TracksDefault):
     def nodeName(self, value):
         self.putTransient('nodeName', value)
 
+#___________________________________________________________________________________________________ GS: completed
+    @property
+    def completed(self):
+        """ Getter returns a boolean indicating whether the 'completed' source flag is set. """
+        flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
+        print 'completed flag = %s' % SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED)
+
+        return SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED)
+    @completed.setter
+    def completed(self, value):
+        """ Setter sets or clears the 'completed' source flag, depending on the boolean value. """
+        # preserve the state of any other flags
+        flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
+
+        if value:
+            print 'setting completed flag'
+            self.sourceFlags = SourceFlagsEnum.set(flags, value)
+        else:
+            print 'clearing completed flag'
+            self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.COMPLETED)
+
 #___________________________________________________________________________________________________ inMaya
     @property
     def inMaya(self):
         """ A boolean that returns true if the track is loaded into Maya (i.e., there is a track
             node with that UID). """
         return
-
 
 
 #===================================================================================================
