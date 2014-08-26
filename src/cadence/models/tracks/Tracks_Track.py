@@ -40,8 +40,6 @@ class Tracks_Track(TracksDefault):
     def completed(self):
         """ Getter returns a boolean indicating whether the 'completed' source flag is set. """
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
-        print 'completed flag = %s' % SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED)
-
         return SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED)
     @completed.setter
     def completed(self, value):
@@ -50,11 +48,45 @@ class Tracks_Track(TracksDefault):
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
         if value:
-            print 'setting completed flag'
             self.sourceFlags = SourceFlagsEnum.set(flags, value)
         else:
-            print 'clearing completed flag'
             self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.COMPLETED)
+
+#___________________________________________________________________________________________________ GS: locked
+    @property
+    def locked(self):
+        """ Getter returns a boolean indicating whether the 'locked' source flag is set. """
+        flags = self.sourceFlags & ~SourceFlagsEnum.LOCKED
+        return SourceFlagsEnum.get(flags, SourceFlagsEnum.LOCKED)
+    @locked.setter
+    def locked(self, value):
+        """ Setter sets or clears the 'locked' source flag, depending on the boolean value. """
+        # preserve the state of any other flags
+        flags = self.sourceFlags & ~SourceFlagsEnum.LOCKED
+
+        if value:
+            self.sourceFlags = SourceFlagsEnum.set(flags, value)
+        else:
+            self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.LOCKED)
+
+#___________________________________________________________________________________________________ GS: marked
+    @property
+    def marked(self):
+        """ Getter returns a boolean indicating whether the 'marked' source flag is set. """
+        flags = self.sourceFlags & ~SourceFlagsEnum.MARKED
+        return SourceFlagsEnum.get(flags, SourceFlagsEnum.MARKED)
+    @marked.setter
+    def marked(self, value):
+        """ Setter sets or clears the 'marked' source flag, depending on the boolean value. """
+        # preserve the state of any other flags
+        flags = self.sourceFlags & ~SourceFlagsEnum.MARKED
+
+        if value:
+            print 'setting marked flag'
+            self.sourceFlags = SourceFlagsEnum.set(flags, value)
+        else:
+            print 'clearing marked flag'
+            self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.MARKED)
 
 #___________________________________________________________________________________________________ inMaya
     @property

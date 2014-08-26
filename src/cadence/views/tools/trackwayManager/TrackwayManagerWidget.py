@@ -102,8 +102,11 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.rotationUncertaintySbx.valueChanged.connect(self.handleRotationUncertaintySbx)
 
         self.completedCkbx.clicked.connect(self.handleCompletedCkbx)
-        self.markedCkbx.clicked.connect(self.handleMarkedCkbx)
         self.hiddenCkbx.clicked.connect(self.handleHiddenCkbx)
+        self.lockedCkbx.clicked.connect(self.handleLockedCkbx)
+        self.lockedCkbx.stateChanged.connect(self.handleLockedCkbx)
+        self.markedCkbx.clicked.connect(self.handleMarkedCkbx)
+
 
         self.lengthRatioSbx.valueChanged.connect(self.handleLengthRatioSbx)
         self.noteLE.textChanged.connect(self.handleNoteLE)
@@ -190,6 +193,30 @@ class TrackwayManagerWidget(PyGlassWidget):
 #===================================================================================================
 #                                                                                        P U B L I C
 #
+#___________________________________________________________________________________________________ enableTrackUI
+    def enableTrackUI(self, value):
+        """ The track ui is either enabled (if passed True) or disabled (if passed False). """
+        self.widthLbl.setEnabled(value)
+        self.widthSbx.setEnabled(value)
+        self.widthUncertaintySbx.setEnabled(value)
+
+        self.lengthLbl.setEnabled(value)
+        self.lengthSbx.setEnabled(value)
+        self.lengthUncertaintySbx.setEnabled(value)
+
+        self.rotationSbx.setEnabled(value)
+        self.rotationUncertaintySbx.setEnabled(value)
+
+        self.completedCkbx.setEnabled(value)
+        self.markedCkbx.setEnabled(value)
+        self.hiddenCkbx.setEnabled(value)
+
+        self.lengthRatioSbx.setEnabled(value)
+
+        self.noteLE.setEnabled(value)
+        self.trackNameLE.setEnabled(value)
+        self.trackIndexLE.setEnabled(value)
+
 #___________________________________________________________________________________________________ getAllTracksInMaya
     def getAllTracksInMaya(self):
         """ Returns a list of all tracks that are currently loaded into Maya. """
@@ -201,7 +228,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             tracks.append(self.getTrackByUid(uid))
         return tracks if len(tracks) > 0 else None
 
-#___________________________________________________________________________________________________ get Tracks
+#___________________________________________________________________________________________________ getCompletedTracks
     def getCompletedTracks(self, completed, uidList=None):
         """ Returns a list of all tracks within the scene that are either completed or incomplete,
             depending on the boolean kwarg. """
@@ -520,6 +547,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.rotationUncertaintySbx.setValue(0)
 
         self.completedCkbx.setChecked(False)
+        self.lockedCkbx.setChecked(False)
         self.markedCkbx.setChecked(False)
         self.hiddenCkbx.setChecked(False)
 
@@ -551,15 +579,21 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.widthUncertaintySbx.setValue(100.0*dict[TrackPropEnum.WIDTH_UNCERTAINTY.maya])
         self.lengthUncertaintySbx.setValue(100.0*dict[TrackPropEnum.LENGTH_UNCERTAINTY.maya])
 
-        self.rotationSbx.setValue(dict[TrackPropEnum.ROTATION.name])
+        rotation = dict[TrackPropEnum.ROTATION.name]
+        if rotation < 0.0:
+            rotation += 360.0
+        self.rotationSbx.setValue(rotation)
+
         self.rotationUncertaintySbx.setValue(dict[TrackPropEnum.ROTATION_UNCERTAINTY.name])
 
-        # set the checkboxes 'Completed' and 'Marked'
+        # set the checkboxes 'Completed', 'Locked', and 'Marked' according to the source flags
         f = dict[TrackPropEnum.SOURCE_FLAGS.name]
-
         self.completedCkbx.setChecked(SourceFlagsEnum.get(f, SourceFlagsEnum.COMPLETED))
 
+        self.lockedCkbx.setChecked(SourceFlagsEnum.get(f, SourceFlagsEnum.LOCKED))
         self.markedCkbx.setChecked(SourceFlagsEnum.get(f, SourceFlagsEnum.MARKED))
+
+        # likewise the special 'Hidden' attribute
         self.hiddenCkbx.setChecked(dict[TrackPropEnum.HIDDEN.name])
 
         self.lengthRatioSbx.setValue(dict[TrackPropEnum.LENGTH_RATIO.name])
@@ -573,6 +607,15 @@ class TrackwayManagerWidget(PyGlassWidget):
         name   = (u'L' if left else u'R') + (u'P' if pes else u'M') + number if number else u'-'
         self.trackNameLE.setText(name)
         self.trackIndexLE.setText(unicode(index))
+
+        # now, depending on whether this track is locked or unlocked, disable/enable the UI
+        locked = SourceFlagsEnum.get(f, SourceFlagsEnum.LOCKED)
+        if locked:
+            self.enableTrackUI(False)
+        else:
+            self.enableTrackUI(True)
+
+
 
 #___________________________________________________________________________________________________ refreshTrackwayUI
     def refreshTrackwayUI(self, dict):
@@ -641,26 +684,24 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             return
 
+        if len(selectedTracks) != 1:
+            return
+
         self.getSession()
 
-        for  t in selectedTracks:
-            t.updateFromNode() # use this opportunity to capture the current state of the Maya node
-            #
-            # # preserve the other flags
-            # flags = t.sourceFlags & ~SourceFlagsEnum.COMPLETED
-            #
-            # if self.completedCkbx.isChecked():
-            #     f = SourceFlagsEnum.set(flags, SourceFlagsEnum.COMPLETED)
-            # else:
-            #     f = SourceFlagsEnum.clear(flags, SourceFlagsEnum.COMPLETED)
-            #
-            # t.sourceFlags = flags | f
+        t = selectedTracks[0]
+        t.updateFromNode() # use this opportunity to capture the current state of the Maya node
 
-            t.completed = self.completedCkbx.isChecked()
-            t.updateNode()
+        t.completed = self.completedCkbx.isChecked()
 
+        t.updateNode()
         self.closeSession(commit=True)
         self.refreshTrackCountsUI()
+
+        # finally, if is set to completed, then lock it (and that requires unlocking to set back
+        # to uncompleted state
+        if self.completedCkbx.isChecked():
+            self.lockedCkbx.setChecked(True)
 
 #___________________________________________________________________________________________________ handleCountsBtn
     def handleCountsBtn(self):
@@ -760,6 +801,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         n.lengthRatio = t.lengthRatio
         n.rotation    = t.rotation
         n.completed   = False
+        n.locked      = False
 
         # update the Maya node and the UI
         n.updateNode()
@@ -1170,6 +1212,42 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.setCameraFocus()
         self.closeSession(commit=True)
 
+#___________________________________________________________________________________________________ handleLockedCkbx
+    def handleLockedCkbx(self):
+        """ The selected track has its LOCKED flag set (or cleared). """
+        selectedTracks = self.getSelectedTracks()
+        if not selectedTracks:
+            return
+
+        if len(selectedTracks) != 1:
+            return
+
+        self.getSession()
+
+        t = selectedTracks[0]
+        t.updateFromNode() # use this opportunity to capture the current state of the Maya node
+
+        # preserve the other flags
+        flags = t.sourceFlags & ~SourceFlagsEnum.LOCKED
+
+        locked = self.lockedCkbx.isChecked()
+        if locked:
+            f = SourceFlagsEnum.set(flags, SourceFlagsEnum.LOCKED)
+        else:
+            f = SourceFlagsEnum.clear(flags, SourceFlagsEnum.LOCKED)
+
+        t.sourceFlags = flags | f
+
+        if locked:
+            self.enableTrackUI(False)
+        else:
+            self.enableTrackUI(True)
+
+        # when I get the property's setter debugged, the above can be replaced with simply:
+        #t.locked = self.lockedCkbx.isChecked()
+        t.updateNode()
+        self.closeSession(commit=True)
+
 #___________________________________________________________________________________________________ handleMarkedCkbx
     def handleMarkedCkbx(self):
         """ This track has its MARKED source flag set or cleared, based on the value of the
@@ -1182,6 +1260,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         self.getSession()
+
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
 
@@ -1194,6 +1273,9 @@ class TrackwayManagerWidget(PyGlassWidget):
             f = SourceFlagsEnum.clear(flags, SourceFlagsEnum.MARKED)
 
         t.sourceFlags = flags | f
+
+        # when I get the property's setter debugged, the above can be replaced with simply:
+        # t.marked = self.markedCkbx.isChecked()
         t.updateNode()
         self.closeSession(commit=True)
 
@@ -1610,14 +1692,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         if tracks is None:
             return
 
-        nodes = list()
-        for t in tracks:
-            nodes.append(self.getTrackNode(t))
-        if len(nodes) == 0:
-            return
-
-        cmds.select(nodes)
-
         # The path of track series is visualized as a piecewise-linear curve added to the PATH_LAYER
         path  = self.createPathFromTrackSeries(tracks)
         curve = self.createCurve(path)
@@ -1625,6 +1699,14 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.createLayer(layer)
         cmds.editDisplayLayerMembers(layer, curve, noRecurse=True)
 
+        # Next, select the Maya track nodes
+        nodes = list()
+        for t in tracks:
+            nodes.append(self.getTrackNode(t))
+        if len(nodes) == 0:
+            return
+
+        cmds.select(nodes)
 
 #___________________________________________________________________________________________________ handleSelectSeriesAfter
     def handleSelectSeriesAfter(self):

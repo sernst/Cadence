@@ -1441,22 +1441,22 @@
             <property name="contextMenuPolicy">
              <enum>Qt::DefaultContextMenu</enum>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_16" stretch="1,1,1,0,2,0">
+            <layout class="QHBoxLayout" name="horizontalLayout_16" stretch="1,1,1,1">
              <property name="margin">
               <number>0</number>
              </property>
              <item>
-              <spacer name="horizontalSpacer">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+              <widget class="QCheckBox" name="lockedCkbx">
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <italic>true</italic>
+                </font>
                </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
+               <property name="text">
+                <string>Locked</string>
                </property>
-              </spacer>
+              </widget>
              </item>
              <item>
               <widget class="QCheckBox" name="markedCkbx">
@@ -1490,26 +1490,6 @@
                </property>
                <property name="autoRepeatInterval">
                 <number>100</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="Line" name="line_2">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
                </property>
               </widget>
              </item>

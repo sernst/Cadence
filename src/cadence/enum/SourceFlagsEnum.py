@@ -13,6 +13,7 @@ class SourceFlagsEnum(object):
     CLEARED   = 0
     COMPLETED = 1<<0
     MARKED    = 1<<1
+    LOCKED    = 1<<2
 
 #___________________________________________________________________________________________________ clearAll
     @classmethod
