@@ -296,7 +296,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             query   = session.query(model)
             batch   = uidList[i*size :]
             query   = query.filter(model.uid.in_(batch))
-            query   = query.filter(model.sourceFlags.op('&')(SourceFlagsEnum.COMPLETED) == state)
+            query   = query.filter(model.sourceFlags.op('&')(flag) == state)
             entries += query.all()
             self.closeSession(commit=False)
 
@@ -1613,6 +1613,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         # so we have a list of UIDs of those track currently in the Maya scene
         tracks = self.getFlaggedTracks(uidList, SourceFlagsEnum.MARKED, marked)
 
+        if not tracks:
+            return
+
+        print 'in handleSelectMarked:  %s selected' % len(tracks)
         nodes= []
         for t in tracks:
             nodes.append(self.getTrackNode(t))
