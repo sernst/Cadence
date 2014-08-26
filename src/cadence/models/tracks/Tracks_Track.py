@@ -48,7 +48,7 @@ class Tracks_Track(TracksDefault):
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
         if value:
-            self.sourceFlags = SourceFlagsEnum.set(flags, value)
+            self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.COMPLETED)
         else:
             self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.COMPLETED)
 
@@ -65,7 +65,7 @@ class Tracks_Track(TracksDefault):
         flags = self.sourceFlags & ~SourceFlagsEnum.LOCKED
 
         if value:
-            self.sourceFlags = SourceFlagsEnum.set(flags, value)
+            self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.LOCKED)
         else:
             self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.LOCKED)
 
@@ -82,10 +82,8 @@ class Tracks_Track(TracksDefault):
         flags = self.sourceFlags & ~SourceFlagsEnum.MARKED
 
         if value:
-            print 'setting marked flag'
-            self.sourceFlags = SourceFlagsEnum.set(flags, value)
+            self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.MARKED)
         else:
-            print 'clearing marked flag'
             self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.MARKED)
 
 #___________________________________________________________________________________________________ inMaya

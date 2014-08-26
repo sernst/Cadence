@@ -1227,24 +1227,16 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
 
-        # preserve the other flags
-        flags = t.sourceFlags & ~SourceFlagsEnum.LOCKED
+        t.locked = self.lockedCkbx.isChecked()
 
-        locked = self.lockedCkbx.isChecked()
-        if locked:
-            f = SourceFlagsEnum.set(flags, SourceFlagsEnum.LOCKED)
-        else:
-            f = SourceFlagsEnum.clear(flags, SourceFlagsEnum.LOCKED)
-
-        t.sourceFlags = flags | f
-
-        if locked:
+        if t.locked:
             self.enableTrackUI(False)
         else:
             self.enableTrackUI(True)
 
-        # when I get the property's setter debugged, the above can be replaced with simply:
-        #t.locked = self.lockedCkbx.isChecked()
+        dict = t.toDict()
+        self.refreshTrackUI(dict)
+
         t.updateNode()
         self.closeSession(commit=True)
 
@@ -1264,18 +1256,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
 
-        # preserve the other flags
-        flags = t.sourceFlags & ~SourceFlagsEnum.MARKED
-
-        if self.markedCkbx.isChecked():
-            f = SourceFlagsEnum.set(flags, SourceFlagsEnum.MARKED)
-        else:
-            f = SourceFlagsEnum.clear(flags, SourceFlagsEnum.MARKED)
-
-        t.sourceFlags = flags | f
-
-        # when I get the property's setter debugged, the above can be replaced with simply:
-        # t.marked = self.markedCkbx.isChecked()
+        t.marked = self.markedCkbx.isChecked()
         t.updateNode()
         self.closeSession(commit=True)
 
