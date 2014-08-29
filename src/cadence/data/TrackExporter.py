@@ -65,8 +65,7 @@ class TrackExporter(object):
                         results.append(diff)
 
                         self.logger.write(
-                            u'<div>MODIFIED: %s</div>' % DictUtils.prettyPrint(
-                                trackStore.toDict(uniqueOnly=True)))
+                            u'<div>MODIFIED: %s</div>' % trackStore.fingerprint)
                 else:
                     results.append(trackStore.toDict())
 
