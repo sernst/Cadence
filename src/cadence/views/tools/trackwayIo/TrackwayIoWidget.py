@@ -17,7 +17,6 @@ from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from pyglass.elements.DataListWidgetItem import DataListWidgetItem
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
-import nimble
 from cadence.data.TrackExporterRemoteThread import TrackExporterRemoteThread
 from cadence.data.TrackLinkageRemoteThread import TrackLinkageRemoteThread
 
@@ -28,6 +27,9 @@ from cadence.mayan.trackway.plugin import CreateTrackNodes
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ TrackwayIoWidget
+from cadence.util.threading.RunPythonModuleThread import RunPythonModuleThread
+
+
 class TrackwayIoWidget(PyGlassWidget):
     """ User interface class for handling track data IO from any of the possible sources and
         saving them to, or loading them from the database. """
@@ -52,6 +54,9 @@ class TrackwayIoWidget(PyGlassWidget):
         self.updateLinksBtn.clicked.connect(self._handleUpdateLinks)
         self.databaseReplaceBtn.clicked.connect(self._handleReplaceDatabase)
 
+        PyGlassElementUtils.registerCheckBox(
+            self, self.verboseDisplayCheck,
+            configSetting=UserConfigEnum.VERBOSE_IO_DISPLAY)
         PyGlassElementUtils.registerCheckBox(
             self, self.exportPrettyCheck,
             configSetting=UserConfigEnum.EXPORT_PRETTY)
@@ -139,7 +144,7 @@ class TrackwayIoWidget(PyGlassWidget):
 #===================================================================================================
 #                                                                                 H A N D L E R S
 
-#___________________________________________________________________________________________________ _handleLoadTracks
+#___________________________________________________________________________________________________ _handleRunIntegrityTests
     def _handleLoadTracks(self):
         self.mainWindow.showLoading(self, u'Loading Tracks')
 
@@ -167,17 +172,21 @@ class TrackwayIoWidget(PyGlassWidget):
             self.mainWindow.hideLoading(self)
             return
 
-        conn = nimble.getConnection()
-        result = conn.runPythonModule(
-            CreateTrackNodes,
-            trackList=trackList,
-            runInMaya=True)
+        thread = RunPythonModuleThread(
+            self, CreateTrackNodes, trackList=trackList, runInMaya=True)
+        thread.userData = {'count':count}
+        thread.execute(callback=self._handleTrackNodesCreated)
+
+#___________________________________________________________________________________________________ _handleTrackNodesCreated
+    def _handleTrackNodesCreated(self, data):
+        result = data['output']
+
         if not result.success:
             PyGlassBasicDialogManager.openOk(
                 parent=self, header=u'Load Error', message=u'Unable to load tracks')
         else:
             PyGlassBasicDialogManager.openOk(
-                parent=self, header=str(count) + ' Tracks Created')
+                parent=self, header=str(data['userData']['count']) + ' Tracks Created')
 
         self.mainWindow.hideLoading(self)
 
@@ -219,6 +228,7 @@ class TrackwayIoWidget(PyGlassWidget):
         self._thread = TrackImporterRemoteThread(
             parent=self,
             path=path,
+            verbose=self.verboseDisplayCheck.isChecked(),
             importType=importType,
             compressed=self.importCompressCheck.isChecked())
         self._thread.execute(

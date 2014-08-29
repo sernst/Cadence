@@ -28,6 +28,7 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
         self._path       = path
         self._session    = session
         self._importType = importType
+        self._verbose    = ArgsUtils.get('verbose', True, kwargs)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -41,7 +42,7 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
             if self._importType == self.CSV:
                 importer = TrackCsvImporter(self._path, logger=self._log)
             else:
-                importer = TrackJsonImporter(self._path, logger=self._log)
+                importer = TrackJsonImporter(self._path, logger=self._log, verbose=self._verbose)
 
             self._log.write(u'<h1>Beginning Import...</h1>')
             importer.read(session, compressed=self._compressed)

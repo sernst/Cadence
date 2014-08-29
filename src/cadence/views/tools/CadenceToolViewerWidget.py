@@ -1,9 +1,6 @@
 # CadenceToolViewerWidget.py
-# (C)2013
+# (C)2013-2014
 # Scott Ernst
-
-import os
-import markdown
 
 from PySide import QtGui
 
@@ -109,7 +106,7 @@ class CadenceToolViewerWidget(PyGlassWidget):
             return
 
         hasHelp = self._helpComm.loadContent(self._currentWidget)
-        self._helpBox.setVisible(hasHelp)
+        self._helpBox.setVisible(False)
         self._hasHelp = hasHelp
         self._header.toggleHelpButton(self._hasHelp)
 

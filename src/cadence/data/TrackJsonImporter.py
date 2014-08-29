@@ -21,13 +21,17 @@ class TrackJsonImporter(object):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, path =None, logger =None):
+    def __init__(self, path =None, logger =None, verbose =True):
         """Creates a new instance of TrackJsonImporter."""
+
+        self.verbose = verbose
+
         self._path          = path
         self._modified      = []
         self._missing       = []
         self._unresolvable  = []
         self._logger = logger
+
         if not logger:
             self._logger = Logger(self, printOut=True)
 
@@ -118,15 +122,17 @@ class TrackJsonImporter(object):
         if 'uid' in displayData:
             del displayData['uid']
 
-        self._logger.write(
-            (u'<div style="background-color:#FFFFFF;">'
+        logEntry = (u'<div style="background-color:#FFFFFF;">'
              + u'<span style="font-size:18px;color:#333333;font-weight:bold;">UPDATED:</span> '
              + u'<span style="color:#AA3333;">[uid: %s]</span> '
-             + u'<span style="color:#33AA33;">[fingerprint: %s]</span>'
-             + u'\n\t* %s</div>') % (
+             + u'<span style="color:#33AA33;">[fingerprint: %s]</span>') % (
                 trackStores[0].uid,
-                trackStores[0].fingerprint,
-                DictUtils.prettyPrint(displayData, u'\n\t* ')) )
+                trackStores[0].fingerprint)
+
+        if self.verbose:
+            logEntry += u'\n\t* %s</div>' % DictUtils.prettyPrint(displayData, u'\n\t* ')
+
+        self._logger.write(logEntry)
 
 #___________________________________________________________________________________________________ _getTrackByProps
     def _getTrackByProps(self, data, session, model):
