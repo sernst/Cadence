@@ -67,7 +67,7 @@ class TrackExporter(object):
                         self.logger.write(
                             u'<div>MODIFIED: %s</div>' % trackStore.fingerprint)
                 else:
-                    results.append(trackStore.toDict())
+                    results.append(track.toDict())
 
             index += 1
             if index in indices:
