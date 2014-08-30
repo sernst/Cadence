@@ -1614,9 +1614,12 @@ class TrackwayManagerWidget(PyGlassWidget):
         tracks = self.getFlaggedTracks(uidList, SourceFlagsEnum.MARKED, marked)
 
         if not tracks:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                'None',
+                'There are no marked tracks in this scene.')
             return
 
-        print 'in handleSelectMarked:  %s selected' % len(tracks)
         nodes= []
         for t in tracks:
             nodes.append(self.getTrackNode(t))
@@ -1979,8 +1982,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
             # get the list of tracks for this trackway (filtering on site, level, sector and name)
             trackway = self.getTrackway(uidList, trackwayName)
-
-            if len(trackway) > 0:
+            if trackway and len(trackway) > 0:
                 self.addTrackwayToLayer(layer, trackway)
 
         # add those trackway names to the combo box
