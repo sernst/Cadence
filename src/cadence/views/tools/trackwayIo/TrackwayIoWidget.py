@@ -91,7 +91,7 @@ class TrackwayIoWidget(PyGlassWidget):
 
             fl = QtGui.QListWidget(self)
             fl.itemSelectionChanged.connect(self._handleFilterChange)
-            fl.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+            fl.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
             fl.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
             flBoxLayout.addWidget(fl)
             f['index']  = index

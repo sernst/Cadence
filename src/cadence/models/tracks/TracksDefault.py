@@ -61,6 +61,8 @@ class TracksDefault(PyGlassModelsDefault):
     _flags               = sqla.Column(sqla.Integer,     default=0)
     _sourceFlags         = sqla.Column(sqla.Integer,     default=0)
     _displayFlags        = sqla.Column(sqla.Integer,     default=0)
+    _importFlags         = sqla.Column(sqla.Integer,     default=0)
+    _analysisFlags       = sqla.Column(sqla.Integer,     default=0)
 
     # Entry is dead for deletion during cleanup/export
     _dead                = sqla.Column(sqla.Boolean,     default=False)

@@ -10,7 +10,8 @@ from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
 from pyaid.reflection.Reflection import Reflection
 from pyaid.string.StringUtils import StringUtils
-
+from cadence.enum.ImportFlagsEnum import ImportFlagsEnum
+from cadence.enum.SnapshotFlagsEnum import SnapshotFlagsEnum
 from cadence.enum.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
@@ -24,6 +25,9 @@ class TrackCsvImporter(object):
 
     # Used to break trackway specifier into separate type and number entries
     _TRACKWAY_PATTERN = re.compile('(?P<type>[^0-9\s\t]+)[\s\t]*(?P<number>[^\(\s\t]+)')
+
+    _UNDERPRINT_IGNORE_TRACKWAY_STR = u':UTW'
+    _OVERPRINT_IGNORE_TRACKWAY_STR = u':OTW'
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, path =None, logger =None):
@@ -92,6 +96,8 @@ class TrackCsvImporter(object):
         """ From the spreadsheet data dictionary representing raw track data, this method creates
             a track entry in the database. """
 
+        removeAndSkip = False
+
         #-------------------------------------------------------------------------------------------
         # MISSING
         #       Try to determine if the missing value has been set for this row data. If so and it
@@ -100,7 +106,7 @@ class TrackCsvImporter(object):
         try:
             missingValue = csvRowData[TrackCsvColumnEnum.MISSING.name].strip()
             if missingValue:
-                return False
+                removeAndSkip = True
         except Exception, err:
             pass
 
@@ -114,9 +120,10 @@ class TrackCsvImporter(object):
 
         model = Tracks_TrackStore.MASTER
         ts = model()
+        ts.importFlags = 0
 
         try:
-            ts.site  = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip().upper()
+            ts.site = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip().upper()
         except Exception, err:
             self._writeError({
                 'message':u'Missing track site',
@@ -125,7 +132,7 @@ class TrackCsvImporter(object):
             return False
 
         try:
-            year = csvRowData.get(TrackCsvColumnEnum.CAST_DATE.name)
+            year = csvRowData.get(TrackCsvColumnEnum.MEASURED_DATE.name)
             if not year:
                 year = u'2014'
             else:
@@ -170,13 +177,26 @@ class TrackCsvImporter(object):
         # TRACKWAY
         #       Parse the trackway entry into type and number values
         try:
-            test = csvRowData.get(TrackCsvColumnEnum.TRACKWAY.name).strip()
+            test = csvRowData.get(TrackCsvColumnEnum.TRACKWAY.name).strip().upper()
         except Exception, err:
             self._writeError({
                 'message':u'Missing trackway',
                 'data':csvRowData,
                 'index':csvIndex })
             return False
+
+        # If the trackway contains an ignore pattern then return without creating the track.
+        # This is used for tracks in the record that are actually under-prints from a higher
+        # level recorded in the spreadsheet only for catalog reference.
+        testIndexes = [
+            test.find(self._UNDERPRINT_IGNORE_TRACKWAY_STR),
+            test.find(self._OVERPRINT_IGNORE_TRACKWAY_STR) ]
+
+        testParensIndex = test.find('(')
+        for testIndex in testIndexes:
+            if testIndex != -1 and (testParensIndex == -1 or testParensIndex > testIndex):
+                removeAndSkip = True
+                break
 
         result = self._TRACKWAY_PATTERN.search(test)
         try:
@@ -204,123 +224,309 @@ class TrackCsvImporter(object):
             return False
 
         #-------------------------------------------------------------------------------------------
-        # MEASUREMENTS
-        #       Parse the length, width, and depth measurements. If any are missing then assign
-        #       zero values as the default, which will be adjusted later in Maya
-        if ts.pes:
-            wide      = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_WIDTH)
-            wideGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_WIDTH_GUESS)
-            longVal   = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_LENGTH)
-            longGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_LENGTH_GUESS)
-            deep      = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_DEPTH)
-            deepGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.PES_DEPTH_GUESS)
-        else:
-            wide      = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_WIDTH)
-            wideGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_WIDTH_GUESS)
-            longVal   = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_LENGTH)
-            longGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_LENGTH_GUESS)
-            deep      = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_DEPTH)
-            deepGuess = self._getStrippedRowData(csvRowData, TrackCsvColumnEnum.MANUS_DEPTH_GUESS)
-
-        if not wide and not wideGuess:
-            wide = 0
-            wideGuess = 0
-
-        if not longVal and not longGuess:
-            longVal = 0
-            longGuess = 0
-
-        if not deep and not deepGuess:
-            deep = 0
-            deepGuess = 0
-
-        #-------------------------------------------------------------------------------------------
-        # SKIP
-        #       Redundant tracks are skipped. This has been disabled to keep the database record
-        #       aligned with the original spreadsheet. Skipping will be handled internally instead
-        #       of at import time.
-        ##doSkip = ts.equivalentProps(
-        ##    site=u'BEB', level=u'515', trackwayType=u'S', trackwayNumber=u'3', year=u'2006')
-        ##if doSkip and (ts.number == u'1' or (ts.number == u'2' and ts.left and ts.pes)):
-        ##    self._logger.write(u'SKIPPED: ' + DictUtils.prettyPrint(ts.toDict()))
-        ##    return False
-
-        #-------------------------------------------------------------------------------------------
         # FIND EXISTING
         #       Use data set above to attempt to load the track database entry
         fingerprint = ts.fingerprint
-        existing    = ts.findExistingTracks(session)
-        if existing or fingerprint in self.fingerprints:
-            if not existing:
-                existing = self.fingerprints[fingerprint]
+        existingStore = ts.findExistingTracks(session)
+        if existingStore and not isinstance(existingStore, Tracks_TrackStore):
+            existingStore = existingStore[0]
+
+        if (existingStore and existingStore.index != csvIndex) or fingerprint in self.fingerprints:
+            if not existingStore:
+                existingStore = self.fingerprints[fingerprint]
 
             self._writeError({
-                'message':u'Ambiguous track entry [#%s -> #%s]' % (csvIndex, existing.index),
+                'message':u'Ambiguous track entry [#%s -> #%s]' % (csvIndex, existingStore.index),
                 'data':csvRowData,
-                'existing':existing,
+                'existing':existingStore,
                 'index':csvIndex })
             return False
+
+        #-------------------------------------------------------------------------------------------
+        # REMOVE MISSING/SKIPPED
+        #       If the track is missing or should be skipped for some reason remove any existing
+        #       entries from the database, which may exist due to previous imports that handled
+        #       the import process differently.
+        if removeAndSkip:
+            t = None
+            if existingStore:
+                t = existingStore.getMatchingTrack(session)
+                session.delete(existingStore)
+
+            if t is None:
+                t = ts.getMatchingTrack(session)
+
+            if t is not None:
+                session.delete(t)
+
+            if existingStore or t:
+                self._logger.write(u'<div>REMOVED TRACK: "%s"</div>' % fingerprint)
+            return False
+
         self.fingerprints[fingerprint] = ts
 
-        if existing:
-            ts = existing[0]
+        if existingStore:
+            ts = existingStore
         else:
             session.add(ts)
             session.flush()
 
+        existing = ts.getMatchingTrack(session)
+        if existing is None:
+            model = Tracks_Track.MASTER
+            t = model()
+            t.uid = ts.uid
+            t.fromDict(ts.toDiffDict(t.toDict()))
+            session.add(t)
+            session.flush()
+        else:
+            t = existing
+
+        t.indx = csvIndex
         ts.index = csvIndex
-        ts.snapshot = JSON.asString(csvRowData)
+
+        TCCE = TrackCsvColumnEnum
+        IFE  = ImportFlagsEnum
+
+        #-------------------------------------------------------------------------------------------
+        # CSV PROPERTY CLEANUP
+        #       Cleanup and format additional CSV values before saving the csv data to the track's
+        #       snapshot.
+        removeNonColumns = [
+            TrackCsvColumnEnum.PRESERVED.name,
+            TrackCsvColumnEnum.CAST.name,
+            TrackCsvColumnEnum.OUTLINE_DRAWING.name]
+        for columnName in removeNonColumns:
+            if columnName in csvRowData:
+                testValue = csvRowData[columnName].strip().upper()
+                if testValue.startswith('NON'):
+                    del csvRowData[columnName]
+
+        # Create a snapshot that only includes a subset of properties that are flagged to be
+        # included in the database snapshot entry
+        snapshot = dict()
+        for column in Reflection.getReflectionList(TrackCsvColumnEnum):
+            # Exclude values that are marked in the enumeration as not to be included
+            if not column.snapshot or column.name not in csvRowData:
+                continue
+            snapshot[column.name] = csvRowData[column.name]
 
         #-------------------------------------------------------------------------------------------
         # WIDTH
         #       Parse the width into a numerical value and assign appropriate default uncertainty
         try:
-            ts.widthMeasured     = 0.01*float(wide if wide else wideGuess)
-            ts.widthUncertainty  = 0.05 if wideGuess else 0.03
+            ts.widthMeasured = 0.01*float(self._collapseManusPesProperty(
+                ts, csvRowData,
+                TCCE.PES_WIDTH, TCCE.PES_WIDTH_GUESS,
+                TCCE.MANUS_WIDTH, TCCE.MANUS_WIDTH_GUESS,
+                '0', IFE.HIGH_WIDTH_UNCERTAINTY, IFE.NO_WIDTH ))
+
+            t.widthMeasured = ts.widthMeasured
+
+            if (not existing and not existingStore) or t.widthUncertainty == 0:
+                ts.widthUncertainty = 0.05 if (ts.importFlags & IFE.HIGH_WIDTH_UNCERTAINTY) else 0.03
+                t.widthUncertainty = ts.widthUncertainty
+
         except Exception, err:
+            print Logger().echoError(u'WIDTH PARSE ERROR:', err)
             self._writeError({
-                'message':u'Width parse error: ' + unicode(wide if wide else wideGuess),
+                'message':u'Width parse error',
                 'data':csvRowData,
+                'error':err,
                 'index':csvIndex })
-            ts.widthMeasured    = 0.0
-            ts.widthUncertainty = 0.05
+
+            ts.widthMeasured = 0.0
+            if not existingStore:
+                ts.widthUncertainty = 0.05
 
         #-------------------------------------------------------------------------------------------
         # LENGTH
         #       Parse the length into a numerical value and assign appropriate default uncertainty
         try:
-            ts.lengthMeasured    = 0.01*float(longVal if longVal else longGuess)
-            ts.lengthUncertainty = 0.05 if longGuess else 0.05
+            ts.lengthMeasured = 0.01*float(self._collapseManusPesProperty(
+                ts, csvRowData,
+                TCCE.PES_LENGTH, TCCE.PES_LENGTH_GUESS,
+                TCCE.MANUS_WIDTH, TCCE.MANUS_WIDTH_GUESS,
+                '0', ImportFlagsEnum.HIGH_LENGTH_UNCERTAINTY, ImportFlagsEnum.NO_LENGTH ))
+
+            t.lengthMeasured = ts.lengthMeasured
+
+            if (not existing and not existingStore) or t.lengthUncertainty == 0:
+                ts.lengthUncertainty = 0.05 if (ts.importFlags & IFE.HIGH_LENGTH_UNCERTAINTY) else 0.03
+                t.lengthUncertainty = ts.lengthUncertainty
+
         except Exception, err:
+            print Logger().echoError(u'LENGTH PARSE ERROR:', err)
             self._writeError({
-                'message':u'Length parse error: ' + unicode(longVal if longVal else longGuess),
+                'message':u'Length parse error',
                 'data':csvRowData,
+                'error':err,
                 'index':csvIndex })
-            ts.lengthMeasured    = 0.0
-            ts.lengthUncertainty = 0.05
+
+            ts.lengthMeasured = 0.0
+            if not existingStore:
+                ts.lengthUncertainty = 0.05
 
         #-------------------------------------------------------------------------------------------
         # DEPTH
         #       Parse the depth into a numerical value and assign appropriate default uncertainty
         try:
-            ts.depthMeasured     = 0.01*float(deep if deep else deepGuess)
-            ts.depthUncertainty  = 0.05 if deepGuess else 0.03
-        except Exception, err:
-            ts.depthMeasured    = 0.0
-            ts.depthUncertainty = 0.05
+            ts.depthMeasured = 0.01*float(self._collapseManusPesProperty(
+                ts, csvRowData,
+                TCCE.PES_DEPTH, TCCE.PES_DEPTH_GUESS,
+                TCCE.MANUS_DEPTH, TCCE.MANUS_DEPTH_GUESS,
+                '0', IFE.HIGH_DEPTH_UNCERTAINTY, 0 ))
 
-        t = ts.getMatchingTrack(session)
-        if t is None:
-            model = Tracks_Track.MASTER
-            t = model()
-            t.uid = ts.uid
-            t.fromDict(ts.toDict())
-            session.add(t)
-            session.flush()
-            self.created.append(t)
-        else:
-            t.fromDict(ts.toDiffDict(t.toDict()))
+            t.depthMeasured = ts.depthMeasured
+
+            if (not existing and not existingStore) or t.depthUncertainty == 0:
+                ts.depthUncertainty = 0.05 if IFE.HIGH_DEPTH_UNCERTAINTY else 0.03
+                t.depthUncertainty = ts.depthUncertainty
+
+        except Exception, err:
+            print Logger().echoError(u'DEPTH PARSE ERROR:', err)
+            ts.depthMeasured = 0.0
+
+            if not existingStore:
+                ts.depthUncertainty = 0.05
+
+
+        #-------------------------------------------------------------------------------------------
+        # ROTATION
+        #       Parse the rotation into a numerical value and assign appropriate default uncertainty
+        try:
+            ts.rotationMeasured = float(self._collapseLimbProperty(
+                ts, csvRowData,
+                TCCE.LEFT_PES_ROTATION, TCCE.LEFT_PES_ROTATION_GUESS,
+                TCCE.RIGHT_PES_ROTATION, TCCE.RIGHT_PES_ROTATION_GUESS,
+                TCCE.LEFT_MANUS_ROTATION, TCCE.LEFT_MANUS_ROTATION_GUESS,
+                TCCE.RIGHT_MANUS_ROTATION, TCCE.RIGHT_MANUS_ROTATION_GUESS,
+                '0', IFE.HIGH_ROTATION_UNCERTAINTY, 0 ))
+
+            t.rotationMeasured = ts.rotationMeasured
+
+            if not existingStore and not existing:
+                ts.rotationUncertainty = 10.0 if IFE.HIGH_ROTATION_UNCERTAINTY else 45.0
+                t.rotationUncertainty = ts.rotationUncertainty
+
+        except Exception, err:
+            print Logger().echoError(u'ROTATION PARSE ERROR:', err)
+            self._writeError({
+                'message':u'Rotation parse error',
+                'error':err,
+                'data':csvRowData,
+                'index':csvIndex })
+
+            ts.rotationMeasured  = 0.0
+            if not existingStore:
+                ts.rotationUncertainty = 45.0
+
+        #-------------------------------------------------------------------------------------------
+        # STRIDE
+        try:
+            strideLength = self._collapseManusPesProperty(
+                ts, csvRowData,
+                TCCE.PES_STRIDE, TCCE.PES_STRIDE_GUESS,
+                TCCE.MANUS_STRIDE, TCCE.MANUS_STRIDE_GUESS,
+                None, IFE.HIGH_STRIDE_UNCERTAINTY )
+
+            strideFactor = self._collapseManusPesProperty(
+                ts, csvRowData,
+                TCCE.PES_STRIDE_FACTOR, None,
+                TCCE.MANUS_STRIDE_FACTOR, None, 1.0)
+
+            if strideLength:
+                snapshot[SnapshotFlagsEnum.STRIDE_LENGTH] = 0.01*float(strideLength)*float(strideFactor)
+        except Exception, err:
+            print Logger().echoError(u'STRIDE PARSE ERROR:', err)
+
+        #-------------------------------------------------------------------------------------------
+        # WIDTH ANGULATION PATTERN
+        try:
+            widthAngulation = self._collapseManusPesProperty(
+                ts, csvRowData,
+                TCCE.WIDTH_PES_ANGULATION_PATTERN, TCCE.WIDTH_PES_ANGULATION_PATTERN_GUESS,
+                TCCE.WIDTH_MANUS_ANGULATION_PATTERN, TCCE.WIDTH_MANUS_ANGULATION_PATTERN_GUESS,
+                None, IFE.HIGH_WIDTH_ANGULATION_UNCERTAINTY )
+
+            if widthAngulation:
+                snapshot[SnapshotFlagsEnum.WIDTH_ANGULATION_PATTERN] = 0.01*float(widthAngulation)
+        except Exception, err:
+            print Logger().echoError(u'WIDTH ANGULATION PARSE ERROR:', err)
+
+        #-------------------------------------------------------------------------------------------
+        # PACE
+        try:
+            pace = self._collapseLimbProperty(
+                ts, csvRowData,
+                TCCE.LEFT_PES_PACE, TCCE.LEFT_PES_PACE_GUESS,
+                TCCE.RIGHT_PES_PACE, TCCE.RIGHT_PES_PACE_GUESS,
+                TCCE.LEFT_MANUS_PACE, TCCE.LEFT_MANUS_PACE_GUESS,
+                TCCE.RIGHT_MANUS_PACE, TCCE.RIGHT_MANUS_PACE_GUESS,
+                None, IFE.HIGH_PACE_UNCERTAINTY )
+
+            if pace:
+                snapshot[SnapshotFlagsEnum.PACE] = 0.01*float(pace)
+        except Exception, err:
+            print Logger().echoError(u'PACE PARSE ERROR:', err)
+
+        #-------------------------------------------------------------------------------------------
+        # PACE ANGULATION PATTERN
+        try:
+            paceAngulation = self._collapseManusPesProperty(
+                ts, csvRowData,
+                TCCE.PES_PACE_ANGULATION, TCCE.PES_PACE_ANGULATION_GUESS,
+                TCCE.MANUS_PACE_ANGULATION, TCCE.MANUS_PACE_ANGULATION_GUESS,
+                None, IFE.HIGH_WIDTH_ANGULATION_UNCERTAINTY )
+
+            if paceAngulation:
+                snapshot[SnapshotFlagsEnum.PACE_ANGULATION_PATTERN] = float(paceAngulation)
+        except Exception, err:
+            print Logger().echoError(u'PACE ANGULATION PARSE ERROR:', err)
+
+        #-------------------------------------------------------------------------------------------
+        # PROGRESSION
+        try:
+            progression = self._collapseLimbProperty(
+                ts, csvRowData,
+                TCCE.LEFT_PES_PROGRESSION, TCCE.LEFT_PES_PROGRESSION_GUESS,
+                TCCE.RIGHT_PES_PROGRESSION, TCCE.RIGHT_PES_PROGRESSION_GUESS,
+                TCCE.LEFT_MANUS_PROGRESSION, TCCE.LEFT_MANUS_PROGRESSION_GUESS,
+                TCCE.RIGHT_MANUS_PROGRESSION, TCCE.RIGHT_MANUS_PROGRESSION_GUESS,
+                None, IFE.HIGH_PROGRESSION_UNCERTAINTY )
+
+            if progression:
+                snapshot[SnapshotFlagsEnum.PROGRESSION] = 0.01*float(progression)
+        except Exception, err:
+            print Logger().echoError(u'PROGRESSION PARSE ERROR:', err)
+
+        #-------------------------------------------------------------------------------------------
+        # GLENO-ACETABULAR DISTANCE
+        try:
+            gad = self._collapseGuessProperty(
+                ts, csvRowData,
+                TCCE.GLENO_ACETABULAR_DISTANCE, TCCE.GLENO_ACETABULAR_DISTANCE_GUESS,
+                None, IFE.HIGH_GLENO_ACETABULAR_UNCERTAINTY )
+
+            if gad:
+                snapshot[SnapshotFlagsEnum.GLENO_ACETABULAR_LENGTH] = 0.01*float(gad)
+        except Exception, err:
+            print Logger().echoError(u'GLENO-ACETABULAR DISTANCE PARSE ERROR:', err)
+
+        # Save the snapshot
+        try:
+            ts.snapshot = JSON.asString(snapshot)
+            t.snapshot = ts.snapshot
+        except Exception, err:
+            print 'TrackStore:', ts
+            raise
+
+        t.importFlags = ts.importFlags
+
+        if existingStore:
             self.modified.append(ts)
+        else:
+            self.created.append(ts)
 
         return t
 
@@ -352,6 +558,14 @@ class TrackCsvImporter(object):
         else:
             self._logger.write(result)
 
+#___________________________________________________________________________________________________ _getStrippedValue
+    @classmethod
+    def _getStrippedValue(cls, value):
+        try:
+            return value.strip()
+        except Exception, err:
+            return value
+
 #___________________________________________________________________________________________________ _getStrippedRowData
     @classmethod
     def _getStrippedRowData(cls, source, trackCsvEnum):
@@ -360,6 +574,64 @@ class TrackCsvImporter(object):
             return out.strip()
         except Exception, err:
             return out
+
+#___________________________________________________________________________________________________ _collapseManusPesProperty
+    @classmethod
+    def _collapseManusPesProperty(
+            cls, track, csvRowData, pesEnum, pesGuessEnum, manusEnum, manusGuessEnum,
+            defaultValue, guessFlag =0, missingFlag =0
+    ):
+
+        if track.pes:
+            return cls._collapseGuessProperty(
+                track, csvRowData, pesEnum, pesGuessEnum, defaultValue, guessFlag, missingFlag)
+        else:
+            return cls._collapseGuessProperty(
+                track, csvRowData, manusEnum, manusGuessEnum, defaultValue, guessFlag, missingFlag)
+
+#___________________________________________________________________________________________________ _collapseLimbProperty
+    @classmethod
+    def _collapseLimbProperty(
+            cls, track, csvRowData, lpEnum, lpGuessEnum, rpEnum, rpGuessEnum, lmEnum, lmGuessEnum,
+            rmEnum, rmGuessEnum, defaultValue, guessFlag =0, missingFlag =0
+    ):
+
+        if track.pes and track.left:
+            return cls._collapseGuessProperty(
+                track, csvRowData, lpEnum, lpGuessEnum, defaultValue, guessFlag, missingFlag)
+        elif track.pes and not track.left:
+            return cls._collapseGuessProperty(
+                track, csvRowData, rpEnum, rpGuessEnum, defaultValue, guessFlag, missingFlag)
+        elif not track.pes and track.left:
+            return cls._collapseGuessProperty(
+                track, csvRowData, lmEnum, lmGuessEnum, defaultValue, guessFlag, missingFlag)
+        elif not track.pes and not track.left:
+            return cls._collapseGuessProperty(
+                track, csvRowData, rmEnum, rmGuessEnum, defaultValue, guessFlag, missingFlag)
+        else:
+            return None
+
+#___________________________________________________________________________________________________ _collapseGuessProperty
+    @classmethod
+    def _collapseGuessProperty(
+            cls, track, csvRowData, regularPropertyEnum, guessPropertyEnum, defaultValue,
+            guessFlag =0, missingFlag =0
+    ):
+        value = cls._getStrippedRowData(csvRowData, regularPropertyEnum)
+        if guessPropertyEnum:
+            valueGuess = cls._getStrippedRowData(csvRowData, guessPropertyEnum)
+        else:
+            valueGuess = None
+
+        if not value:
+            if not valueGuess:
+                track.importFlags |= (missingFlag & guessFlag)
+                return defaultValue
+
+            track.importFlags |= guessFlag
+            return valueGuess
+
+        return value
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

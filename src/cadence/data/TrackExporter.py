@@ -50,7 +50,6 @@ class TrackExporter(object):
         for trackStore in trackStores:
             track = trackStore.getMatchingTrack(session)
             if track is None:
-                print 'TRACK IS NONE'
                 self.modifications += 1
                 results.append({'uid':trackStore.uid, 'action':self.DELETED_IDENTIFIER})
 

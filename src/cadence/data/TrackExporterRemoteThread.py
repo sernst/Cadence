@@ -39,17 +39,21 @@ class TrackExporterRemoteThread(RemoteExecutionThread):
         try:
             exporter = TrackExporter(logger=self._log)
             self._log.write(u'<h1>Beginning Export...</h1>')
+            self.enableLogBuffer(50)
             exporter.write(
                 session=session,
                 path=self._path,
                 pretty=self._pretty,
                 gzipped=self._gzipped,
                 difference=self._difference)
+
+            self.disableLogBuffer()
         except Exception, err:
             if not self._session:
                 session.rollback()
                 session.close()
 
+            self.disableLogBuffer()
             self._log.writeError(u'ERROR: Track Export Failed', err)
             return 1
 

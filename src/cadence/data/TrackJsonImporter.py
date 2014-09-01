@@ -5,15 +5,13 @@
 from pyaid.debug.Logger import Logger
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
+from cadence.data.TrackExporter import TrackExporter
 from cadence.enum.TrackPropEnum import TrackPropEnumOps
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
-from cadence.data.TrackExporter import TrackExporter
-
-#___________________________________________________________________________________________________ TrackJsonImporter
 from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
 
-
+#___________________________________________________________________________________________________ TrackJsonImporter
 class TrackJsonImporter(object):
     """A class for..."""
 
@@ -39,7 +37,7 @@ class TrackJsonImporter(object):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ read
-    def read(self, session, path =None, compressed =False):
+    def read(self, session, path =None, compressed =False, storeImport =True):
         """ Reads from the spreadsheet located at the absolute path argument and adds each row
             to the tracks in the database. """
 
@@ -55,11 +53,22 @@ class TrackJsonImporter(object):
             self._logger.writeError('ERROR: Unable to read JSON import file', err)
             return False
 
+        index = 0
+        count = float(len(tracksData))
+        increment = round(0.1*count)
+        logAllEntries = len(tracksData) < 200
+
         for trackEntry in tracksData:
+            index += 1
             if TrackExporter.DELETED_IDENTIFIER in trackEntry:
-                self._deleteTrackEntry(trackEntry, session)
+                self._deleteTrackEntry(trackEntry, session, storeImport, logAllEntries)
             else:
-                self._parseTrackEntry(trackEntry, session)
+                self._parseTrackEntry(trackEntry, session, storeImport, logAllEntries)
+
+            if index % increment == 0:
+                self._logger.write(u'<div>%s%% Complete</div>' % (round(float(index)/count)))
+
+        self._logger.write(u'<div>100% Complete</div>')
 
         return True
 
@@ -67,27 +76,35 @@ class TrackJsonImporter(object):
 #                                                                               P R O T E C T E D
 
 #___________________________________________________________________________________________________ _deleteTrackEntry
-    def _deleteTrackEntry(self, data, session):
+    def _deleteTrackEntry(self, data, session, storeImport, logAllEntries):
         model = Tracks_Track.MASTER
 
         track = model.getByUid(data['uid'], session)
-        if track is None:
+        if track:
+            session.delete(track)
+
+        if not storeImport:
             return True
 
-        session.delete(track)
+        model = Tracks_TrackStore.MASTER
+
+        trackStore = model.getByUid(data['uid'], session)
+        if trackStore:
+            session.delete(trackStore)
+
         return True
 
 #___________________________________________________________________________________________________ _parseTrackEntry
-    def _parseTrackEntry(self, data, session):
+    def _parseTrackEntry(self, data, session, storeImport, logAllEntries):
         """Doc..."""
-        model = Tracks_Track.MASTER
+        model        = Tracks_Track.MASTER
         storageModel = Tracks_TrackStore.MASTER
-        tracks = None
-        trackStores = None
+        tracks       = None
+        trackStores  = None
 
         # If a UID is present in the data use that to retrieve the track instance
         if TrackPropEnum.UID.name in data:
-            uid = data[TrackPropEnum.UID.name]
+            uid    = data[TrackPropEnum.UID.name]
             tracks = model.getByUid(uid, session)
             tracks = [tracks] if tracks else None
 
@@ -110,13 +127,18 @@ class TrackJsonImporter(object):
         if len(tracks) > 1 or len(trackStores) > 1:
             msg = [u'WARNING: Ambiguous track data: ' + DictUtils.prettyPrint(data)]
             for r in tracks:
-                msg.append('    ' + DictUtils.prettyPrint(r.toDict(uniqueOnly=True)))
+                msg.append(u'    ' + DictUtils.prettyPrint(r.toDict(uniqueOnly=True)))
             self._logger.write('\n'.join(msg))
             self._unresolvable.append(data)
             return
 
         tracks[0].fromDict(data)
-        trackStores[0].fromDict(data)
+
+        if storeImport:
+            trackStores[0].fromDict(data)
+
+        if not logAllEntries:
+            return
 
         displayData = DictUtils.clone(data)
         if 'uid' in displayData:
@@ -135,7 +157,8 @@ class TrackJsonImporter(object):
         self._logger.write(logEntry)
 
 #___________________________________________________________________________________________________ _getTrackByProps
-    def _getTrackByProps(self, data, session, model):
+    @classmethod
+    def _getTrackByProps(cls, data, session, model):
         searchData = dict()
 
         for name,value in data.iteritems():
