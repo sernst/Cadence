@@ -15,80 +15,13 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_5">
    <item>
-    <widget class="QTabWidget" name="tabWidget">
+    <widget class="QTabWidget" name="exportTabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
-     <widget class="QWidget" name="loadTabWidget">
+     <widget class="QWidget" name="importTabWidget">
       <attribute name="title">
-       <string>Trackway Loader</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_6">
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QWidget" name="widget_10" native="true">
-         <layout class="QVBoxLayout" name="verticalLayout_9">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QWidget" name="widget_2" native="true">
-            <layout class="QHBoxLayout" name="horizontalLayout_2">
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <spacer name="horizontalSpacer">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QPushButton" name="loadBtn">
-               <property name="text">
-                <string>Load</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QWidget" name="filterBox" native="true">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_3">
-      <attribute name="title">
-       <string>Import/Export</string>
+       <string>Import</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
@@ -292,97 +225,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="widget_3" native="true">
-         <layout class="QVBoxLayout" name="verticalLayout">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QLabel" name="label_5">
-            <property name="font">
-             <font>
-              <pointsize>18</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Export -- Database to Interchange Files</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QWidget" name="widget_6" native="true">
-            <layout class="QHBoxLayout" name="horizontalLayout_4">
-             <item>
-              <widget class="QPushButton" name="exportBtn">
-               <property name="font">
-                <font>
-                 <pointsize>15</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Export</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="exportDiffCheck">
-               <property name="font">
-                <font>
-                 <pointsize>15</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Difference</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="exportCompressCheck">
-               <property name="font">
-                <font>
-                 <pointsize>15</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Compressed</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="exportPrettyCheck">
-               <property name="font">
-                <font>
-                 <pointsize>15</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Formatted</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_4">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>231</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <widget class="Line" name="line_2">
          <property name="lineWidth">
           <number>4</number>
@@ -514,6 +356,316 @@
         </spacer>
        </item>
       </layout>
+     </widget>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>Export</string>
+      </attribute>
+      <widget class="QWidget" name="widget_3" native="true">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>10</y>
+         <width>617</width>
+         <height>195</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_11">
+        <item>
+         <widget class="QWidget" name="widget_6" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QLabel" name="label_5">
+             <property name="font">
+              <font>
+               <pointsize>24</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>JSON Interchange Export</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>231</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="exportBtn">
+             <property name="font">
+              <font>
+               <pointsize>18</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Export</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget_16" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <item>
+            <widget class="QWidget" name="widget_13" native="true">
+             <layout class="QVBoxLayout" name="verticalLayout">
+              <item>
+               <widget class="QCheckBox" name="exportDiffCheck">
+                <property name="font">
+                 <font>
+                  <pointsize>18</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Difference</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_8">
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Only export changes made since the last synchronization.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+                <property name="indent">
+                 <number>-1</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="widget_14" native="true">
+             <layout class="QVBoxLayout" name="verticalLayout_8">
+              <item>
+               <widget class="QCheckBox" name="exportCompressCheck">
+                <property name="font">
+                 <font>
+                  <pointsize>18</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Compressed</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_9">
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Use GZip compression when exporting the file to save disk space.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+                <property name="indent">
+                 <number>-1</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="widget_15" native="true">
+             <layout class="QVBoxLayout" name="verticalLayout_10">
+              <item>
+               <widget class="QCheckBox" name="exportPrettyCheck">
+                <property name="font">
+                 <font>
+                  <pointsize>18</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Formatted</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_10">
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Format the output with line breaks and whitespace for human-readable display.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+                <property name="indent">
+                 <number>-1</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_9">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="Line" name="line_3">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>220</y>
+         <width>118</width>
+         <height>3</height>
+        </rect>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+      <widget class="QWidget" name="widget_17" native="true">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>240</y>
+         <width>617</width>
+         <height>195</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_12">
+        <item>
+         <widget class="QWidget" name="widget_18" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <item>
+            <widget class="QLabel" name="label_11">
+             <property name="font">
+              <font>
+               <pointsize>24</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>VDB Export</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_8">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>231</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="vdbExportBtn">
+             <property name="font">
+              <font>
+               <pointsize>18</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Export</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget_19" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <item>
+            <widget class="QWidget" name="widget_20" native="true">
+             <layout class="QVBoxLayout" name="verticalLayout_13">
+              <item>
+               <widget class="QCheckBox" name="syncExportChk">
+                <property name="font">
+                 <font>
+                  <pointsize>18</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Merge</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_12">
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Only export changes made since the last synchronization.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+                <property name="indent">
+                 <number>-1</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_10">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </widget>
    </item>

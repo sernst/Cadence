@@ -20,38 +20,38 @@ class TrackCsvColumnEnum(object):
     """ Row index within the spreadsheet file where the entry is found. This value can change any
         time a new import process occurs and represents the location in the most recent spreadsheet
         file. It should only be used for reference given that the value can arbitrarily change. """
-    INDEX = CSV_COLUMN_NT(0,  'index', False)
+    INDEX = CSV_COLUMN_NT(0, 'index', False)
 
     """ The short name of the track site where the print resides, e.g. BEB.
         Always 3 upper case letters"""
-    TRACKSITE = CSV_COLUMN_NT(1,  'tracksite', False)
+    TRACKSITE = CSV_COLUMN_NT(1, 'tracksite', False)
 
     """ The level within the track site specifying the excavation depth where the track resided.
         Lower numbers are deeper in the excavation and are therefore older. """
-    LEVEL = CSV_COLUMN_NT(2,  'level', False)
+    LEVEL = CSV_COLUMN_NT(2, 'level', False)
 
     """ Represents the trackway type, e.g. S for Sauropod, and the trackway number within the
         tracksite and level. Suffices can include 'bis' for a trackway that was broken but could
         be a continuation of the previous version. """
-    TRACKWAY = CSV_COLUMN_NT(3,  'trackway', False)
+    TRACKWAY = CSV_COLUMN_NT(3, 'trackway', False)
 
     """ The excavation area within the tracksite where the track was found. """
-    SECTOR = CSV_COLUMN_NT(4,  'sector', False)
+    SECTOR = CSV_COLUMN_NT(4, 'sector', False)
 
     """ CATALOG ONLY: Entry angle for the trackway as measured by the Illustrator file. """
-    ENTRY_AZIMUTH = CSV_COLUMN_NT(5,  'entry_azimuth', False)
+    ENTRY_AZIMUTH = CSV_COLUMN_NT(5, 'entry_azimuth', False)
 
     """ CATALOG ONLY: Exit angle for the trackway as measured by the Illustrator file. """
-    EXIT_AZIMUTH = CSV_COLUMN_NT(6,  'exit_azimuth', False)
+    EXIT_AZIMUTH = CSV_COLUMN_NT(6, 'exit_azimuth', False)
 
     """ CATALOG ONLY: Information that specifies the total orientation """
-    TOTAL_AZIMUTH = CSV_COLUMN_NT(7,  'direct_azimuth', False)
+    TOTAL_AZIMUTH = CSV_COLUMN_NT(7, 'direct_azimuth', False)
 
     """ CATALOG ONLY: Trackway length as measured by the illustrator file. """
-    TRACKWAY_LENGTH = CSV_COLUMN_NT(8,  'trackway_length', False)
+    TRACKWAY_LENGTH = CSV_COLUMN_NT(8, 'trackway_length', False)
 
     """ CATALOG ONLY: Illustrator file measurement. """
-    COMMENT = CSV_COLUMN_NT(9,  'comment', False)
+    COMMENT = CSV_COLUMN_NT(9, 'comment', False)
 
     """ CATALOG ONLY: Illustrator file measurement. """
     AZIMUTH_DEVIATION = CSV_COLUMN_NT(10, 'azimuth_deviation', False)
@@ -141,7 +141,7 @@ class TrackCsvColumnEnum(object):
     WIDTH_PES_ANGULATION_PATTERN_GUESS = CSV_COLUMN_NT(47, 'width_pes_angulation_pattern_guess', False)
 
     WIDTH_MANUS_ANGULATION_PATTERN = CSV_COLUMN_NT(61, 'width_manus_angulation_pattern', False)
-    WIDTH_MANUS_ANGULATION_PATTERN_GUESS= CSV_COLUMN_NT(62, 'width_manus_angulation_pattern_guess', False)
+    WIDTH_MANUS_ANGULATION_PATTERN_GUESS = CSV_COLUMN_NT(62, 'width_manus_angulation_pattern_guess', False)
 
     """ Diagonal distance between the track and the corresponding next track on the opposite side
         of the body/trackway."""

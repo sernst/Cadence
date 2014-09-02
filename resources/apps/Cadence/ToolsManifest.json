@@ -1,22 +1,29 @@
 {
     "tools":[
-        {   "id":"trackwayManager",
-            "module":"cadence.views.tools.trackwayManager.TrackwayManagerWidget",
-            "name":"Trackway Manager",
-            "description":"Manages 3D visualizations of trackways within Maya."
-        },
-
-        {   "id":"trackwayIo",
-            "module":"cadence.views.tools.trackwayIo.TrackwayIoWidget",
-            "name":"Data Manager",
-            "description":"Manages trackway data between spreadsheets, Maya, and the local database."
-        },
-
         {
             "id":"trackAnalyzer",
             "module":"cadence.views.tools.analysis.TrackAnalysisWidget",
             "name":"Trackway Analysis",
             "description":"Control panel for the growing collection of analysis tools."
+        },
+
+        {   "id":"databaseManager",
+            "module":"cadence.views.tools.databaseManager.DatabaseManagerWidget",
+            "name":"Database Manager",
+            "description":"Manages the local database."
+        },
+
+        {
+            "id":"trackwayLoader",
+            "module":"cadence.views.tools.trackwayLoader.TrackwayLoaderWidget",
+            "name":"Trackway Visualization Loader",
+            "description":"Loads trackways and other elements into Maya for visualization."
+        },
+
+        {   "id":"trackwayManager",
+            "module":"cadence.views.tools.trackwayManager.TrackwayManagerWidget",
+            "name":"Trackway Manager",
+            "description":"Manages 3D visualizations of trackways within Maya."
         },
 
         {   "id":"gaitGenerator",
