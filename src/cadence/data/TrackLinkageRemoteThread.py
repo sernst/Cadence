@@ -15,15 +15,16 @@ class TrackLinkageRemoteThread(RemoteExecutionThread):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, parent, session =None, **kwargs):
+    def __init__(self, parent, session =None, tracks =None, **kwargs):
         """Creates a new instance of TrackLinkageRemoteThread."""
         RemoteExecutionThread.__init__(self, parent, **kwargs)
         self._session = session
+        self._tracks  = tracks
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _internalMethod
+#___________________________________________________________________________________________________ _runImpl
     def _runImpl(self):
         model   = Tracks_Track.MASTER
         session = self._session if self._session else model.createSession()
@@ -31,7 +32,11 @@ class TrackLinkageRemoteThread(RemoteExecutionThread):
         try:
             tlc = TrackLinkConnector(logger=self._log)
             self._log.write(u'<h1>Beginning Linkage Reset...</h1>')
-            tlc.runAll(session)
+
+            if self._tracks is not None:
+                tlc.run(self._tracks, session)
+            else:
+                tlc.runAll(session)
         except Exception, err:
             if not self._session:
                 session.close()

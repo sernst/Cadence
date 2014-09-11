@@ -10,8 +10,10 @@ from pyaid.system.SystemUtils import SystemUtils
 from pyglass.elements.PyGlassElementUtils import PyGlassElementUtils
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
+from cadence.data.SitemapImporterRemoteThread import SitemapImporterRemoteThread
 
 from cadence.data.TrackExporterRemoteThread import TrackExporterRemoteThread
+from cadence.data.TrackMergeRemoteThread import TrackMergeRemoteThread
 from cadence.enum.UserConfigEnum import UserConfigEnum
 from cadence.data.TrackImporterRemoteThread import TrackImporterRemoteThread
 from cadence.models.tracks.Tracks_Track import Tracks_Track
@@ -37,6 +39,8 @@ class DatabaseManagerWidget(PyGlassWidget):
         self.importCsvBtn.clicked.connect(self._handleImport)
         self.importJsonBtn.clicked.connect(self._handleImport)
         self.exportBtn.clicked.connect(self._handleExport)
+        self.mergeBtn.clicked.connect(self._handleMerge)
+        self.sitemapImportBtn.clicked.connect(self._handleImportSitemaps)
         self.databaseReplaceBtn.clicked.connect(self._handleReplaceDatabase)
 
         PyGlassElementUtils.registerCheckBox(
@@ -54,8 +58,6 @@ class DatabaseManagerWidget(PyGlassWidget):
         PyGlassElementUtils.registerCheckBox(
             self, self.importCompressCheck,
             configSetting=UserConfigEnum.IMPORT_COMPRESSED)
-
-        self.tabWidget.currentChanged.connect(self._handleTabChanged)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -94,23 +96,62 @@ class DatabaseManagerWidget(PyGlassWidget):
 
         # Store directory location as the last active directory
         self.mainWindow.appConfig.set(
-            UserConfigEnum.LAST_BROWSE_PATH,
-            FileUtils.getDirectoryOf(path) )
+            UserConfigEnum.LAST_BROWSE_PATH, FileUtils.getDirectoryOf(path) )
 
         self.mainWindow.showStatus(
             self,
             u'Importing Tracks',
             u'Reading track information into database')
 
-        self._thread = TrackImporterRemoteThread(
+        TrackImporterRemoteThread(
             parent=self,
             path=path,
             verbose=self.verboseDisplayCheck.isChecked(),
             importType=importType,
-            compressed=self.importCompressCheck.isChecked())
-        self._thread.execute(
+            compressed=self.importCompressCheck.isChecked()
+        ).execute(
             callback=self._handleImportComplete,
+            logCallback=self._handleImportStatusUpdate )
+
+#___________________________________________________________________________________________________ _handleImportSitemaps
+    def _handleImportSitemaps(self):
+
+
+        self.mainWindow.showLoading(
+            self,
+            u'Browsing for Sitemap File',
+            u'Choose the Sitemap CSV file to import into the database')
+
+        path = PyGlassBasicDialogManager.browseForFileOpen(
+            parent=self,
+            caption=u'Select CSV File to Import',
+            defaultPath=self.mainWindow.appConfig.get(UserConfigEnum.LAST_BROWSE_PATH) )
+
+        self.mainWindow.hideLoading(self)
+
+        if not path or not isinstance(path, basestring):
+            self.mainWindow.toggleInteractivity(True)
+            return
+
+        # Store directory location as the last active directory
+        self.mainWindow.appConfig.set(
+            UserConfigEnum.LAST_BROWSE_PATH, FileUtils.getDirectoryOf(path) )
+
+        self.mainWindow.showStatus(
+            self,
+            u'Importing Sitemaps',
+            u'Reading sitemap information into database')
+
+        SitemapImporterRemoteThread(
+            parent=self,
+            path=path
+        ).execute(
+            callback=self._sitemapImportComplete,
             logCallback=self._handleImportStatusUpdate)
+
+#___________________________________________________________________________________________________ _sitemapImportComplete
+    def _sitemapImportComplete(self, response):
+        self.mainWindow.showStatusDone(self)
 
 #___________________________________________________________________________________________________ _handleImportStatusUpdate
     def _handleImportStatusUpdate(self, message):
@@ -247,3 +288,32 @@ class DatabaseManagerWidget(PyGlassWidget):
 
         self.mainWindow.appendStatus(self, u'<span style="color:#33CC33;">Database Replaced</span>')
         self.mainWindow.showStatusDone(self)
+
+#___________________________________________________________________________________________________ _handleMerge
+    def _handleMerge(self):
+
+        result = PyGlassBasicDialogManager.openYesNo(
+            self,
+            u'Are You Sure?',
+            u'Merging this database will overwrite existing storage values for all tracks.',
+            False,
+            u'Confirm Merge?')
+
+        if not result:
+            return
+
+        self.mainWindow.showStatus(
+            self,
+            u'Merging Database',
+            u'Changes to tracks are being applied to the storage entries')
+
+        thread = TrackMergeRemoteThread(self, None)
+        thread.execute(self._handleMergeComplete, self._handleLogMessage)
+
+#___________________________________________________________________________________________________ _handleMergeComplete
+    def _handleMergeComplete(self, response):
+        self.mainWindow.showStatusDone(self)
+
+#___________________________________________________________________________________________________ _handleLogMessage
+    def _handleLogMessage(self, message):
+        self.mainWindow.appendStatus(self, message)

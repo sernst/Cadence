@@ -100,16 +100,10 @@ class TrackwayLoaderWidget(PyGlassWidget):
         first.setSelected(True)
         fl.itemSelectionChanged.connect(self._handleFilterChange)
 
-#===================================================================================================
-#                                                                                 H A N D L E R S
-
-#___________________________________________________________________________________________________ _handleRunIntegrityTests
-    def _handleLoadTracks(self):
-        self.mainWindow.showLoading(self, u'Loading Tracks')
-
-        model   = Tracks_Track.MASTER
-        session = model.createSession()
-        query   = session.query(model)
+#___________________________________________________________________________________________________ _getFilteredTracks
+    def _getFilteredTracks(self, session):
+        model = Tracks_Track.MASTER
+        query = session.query(model)
 
         for filterDef in self._filterList:
             items = filterDef['widget'].selectedItems()
@@ -120,7 +114,17 @@ class TrackwayLoaderWidget(PyGlassWidget):
         # Prevents tracks that have been "hidden" from being loaded into the scene
         # query = query.filter(model.hidden == False)
 
-        entries   = query.all()
+        return query.all()
+
+#===================================================================================================
+#                                                                                 H A N D L E R S
+
+#___________________________________________________________________________________________________ _handleRunIntegrityTests
+    def _handleLoadTracks(self):
+        self.mainWindow.showLoading(self, u'Loading Tracks')
+
+        session   = Tracks_Track.MASTER.createSession()
+        entries   = self._getFilteredTracks(session)
         count     = len(entries)
         trackList = []
         for entry in entries:
@@ -155,21 +159,40 @@ class TrackwayLoaderWidget(PyGlassWidget):
         result = PyGlassBasicDialogManager.openYesNo(
             self,
             u'Confirm Linkages Reset',
-            u'Are you sure you want to reset all track linkages within the current database?',
+            u'Are you sure you want to reset the selected trackway linkages?',
             False)
 
         if not result:
             return
+
+        session   = Tracks_Track.MASTER.createSession()
+        entries   = self._getFilteredTracks(session)
 
         self.mainWindow.showStatus(
             self,
             u'Resetting Linkages',
             u'Updating linkages to their default values')
 
-        self._thread = TrackLinkageRemoteThread(parent=self)
-        self._thread.execute(
-            callback=self._handleImportComplete,
-            logCallback=self._handleImportStatusUpdate)
+        thread = TrackLinkageRemoteThread(parent=self, session=session, tracks=entries)
+        thread.userData = session
+        thread.execute(
+            callback=self._handleLinkagesComplete,
+            logCallback=self._handleLinkagesStatusUpdate)
+
+#___________________________________________________________________________________________________ _handleLinkagesComplete
+    def _handleLinkagesComplete(self, response):
+        session = response['userData']
+        if response['response'] == 0:
+            session.commit()
+        else:
+            session.rollback()
+        session.close()
+
+        self.mainWindow.showStatusDone(self)
+
+#___________________________________________________________________________________________________ _handleImportStatusUpdate
+    def _handleLinkagesStatusUpdate(self, message):
+        self.mainWindow.appendStatus(self, message)
 
 #___________________________________________________________________________________________________ _handleFilterChange
     def _handleFilterChange(self):

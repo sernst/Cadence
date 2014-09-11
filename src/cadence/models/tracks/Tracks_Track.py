@@ -10,6 +10,7 @@ from cadence.mayan.trackway import GetTrackNodeData
 from cadence.mayan.trackway import UpdateTrackNode
 from cadence.mayan.trackway import CreateTrackNode
 from cadence.models.tracks.TracksDefault import TracksDefault
+# AS NEEDED: from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
 
 #___________________________________________________________________________________________________ Tracks_Track
 class Tracks_Track(TracksDefault):
@@ -156,4 +157,20 @@ class Tracks_Track(TracksDefault):
 
         return False
 
+#___________________________________________________________________________________________________ mergeToStorage
+    def mergeToStorage(self, session):
+        store = self.getMatchingTrackStore(session)
+        if not store:
+            return False
 
+        store.fromDict(self.toDict())
+        return True
+
+#___________________________________________________________________________________________________ getMatchingTrack
+    def getMatchingTrackStore(self, session):
+        """ Returns the Tracks_Track instance that corresponds to this Tracks_TrackStore instance
+            if such an instance exists. """
+        from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
+        model  = Tracks_TrackStore.MASTER
+        result = session.query(model).filter(model.uid == self.uid).all()
+        return result[0] if result else None

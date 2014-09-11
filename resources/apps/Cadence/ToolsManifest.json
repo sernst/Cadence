@@ -14,9 +14,9 @@
         },
 
         {
-            "id":"trackwayLoader",
+            "id":"mayaTrackwayLoader",
             "module":"cadence.views.tools.trackwayLoader.TrackwayLoaderWidget",
-            "name":"Trackway Visualization Loader",
+            "name":"Maya Trackway Loader",
             "description":"Loads trackways and other elements into Maya for visualization."
         },
 
