@@ -7,7 +7,7 @@ import sqlalchemy as sqla
 from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
 
 #___________________________________________________________________________________________________ Tracks_SiteMap
-class Tracks_Sitemap(FlagsTracksDefault):
+class Tracks_SiteMap(FlagsTracksDefault):
     """A database model class containing coordinate information for trackway excavation site maps. """
 
 #===================================================================================================
