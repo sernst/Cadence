@@ -14,7 +14,7 @@ from pyaid.string.StringUtils import StringUtils
 from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
 from cadence.enum.SitemapCsvColumnEnum import SitemapCsvColumnEnum
 
-from cadence.models.tracks.Tracks_Sitemap import Tracks_Sitemap
+from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 
 #___________________________________________________________________________________________________ SitemapImporterRemoteThread
 class SitemapImporterRemoteThread(RemoteExecutionThread):
@@ -36,7 +36,7 @@ class SitemapImporterRemoteThread(RemoteExecutionThread):
 
 #___________________________________________________________________________________________________ _runImpl
     def _runImpl(self):
-        model   = Tracks_Sitemap.MASTER
+        model   = Tracks_SiteMap.MASTER
         session = self._session if self._session else model.createSession()
 
         try:
@@ -101,7 +101,7 @@ class SitemapImporterRemoteThread(RemoteExecutionThread):
 
 #___________________________________________________________________________________________________ _fromSpreadsheetEntry
     def _fromSpreadsheetEntry(self, data, session):
-        model = Tracks_Sitemap.MASTER
+        model = Tracks_SiteMap.MASTER
         sitemap = model()
 
         sitemap.index        = int(data[SitemapCsvColumnEnum.INDEX.name])
