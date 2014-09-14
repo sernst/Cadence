@@ -41,7 +41,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Trackway Import (Interchange Files to Database)</string>
+             <string>Trackway (Interchange Files to Database)</string>
             </property>
            </widget>
           </item>
@@ -241,7 +241,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Database (Import a database file)</string>
+             <string>Database (Existing Database File)</string>
             </property>
            </widget>
           </item>
@@ -303,7 +303,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Sitemap Import</string>
+             <string>Site Map</string>
             </property>
            </widget>
           </item>
