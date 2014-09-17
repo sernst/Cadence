@@ -7,6 +7,9 @@
 # from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 from cadence.svg.SvgWriter import SvgWriter
 
+
+# >>>>>>> Scott... ah, needs a bit of help here...
+
 # model   = Tracks_SiteMap.MASTER
 # session = Tracks_Track.MASTER.createSession()
 # map     = session.query(model).filter(model.index == 1).first()
