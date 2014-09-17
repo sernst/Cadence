@@ -8,7 +8,23 @@ from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
 
 #___________________________________________________________________________________________________ Tracks_SiteMap
 class Tracks_SiteMap(FlagsTracksDefault):
-    """A database model class containing coordinate information for trackway excavation site maps. """
+    """ A database model class containing coordinate information for trackway excavation site maps.
+        The following public methods assist in mapping from scene coordinates to map coordinates,
+        and vice versa, and  Federal coordinates:
+
+            fromScene(sceneX, sceneZ)   returns the corresponding site map point [mapX, mapY]
+            toScene(mapX, mapY) 	    returns the corresponding scene point [sceneX, sceneZ]
+            getFederalCoordinates()     returns the federal coordinates [east, north] of the marker
+
+        The federal coordinates marker is translated to the origin of the scene by xTranslate and
+        yTranslate, and rotated bt xRotate, yRotate, and zRotate and scaled.  The map is bounded by
+        the upper left corner (left, top) and the lower right corner (left + width, top + height).
+        The site maps are drawn in millimeter units, with a scale of 50:1.  That is, 1 mm in the
+        map = 50 mm in the real world.  The Maya scene is defined with centimeter units, hence 1
+        unit in map equals 5 units in the scene. While the scale has been uniformly 50:1, this
+        value is not hardcoded, but rather regarded a parameter.  The parameters federalEast and
+        federalNorth are directly read off of the map above the federal coordinates marker, and the
+        marker's map location is recoreded by xFederal and yFederal."""
 
 #===================================================================================================
 #                                                                                       C L A S S
@@ -37,3 +53,43 @@ class Tracks_SiteMap(FlagsTracksDefault):
     _displayFlags        = sqla.Column(sqla.Integer,     default=0)
     _importFlags         = sqla.Column(sqla.Integer,     default=0)
     _analysisFlags       = sqla.Column(sqla.Integer,     default=0)
+
+#___________________________________________________________________________________________________ __init__
+    def __init__(self, **kwargs):
+        super(Tracks_SiteMap, self).__init__(**kwargs)
+
+#===================================================================================================
+#                                                                                     P U B L I C
+
+
+#___________________________________________________________________________________________________ fromScene
+    def fromScene(self, xScene, zScene):
+        """ The given scene point is converted to the corresponding map location and returned.
+            xScene is positive to the left, and zScene is positive upwards; xMap is positive to the
+            right and yMap is positive downwards. The 0.1 factor converts from the mm units in the
+            map to centimeter units in the scene. """
+
+        xMap = self.federalX - xScene/(0.1*self.scale)
+        yMap = self.federalY + zScene/(0.1*self.scale)
+        return [xMap, yMap]
+
+#___________________________________________________________________________________________________ toScene
+    def toScene(self, xMap, yMap):
+        """ The given map location is converted to the corresponding scene point and returned.
+            xScene is positive to the left, and zScene is positive upwards; xMap is positive to the
+            right and yMap is positive downwards. The 0.1 factor converts from the mm units in the
+            map to centimeter units in the scene. """
+
+        xScene = (self.xFederal - xMap)*0.1*self.scale
+        zScene = (self.yFederal - yMap)*0.1*self.scale
+        return [xScene, zScene]
+
+#___________________________________________________________________________________________________ getFederalCoordinates
+    def getFederalCoordinates(self):
+        """ The Swiss federal coordinates associated with the marker on the map is returned.  These
+            coordinates are in meters relative to a geographical reference point.  The values of
+            the first, 'east', coordinate are on the order of 600,000 m and those of the second,
+            'north' coordinate on the order of 200,000 m. Note that coordinate values extracted from
+            the scene are in centimeters, while these coordinates are in meters. """
+
+        return [self.federalEast, self.federalNorth]
