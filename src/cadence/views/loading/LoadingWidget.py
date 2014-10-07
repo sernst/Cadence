@@ -4,10 +4,12 @@
 
 from PySide import QtGui
 
-from pyglass.widgets.PyGlassWidget import PyGlassWidget
+from pyaid.ArgsUtils import ArgsUtils
+
+from pyglass.widgets.ApplicationLevelWidget import ApplicationLevelWidget
 
 #___________________________________________________________________________________________________ LoadingWidget
-class LoadingWidget(PyGlassWidget):
+class LoadingWidget(ApplicationLevelWidget):
     """A class for..."""
 
 #===================================================================================================
@@ -23,6 +25,7 @@ class LoadingWidget(PyGlassWidget):
 
         self.target    = None
         self.isShowing = False
+        self.setVisible(False)
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -53,7 +56,10 @@ class LoadingWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _activateWidgetDisplayImpl
     def _activateWidgetDisplayImpl(self, **kwargs):
-        self.isShowing = True
+        self.target     = ArgsUtils.get('target', None, kwargs)
+        self.header     = ArgsUtils.get('header', None, kwargs)
+        self.info       = ArgsUtils.get('info', None, kwargs)
+        self.isShowing  = True
         self._animatedIcon.start()
 
 #___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl

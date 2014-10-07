@@ -3,6 +3,7 @@
 # Scott Ernst
 
 from PySide import QtGui
+from pyaid.ArgsUtils import ArgsUtils
 from pyaid.string.StringUtils import StringUtils
 
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
@@ -28,6 +29,7 @@ class StatusWidget(PyGlassWidget):
 
         self.target    = None
         self.isShowing = False
+        self.setVisible(False)
 
         self.closeBtn.clicked.connect(self._handleClose)
 
@@ -84,14 +86,21 @@ class StatusWidget(PyGlassWidget):
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
+#___________________________________________________________________________________________________ showInApplication
     def _activateWidgetDisplayImpl(self, **kwargs):
+        self.header = ArgsUtils.get('header', None, kwargs)
+        self.info   = ArgsUtils.get('info', None, kwargs)
+        self.target = ArgsUtils.get('target', None, kwargs)
+
+        if ArgsUtils.get('clear', True, kwargs):
+            self.clear()
+
         self.closeBtn.setEnabled(False)
         self.iconLabel.setVisible(True)
         self.isShowing = True
         self._animatedIcon.start()
 
-#___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
+#___________________________________________________________________________________________________ hideInApplication
     def _deactivateWidgetDisplayImpl(self, **kwargs):
         self.isShowing = False
         self._animatedIcon.stop()
