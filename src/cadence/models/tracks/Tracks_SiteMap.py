@@ -4,6 +4,7 @@
 
 import sqlalchemy as sqla
 
+
 from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
 
 #___________________________________________________________________________________________________ Tracks_SiteMap
@@ -12,8 +13,8 @@ class Tracks_SiteMap(FlagsTracksDefault):
         The following public methods assist in mapping from scene coordinates to map coordinates,
         and vice versa, and  Federal coordinates:
 
-            fromScene(sceneX, sceneZ)   returns the corresponding site map point [mapX, mapY]
-            toScene(mapX, mapY) 	    returns the corresponding scene point [sceneX, sceneZ]
+            projectToMap(sceneX, sceneZ)   returns the corresponding site map point [mapX, mapY]
+            projectToScene(mapX, mapY) 	    returns the corresponding scene point [sceneX, sceneZ]
             getFederalCoordinates()     returns the federal coordinates [east, north] of the marker
 
         The federal coordinates marker is translated to the origin of the scene by xTranslate and
@@ -22,7 +23,7 @@ class Tracks_SiteMap(FlagsTracksDefault):
         The site maps are drawn in millimeter units, with a scale of 50:1.  That is, 1 mm in the
         map = 50 mm in the real world.  The Maya scene is defined with centimeter units, hence 1
         unit in map equals 5 units in the scene. While the scale has been uniformly 50:1, this
-        value is not hardcoded, but rather regarded a parameter.  The parameters federalEast and
+        value is not hard-coded, but rather regarded a parameter.  The parameters federalEast and
         federalNorth are directly read off of the map above the federal coordinates marker, and the
         marker's map location is recoreded by xFederal and yFederal."""
 
@@ -46,7 +47,7 @@ class Tracks_SiteMap(FlagsTracksDefault):
     _xRotate             = sqla.Column(sqla.Float,       default=0.0)
     _yRotate             = sqla.Column(sqla.Float,       default=0.0)
     _zRotate             = sqla.Column(sqla.Float,       default=0.0)
-    _scale               = sqla.Column(sqla.Float,       default=0.0)
+    _scale               = sqla.Column(sqla.Float,       default=1.0)
 
     _flags               = sqla.Column(sqla.Integer,     default=0)
     _sourceFlags         = sqla.Column(sqla.Integer,     default=0)
@@ -60,29 +61,6 @@ class Tracks_SiteMap(FlagsTracksDefault):
 
 #===================================================================================================
 #                                                                                     P U B L I C
-
-
-#___________________________________________________________________________________________________ fromScene
-    def fromScene(self, xScene, zScene):
-        """ The given scene point is converted to the corresponding map location and returned.
-            xScene is positive to the left, and zScene is positive upwards; xMap is positive to the
-            right and yMap is positive downwards. The 0.1 factor converts from the mm units in the
-            map to centimeter units in the scene. """
-
-        xMap = self.federalX - xScene/(0.1*self.scale)
-        yMap = self.federalY + zScene/(0.1*self.scale)
-        return [xMap, yMap]
-
-#___________________________________________________________________________________________________ toScene
-    def toScene(self, xMap, yMap):
-        """ The given map location is converted to the corresponding scene point and returned.
-            xScene is positive to the left, and zScene is positive upwards; xMap is positive to the
-            right and yMap is positive downwards. The 0.1 factor converts from the mm units in the
-            map to centimeter units in the scene. """
-
-        xScene = (self.xFederal - xMap)*0.1*self.scale
-        zScene = (self.yFederal - yMap)*0.1*self.scale
-        return [xScene, zScene]
 
 #___________________________________________________________________________________________________ getFederalCoordinates
     def getFederalCoordinates(self):

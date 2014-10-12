@@ -7,8 +7,6 @@ import nimble
 
 from nimble import cmds
 
-# from pyaid.json.JSON import JSON
-
 from PySide import QtGui
 
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
