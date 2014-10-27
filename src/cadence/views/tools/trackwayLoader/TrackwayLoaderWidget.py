@@ -141,15 +141,15 @@ class TrackwayLoaderWidget(PyGlassWidget):
         thread.execute(callback=self._handleTrackNodesCreated)
 
 #___________________________________________________________________________________________________ _handleTrackNodesCreated
-    def _handleTrackNodesCreated(self, data):
-        result = data['output']
+    def _handleTrackNodesCreated(self, event):
+        result = event.target.output
 
         if not result.success:
             PyGlassBasicDialogManager.openOk(
                 parent=self, header=u'Load Error', message=u'Unable to load tracks')
         else:
             PyGlassBasicDialogManager.openOk(
-                parent=self, header=str(data['userData']['count']) + ' Tracks Created')
+                parent=self, header=str(event.target.userData['count']) + ' Tracks Created')
 
         self.mainWindow.hideLoading(self)
 
@@ -180,9 +180,9 @@ class TrackwayLoaderWidget(PyGlassWidget):
             logCallback=self._handleLinkagesStatusUpdate)
 
 #___________________________________________________________________________________________________ _handleLinkagesComplete
-    def _handleLinkagesComplete(self, response):
-        session = response['userData']
-        if response['response'] == 0:
+    def _handleLinkagesComplete(self, event):
+        session = event.target.userData
+        if event.target.success:
             session.commit()
         else:
             session.rollback()
@@ -191,8 +191,8 @@ class TrackwayLoaderWidget(PyGlassWidget):
         self.mainWindow.showStatusDone(self)
 
 #___________________________________________________________________________________________________ _handleImportStatusUpdate
-    def _handleLinkagesStatusUpdate(self, message):
-        self.mainWindow.appendStatus(self, message)
+    def _handleLinkagesStatusUpdate(self, event):
+        self.mainWindow.appendStatus(self, event.get('message'))
 
 #___________________________________________________________________________________________________ _handleFilterChange
     def _handleFilterChange(self):

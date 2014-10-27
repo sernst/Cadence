@@ -51,11 +51,11 @@ class MayaIniWidget(PyGlassWidget):
         self._runInitializer(install=False, test=self.testChk.isChecked())
 
 #___________________________________________________________________________________________________ _handleInitializerComplete
-    def _handleInitializerComplete(self, response):
+    def _handleInitializerComplete(self, event):
         self.mainWindow.showStatusDone(self)
         self.refreshGui()
         self._thread = None
 
 #___________________________________________________________________________________________________ _handleThreadLog
-    def _handleThreadLog(self, value):
-        self.mainWindow.appendStatus(self, value)
+    def _handleThreadLog(self, event):
+        self.mainWindow.appendStatus(self, event.get('message'))

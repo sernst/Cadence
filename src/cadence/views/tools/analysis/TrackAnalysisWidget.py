@@ -52,11 +52,11 @@ class TrackAnalysisWidget(PyGlassWidget):
             logCallback=self._handleThreadLog)
 
 #___________________________________________________________________________________________________ _handleThreadLog
-    def _handleThreadLog(self, message):
-        self.mainWindow.appendStatus(self, message)
+    def _handleThreadLog(self, event):
+        self.mainWindow.appendStatus(self, event.get('message'))
 
 #___________________________________________________________________________________________________ _handleIntegrityTestsComplete
-    def _handleIntegrityTestsComplete(self, result):
+    def _handleIntegrityTestsComplete(self, event):
         self.mainWindow.showStatusDone(self)
 
 

@@ -150,21 +150,21 @@ class DatabaseManagerWidget(PyGlassWidget):
             logCallback=self._handleImportStatusUpdate)
 
 #___________________________________________________________________________________________________ _sitemapImportComplete
-    def _sitemapImportComplete(self, response):
+    def _sitemapImportComplete(self, event):
         self.mainWindow.showStatusDone(self)
 
 #___________________________________________________________________________________________________ _handleImportStatusUpdate
-    def _handleImportStatusUpdate(self, message):
-        self.mainWindow.appendStatus(self, message)
+    def _handleImportStatusUpdate(self, event):
+        self.mainWindow.appendStatus(self, event.get('message'))
 
 #___________________________________________________________________________________________________ _handleImportComplete
-    def _handleImportComplete(self, response):
+    def _handleImportComplete(self, event):
         actionType = 'Export' if isinstance(self._thread, TrackExporterRemoteThread) else 'Import'
 
-        if response['response']:
+        if not event.target.success:
             print 'ERROR: %s Failed' % actionType
-            print '  OUTPUT:', response['output']
-            print '  ERROR:', response['error']
+            print '  OUTPUT:', event.target.output
+            print '  ERROR:', event.target.error
             PyGlassBasicDialogManager.openOk(
                 parent=self,
                 header='ERROR',
@@ -311,9 +311,9 @@ class DatabaseManagerWidget(PyGlassWidget):
         thread.execute(self._handleMergeComplete, self._handleLogMessage)
 
 #___________________________________________________________________________________________________ _handleMergeComplete
-    def _handleMergeComplete(self, response):
+    def _handleMergeComplete(self, event):
         self.mainWindow.showStatusDone(self)
 
 #___________________________________________________________________________________________________ _handleLogMessage
-    def _handleLogMessage(self, message):
-        self.mainWindow.appendStatus(self, message)
+    def _handleLogMessage(self, event):
+        self.mainWindow.appendStatus(self, event.get('message'))

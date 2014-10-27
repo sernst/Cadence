@@ -97,8 +97,8 @@ class CadenceMayaStatusElement(PyGlassElement):
         self.refresh()
 
 #___________________________________________________________________________________________________ _handleMayaCheckResults
-    def _handleMayaCheckResults(self, response):
-        if response['output']['success']:
+    def _handleMayaCheckResults(self, event):
+        if event.target.output['success']:
             # Run an ls command looking for the time nodeName (to prevent large returns)
             self._colors = ThemeColorBundle(ColorSchemes.GREEN)
             self._status = True
