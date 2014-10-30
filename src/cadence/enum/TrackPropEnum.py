@@ -117,13 +117,13 @@ class TrackPropEnum(object):
     WIDTH_MEASURED    = TRACK_PROP_NT('widthMeasured',    'float', None,               False)
     WIDTH_UNCERTAINTY = TRACK_PROP_NT('widthUncertainty', 'float', 'widthUncertainty', False)
 
-    # the x coordinate of a given track (relative to tracksite's map origin) encoded in nodeName
+    # the x coordinate of a given track (relative to tracksite's siteMap origin) encoded in nodeName
     X = TRACK_PROP_NT('x', 'float', 'translateX', False)
 
     # Year of cast for the track
     YEAR = TRACK_PROP_NT('year', 'string', None, True)
 
-    # the z coordinate of a given track (relative to tracksite's map origin) encoded in nodeName
+    # the z coordinate of a given track (relative to tracksite's siteMap origin) encoded in nodeName
     Z = TRACK_PROP_NT('z', 'float', 'translateZ', False)
 
     # Specifies whether or not the track has been hidden from view. Hidden tracks will not be

@@ -4,9 +4,9 @@
 
 import math
 import nimble
+import svgwrite
 
 from nimble import cmds
-
 from PySide import QtGui
 
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
@@ -16,6 +16,10 @@ from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.enum.SourceFlagsEnum import SourceFlagsEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
+
+from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
+from cadence.svg.CadenceDrawing import CadenceDrawing
+
 from cadence.util.maya.MayaUtils import MayaUtils
 
 from cadence.mayan.trackway import GetSelectedUidList
@@ -78,8 +82,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._session = None
 
-        priorSelection = MayaUtils.getSelectedTransforms()
-
         self.firstBtn.setIcon(QtGui.QIcon(self.getResourcePath('mediaIcons', 'first.png')))
         self.prevBtn.setIcon( QtGui.QIcon(self.getResourcePath('mediaIcons', 'prev.png')))
         self.nextBtn.setIcon( QtGui.QIcon(self.getResourcePath('mediaIcons', 'next.png')))
@@ -104,7 +106,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.lockedCkbx.clicked.connect(self.handleLockedCkbx)
         self.lockedCkbx.stateChanged.connect(self.handleLockedCkbx)
         self.markedCkbx.clicked.connect(self.handleMarkedCkbx)
-
 
         self.lengthRatioSbx.valueChanged.connect(self.handleLengthRatioSbx)
         self.noteLE.textChanged.connect(self.handleNoteLE)
@@ -174,19 +175,20 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.showAllTrackwaysBtn.clicked.connect(self.handleShowAllTrackwaysBtn)
         self.hideAllTrackwaysBtn.clicked.connect(self.handleHideAllTrackwaysBtn)
         self.selectAllTrackwaysBtn.clicked.connect(self.handleSelectAllTrackwaysBtn)
+        self.exportAllTrackwaysBtn.clicked.connect(self.handleExportAllTrackwaysBtn)
         self.erasePathsBtn.clicked.connect(self.handleErasePathsBtn)
 
-        # get the CadenceCam set up so that the map is oriented to be legible
-        self.initializeCadenceCam()
+        # in the Tracksite tab:
+        self.trackSiteIndexSbx.valueChanged.connect(self.handleTrackSiteIndexSbx)
+        self.svgFileNameLE.textChanged.connect(self.handleSvgNameLE)
+        self.openSvgFileBtn.clicked.connect(self.handleSvgOpenBtn)
+        self.saveSvgFileBtn.clicked.connect(self.handleSvgSaveBtn)
+        self.addSelectedBtn.clicked.connect(self.handleSvgAddSelectedBtn)
 
-        # and start up with the UI displaying data for the current selection (if any)
-        MayaUtils.setSelection(priorSelection)
+        self.currentDrawing = None
 
-        # update the track UI and trackway UI based on what might be selected already
-        self.handlePullBtn()
-
-        # display summary counts of loaded, completed, and selected tracks
-        self.refreshTrackCountsUI()
+        # populate the track site data based on the initial value of the index
+        self.handleTrackSiteIndexSbx()
 
 #===================================================================================================
 #                                                                                        P U B L I C
@@ -366,6 +368,24 @@ class TrackwayManagerWidget(PyGlassWidget):
         for uid in selectedUidList:
             tracks.append(self.getTrackByUid(uid))
         return tracks
+
+#___________________________________________________________________________________________________ getSiteMap
+    def getSiteMap(self, index):
+        """ If the track site specified by the given index is valid, a Tracks_TrackSite instance is
+            returned, otherwise None. """
+
+        model   = Tracks_SiteMap.MASTER
+        session = self.getSession()
+        siteMap = session.query(model).filter(model.index == index).first()
+
+        # close this session to release the database lock
+        session.close()
+
+        # an indicator that the site siteMap table is not yet populated for this index, check the scale
+        if not siteMap or siteMap.scale == 0:
+            return None
+        else:
+            return siteMap
 
 #___________________________________________________________________________________________________ getTrackByUid
     def getTrackByUid(self, uid):
@@ -555,6 +575,25 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.trackNameLE.setText(u'')
         self.trackIndexLE.setText(u'')
 
+#___________________________________________________________________________________________________ clearTrackSiteUI
+    def clearTrackSiteUI(self):
+        """ This clears the track site data in the Trackways tab. """
+        self.trackSiteNameLbl.setText(u'')
+        self.federalEastLbl.setText(u'')
+        self.federalNorthLbl.setText(u'')
+        self.mapLeftLbl.setText(u'')
+        self.mapTopLbl.setText(u'')
+        self.mapWidthLbl.setText(u'')
+        self.mapHeightLbl.setText(u'')
+        self.xFedLbl.setText(u'')
+        self.yFedLbl.setText(u'')
+        self.transXLbl.setText(u'')
+        self.transZLbl.setText(u'')
+        self.rotXLbl.setText(u'')
+        self.rotYLbl.setText(u'')
+        self.rotZLbl.setText(u'')
+        self.scaleLbl.setText(u'')
+
 #___________________________________________________________________________________________________ clearTrackwayUI
     def clearTrackwayUI(self):
         """ Clears the banner at the top of the UI. """
@@ -613,7 +652,29 @@ class TrackwayManagerWidget(PyGlassWidget):
         else:
             self.enableTrackUI(True)
 
+#___________________________________________________________________________________________________ refreshTrackSiteUI
+    def refreshTrackSiteUI(self, siteMap):
+        """ The data for the given track site index is updated. """
+        self.trackSiteNameLbl.setText(siteMap.filename)
 
+        self.federalEastLbl.setText(unicode(siteMap.federalEast))
+        self.federalNorthLbl.setText(unicode(siteMap.federalNorth))
+
+        self.mapLeftLbl.setText(unicode(siteMap.left))
+        self.mapTopLbl.setText(unicode(siteMap.top))
+
+        self.mapWidthLbl.setText(unicode(siteMap.width))
+        self.mapHeightLbl.setText(unicode(siteMap.height))
+
+        self.xFedLbl.setText(unicode(siteMap.xFederal))
+        self.yFedLbl.setText(unicode(siteMap.yFederal))
+
+        self.transXLbl.setText(unicode(siteMap.xTranslate))
+        self.transZLbl.setText(unicode(siteMap.zTranslate))
+        self.rotXLbl.setText(unicode(siteMap.xRotate))
+        self.rotYLbl.setText(unicode(siteMap.yRotate))
+        self.rotZLbl.setText(unicode(siteMap.zRotate))
+        self.scaleLbl.setText(unicode(siteMap.scale))
 
 #___________________________________________________________________________________________________ refreshTrackwayUI
     def refreshTrackwayUI(self, dict):
@@ -662,13 +723,13 @@ class TrackwayManagerWidget(PyGlassWidget):
             completedCount  = len(completedTracks) if completedTracks else 0
             selectedCount   = len(cmds.ls(selection=True))
 
-        # Display how may tracks in total are in the Maya scene currently
+        # Display the total number of tracks currently in the Maya scene
         self.totalTrackCountLbl.setText('Total:  ' + unicode(totalTrackCount))
 
         # Now determine how many tracks have their COMPLETED source flag set
         self.completedTrackCountLbl.setText('Completed:  ' + unicode(completedCount))
 
-        # Show how many are currently selected
+        # And show how many are currently selected
         self.selectedTrackCountLbl.setText('Selected:  ' + unicode(selectedCount))
 
 
@@ -713,6 +774,21 @@ class TrackwayManagerWidget(PyGlassWidget):
         for curve in curves:
             cmds.delete(curve)
         cmds.delete(self.PATH_LAYER)
+
+#___________________________________________________________________________________________________ handleExportAllTrackwaysBtn
+    def handleExportAllTrackwaysBtn(self):
+        """ Creates an svg file (to scale with the tracksite) indicating the position and the
+            uncertainty in width and length of each track. """
+        layers = cmds.ls( type='displayLayer')
+        nodes  = []
+        if not layers:
+            return
+        for layer in layers:
+            print 'layer = %s' % layer
+            if layer.endswith(self.LAYER_SUFFIX):
+                nodes.extend(cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True))
+        cmds.select(nodes)
+        print "%s-many noders selected" % len(nodes)
 
 #___________________________________________________________________________________________________ handleExtrapolateNext
     def handleExtrapolateNext(self):
@@ -1130,7 +1206,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         t.updateNode()
         self.closeSession(commit=True)
 
-#___________________________________________________________________________________________________ handlengthUncertaintySbx
+#___________________________________________________________________________________________________ handleLengthUncertaintySbx
     def handleLengthUncertaintySbx(self):
         """ The length uncertainty of the selected track is adjusted. """
         selectedTracks = self.getSelectedTracks()
@@ -1515,6 +1591,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             if layer.endswith(self.LAYER_SUFFIX):
                nodes.extend(cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True))
         cmds.select(nodes)
+        print "%s nodes selected" %len(nodes)
 
 #___________________________________________________________________________________________________ handleSelectByIndex
     def handleSelectByIndex(self):
@@ -1739,7 +1816,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         # and select 'em
         cmds.select(nodes)
 
-#___________________________________________________________________________________________________ handleSetToMeasuredDimnensions
+#___________________________________________________________________________________________________ handleSetToMeasuredDimensions
     def handleSetToMeasuredDimensions(self):
         """ The selected track is assigned the length and width as measured in the field. """
         selectedTracks = self.getSelectedTracks()
@@ -1832,6 +1909,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.setCameraFocus()
         self.closeSession(commit=True)
 
+#___________________________________________________________________________________________________ handleShowAllTracksBtn
+    def handleShowAllTracksBtn(self):
+        """ This creates an svg drawing of all tracks (
+        """
 #___________________________________________________________________________________________________ handleShowAllTrackwaysBtn
     def handleShowAllTrackwaysBtn(self, visible=True):
         """ This straightforwardly sets all layers either visible (default) or invisible. """
@@ -1844,16 +1925,158 @@ class TrackwayManagerWidget(PyGlassWidget):
     def handleShowTrackwayBtn(self, visible=True):
         """ With the tracks comprising each trackway (e.g., S18) placed in their own layer, the
             visibility of each trackway is controlled by the corresponding layer visiblity. """
+
         # compose the name of the layer from the trackway name in the combo box
         layer = self.trackwayCmbx.currentText() + self.LAYER_SUFFIX
 
         # then set this layer either visible or invisible according to the kwarg
         cmds.setAttr('%s.visibility' % layer, visible)
 
+#___________________________________________________________________________________________________ handleSvgAddSelectedBtn
+    def handleSvgAddSelectedBtn(self):
+        """ The current selection of tracks (if non-empty) is added to the current SVG file """
+        tracks = self.getSelectedTracks()
+
+        if tracks is None:
+            return
+
+        for track in tracks:
+            x = track.x
+            z = track.z
+
+            # The track dimensions stored in the database are in fractional meters, so multiply by
+            # 100 to convert to cm.
+            r = 100*0.5*(track.width/2.0 + track.length/2.0)
+
+            self.currentDrawing.circle(
+                (x, z),
+                r,
+                scene=True,
+                fill='none',
+                stroke='blue',
+                stroke_width=1)
+
+            # compute the averge uncertainty in cm (also stored in fractional meters)
+            u = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
+
+            # so that a radius of less than 5 remains visible
+            #if u > 0 and u < 5.0:
+#                u = 5.0
+
+            self.currentDrawing.circle(
+                (x, z),
+                u,
+                scene=True,
+                fill='red',
+                stroke='red',
+                stroke_width=1)
+
+#___________________________________________________________________________________________________ handleSvgOpenBtn
+    def handleSvgOpenBtn(self):
+        """ A file name is specified relative to the local root. This file is then explicitly
+            opened by a separate button press "Open", followed by compilation of the SVG drawing by
+            incrementally adding objects (e.g., one can interactively compose a specific SVG drawing
+            based on successive rounds of first selecting sceen content then pressing the
+            "Add Selected" button, finally completing by pressing "Save".  When the "Open" button
+            is pressed, the fresh svg file is created if there is a valid row (completed columns)
+            for the track site of specified index.  Otherwise it warns and returns. """
+
+        # get the current index again and from this, get the site map
+        index = self.trackSiteIndexSbx.value()
+
+        # check if there is a valid (completed) site map for that particular tracksite index
+        siteMap = self.getSiteMap(index)
+        if not siteMap:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                header=u'Invalid Site Map',
+                message=u'Tracksite index %s empty' % index,
+                windowTitle=u'Tool Error')
+            return
+
+        # ok, so then make sure there is a file name specified
+        fileName = self.svgFileNameLE.text()
+        if not fileName:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                header=u'Invalid SVG file name',
+                message=u'Edit name and retry.',
+                windowTitle=u'Tool Error')
+            return
+
+        # if there is already an open Cadence drawing, offer to close it before continuing with new
+        if self.currentDrawing:
+            save = PyGlassBasicDialogManager.openYesNo(
+                    self,
+                    'SVG File already open.',
+                    'Do you wish to save?')
+            if save:
+                self.currentDrawing.save()
+
+        # now open a new drawing file
+        self.currentDrawing = CadenceDrawing(fileName, siteMap)
+
+        # place a grid in the drawing file
+        self.currentDrawing.grid()
+
+#___________________________________________________________________________________________________ handleSvgSaveBtn
+    def handleSvgSaveBtn(self):
+        """ The currently open Cadence drawing (SVG file) is written here after pressing "Save". If
+            no Cadence drawing is already open, this complains and returns. """
+
+        # complain if this button is pressed and no Cadence SVG drawing is currently open
+        if not self.currentDrawing:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                header=u'Error',
+                message=u'No SVG file open.',
+                windowTitle=u'Tool Error')
+            return
+
+        print 'saving svg file'
+
+        # place the federal coordinates as a text string 20 cm above the marker
+        site = self.currentDrawing.siteMap
+        t    = "(%s, %s)" % (site.federalEast, site.federalNorth)
+        self.currentDrawing.text(t, (0, 20), scene=True)
+
+        # place a 2 cm green unfilled circle atop the federal coordinate marker
+        self.currentDrawing.circle(
+            (0, 0),
+            2,
+            scene=True,
+            fill='none',
+            stroke='green',
+            stroke_width=1)
+        self.currentDrawing.save()
+        self.currentDrawing = None
+
+#___________________________________________________________________________________________________ handleSvgNameLE
+    def handleSvgNameLE(self):
+        """ A file name is specified, which is later used in responding to the button press 'Open'
+            to create an SVG file. """
+        pass
+
+#___________________________________________________________________________________________________ handleTrackSiteIndexSbx
+    def handleTrackSiteIndexSbx(self):
+        """ The tracksites are indexed in a table (see Tracks_SiteMap).  That index provides a
+            means to select a given tracksite from the UI. """
+
+        index   = self.trackSiteIndexSbx.value()
+        siteMap = self.getSiteMap(index)
+
+        if siteMap is None:
+            self.clearTrackSiteUI()
+            return
+
+        # now populate the tracksite information in the UI
+        self.refreshTrackSiteUI(siteMap)
+
 #___________________________________________________________________________________________________ handleUnlink
     def handleUnlink(self):
         """ The 'next' attribute is cleared for the selected track. Unlinking does not
             attempt to relink tracks automatically (one must do it explicitly; see handleLink). """
+
         selectedTracks = self.getSelectedTracks()
         if selectedTracks is None:
             return
@@ -2008,7 +2231,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ createPathFromTrackSeries
     def createPathFromTrackSeries(self, tracks):
         """ Creates a list of the (x, z) track coordinates from a given track series.  Note that
-            hidden tracks are not included, nor are tracks that are still at the origin. """
+            hidden tracks are not included, nor are tracks that are still at the origin. The
+            path is specified as a list of 3D points, with the y coordinate zeroed out."""
         path = []
         for track in tracks:
             if not track.hidden and track.x != 0.0 and track.z != 0.0:
@@ -2042,16 +2266,30 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _activateWidgetDisplayImpl
     def _activateWidgetDisplayImpl(self, **kwargs):
-        if CadenceEnvironment.NIMBLE_IS_ACTIVE:
-         #   self.importFromMaya()
+        if not CadenceEnvironment.NIMBLE_IS_ACTIVE:
+            self.setVisible(False)
+            PyGlassBasicDialogManager.openOk(
+                self,
+                header=u'No Nimble Connection',
+                message=u'This tool requires an active Nimble server connection running in Maya',
+                windowTitle=u'Tool Error')
             return
 
-        self.setVisible(False)
-        PyGlassBasicDialogManager.openOk(
-            self,
-            header=u'No Nimble Connection',
-            message=u'This tool requires an active Nimble server connection running in Maya',
-            windowTitle=u'Tool Error')
+        # in case there was an earlier failure, set this visible
+        self.setVisible(True)
+
+        # now that Nimble is active, get Maya ready for Cadence, starting with the CadenceCam
+        priorSelection = MayaUtils.getSelectedTransforms()
+        self.initializeCadenceCam()
+
+        # then have the Trackway Manager's UI display data for the current Maya selection (if any)
+        MayaUtils.setSelection(priorSelection)
+
+        # update the track UI and trackway UI based on what might be selected already
+        self.handlePullBtn()
+
+        # display summary counts of loaded, completed, and selected tracks
+        self.refreshTrackCountsUI()
 
 #___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
     def _deactivateWidgetDisplayImpl(self, **kwargs):

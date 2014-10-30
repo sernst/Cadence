@@ -10,22 +10,22 @@ from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
 #___________________________________________________________________________________________________ Tracks_SiteMap
 class Tracks_SiteMap(FlagsTracksDefault):
     """ A database model class containing coordinate information for trackway excavation site maps.
-        The following public methods assist in mapping from scene coordinates to map coordinates,
+        The following public methods assist in mapping from scene coordinates to siteMap coordinates,
         and vice versa, and  Federal coordinates:
 
-            projectToMap(sceneX, sceneZ)   returns the corresponding site map point [mapX, mapY]
+            projectToMap(sceneX, sceneZ)   returns the corresponding site siteMap point [mapX, mapY]
             projectToScene(mapX, mapY) 	    returns the corresponding scene point [sceneX, sceneZ]
             getFederalCoordinates()     returns the federal coordinates [east, north] of the marker
 
         The federal coordinates marker is translated to the origin of the scene by xTranslate and
-        yTranslate, and rotated bt xRotate, yRotate, and zRotate and scaled.  The map is bounded by
+        yTranslate, and rotated bt xRotate, yRotate, and zRotate and scaled.  The siteMap is bounded by
         the upper left corner (left, top) and the lower right corner (left + width, top + height).
         The site maps are drawn in millimeter units, with a scale of 50:1.  That is, 1 mm in the
-        map = 50 mm in the real world.  The Maya scene is defined with centimeter units, hence 1
-        unit in map equals 5 units in the scene. While the scale has been uniformly 50:1, this
+        siteMap = 50 mm in the real world.  The Maya scene is defined with centimeter units, hence 1
+        unit in siteMap equals 5 units in the scene. While the scale has been uniformly 50:1, this
         value is not hard-coded, but rather regarded a parameter.  The parameters federalEast and
-        federalNorth are directly read off of the map above the federal coordinates marker, and the
-        marker's map location is recoreded by xFederal and yFederal."""
+        federalNorth are directly read off of the siteMap above the federal coordinates marker, and the
+        marker's siteMap location is recoreded by xFederal and yFederal."""
 
 #===================================================================================================
 #                                                                                       C L A S S
@@ -64,7 +64,7 @@ class Tracks_SiteMap(FlagsTracksDefault):
 
 #___________________________________________________________________________________________________ getFederalCoordinates
     def getFederalCoordinates(self):
-        """ The Swiss federal coordinates associated with the marker on the map is returned.  These
+        """ The Swiss federal coordinates associated with the marker on the siteMap is returned.  These
             coordinates are in meters relative to a geographical reference point.  The values of
             the first, 'east', coordinate are on the order of 600,000 m and those of the second,
             'north' coordinate on the order of 200,000 m. Note that coordinate values extracted from

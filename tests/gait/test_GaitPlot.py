@@ -21,7 +21,7 @@ else:
 # note that you can get a list of named color maps by colorNames()
 # print gp.colorMapNames()
 
-gp.setColorMap('gray') # choose a monochrome color map
+gp.setColorMap('gray') # choose a monochrome color siteMap
 
 gp.setPlotInterval(0.0, 24.0)
 #___________________________________________________________________________________________________ plotGait test

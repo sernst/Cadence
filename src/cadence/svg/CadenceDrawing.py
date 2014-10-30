@@ -7,24 +7,26 @@ import math
 import svgwrite
 from svgwrite import mm
 
+from pyaid.OsUtils import OsUtils
 
 #___________________________________________________________________________________________________ CadenceDrawing
 class CadenceDrawing(object):
     """ A class for writing Scalable Vector Graphics (SVG) files, tailored to create overlays for
         site maps. Each site map has a marker that indicates a reference point in Swiss Federal
-        coordinates.  One such marker appears somewhere within each site map.  The may is oriented
-        such that the x axis is positve to the right (towards the east) and the y axis is positive
-        down (southward).  This site map is projected onto the y=0 plane of a 3D scene (by scaling,
-        rotating, and translating) such that the Federal Coordinate marker is at the origin, the
+        coordinates.  At least one such marker appears somewhere within each site map (in cases
+        where there were two, the more central was chosen).  The maps are all oriented such that
+        the x axis is positve to the right (towards the east) and the y axis is positive down
+        (southward).  For visualization in Cadence, a site map is projected onto the y=0 plane of a
+        3D scene such that the Federal Coordinate marker is placed at the origin in 3D, and the
         scene's positive x axis increases to the left ('west') and the scene's positive z axis
         increases to the 'north'.  The correspondence between these two coordinate systems is
-        handled by public functions in this class, based on information derived from an instance of
-        a Tracks_SiteMap (specifically the scale and the location of a federal coordinates marker
-        within the map).
+        handled by public functions to be found in this class, based on information derived from an
+        instance of a Tracks_SiteMap (specifically the scale and the location of a federal
+        coordinates marker within the siteMap).
 
-        This class wraps an instance of an svgwrite.Drawing and handles the mapping from 3D scene
-        coordinates (x, z) to svg coordinates (x, y).  Scene coordinates are in real-world cm, while
-        the svg coordinates used in the sitemaps is in 50:1 scaled mm.  That is, one mm in the
+        This class wraps (owns) an instance of an svgwrite.Drawing and handles the mapping from 3D
+        scene coordinates (x, z) to svg coordinates (x, y).  Scene coordinates are in real-world cm,
+        while the svg coordinates used in the sitemaps is in 50:1 scaled mm.  That is, one mm in the
         drawing equals 5 cm, realworld.  By default, a saved CadenceDrawing can then be
         placed in an Adobe Illustrator layer, in registation with the vector art of a sitemap.
 
@@ -55,27 +57,35 @@ class CadenceDrawing(object):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, fileName, map):
+    def __init__(self, fileName, siteMap):
         """ Creates a new instance of CadenceDrawing.  Calls to the public functions line(), rect(),
             and others result in objects being added to the SVG canvas, with the file written by the
-            save() method to specified fileName.  The second argument, the map is provided as an
-            argument to establish the correspondence between the Maya scene and the site map
+            save() method to specified fileName.  The second argument, the siteMap is provided as an
+            argument to establish the correspondence between the Maya scene and the site siteMap
             coordinates.  Note that all coordinates will be assumed to be mm units. """
 
-        self.map = map
+        self.siteMap = siteMap
 
-        self.pxPerMm = None
+        # Generally units can be specified in millimeters.  In a few cases, however, (e.g.,
+        # PolyLine) the coordinates must be unqualified integers (as px).  The site maps, however
+        # are in 'scaled mm'.  Hence the need for a cnversion factor pxPerMm. Unfortunately, the
+        # conversion between px and mm is OS-dependent. The conversion from px to inches is 72 for
+        # Apple but 90 more generally).
+
+        ppi = 72 if OsUtils.isMac() else 90
+        self.pxPerMm = ppi/25.4
 
         # specify the width and height explicitly in mm, and likewise for the background rect
-        left   = map.left*mm
-        top    = map.top*mm
-        width  = map.width*mm
-        height = map.height*mm
+        left   = siteMap.left*mm
+        top    = siteMap.top*mm
+        width  = siteMap.width*mm
+        height = siteMap.height*mm
 
-        self.drawing = svgwrite.Drawing(fileName,
-                                        profile='tiny',
-                                        size=(width, height),
-                                        stroke=svgwrite.rgb(0, 0, 0))
+        self.drawing = svgwrite.Drawing(
+            fileName,
+            profile='tiny',
+            size=(width, height),
+            stroke=svgwrite.rgb(0, 0, 0))
         self.drawing.add(self.drawing.rect((left, top), (width, height), opacity='0'))
 
 #===================================================================================================
@@ -83,55 +93,63 @@ class CadenceDrawing(object):
 
 
 #___________________________________________________________________________________________________ scaleToScene
-    def scaleToScene(self, v):
-        """ Converts from map coordinates ('scaled mm') to scene coordinates (in cm). The 0.1 factor
-            converts from the 'scaled mm' units of the map to the centimeter units of the scene.
-            The map is usually drawn in 50:1 scale. """
+    def scaleToScene(self, value):
+        """ Site maps (Adobe Illustrator .ai files) are typically in 50:1 scale, and use mm as their
+            units.  Consequently a single unit in the site map corresponds to 50 mm in the 'real
+            world'. The 3D scene used in Cadence, on the other hand, uses cm scale.  That is,
+            coordinates and dimensions are in cm.  This function converts a value (coordinate or
+            dimension) from 'scaled mm' of the map into centimeter units of the 3D scene. For
+            example, a value of 20 units corresponds to 100 cm in the scene, which is returned. """
 
-        return int(v*(0.1*self.map.scale))
+        return 0.1*self.siteMap.scale*value
 
 #___________________________________________________________________________________________________ scaleToMap
     def scaleToMap(self, v):
-        """ Converts from scene coordinates (in cm) to map coordinates ('scaled mm')   The map
-            is usually drawn in 50:1 scale. """
+        """ Converts from scene coordinates (in cm) to siteMap coordinates ('scaled mm'). The
+            siteMap is usually drawn in 50:1 scale. """
 
-        return int(v/(0.1*self.map.scale))
+        #return round(v/(0.1*self.siteMap.scale))
+        return v/(0.1*self.siteMap.scale)
 
 #___________________________________________________________________________________________________ projectToScene
     def projectToScene(self, p):
-        """ The given map location p is projected to the corresponding scene point and returned.
-            In the scene, x is positive to the left, and z is positive upwards.  In the map, x is
-            positive to the right and y is positive downwards (hence both are multiplied by -1.
-            Note the asymmetry between projectToScene and projectToMap.  Going from the map to the
-            scene presumes one starts with map coordinates in mm, while going from the map """
+        """ The given siteMap location p is projected to the corresponding scene point and returned.
+            In the scene, x is positive to the left, and z is positive upwards.  In the siteMap, x
+            is positive to the right and y is positive downwards. """
 
-        xScene = -self.scaleToScene(p[0] - self.map.xFederal)
-        zScene = -self.scaleToScene(p[1] - self.map.yFederal)
+        xMap   = p[0]
+        yMap   = p[1]
+        xScene = -self.scaleToScene(xMap - self.siteMap.xFederal)
+        zScene = -self.scaleToScene(yMap - self.siteMap.yFederal)
 
-        return [xScene, zScene]
+        return (xScene, zScene)
 
 #___________________________________________________________________________________________________ projectToMap
-    def projectToMap(self, p, scene =True):
-        """ The given scene point p is projected to the corresponding map location and returned.
-            xScene is positive to the left, and zScene is positive upwards; xMap is positive to the
-            right and yMap is positive downwards.  """
+    def projectToMap(self, p):
+        """ The given 2D scene point p, comprised of scene cooordinates (xScene, zScene), is
+            projected to the corresponding 2D siteMap location (xMap, yMap) and returned. xScene
+            is positive to the left, and zScene is positive upwards; xMap is positive to the right
+            and yMap is positive downwards. """
 
-        x = self.map.xFederal - self.scaleToMap(p[0])
-        y = self.map.yFederal - self.scaleToMap(p[1])
+        xScene = p[0]
+        yScene = p[1]
+        xMap   = self.siteMap.xFederal - self.scaleToMap(xScene)
+        yMap   = self.siteMap.yFederal - self.scaleToMap(yScene)
 
-        return [x, y]
+        return (xMap, yMap)
 
 #___________________________________________________________________________________________________ mm
     def mm(self, p):
         """ Appends the units label 'mm' to each value. """
-        return [p[0]*mm, p[1]*mm]
+        return (p[0]*mm, p[1]*mm)
 
 #___________________________________________________________________________________________________ line
     def line(self, p1, p2, scene =True, **extra):
         """ Adds a line object to the svg file based on two scene points. It first converts from
-            scene to map coordinates if necessary, then concatenates 'mm' units to all values. """
+            scene to siteMap coordinates if necessary, then concatenates the units suffix 'mm' to
+            all coordinate values. """
 
-        # convert from scene coordinates to map coordinates if necessary
+        # convert from scene coordinates to siteMap coordinates if necessary
         if scene:
             p1 = self.projectToMap(p1, scene)
             p2 = self.projectToMap(p2, scene)
@@ -148,19 +166,21 @@ class CadenceDrawing(object):
     def polyLine(self, points, scene =True, **extra):
         """ Adds a polyline object to the svg file, based on a list of scene points. """
 
-        # convert from scene coordinates to map coordinates if necessary
+        # map from scene coordinates to siteMap coordinates if necessary
         if scene:
-            p = list()
-            for point in points:
-                p.append(self.projectToMap(point))
-            points = p
+            mappedPoints = list()
+            for p in points:
+                mappedPoints.append(self.projectToMap(p))
+            points = mappedPoints
 
-        # create a list of points p with 'mm' appended to the coordinates of each point
-        p = list()
-        for point in points:
-            p.append(self.mm(point))
+        # svgwrite does not allow coordinates with the suffix 'mm', hence all values must be in px.
+        convertedPoints = list()
+        for p in points:
+            p[0] *= self.pxPerMm
+            p[1] *= self.pxPerMm
+            convertedPoints.append(p)
 
-        obj = self.drawing.polyline(p, **extra)
+        obj = self.drawing.polyline(convertedPoints, **extra)
         self.drawing.add(obj)
         return obj
 
@@ -171,7 +191,7 @@ class CadenceDrawing(object):
             'scaled mm', otherwise they are presumed to be in mm.  All coordinates are explicitly
             labled with 'mm' and passed to svgwrite. """
 
-        # convert from scene coordinates to map coordinates if necessary
+        # convert from scene coordinates to siteMap coordinates if necessary
         if scene:
             insert = self.projectToMap(insert, scene)
             size   = [self.scaleToMap(size[0]), self.scaleToMap(size[1])]
@@ -189,7 +209,7 @@ class CadenceDrawing(object):
         """ Adds a circle object to the svg file. All coordinates are explicitly labled with 'mm'
             and passed to svgwrite. """
 
-        # convert from scene coordinates to map coordinates if necessary
+        # convert from scene coordinates to siteMap coordinates if necessary
         if scene:
             center = self.projectToMap(center)
             radius = self.scaleToMap(radius)
@@ -207,7 +227,7 @@ class CadenceDrawing(object):
         """ Adds an ellipse object to the svg file, based on a center point and two radii.  All
             coordinates are explicitly labled with 'mm' and passed to svgwrite. """
 
-        # convert from scene coordinates to map coordinates if necessary
+        # convert from scene coordinates to siteMap coordinates if necessary
         if scene:
             center = self.projectToMap(center)
             radii  = [self.scaleToMap(radii[0]), self.scaleToMap(radii[1])]
@@ -224,7 +244,7 @@ class CadenceDrawing(object):
     def text(self, textString, insert, scene =True, **extra):
         """ Adds a text of a given fill at the given insertion point. """
 
-        # convert from scene coordinates to map coordinates if necessary
+        # convert from scene coordinates to siteMap coordinates if necessary
         if scene:
             insert = self.projectToMap(insert)
 
@@ -253,68 +273,25 @@ class CadenceDrawing(object):
 
 #___________________________________________________________________________________________________ grid
     def grid(self, markerSize =2, diagonals =True, dx =200, dy =200, **extra):
-        """ Adds a grid of marks (each an'X' or '+" depending on the boolean diagonals) of a given
-            size and spacing, spaThe
-            grid is then filled out with marks within the width and height of the map, spaced in x
-            by dx and in y by dy. Note that the grid is computed entirely in map coordinates. """
+        """ Adds a rectangular grid of marks (each an'X' or '+" depending on the boolean diagonals)
+            of a given size and spacing.  The grid is in registration with the site map's federal
+            coordinate marker, spaced by multiples of dx and dy to fill up the width and height of
+            the siteMap. Note that the grid is computed entirely in siteMap coordinates. Note that
+            the grid marks on a site map are separated by 10 m in the real world, or 200 units in
+            the map. """
 
-        x0 = self.map.xFederal
-        y0 = self.map.yFederal
+        x0 = self.siteMap.xFederal
+        y0 = self.siteMap.yFederal
         x0 = x0%dx
         y0 = y0%dy
-        xn = int(self.map.width/dx)
-        yn = int(self.map.height/dy)
+        xn = int(self.siteMap.width/dx)
+        yn = int(self.siteMap.height/dy)
 
         for i in range(xn):
             x = x0 + i*dy
             for j in range(yn):
                 y = y0 + j*dy
                 self.mark([x, y], markerSize, diagonals, scene=False, **extra)
-
-#___________________________________________________________________________________________________ markG
-    def markG(self, size, diagonals =True, scene =True, **extra):
-        """ Adds a mark of given radius at a given location.  If diagonals is True the mark is
-            an 'X' else a '+'. """
-
-        x = 0
-        y = 0
-
-        #markGroup = self.drawing.add(self.drawing.g(id='markGroup'))
-        markGroup = self.drawing.g(id='markGroup')
-        if diagonals:
-            size *= math.sqrt(2.0)
-            markGroup.add(self.line([x - size, y - size], [x + size, y + size], scene=scene, **extra))
-            markGroup.add(self.line([x - size, y + size], [x + size, y - size], scene=scene, **extra))
-        else:
-            markGroup.add(self.line([x - size, y], [x + size, y], scene=scene, **extra))
-            markGroup.add(self.line([x, y - size], [x, y + size], scene=scene, **extra))
-
-        return markGroup
-
-#___________________________________________________________________________________________________ gridG
-    def gridG(self, markerSize =2, diagonals =True, dx =200, dy =200, **extra):
-        """ Adds a grid of marks (each an'X' or '+" depending on the boolean diagonals) of a given
-            size and spacing, spaThe
-            grid is then filled out with marks within the width and height of the map, spaced in x
-            by dx and in y by dy. Note that the grid is computed entirely in map coordinates. """
-
-        x0 = self.map.xFederal
-        y0 = self.map.yFederal
-        x0 = x0%dx
-        y0 = y0%dy
-        xn = int(self.map.width/dx)
-        yn = int(self.map.height/dy)
-
-        markerG = self.markG(markerSize, diagonals, scene=False, **extra)
-
-        for i in range(xn):
-            x = x0 + i*dy
-            for j in range(yn):
-                y = y0 + j*dy
-                #self.mark([x, y], markerSize, diagonals, scene=False, **extra)
-                instance = self.drawing.use(markerG)
-                instance.translate(2.834*x, 2.834*y)
-                self.drawing.add(instance)
 
 #___________________________________________________________________________________________________ save
     def save(self):

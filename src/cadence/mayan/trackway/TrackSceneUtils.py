@@ -365,7 +365,7 @@ class TrackSceneUtils(object):
         # Scale the length of the length ruler
         cmds.connectAttr(node + '.length', node + '|' + inverter + '|LengthRuler.scaleZ')
 
-        # Translate the track node epsilon below ground level (to reveal the overlaid track map)
+        # Translate the track node epsilon below ground level (to reveal the overlaid track siteMap)
         cmds.move(0, -epsilon, 0, node)
 
         # Initialize all the properties from the dictionary

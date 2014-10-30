@@ -20,7 +20,7 @@ class SitemapCsvColumnEnum(object):
     """ A unique decimal index that identifies the sitemap when referenced within the database. """
     INDEX = SITEMAP_PROP_NT(0, 'index')
 
-    """ The name of the Adobe Illustrator file represented by the map. """
+    """ The name of the Adobe Illustrator file represented by the siteMap. """
     FILENAME = SITEMAP_PROP_NT(1, 'filename')
 
     FEDERAL_EAST = SITEMAP_PROP_NT(2, 'federal_east')

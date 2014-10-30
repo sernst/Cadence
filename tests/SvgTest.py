@@ -29,42 +29,51 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 
 model   = Tracks_SiteMap.MASTER
 session = model.createSession()
-map     = session.query(model).filter(model.index == 14).first()
-drawing  = CadenceDrawing('test.svg', map)
+siteMap = session.query(model).filter(model.index == 14).first()
+drawing = CadenceDrawing('test0.svg', siteMap)
 
-fMap = (map.xFederal, map.yFederal)
-fScene = drawing.projectToScene([fMap[0], fMap[1]])
+xFed   = siteMap.xFederal
+yFed   = siteMap.yFederal
+fMap   = (xFed, yFed)
+fScene = drawing.projectToScene((xFed, yFed))
 
-print "map.index = %s and map.name = %s" % (map.index, map.filename)
-print 'in map, xFederal = %s and yFederal = %s' % fMap
+print "siteMap.index = %s and siteMap.name = %s" % (siteMap.index, siteMap.filename)
+print 'in siteMap, xFederal = %s and yFederal = %s' % fMap
 print 'in scene, xFederal = %s and yFederal = %s' % (fScene[0], fScene[1])
-print 'and back again, to map, p = %s' % drawing.projectToMap([fScene[0], fScene[1]])
+print 'and back again, to siteMap, p = %s' % drawing.projectToMap([fScene[0], fScene[1]])
 
-print 'scaling to scene, map.xFederal maps to %s' % drawing.scaleToScene(map.xFederal)
-print 'and this maps back to to %s' % drawing.scaleToMap(drawing.scaleToScene(map.xFederal))
+print 'scaling to scene, siteMap.xFederal maps to %s' % drawing.scaleToScene(xFed)
+print 'and this maps back to to %s' % drawing.scaleToMap(drawing.scaleToScene(yFed))
 
-#
-# #drawing.rect(0, 0, map.width, map.height, sceneCoordinates=False)
-#
-# #drawing.circle(10.0, 10.0, 5)
-# # drawing.text("zero-zero", 10, 10)
-# drawing.circle(map.xFederal, map.yFederal, r=4, sceneCoordinates=False)
-# # drawing.mark(map.xFederal, map.yFederal, 10)
-#
-# # drawing.mmLine(500, 500, 550, 550)
-# # drawing.line(500, 550, 550, 500)
-#
-drawing.gridG()
-#
-# xc = map.xFederal
-# yc = map.yFederal
-#
-# # points = ((xc - 50, yc -50), (xc + 50, yc - 50), (xc + 50, yc + 50), (xc - 50, yc + 50), (xc - 50, yc - 50))
-# # drawing.polyLine(points)
-drawing.text("fed", [map.xFederal - 100, map.yFederal], scene=False)
+# place a circle of radius 5 at (10.0, 10.0) in scene coordinates
+drawing.circle((10, 10), 5)
+
+# label it with text at (20, 10)
+drawing.text("circle of radius 5", (20, 10), scene=True)
+
+# now place another circle and rect in map coordinates (not scene coordinates) at the federal marker
+drawing.rect((xFed + 40, yFed), (20, 20), scene=False)
+
+# and another smaller one at (10, 20) in map coordinates
+drawing.rect((10, 20), (4, 8), scene=False)
+
+# and test out polyLine
+xc = 50
+yc = 50
+
+points = (
+    (xc - 50, yc -50),
+    (xc + 50, yc - 50),
+    (xc + 50, yc + 50),
+    (xc - 50, yc + 50),
+    (xc - 50, yc - 50))
+
+drawing.polyLine(points)
+
+# done
 drawing.save()
 
-# Don't forget to always close the session at the end to release the database lock
+# Don't forget to always close the session at the end in order to release the database lock
 session.close()
 
 print 'Test Complete'
