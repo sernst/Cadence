@@ -30,7 +30,7 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 model   = Tracks_SiteMap.MASTER
 session = model.createSession()
 siteMap = session.query(model).filter(model.index == 13).first()
-drawing = CadenceDrawing('test0.svg', siteMap)
+drawing = CadenceDrawing('test.svg', siteMap)
 
 #
 # xFed   = siteMap.xFederal
