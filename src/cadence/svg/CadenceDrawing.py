@@ -25,16 +25,17 @@ class CadenceDrawing(object):
         coordinates marker within the siteMap).
 
         This class wraps (owns) an instance of an svgwrite.Drawing and handles the mapping from 3D
-        scene coordinates (x, z) to svg coordinates (x, y).  Scene coordinates are in real-world cm,
-        while the svg coordinates used in the sitemaps is in 50:1 scaled mm.  That is, one mm in the
-        drawing equals 5 cm, realworld.  By default, a saved CadenceDrawing can then be
-        placed in an Adobe Illustrator layer, in registation with the vector art of a sitemap.
+        scene coordinates (x, z) to SVG coordinates (x, y).  Scene coordinates are in real-world cm,
+        while the SVG coordinates used in the sitemaps is in (50:1 scaled) mm.  That is, one mm in
+        the drawing equals 5 cm, realworld.  By default, a saved CadenceDrawing can be placed in an
+        Adobe Illustrator layer, then adjusted to be in registation with the sitemap.
 
-        As background, the underlying svgwrite.Drawing class provides functions to draw lines,
-        rectangles, and other objects, that are accumulated (by .add() function) and subsequently
-        written (by .save() to the file specified.  The svgwrite class Drawing uses kwargs to
-        provide a Pythonic means to specify attributes such as stroke, stroke_linecap, stroke_width,
-        and fill.  For example (as shown in svgwrite.shapes.py):
+        The underlying svgwrite.Drawing class provides functions to draw lines, rectangles, and
+        other SVG objects. A new drawing is created with specified file name, canvas size and other
+        parameters, then details are drawn by add, and finally the drawing (the SVG file) is written
+        by a save function.  The svgwrite class Drawing uses kwargs to provide a Pythonic means to
+        specify SVG attributes such as stroke, stroke_linecap, stroke_width, and fill.  For example
+        (as shown in svgwrite.shapes.py):
             line    requires start=(x, y), end=(x, y)
             rect    requires insert=(x, y), size=(width, height)
             circle  requires center=(x, y), r=<number>
@@ -50,7 +51,7 @@ class CadenceDrawing(object):
         line, rect, circle, etc., each of which returns an svg object.  They are scaled
         appropriately for inclusion into a tracksite file in Adobe illustrator, but they can also
         be added to svg groups and so forth. Generally one would leave the kwarg scene to default
-        to True, as that enables conversion from scene coordinates to scaled mm."""
+        to True, as that enables conversion from scene coordinates to scaled mm. """
 
 
 #===================================================================================================
@@ -62,7 +63,7 @@ class CadenceDrawing(object):
             and others result in objects being added to the SVG canvas, with the file written by the
             save() method to specified fileName.  The second argument, the siteMap is provided as an
             argument to establish the correspondence between the Maya scene and the site siteMap
-            coordinates.  Note that all coordinates will be assumed to be mm units. """
+            coordinates. """
 
         self.siteMap = siteMap
 
@@ -96,9 +97,8 @@ class CadenceDrawing(object):
     def scaleToScene(self, value):
         """ Site maps (Adobe Illustrator .ai files) are typically in 50:1 scale, and use mm as their
             units.  Consequently a single unit in the site map corresponds to 50 mm in the 'real
-            world'. The 3D scene used in Cadence, on the other hand, uses cm scale.  That is,
-            coordinates and dimensions are in cm.  This function converts a value (coordinate or
-            dimension) from 'scaled mm' of the map into centimeter units of the 3D scene. For
+            world'. The 3D scene on the other hand, uses cm scale.  This function converts the given
+            value from the 'scaled mm' of the map into centimeter units of the 3D scene. For
             example, a value of 20 units corresponds to 100 cm in the scene, which is returned. """
 
         return 0.1*self.siteMap.scale*value
@@ -164,7 +164,7 @@ class CadenceDrawing(object):
 
 #___________________________________________________________________________________________________ polyLine
     def polyLine(self, points, scene =True, **extra):
-        """ Adds a polyline object to the svg file, based on a list of scene points. """
+        """ Adds a polyline object to the SVG file, based on a list of scene points. """
 
         # map from scene coordinates to siteMap coordinates if necessary
         if scene:
@@ -186,7 +186,7 @@ class CadenceDrawing(object):
 
 #___________________________________________________________________________________________________ rect
     def rect(self, insert, size, scene =True, rx =None, ry =None, **extra):
-        """ Adds a rect object to the svg file, based on insert (coordinates of upper left corner)
+        """ Adds a rect object to the SVG file, based on insert (coordinates of upper left corner)
             and size (width, height).  If the boolean scene is True, the arguments are converted to
             'scaled mm', otherwise they are presumed to be in mm.  All coordinates are explicitly
             labled with 'mm' and passed to svgwrite. """
@@ -206,7 +206,7 @@ class CadenceDrawing(object):
 
 #___________________________________________________________________________________________________ circle
     def circle(self, center, radius, scene =True, **extra):
-        """ Adds a circle object to the svg file. All coordinates are explicitly labled with 'mm'
+        """ Adds a circle object to the SVG file. All coordinates are explicitly labled with 'mm'
             and passed to svgwrite. """
 
         # convert from scene coordinates to siteMap coordinates if necessary
@@ -224,7 +224,7 @@ class CadenceDrawing(object):
 
 #___________________________________________________________________________________________________ ellipse
     def ellipse(self, center, radii, scene =True, **extra):
-        """ Adds an ellipse object to the svg file, based on a center point and two radii.  All
+        """ Adds an ellipse object to the SVG file, based on a center point and two radii.  All
             coordinates are explicitly labled with 'mm' and passed to svgwrite. """
 
         # convert from scene coordinates to siteMap coordinates if necessary
@@ -301,12 +301,10 @@ class CadenceDrawing(object):
 #___________________________________________________________________________________________________ group
     def group(self):
         """ Creates an svgwrite group, so that the SVG fragments that are added to the group can be
-            transformed by the group's transform mixin.  For this
-        """
+            transformed by the group's transform mixin. """
         pass
 
 #___________________________________________________________________________________________________ symbol
     def symbol(self, name):
-        """  Creates a symbol of a given name. """
-        #self.drawing. ... later
+        """  Creates a symbol of given name. """
         pass
