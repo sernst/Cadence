@@ -4,7 +4,6 @@
 
 import math
 import nimble
-import svgwrite
 
 from nimble import cmds
 from PySide import QtGui
@@ -1958,10 +1957,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 
             # compute the averge uncertainty in cm (also stored in fractional meters)
             u = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
-
-            # so that a radius of less than 5 remains visible
-            #if u > 0 and u < 5.0:
-#                u = 5.0
 
             self.currentDrawing.circle(
                 (x, z),

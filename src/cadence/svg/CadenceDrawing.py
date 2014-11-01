@@ -176,9 +176,9 @@ class CadenceDrawing(object):
         # svgwrite does not allow coordinates with the suffix 'mm', hence all values must be in px.
         convertedPoints = list()
         for p in points:
-            p[0] *= self.pxPerMm
-            p[1] *= self.pxPerMm
-            convertedPoints.append(p)
+            x = p[0]*self.pxPerMm
+            y = p[1]*self.pxPerMm
+            convertedPoints.append((x, y))
 
         obj = self.drawing.polyline(convertedPoints, **extra)
         self.drawing.add(obj)
@@ -297,3 +297,16 @@ class CadenceDrawing(object):
     def save(self):
         """ Writes the current drawing to the file specified at initialization. """
         self.drawing.save()
+
+#___________________________________________________________________________________________________ group
+    def group(self):
+        """ Creates an svgwrite group, so that the SVG fragments that are added to the group can be
+            transformed by the group's transform mixin.  For this
+        """
+        pass
+
+#___________________________________________________________________________________________________ symbol
+    def symbol(self, name):
+        """  Creates a symbol of a given name. """
+        #self.drawing. ... later
+        pass

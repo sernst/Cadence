@@ -6,6 +6,7 @@ import sqlalchemy as sqla
 
 
 from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
+from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ Tracks_SiteMap
 class Tracks_SiteMap(FlagsTracksDefault):
@@ -66,8 +67,33 @@ class Tracks_SiteMap(FlagsTracksDefault):
     def getFederalCoordinates(self):
         """ The Swiss federal coordinates associated with the marker on the siteMap is returned.  These
             coordinates are in meters relative to a geographical reference point.  The values of
-            the first, 'east', coordinate are on the order of 600,000 m and those of the second,
-            'north' coordinate on the order of 200,000 m. Note that coordinate values extracted from
+            the first coordinate ('east') are on the order of 600,000 m and those of the second
+            coordinate ('north') are roughly 200,000 m. Note that coordinate values extracted from
             the scene are in centimeters, while these coordinates are in meters. """
 
         return [self.federalEast, self.federalNorth]
+
+#___________________________________________________________________________________________________ getAllTracks
+    def getAllTracks(self, session =None):
+        """ This operates on the current siteMap, which is populated with the specifics for a given
+            track site.  The three-letter site abbreviation (e.g., BSY, TCH) and the level can be
+            parsed the filename, based on the (informal-but-thus-far-valid) naming convention for
+            the sitemap file. """
+
+        model = Tracks_Track.MASTER
+
+        filename = self.filename
+        if not filename:
+            print 'getAllTracks: filename invalid'
+
+        site  = self.filename[0:3]
+        level = filename.partition('_')[-1].rpartition(' ')[0]
+        print 'getAllTracks:  querying for site = %s and level = %s' % (site, level)
+
+        if session is None:
+            session = model.createSession()
+
+        query = session.query(model).filter(model.site == site)
+        query = query.filter(model.level == level)
+
+        return query.all()

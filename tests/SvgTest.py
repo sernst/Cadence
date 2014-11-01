@@ -29,21 +29,26 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 
 model   = Tracks_SiteMap.MASTER
 session = model.createSession()
-siteMap = session.query(model).filter(model.index == 14).first()
+siteMap = session.query(model).filter(model.index == 13).first()
 drawing = CadenceDrawing('test0.svg', siteMap)
 
 xFed   = siteMap.xFederal
 yFed   = siteMap.yFederal
 fMap   = (xFed, yFed)
 fScene = drawing.projectToScene((xFed, yFed))
+xScene = fScene[0]
+yScene = fScene[1]
 
 print "siteMap.index = %s and siteMap.name = %s" % (siteMap.index, siteMap.filename)
 print 'in siteMap, xFederal = %s and yFederal = %s' % fMap
-print 'in scene, xFederal = %s and yFederal = %s' % (fScene[0], fScene[1])
-print 'and back again, to siteMap, p = %s' % drawing.projectToMap([fScene[0], fScene[1]])
+print 'in scene, xFederal = %s and yFederal = %s' % (xScene, yScene)
+
+pScene = drawing.projectToMap((xScene, yScene))
+
+print 'and back again, to siteMap, p = (%s, %s)' % pScene
 
 print 'scaling to scene, siteMap.xFederal maps to %s' % drawing.scaleToScene(xFed)
-print 'and this maps back to to %s' % drawing.scaleToMap(drawing.scaleToScene(yFed))
+print 'and this maps back to %s' % drawing.scaleToMap(drawing.scaleToScene(xFed))
 
 # place a circle of radius 5 at (10.0, 10.0) in scene coordinates
 drawing.circle((10, 10), 5)
@@ -92,7 +97,7 @@ print 'Test Complete'
 #     for y in range(20):
 #         hlines.add(dwg.line(start=(2*cm, (2+y)*cm), end=(18*cm, (2+y)*cm)))
 #
-#     # make anoher group, this one called vlines
+#     # make another group, this one called vlines
 #     vlines = dwg.add(dwg.g(id='vline', stroke='blue'))
 #
 #     # and add lines to it also
