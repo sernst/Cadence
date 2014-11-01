@@ -32,6 +32,9 @@ session = model.createSession()
 siteMap = session.query(model).filter(model.index == 13).first()
 drawing = CadenceDrawing('test.svg', siteMap)
 
+# --------------------------------------------------------------------------------------------------
+# THIS DEMONSTRATES MAPPING BETWEEN A SITE MAP THE SCENE, PLUS SIMPLE SHAPES
+
 #
 # xFed   = siteMap.xFederal
 # yFed   = siteMap.yFederal
@@ -69,7 +72,7 @@ drawing = CadenceDrawing('test.svg', siteMap)
 # drawing.polyLine(points)
 
 #==================================================================================================
-# LOAD ALL TRACKS FOR THIS SITE AND DRAWN THEM
+# LOAD ALL TRACKS FOR THIS SITE AND DRAW THEM
 
 tracks = siteMap.getAllTracks(session)
 
