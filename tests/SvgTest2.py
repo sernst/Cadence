@@ -33,7 +33,7 @@ siteMap = session.query(model).filter(model.index == 13).first()
 drawing = CadenceDrawing('test_2.svg', siteMap)
 
 # --------------------------------------------------------------------------------------------------
-# THIS DEMONSTRATES MAPPING BETWEEN A SITE MAP THE SCENE, PLUS SIMPLE SHAPES
+# THIS DEMONSTRATES MAPPING BETWEEN A SITE MAP AND THE SCENE, PLUS SIMPLE SHAPES
 
 #
 # xFed   = siteMap.xFederal
@@ -71,7 +71,8 @@ drawing.circle((0, 0), 2, scene=True, fill='none', stroke='green', stroke_width=
 drawing.grid()
 
 #==================================================================================================
-# # TEST POLYLINE
+# TEST POLYLINE
+
 # xc = 50
 # yc = 50
 #
@@ -85,7 +86,7 @@ drawing.grid()
 # drawing.polyLine(points)
 
 #==================================================================================================
-# # LOAD ALL TRACKS FOR THIS SITE AND DRAW THEM
+# LOAD ALL TRACKS FOR THIS SITE AND DRAW THEM AS DISKS
 #
 # tracks = siteMap.getAllTracks(session)
 #
@@ -107,9 +108,8 @@ drawing.grid()
 #     drawing.circle((x, z), u, scene=True, fill='red', stroke='red', stroke_width=1)
 
 
-
 #==================================================================================================
-# # create a group and transform it.
+# #  CREATE A GROUP CONTAINING A RECT, SHOWING HOW TO USE (INSTANCE) IT ROTATED AND TRANSLATED
 #
 # drawing.createGroup('g1')
 # drawing.rect((0, 0), 10, 40, scene=False, groupId='g1') # add this rect to the group
@@ -119,12 +119,6 @@ drawing.grid()
 # drawing.use('g1', (400, 300), rotation=30)
 # drawing.use('g1', (400, 400), rotation=40)
 # drawing.use('g1', (400, 500), rotation=50)
-
-
-
-
-
-
 
 # done
 drawing.save()

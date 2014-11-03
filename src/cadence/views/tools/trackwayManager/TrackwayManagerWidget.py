@@ -2032,8 +2032,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         # place the federal coordinates as a text string 20 cm above the marker
         site = self.currentDrawing.siteMap
-        t    = "(%s, %s)" % (site.federalEast, site.federalNorth)
-        self.currentDrawing.text(t, (0, 20), scene=True)
+        text = "(%s, %s)" % (site.federalEast, site.federalNorth)
+        self.currentDrawing.text(text, (0, 20), scene=True)
 
         # place a 2 cm green unfilled circle atop the federal coordinate marker
         self.currentDrawing.circle(
