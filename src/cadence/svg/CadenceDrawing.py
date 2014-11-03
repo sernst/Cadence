@@ -1,8 +1,6 @@
-# SvgWriter.py
+# CadenceDrawing.py
 # (C)2014
 # Kent A. Stevens
-
-import math
 
 import svgwrite
 from svgwrite import mm
