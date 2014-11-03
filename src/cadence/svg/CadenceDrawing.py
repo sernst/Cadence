@@ -27,32 +27,48 @@ class CadenceDrawing(object):
         This class wraps (owns) an instance of an svgwrite.Drawing and handles the mapping from 3D
         scene coordinates (x, z) to SVG coordinates (x, y).  Scene coordinates are in real-world cm,
         while the SVG coordinates used in the sitemaps is in (50:1 scaled) mm.  That is, one mm in
-        the drawing equals 5 cm, realworld.  By default, a saved CadenceDrawing can be placed in an
+        the _drawing equals 5 cm, realworld.  By default, a saved CadenceDrawing can be placed in an
         Adobe Illustrator layer, then adjusted to be in registation with the sitemap.
 
-        The underlying svgwrite.Drawing class provides functions to draw lines, rectangles, and
-        other SVG objects. A new drawing is created with specified file name, canvas size and other
-        parameters, then details are drawn by add, and finally the drawing (the SVG file) is written
-        by a save function.  The svgwrite class Drawing uses kwargs to provide a Pythonic means to
-        specify SVG attributes such as stroke, stroke_linecap, stroke_width, and fill.  For example
-        (as shown in svgwrite.shapes.py):
-            line    requires start=(x, y), end=(x, y)
-            rect    requires insert=(x, y), size=(width, height)
-            circle  requires center=(x, y), r=<number>
-            ellipse requires center=(x, y), r=(radius1, radius2)
-        where a simple svgwrite usage would be:
-            import svgwrite
-            d = svgwrite.Drawing(someMap, someFile)
-            d.add(d.line(someStartPoint, someEndPoint)
-            d.save()
-        See further coding examples at http://nullege.com/codes/search/svgwrite.Drawing.
+        CadenceDrawing is built upon the svgwrite.Drawing class, which provides the basic
+        functions to draw lines, rectangles, and other SVG objects. For further information on
+        svgwrite, consult: https://pythonhosted.org/svgwrite
 
-        In this wrapper adaptation of svgwrite, a CadenceDrawing provides the basic shape functions
-        line, rect, circle, etc., each of which returns an svg object.  They are scaled
-        appropriately for inclusion into a tracksite file in Adobe illustrator, but they can also
-        be added to svg groups and so forth. Generally one would leave the kwarg scene to default
-        to True, as that enables conversion from scene coordinates to scaled mm. """
+        A CadenceDrawing instance simplifies the functionality of svgwrite, encapsulating all the
+        handling of all SVG fragments through function calls to create lines, polyLines, rects,
+        circles, elipses, and text, plus transformable groups, with the resultant SVG file written
+        by the function save.  A CadenceDrawing adopts the underlying svgwrite convention of using
+        kwargs to provide a Pythonic means to specify SVG attributes such as stroke, stroke_linecap,
+        stroke_width, and fill. CadenceDrawing is a wrapper adaptation of svgwrite.  That is, a
+        CadenceDrawing encapsulates an instance of an svgwrite Drawing. Coordinate mapping allows
+        trackway data (coordinates and dimensions) to be scaled appropriately for inclusion into an
+        SVG-format tracksite file to be placed in a layer in Adobe illustrator).  This scaling is
+        provided by the kwarg scene=True, wherein scene coordinates (in cm) are converted to scaled
+        mm. The following is an example in which all tracks for a given site are loaded and drawn:
 
+            tracks = siteMap.getAllTracks(session)
+            for track in tracks:
+                x = track.x
+                z = track.z
+                # Track dimensions are in fractional meters, so multiply by 100 to convert to cm.
+                r = 100*0.5*(track.width/2.0 + track.length/2.0)
+                drawing.circle((x, z), r, scene=True, fill='none', stroke='blue', stroke_width=1)
+                # compute this track's averge uncertainty in cm (also stored in fractional meters)
+                u = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
+                drawing.circle((x, z), u, scene=True, fill='red', stroke='red', stroke_width=1)
+
+        A more advanced usage uses groups that can be transformed (rotated, scaled, translated).
+        A group is created and given an ID that is then passed to drawing functions (which create
+        the shape), then the group is used (instantiated) at somePlace at a rotation of 45 degrees:
+
+            drawing.createGroup('g1')
+            drawing.rect((0, 0), width, height, groupId='g1')
+            ...etc...
+
+            drawing.use('g1', somePlace, rotation=45)
+
+        The use of groups, while convenient, requires that all map coordinates be converted to px.
+        For more detail, see the use function and grid, which produces a 10 m grid. """
 
 #===================================================================================================
 #                                                                                       C L A S S
@@ -82,12 +98,14 @@ class CadenceDrawing(object):
         width  = siteMap.width*mm
         height = siteMap.height*mm
 
-        self.drawing = svgwrite.Drawing(
+        self._drawing = svgwrite.Drawing(
             fileName,
             profile='tiny',
             size=(width, height),
             stroke=svgwrite.rgb(0, 0, 0))
-        self.drawing.add(self.drawing.rect((left, top), (width, height), opacity='0'))
+        self._drawing.add(self._drawing.rect((left, top), (width, height), opacity='0'))
+
+        self.groups = dict()
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -108,7 +126,6 @@ class CadenceDrawing(object):
         """ Converts from scene coordinates (in cm) to siteMap coordinates ('scaled mm'). The
             siteMap is usually drawn in 50:1 scale. """
 
-        #return round(v/(0.1*self.siteMap.scale))
         return v/(0.1*self.siteMap.scale)
 
 #___________________________________________________________________________________________________ projectToScene
@@ -144,12 +161,12 @@ class CadenceDrawing(object):
         return (p[0]*mm, p[1]*mm)
 
 #___________________________________________________________________________________________________ line
-    def line(self, p1, p2, scene =True, **extra):
+    def line(self, p1, p2, scene =True, groupId =None, **extra):
         """ Adds a line object to the svg file based on two scene points. It first converts from
             scene to siteMap coordinates if necessary, then concatenates the units suffix 'mm' to
             all coordinate values. """
 
-        # convert from scene coordinates to siteMap coordinates if necessary
+        # convert from scene coordinates to map coordinates as necessary
         if scene:
             p1 = self.projectToMap(p1, scene)
             p2 = self.projectToMap(p2, scene)
@@ -158,15 +175,26 @@ class CadenceDrawing(object):
         p1 = self.mm(p1)
         p2 = self.mm(p2)
 
-        line = self.drawing.line(p1, p2, **extra)
-        self.drawing.add(line)
-        return line
+        # create the object
+        obj = self._drawing.line(p1, p2, **extra)
+
+        # and add it to either a specific group or to the default _drawing
+        if groupId:
+            group = self.groups[groupId]
+            if group:
+                group.add(obj)
+            else:
+                print 'line:  %s is not a valid group ID' % groupId
+                return
+        else:
+            self._drawing.add(obj)
 
 #___________________________________________________________________________________________________ polyLine
-    def polyLine(self, points, scene =True, **extra):
-        """ Adds a polyline object to the SVG file, based on a list of scene points. """
+    def polyLine(self, points, scene =True, groupId =None, **extra):
+        """ Adds a polyline object to the SVG file, based on a list of scene points. If canvas is
+            specified, this permits adding this object to a """
 
-        # map from scene coordinates to siteMap coordinates if necessary
+        # map from scene coordinates to map coordinates as necessary
         if scene:
             mappedPoints = list()
             for p in points:
@@ -180,18 +208,33 @@ class CadenceDrawing(object):
             y = p[1]*self.pxPerMm
             convertedPoints.append((x, y))
 
-        obj = self.drawing.polyline(convertedPoints, **extra)
-        self.drawing.add(obj)
-        return obj
+        # create the object
+        obj = self._drawing.polyline(convertedPoints, **extra)
+
+        # and add it to either a specific group or symbol, or the default _drawing
+        if groupId:
+            group = self.groups[groupId]
+            if group:
+                group.add(obj)
+            else:
+                print 'polyLine:  %s is not a valid group ID' % groupId
+                return
+        else:
+            self._drawing.add(obj)
 
 #___________________________________________________________________________________________________ rect
-    def rect(self, insert, size, scene =True, rx =None, ry =None, **extra):
-        """ Adds a rect object to the SVG file, based on insert (coordinates of upper left corner)
-            and size (width, height).  If the boolean scene is True, the arguments are converted to
+    def rect(self, center, width, height, scene =True, groupId =None, rx =None, ry =None, **extra):
+        """ Adds a rect object to the SVG file, based on center and dimensions. If the boolean
+            scene is True, the arguments are converted to
             'scaled mm', otherwise they are presumed to be in mm.  All coordinates are explicitly
             labled with 'mm' and passed to svgwrite. """
 
-        # convert from scene coordinates to siteMap coordinates if necessary
+        xCenter = center[0]
+        yCenter = center[1]
+        insert  = (xCenter - width/2, yCenter - height/2)
+        size    = (width, height)
+
+        # convert from scene coordinates to map coordinates as necessary
         if scene:
             insert = self.projectToMap(insert, scene)
             size   = [self.scaleToMap(size[0]), self.scaleToMap(size[1])]
@@ -200,16 +243,26 @@ class CadenceDrawing(object):
         insert = self.mm(insert)
         size   = self.mm(size)
 
-        obj = self.drawing.rect(insert, size, rx, ry, **extra)
-        self.drawing.add(obj)
-        return obj
+        # create the object
+        obj = self._drawing.rect(insert, size, rx, ry, **extra)
+
+        # and add it to either a specific group or to the default _drawing
+        if groupId:
+            group = self.groups[groupId]
+            if group:
+                group.add(obj)
+            else:
+                print 'rect:  %s is not a valid group ID' % groupId
+                return
+        else:
+            self._drawing.add(obj)
 
 #___________________________________________________________________________________________________ circle
-    def circle(self, center, radius, scene =True, **extra):
+    def circle(self, center, radius, scene =True, groupId =None, **extra):
         """ Adds a circle object to the SVG file. All coordinates are explicitly labled with 'mm'
             and passed to svgwrite. """
 
-        # convert from scene coordinates to siteMap coordinates if necessary
+        # convert from scene coordinates to map coordinates as necessary
         if scene:
             center = self.projectToMap(center)
             radius = self.scaleToMap(radius)
@@ -218,16 +271,26 @@ class CadenceDrawing(object):
         center = self.mm(center)
         radius = radius*mm
 
-        obj = self.drawing.circle(center, radius, **extra)
-        self.drawing.add(obj)
-        return obj
+        # create the object
+        obj = self._drawing.circle(center, radius, **extra)
+
+        # and add it to either a specific group or to the default _drawing
+        if groupId:
+            group = self.groups[groupId]
+            if group:
+                group.add(obj)
+            else:
+                print 'circle:  %s is not a valid group ID' % groupId
+                return
+        else:
+            self._drawing.add(obj)
 
 #___________________________________________________________________________________________________ ellipse
-    def ellipse(self, center, radii, scene =True, **extra):
+    def ellipse(self, center, radii, scene =True, groupId =None, **extra):
         """ Adds an ellipse object to the SVG file, based on a center point and two radii.  All
             coordinates are explicitly labled with 'mm' and passed to svgwrite. """
 
-        # convert from scene coordinates to siteMap coordinates if necessary
+        # convert from scene coordinates to map coordinates as necessary
         if scene:
             center = self.projectToMap(center)
             radii  = [self.scaleToMap(radii[0]), self.scaleToMap(radii[1])]
@@ -236,75 +299,140 @@ class CadenceDrawing(object):
         center = self.mm(center)
         radii  = self.mm(radii)
 
-        obj = self.drawing.ellipse(center, radii, **extra)
-        self.drawing.add(obj)
-        return obj
+        # create the object
+        obj = self._drawing.ellipse(center, radii, **extra)
+
+        # and add it to either a specific group or to the default _drawing
+        if groupId:
+            group = self.groups[groupId]
+            if group:
+                group.add(obj)
+            else:
+                print 'circle:  %s is not a valid group ID' % groupId
+                return
+        else:
+            self._drawing.add(obj)
 
 #___________________________________________________________________________________________________ text
-    def text(self, textString, insert, scene =True, **extra):
+    def text(self, textString, insert, scene =True, groupId =None, **extra):
         """ Adds a text of a given fill at the given insertion point. """
 
-        # convert from scene coordinates to siteMap coordinates if necessary
+        # convert from scene coordinates to map coordinates as necessary
         if scene:
             insert = self.projectToMap(insert)
 
         # append the 'mm' units
         insert = self.mm(insert)
 
-        obj = self.drawing.text(textString, insert, **extra)
-        self.drawing.add(obj)
-        return obj
+        # create the object
+        obj = self._drawing.text(textString, insert, **extra)
+
+        # and add it to either a specific group or to the default _drawing
+        if groupId:
+            group = self.groups[groupId]
+            if group:
+                group.add(obj)
+            else:
+                print 'text:  %s is not a valid group ID' % groupId
+                return
+        else:
+
+            self._drawing.add(obj)
 
 #___________________________________________________________________________________________________ mark
-    def mark(self, center, size, diagonals =True, scene =True, **extra):
-        """ Adds a mark of given radius at a given location.  If diagonals is True the mark is
-            an 'X' else a '+'. """
+    def mark(self, size, scene =True, groupId =None, **extra):
+        """ Adds an axis-aligned '+' mark of given size at the origin. If scene=True, the size is
+            transformed to map coordinates, else presumed to already be in map coordinates. If
+            groupId=True, the mark is added to the specified group, rather
+            than to the drawing. This fragment is intended for use as a group (see grid). """
 
-        x = center[0]
-        y = center[1]
+        r = size
 
-        if diagonals:
-            size *= math.sqrt(2.0)
-            self.line([x - size, y - size], [x + size, y + size], scene=scene, **extra)
-            self.line([x - size, y + size], [x + size, y - size], scene=scene, **extra)
-        else:
-            self.line([x - size, y], [x + size, y], scene=scene, **extra)
-            self.line([x, y - size], [x, y + size], scene=scene, **extra)
+        self.line([-r, 0], [r, 0], scene=scene, groupId=groupId, **extra)
+        self.line([0, -r], [0, r], scene=scene, groupId=groupId, **extra)
 
 #___________________________________________________________________________________________________ grid
-    def grid(self, markerSize =2, diagonals =True, dx =200, dy =200, **extra):
-        """ Adds a rectangular grid of marks (each an'X' or '+" depending on the boolean diagonals)
-            of a given size and spacing.  The grid is in registration with the site map's federal
-            coordinate marker, spaced by multiples of dx and dy to fill up the width and height of
-            the siteMap. Note that the grid is computed entirely in siteMap coordinates. Note that
-            the grid marks on a site map are separated by 10 m in the real world, or 200 units in
-            the map. """
+    def grid(self, size =2, diagonals =True, dx =200, dy =200, **extra):
+        """ This is a group-based version of grid.  It creates a rectangular grid of marks, as in
+            grid. The grid marks on a site map are separated by 10 m in the real world, or 200 units
+            in the map in their 'scaled mm' convention. Unfortunately, the group construct in
+            svgwrite requires px values, and will not allow the mm suffix. """
 
-        x0 = self.siteMap.xFederal
-        y0 = self.siteMap.yFederal
-        x0 = x0%dx
-        y0 = y0%dy
+        x0 = self.siteMap.xFederal%dx
+        y0 = self.siteMap.yFederal%dy
         xn = int(self.siteMap.width/dx)
         yn = int(self.siteMap.height/dy)
+
+        self.createGroup('mark')
+        self.mark(size, scene=False, groupId='mark')
 
         for i in range(xn):
             x = x0 + i*dy
             for j in range(yn):
                 y = y0 + j*dy
-                self.mark([x, y], markerSize, diagonals, scene=False, **extra)
+                self.use('mark', [self.pxPerMm*x, self.pxPerMm*y], rotation=45)
 
 #___________________________________________________________________________________________________ save
     def save(self):
-        """ Writes the current drawing to the file specified at initialization. """
-        self.drawing.save()
+        """ Writes the current _drawing to the file specified at initialization. """
+        self._drawing.save()
 
-#___________________________________________________________________________________________________ group
-    def group(self):
-        """ Creates an svgwrite group, so that the SVG fragments that are added to the group can be
-            transformed by the group's transform mixin. """
-        pass
+#___________________________________________________________________________________________________ createGroup
+    def createGroup(self, id, **extra):
+        """ Creates an SVG group, so that subsequent SVG fragments can be added to the group.  When
+            the group is subsequently used (by the use function) an instance is created, and placed
+            at a particular location in the drawing, with a particualr scale and rotation. This
+            method only creates tghe group; to then add fragments, the group's id is passed to draw
+            functions so that those fragments are added to the group rather than to the drawing
+            directly. Groups are intended to be placed readily across a drawing, hence the pivot
+            for the group should normally be centered on the user space (map) origin."""
 
-#___________________________________________________________________________________________________ symbol
-    def symbol(self, name):
-        """  Creates a symbol of given name. """
-        pass
+        group = self._drawing.g(id=id, **extra)
+
+        # add it to defs so that it is not directly rendered
+        self._drawing.defs.add(group)
+
+        # and keep track of the id so it can be used to refer to the group
+        self.groups[id] = group
+
+#___________________________________________________________________________________________________ use
+    def use(self, id, center,
+            scene =None, rotation =None, rotationCenter =None, scale =None, scaleY =None, **extra):
+        """ Groups are given an id when created.  This id is used to create instances that are
+            added to the Cadence drawing (and hence the SVG file) by this function.  The group is
+            placed in the drawing using map coordinates.  Rotation defaults to about the origin. A
+            preferred usage would be to create a create a group relative to (i.e., centered upon)
+            the origin, so that the rotation pivot is naturally at the group's center.  The group
+            is then placed at the specfified center location (which either in map coordinates or
+            scene coordinates depending upon the kwarg scene).  For example, for a group 'g1' to
+            be placed at some point (xScene, yScene) and rotated 45 degrees, and with 2x scale:
+                use('g1', (xScene, yScene), scene=True, rotation=45, scale = 2) """
+
+        element = self.groups[id]
+        if not element:
+            print 'CadenceDrawing.use:  %s is not a valid group id' % id
+            return
+
+        if scene:
+            center = self.projectToMap(center)
+            tx = self.pxPerMm*center[0]
+            ty = self.pxPerMm*center[1]
+        else:
+            tx = center[0]
+            ty = center[1]
+
+        instance = self._drawing.use(element, **extra)
+
+        instance.translate(tx, ty)
+
+        if rotation:
+            instance.rotate(rotation, center=rotationCenter)
+
+        # scale anisotropically only if scaleY is specified, else isotropically
+        if scale:
+            if not scaleY:
+                scaleY = scale
+            instance.scale(scale, scaleY)
+
+        self._drawing.add(instance)
+
