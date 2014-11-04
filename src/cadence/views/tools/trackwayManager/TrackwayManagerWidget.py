@@ -1939,6 +1939,37 @@ class TrackwayManagerWidget(PyGlassWidget):
         if tracks is None:
             return
 
+        # for track in tracks:
+        #     x = track.x
+        #     z = track.z
+        #
+        #     # The track dimensions stored in the database are in fractional meters, so multiply by
+        #     # 100 to convert to cm.
+        #     r = 100*0.5*(track.width/2.0 + track.length/2.0)
+        #
+        #     self.currentDrawing.circle(
+        #         (x, z),
+        #         r,
+        #         scene=True,
+        #         fill='none',
+        #         stroke='blue',
+        #         stroke_width=1)
+        #
+        #     # compute the averge uncertainty in cm (also stored in fractional meters)
+        #     u = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
+        #
+        #     self.currentDrawing.circle(
+        #         (x, z),
+        #         u,
+        #         scene=True,
+        #         fill='red',
+        #         stroke='red',
+        #         stroke_width=1)
+        #
+
+        self._drawing.createGroup('circle')
+        self._drawing.circle((0, 0), 100, scene=True, )
+
         for track in tracks:
             x = track.x
             z = track.z
@@ -1965,6 +1996,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                 fill='red',
                 stroke='red',
                 stroke_width=1)
+
 
 #___________________________________________________________________________________________________ handleSvgOpenBtn
     def handleSvgOpenBtn(self):

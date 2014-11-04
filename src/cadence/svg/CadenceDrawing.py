@@ -430,7 +430,7 @@ class CadenceDrawing(object):
         if scale:
             if not scaleY:
                 scaleY = scale
-            instance.scale(scale, scaleY)
+            instance.scale(scale, sy=scaleY)
 
         self._drawing.add(instance)
 
