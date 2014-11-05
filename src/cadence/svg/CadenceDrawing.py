@@ -155,7 +155,8 @@ class CadenceDrawing(object):
 
 #___________________________________________________________________________________________________ mm
     def mm(self, p):
-        """ Appends the units label 'mm' to each value. """
+        """ Appends the units label 'mm' to each value.  Too many cases where svgwrite will not
+            allow this suffix, so not currently used. """
         return (p[0]*mm, p[1]*mm)
 
 #___________________________________________________________________________________________________ line
@@ -169,9 +170,9 @@ class CadenceDrawing(object):
             p1 = self.projectToMap(p1, scene)
             p2 = self.projectToMap(p2, scene)
 
-        # append 'mm' units to each coordinate of the points p1 and p2 and create line object
-        p1 = self.mm(p1)
-        p2 = self.mm(p2)
+        # convert from (scaled) mm to px
+        p1 *= self.pxPerMm
+        p2 *= self.pxPerMm
 
         # create the object
         obj = self._drawing.line(p1, p2, **extra)
@@ -237,9 +238,9 @@ class CadenceDrawing(object):
             insert = self.projectToMap(insert, scene)
             size   = [self.scaleToMap(size[0]), self.scaleToMap(size[1])]
 
-        # append the 'mm' units
-        insert = self.mm(insert)
-        size   = self.mm(size)
+        # convert from (scaled) mm to px
+        insert = (self.pxPerMm*insert[0], self.pxPerMm*insert[1])
+        size   *= self.pxPerMm
 
         # create the object
         obj = self._drawing.rect(insert, size, rx, ry, **extra)
@@ -265,9 +266,9 @@ class CadenceDrawing(object):
             center = self.projectToMap(center)
             radius = self.scaleToMap(radius)
 
-        # append the 'mm' units
-        center = self.mm(center)
-        radius = radius*mm
+        # convert from (scaled) mm to px
+        center = (self.pxPerMm*center[0], self.pxPerMm*center[1])
+        radius *= self.pxPerMm
 
         # create the object
         obj = self._drawing.circle(center, radius, **extra)
@@ -293,9 +294,9 @@ class CadenceDrawing(object):
             center = self.projectToMap(center)
             radii  = [self.scaleToMap(radii[0]), self.scaleToMap(radii[1])]
 
-        # append the 'mm' units
-        center = self.mm(center)
-        radii  = self.mm(radii)
+        # convert from (scaled) mm to px
+        center = (self.pxPerMm*center[0], self.pxPerMm*center[1])
+        radii  = (self.pxPerMm*radii[0], self.pxPerMm*radii[1])
 
         # create the object
         obj = self._drawing.ellipse(center, radii, **extra)
@@ -306,7 +307,7 @@ class CadenceDrawing(object):
             if group:
                 group.add(obj)
             else:
-                print 'circle:  %s is not a valid group ID' % groupId
+                print 'ellipse:  %s is not a valid group ID' % groupId
                 return
         else:
             self._drawing.add(obj)
@@ -319,8 +320,8 @@ class CadenceDrawing(object):
         if scene:
             insert = self.projectToMap(insert)
 
-        # append the 'mm' units
-        insert = self.mm(insert)
+        # convert from (scaled) mm to px
+        insert = (self.pxPerMm*insert[0], self.pxPerMm*insert[1])
 
         # create the object
         obj = self._drawing.text(textString, insert, **extra)
@@ -402,14 +403,9 @@ class CadenceDrawing(object):
             preferred usage would be to create a create a group relative to (i.e., centered upon)
             the origin, so that the rotation pivot is naturally at the group's center.  The group
             is then placed at the specfified center location (which either in map coordinates or
-            scene coordinates depending upon the kwarg scene).  For example, for a group 'g1' to
+            scene coordinates depending upon the kwarg scene).  For example, for a group 'g' to
             be placed at some point (xScene, yScene) and rotated 45 degrees, and with 2x scale:
-                use('g1', (xScene, yScene), scene=True, rotation=45, scale = 2) """
-
-        element = self.groups[id]
-        if not element:
-            print 'CadenceDrawing.use:  %s is not a valid group id' % id
-            return
+                use('g', (xScene, yScene), scene=True, rotation=45, scale = 2) """
 
         if scene:
             center = self.projectToMap(center)
@@ -419,12 +415,17 @@ class CadenceDrawing(object):
             tx = center[0]
             ty = center[1]
 
-        instance = self._drawing.use(element, **extra)
+        element = self.groups[id]
+        if not element:
+            print 'CadenceDrawing.use:  %s is not a valid group id' % id
+            return
 
+        instance = self._drawing.use(element, **extra)
         instance.translate(tx, ty)
 
+        # note we want rotation to be according to a right-handed system (postive counterclockwise)
         if rotation:
-            instance.rotate(rotation, center=rotationCenter)
+            instance.rotate(-rotation, center=rotationCenter)
 
         # scale anisotropically only if scaleY is specified, else isotropically
         if scale:
