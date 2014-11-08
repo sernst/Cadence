@@ -41,6 +41,8 @@ class Tracks_Track(TracksDefault):
     def completed(self):
         """ Getter returns a boolean indicating whether the 'completed' source flag is set. """
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
+
+        print 'in the getter for completed flag:  flags = %s and value = %s' % (flags, SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED))
         return SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED)
     @completed.setter
     def completed(self, value):
@@ -48,8 +50,11 @@ class Tracks_Track(TracksDefault):
         # preserve the state of any other flags
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
+        print 'in the setter for completed flag:  flags = %s and value = %s' % (flags, value)
         if value:
+            print 'in completed:  about to do set, flags = %s and sourceFlags = %s' % (flags, self.sourceFlags)
             self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.COMPLETED)
+            print 'in completed:  finished set, and source flags = %s' % self.sourceFlags
         else:
             self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.COMPLETED)
 
