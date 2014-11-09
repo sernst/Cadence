@@ -2,11 +2,16 @@
 # (C)2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import re
+
 from pyaid.debug.Logger import Logger
 from pyaid.dict.DictUtils import DictUtils
+from pyaid.string.StringUtils import StringUtils
 
 from cadence.models.tracks.Tracks_Track import Tracks_Track
+
 
 
 #___________________________________________________________________________________________________ TrackLinkConnector
@@ -87,7 +92,7 @@ class TrackLinkConnector(object):
             result = self._TRACK_NUMBER_RE.search(track.number)
             if not result or result.group('prefix'):
                 self.logger.write([
-                    u'ERROR: Unable to parse track number: ' + unicode(track.number),
+                    u'ERROR: Unable to parse track number: ' + StringUtils.toUnicode(track.number),
                     u'TRACK: ' + DictUtils.prettyPrint(track.toDict()) ])
                 continue
 
@@ -102,7 +107,7 @@ class TrackLinkConnector(object):
                 entry['track'] = track
             elif not suffix:
                 self.logger.write([
-                    u'ERROR: Invalid track number: ' + unicode(track.number),
+                    u'ERROR: Invalid track number: ' + StringUtils.toUnicode(track.number),
                     u'TRACK: ' + DictUtils.prettyPrint(track.toDict()) ])
                 continue
             else:
@@ -140,10 +145,6 @@ class TrackLinkConnector(object):
 #___________________________________________________________________________________________________ __repr__
     def __repr__(self):
         return self.__str__()
-
-#___________________________________________________________________________________________________ __unicode__
-    def __unicode__(self):
-        return unicode(self.__str__())
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):

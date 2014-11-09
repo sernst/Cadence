@@ -2,6 +2,8 @@
 # (C)2012 http://GaitGenerator.threeaddone.com
 # Kent A. Stevens
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import pylab as plt
 
 from cadence.shared.io.CadenceData import CadenceData
@@ -105,7 +107,7 @@ class GaitPlot(object):
             elif c.target == TargetsEnum.RIGHT_FORE: self._channel_RF = c
             elif c.target == TargetsEnum.RIGHT_HIND: self._channel_RH = c
             else:
-                raise Exception, "Unknown Channel_ Target:  " + str(c.target)
+                raise Exception("Unknown Channel_ Target:  " + str(c.target))
 
         # this method presumes that all channels have the same start and stop times
         # hence we use the left hind limb (channel_LH) as representative

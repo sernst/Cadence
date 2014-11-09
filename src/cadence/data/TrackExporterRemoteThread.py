@@ -2,8 +2,9 @@
 # (C)2014
 # Scott Ernst
 
-from pyaid.ArgsUtils import ArgsUtils
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+from pyaid.ArgsUtils import ArgsUtils
 from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
 
 from cadence.data.TrackExporter import TrackExporter
@@ -48,7 +49,7 @@ class TrackExporterRemoteThread(RemoteExecutionThread):
                 difference=self._difference)
 
             self.disableLogBuffer()
-        except Exception, err:
+        except Exception as err:
             if not self._session:
                 session.rollback()
                 session.close()

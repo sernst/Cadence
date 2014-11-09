@@ -2,11 +2,11 @@
 # (C)2013-2014
 # Scott Ernst
 
-import nimble
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+import nimble
 from PySide import QtCore
 from PySide import QtGui
-
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from pyglass.gui.PyGlassGuiUtils import PyGlassGuiUtils
 from pyglass.elements.PyGlassElement import PyGlassElement
@@ -112,8 +112,8 @@ class CadenceNimbleStatusElement(PyGlassElement):
                 self._label.setText(self._ACTIVE_LABEL)
                 self._info.setText(self._ACTIVE_INFO)
                 CadenceEnvironment.NIMBLE_IS_ACTIVE = True
-            except Exception, err:
-                print 'FAILED: Nimble connection attempt', err
+            except Exception as err:
+                print('FAILED: Nimble connection attempt', err)
                 self._colors = ThemeColorBundle(ColorSchemes.RED)
                 self._status = False
                 self._label.setText(self._FAILED_LABEL)

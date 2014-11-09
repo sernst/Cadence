@@ -2,8 +2,9 @@
 # (C)2013-2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from PySide import QtCore
-from PySide import QtGui
 
 from pyaid.OsUtils import OsUtils
 
@@ -107,7 +108,6 @@ class CadenceMainWindow(PyGlassWindow):
 #___________________________________________________________________________________________________ _initializeImpl
     def _initializeImpl(self, *args, **kwargs):
         # Initialize databases
-        from cadence.models import tracks
         super(CadenceMainWindow, self)._initializeImpl()
 
 #___________________________________________________________________________________________________ _firstShowImpl

@@ -2,6 +2,9 @@
 # (C)2013
 # Kent A. Stevens
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+from pyaid.string.StringUtils import StringUtils
+
 from cadence.util.shading.ShadingUtils import ShadingUtils
 
 #___________________________________________________________________________________________________ ShaderMixer
@@ -53,7 +56,7 @@ class ShaderMixer(object):
 
 #___________________________________________________________________________________________________ __unicode__
     def __unicode__(self):
-        return unicode(self.__str__())
+        return StringUtils.toUnicode(self.__str__())
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):

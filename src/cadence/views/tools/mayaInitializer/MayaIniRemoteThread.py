@@ -2,6 +2,8 @@
 # (C)2013
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from nimble.utils.MayaEnvEntry import MayaEnvEntry
 from nimble.utils.MayaEnvUtils import MayaEnvUtils
 from pyaid.file.FileUtils import FileUtils
@@ -87,7 +89,7 @@ class MayaIniRemoteThread(RemoteExecutionThread):
     def _runCheck(self):
         self.log.write(u'<h1>Running Check...</h1>')
         envFiles = MayaEnvUtils.locateMayaEnvFiles()
-        print 'ENV:', envFiles
+        print('ENV:', envFiles)
         if not envFiles:
             self.log.write(u"""\
             <p style="color:#FF6666;">Operation failed. Unable to locate a maya installation.\

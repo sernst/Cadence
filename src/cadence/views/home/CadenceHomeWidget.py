@@ -2,12 +2,12 @@
 # (C)2013
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from PySide import QtCore
 from PySide import QtGui
-
 from pyaid.ArgsUtils import ArgsUtils
 from pyaid.json.JSON import JSON
-
 from pyglass.gui.scrollArea.SimpleScrollArea import SimpleScrollArea
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from pyglass.widgets.LineSeparatorWidget import LineSeparatorWidget
@@ -15,6 +15,7 @@ from pyglass.widgets.LineSeparatorWidget import LineSeparatorWidget
 from cadence.enum.UserConfigEnum import UserConfigEnum
 from cadence.views.home.CadenceMayaStatusElement import CadenceMayaStatusElement
 from cadence.views.home.CadenceNimbleStatusElement import CadenceNimbleStatusElement
+
 
 #___________________________________________________________________________________________________ CadenceHomeWidget
 class CadenceHomeWidget(PyGlassWidget):
@@ -117,7 +118,7 @@ class CadenceHomeWidget(PyGlassWidget):
             f = open(path)
             definition = JSON.fromString(f.read())
             f.close()
-        except Exception, err:
+        except Exception as err:
             self.log.writeError('ERROR: Unable to read tools manifest file.', err)
             return
 

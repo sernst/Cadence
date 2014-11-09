@@ -2,6 +2,10 @@
 # (C)2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+from pyaid.string.StringUtils import StringUtils
+
 from cadence.enum.SourceFlagsEnum import SourceFlagsEnum
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
@@ -50,7 +54,7 @@ class DataIntegrityTester(object):
         column  = getattr(model, TrackPropEnum.SOURCE_FLAGS.name)
         result  = session.query(model).filter(column.op('&')(SourceFlagsEnum.COMPLETED) == 1).all()
 
-        print 'Result:', len(result)
+        print('Result:', len(result))
 
 
 #===================================================================================================
@@ -62,7 +66,7 @@ class DataIntegrityTester(object):
 
 #___________________________________________________________________________________________________ __unicode__
     def __unicode__(self):
-        return unicode(self.__str__())
+        return StringUtils.toUnicode(self.__str__())
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):

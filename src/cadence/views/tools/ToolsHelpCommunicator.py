@@ -2,10 +2,13 @@
 # (C)2013
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import os
 import markdown
 
 from PySide import QtCore
+from pyaid.string.StringUtils import StringUtils
 
 from pyglass.web.PyGlassCommunicator import PyGlassCommunicator
 
@@ -47,14 +50,14 @@ class ToolsHelpCommunicator(PyGlassCommunicator):
                 self._content = markdown.markdown(md)
             else:
                 return False
-        except Exception, err:
+        except Exception as err:
             return False
 
         self.callUpdate()
         return True
 
 #___________________________________________________________________________________________________ getContent
-    @QtCore.Slot(result=unicode)
+    @QtCore.Slot(result=StringUtils.TEXT_TYPE)
     def getContent(self):
         return self._content if self._content else u''
 

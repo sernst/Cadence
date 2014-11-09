@@ -1,8 +1,10 @@
 # TrackImporterRemoteThread.py
 # (C)2013-2014
 # Scott Ernst
-from pyaid.ArgsUtils import ArgsUtils
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+from pyaid.ArgsUtils import ArgsUtils
 from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
 
 from cadence.data.TrackCsvImporter import TrackCsvImporter
@@ -46,7 +48,7 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
 
             self._log.write(u'<h1>Beginning Import...</h1>')
             importer.read(session, compressed=self._compressed)
-        except Exception, err:
+        except Exception as err:
             if not self._session:
                 session.rollback()
                 session.close()

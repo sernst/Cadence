@@ -2,6 +2,8 @@
 # (C)2014
 # Scott Ernst and Kent A. Stevens
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import sqlalchemy as sqla
 
 from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
@@ -83,7 +85,7 @@ class Tracks_SiteMap(FlagsTracksDefault):
         filename = self.filename
 
         if not filename:
-            print 'getAllTracks: filename invalid'
+            print('getAllTracks: filename invalid')
             return
 
         site  = self.filename[0:3]

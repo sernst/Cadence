@@ -2,6 +2,8 @@
 # (C)2012-2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import os
 
 from pyaid.file.FileUtils import FileUtils
@@ -74,12 +76,12 @@ class CadenceEnvironment(object):
     @classmethod
     def _createAbsolutePath(cls, rootFolder, folder, filename):
         p = rootFolder if isinstance(rootFolder, list) else [rootFolder]
-        if isinstance(folder, basestring):
+        if StringUtils.isStringType(folder):
             p.append(folder)
         elif isinstance(folder, list):
             p += folder
 
-        if isinstance(filename, basestring):
+        if StringUtils.isStringType(filename):
             p.append(filename)
 
         out = os.path.join(cls.ENV_PATH, '..', '..', *p)

@@ -2,6 +2,8 @@
 # (C) 2014
 # Kent A. Stevens
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 #___________________________________________________________________________________________________ SourceFlagsEnum
 class SourceFlagsEnum(object):
     """ Boolean flags to signify states associated with the source data for individual tracks. The
@@ -26,7 +28,7 @@ class SourceFlagsEnum(object):
     @classmethod
     def set(cls, flags, flag):
         """ Sets the specified flag in flags. """
-        print 'in SourceFlagsEnum set:  flags = %s and flag = %s, hence %s' % (flags, flag, flags | flag)
+        print('in SourceFlagsEnum set:  flags = %s and flag = %s, hence %s' % (flags, flag, flags | flag))
         return flags | flag
 
 #___________________________________________________________________________________________________ clear

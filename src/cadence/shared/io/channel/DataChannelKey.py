@@ -2,7 +2,10 @@
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from pyaid.ArgsUtils import ArgsUtils
+from pyaid.string.StringUtils import StringUtils
 
 from cadence.shared.enum.DataTypeEnum import DataTypeEnum
 from cadence.shared.enum.MayaTangentsEnum import MayaTangentsEnum
@@ -72,7 +75,7 @@ class DataChannelKey(object):
 
 #___________________________________________________________________________________________________ echo
     def echo(self):
-        print self.toString('KEY')
+        print(self.toString('KEY'))
 
 #___________________________________________________________________________________________________ toString
     def toString(self,  prefix =''):
@@ -227,7 +230,7 @@ class DataChannelKey(object):
 #___________________________________________________________________________________________________ _getDataTypeFromValue
     @classmethod
     def _getDataTypeFromValue(cls, value):
-        if isinstance(value, basestring):
+        if StringUtils.isStringType(value):
             return DataTypeEnum.ENUM
         elif isinstance(value, Vector3D):
             return DataTypeEnum.VECTOR

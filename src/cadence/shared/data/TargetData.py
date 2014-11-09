@@ -2,12 +2,15 @@
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import math
 from collections import namedtuple
 
 import numpy as np
-
 from pyaid.ArgsUtils import ArgsUtils
+from pyaid.dict.DictUtils import DictUtils
+from pyaid.string.StringUtils import StringUtils
 
 from cadence.config.enum.SkeletonConfigEnum import SkeletonConfigEnum
 from cadence.shared.enum.ChannelsEnum import ChannelsEnum
@@ -16,6 +19,7 @@ from cadence.shared.enum.TangentsEnum import TangentsEnum
 from cadence.shared.enum.TargetsEnum import TargetsEnum
 from cadence.util.math3D.Vector3D import Vector3D
 from cadence.shared.io.channel.DataChannel import DataChannel
+
 
 #___________________________________________________________________________________________________ TargetData
 class TargetData(object):
@@ -44,7 +48,7 @@ class TargetData(object):
         self._dutyFactor    = ArgsUtils.get('dutyFactor', 0.5, kwargs)
         self._phaseOffset   = float(ArgsUtils.get('phaseOffset', 0.0, kwargs))
 
-        print self.target, self._phaseOffset
+        print(self.target, self._phaseOffset)
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -74,12 +78,12 @@ class TargetData(object):
 
 #___________________________________________________________________________________________________ echo
     def echo(self):
-        print 'TARGET:',self.target
-        print 'GAIT PHASE OFFSET:',self._phaseOffset
-        print 'DUTY FACTOR:',self._dutyFactor
-        print 'CHANNELS:'
-        for n,v in self._channels.iteritems():
-            print v.toString()
+        print('TARGET:',self.target)
+        print('GAIT PHASE OFFSET:',self._phaseOffset)
+        print('DUTY FACTOR:',self._dutyFactor)
+        print('CHANNELS:')
+        for n,v in DictUtils.iter(self._channels):
+            print(v.toString())
 
 #___________________________________________________________________________________________________ createChannel
     def createChannel(self, kind, values =None, times =None):
@@ -101,7 +105,7 @@ class TargetData(object):
 #___________________________________________________________________________________________________ getChannel
     def getChannel(self, kind):
         """Doc..."""
-        for n,v in self._channels.iteritems():
+        for n,v in DictUtils.iter(self._channels):
             if n == kind:
                 return v
 
@@ -297,7 +301,7 @@ class TargetData(object):
 
 #___________________________________________________________________________________________________ __unicode__
     def __unicode__(self):
-        return unicode(self.__str__())
+        return StringUtils.toUnicode(self.__str__())
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):

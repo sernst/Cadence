@@ -2,6 +2,8 @@
 # (C)2013-2014
 # Scott Ernst and Kent A. Stevens
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from collections import namedtuple
 
 from pyaid.reflection.Reflection import Reflection

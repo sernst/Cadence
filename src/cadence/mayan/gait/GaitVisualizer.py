@@ -2,8 +2,9 @@
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
-from nimble import cmds
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+from nimble import cmds
 from pyaid.ArgsUtils import ArgsUtils
 
 from cadence.config.enum.GaitConfigEnum import GaitConfigEnum
@@ -313,10 +314,6 @@ class GaitVisualizer(object):
 #___________________________________________________________________________________________________ __repr__
     def __repr__(self):
         return self.__str__()
-
-#___________________________________________________________________________________________________ __unicode__
-    def __unicode__(self):
-        return unicode(self.__str__())
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):

@@ -2,6 +2,8 @@
 # (C)2014
 # Scott Ernst and Kent A. Stevens
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import math
 
 from nimble import cmds
@@ -372,7 +374,7 @@ class TrackSceneUtils(object):
         if props:
             cls.setTrackProps(node, props)
         else:
-            print 'in createTrackNode:  no properties provided'
+            print('in createTrackNode:  no properties provided')
             return node
 
         # Add the new nodeName to the Cadence track scene set, color it, and we're done
@@ -413,7 +415,7 @@ class TrackSceneUtils(object):
             return None
         try:
             return cmds.getAttr(node + '.' + TrackPropEnum.UID.maya)
-        except Exception, err:
+        except Exception as err:
             return None
 
 #___________________________________________________________________________________________________ checkNodeUidMatch
@@ -421,7 +423,7 @@ class TrackSceneUtils(object):
     def checkNodeUidMatch(cls, uid, node):
         try:
             return uid == cls.getUid(node)
-        except Exception, err:
+        except Exception as err:
             return False
 
 #___________________________________________________________________________________________________ getTrackProps

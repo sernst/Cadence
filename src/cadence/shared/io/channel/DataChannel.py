@@ -2,7 +2,10 @@
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from pyaid.ArgsUtils import ArgsUtils
+from pyaid.string.StringUtils import StringUtils
 
 from cadence.shared.io.channel.DataChannelKey import DataChannelKey
 
@@ -144,9 +147,8 @@ class DataChannel(object):
             self._keys.append(DataChannelKey(
                 time=x[i],
                 value=y[i],
-                inTangent=inTans if isinstance(inTans, basestring) else inTans[i],
-                outTangent=outTans if isinstance(outTans, basestring) else outTans[i]
-            ))
+                inTangent=inTans if StringUtils.isStringType(inTans) else inTans[i],
+                outTangent=outTans if StringUtils.isStringType(outTans) else outTans[i] ))
 
 #___________________________________________________________________________________________________ addKeyframe
     def addKeyframe(self, keyframe):
@@ -173,7 +175,7 @@ class DataChannel(object):
 
 #___________________________________________________________________________________________________ echo
     def echo(self):
-        print self.toString()
+        print(self.toString())
 
 #___________________________________________________________________________________________________ toString
     def toString(self):
@@ -218,14 +220,13 @@ class DataChannel(object):
 
 #___________________________________________________________________________________________________ __unicode__
     def __unicode__(self):
-        return unicode(self.__str__())
+        return StringUtils.toUnicode(self.__str__())
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):
         return '<%s::%s[%s] K:%s T:%s>' % (
             self.__class__.__name__, str(self.name), str(len(self.keys)), str(self.kind),
-            str(self.target)
-        )
+            str(self.target) )
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

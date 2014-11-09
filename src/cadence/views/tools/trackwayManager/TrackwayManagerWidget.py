@@ -2,11 +2,12 @@
 # (C)2012-2014
 # Scott Ernst and Kent A. Stevens
 
-import nimble
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+import nimble
 from nimble import cmds
 from PySide import QtGui
-
+from pyaid.string.StringUtils import StringUtils
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 
@@ -14,12 +15,9 @@ from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.enum.SourceFlagsEnum import SourceFlagsEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
-
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 from cadence.svg.CadenceDrawing import CadenceDrawing
-
 from cadence.util.maya.MayaUtils import MayaUtils
-
 from cadence.mayan.trackway import GetSelectedUidList
 from cadence.mayan.trackway import GetUidList
 from cadence.mayan.trackway import GetTrackNodeData
@@ -417,7 +415,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             runInMaya=True)
 
         if result.payload.get('error'):
-            print 'Error in updateFromNode:', result.payload.get('message')
+            print('Error in updateFromNode:', result.payload.get('message'))
             return False
 
         return result.payload.get('nodeName')
@@ -628,8 +626,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         marked    = SourceFlagsEnum.get(f, SourceFlagsEnum.MARKED)
         completed = SourceFlagsEnum.get(f, SourceFlagsEnum.COMPLETED)
 
-        print 'in refreshTrackUI:  the source flags (f) is %s, and completed = %s' % (f, completed)
-        print '     locked=%s, marked=%s, completed=%s' % (locked, marked, completed)
+        print('in refreshTrackUI:  the source flags (f) is %s, and completed = %s' % (f, completed))
+        print('     locked=%s, marked=%s, completed=%s' % (locked, marked, completed))
         self.lockedCkbx.setChecked(locked)
         self.markedCkbx.setChecked(marked)
         self.completedCkbx.setChecked(completed)
@@ -647,7 +645,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         index  = props[TrackPropEnum.INDEX.name]
         name   = (u'L' if left else u'R') + (u'P' if pes else u'M') + number if number else u'-'
         self.trackNameLE.setText(name)
-        self.trackIndexLE.setText(unicode(index))
+        self.trackIndexLE.setText(StringUtils.toUnicode(index))
 
         # now, depending on whether this track is locked or unlocked, disable/enable the UI
         # locked = SourceFlagsEnum.get(f, SourceFlagsEnum.LOCKED)
@@ -661,24 +659,24 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ The data for the given track site index is updated. """
         self.trackSiteNameLbl.setText(siteMap.filename)
 
-        self.federalEastLbl.setText(unicode(siteMap.federalEast))
-        self.federalNorthLbl.setText(unicode(siteMap.federalNorth))
+        self.federalEastLbl.setText(StringUtils.toUnicode(siteMap.federalEast))
+        self.federalNorthLbl.setText(StringUtils.toUnicode(siteMap.federalNorth))
 
-        self.mapLeftLbl.setText(unicode(siteMap.left))
-        self.mapTopLbl.setText(unicode(siteMap.top))
+        self.mapLeftLbl.setText(StringUtils.toUnicode(siteMap.left))
+        self.mapTopLbl.setText(StringUtils.toUnicode(siteMap.top))
 
-        self.mapWidthLbl.setText(unicode(siteMap.width))
-        self.mapHeightLbl.setText(unicode(siteMap.height))
+        self.mapWidthLbl.setText(StringUtils.toUnicode(siteMap.width))
+        self.mapHeightLbl.setText(StringUtils.toUnicode(siteMap.height))
 
-        self.xFedLbl.setText(unicode(siteMap.xFederal))
-        self.yFedLbl.setText(unicode(siteMap.yFederal))
+        self.xFedLbl.setText(StringUtils.toUnicode(siteMap.xFederal))
+        self.yFedLbl.setText(StringUtils.toUnicode(siteMap.yFederal))
 
-        self.transXLbl.setText(unicode(siteMap.xTranslate))
-        self.transZLbl.setText(unicode(siteMap.zTranslate))
-        self.rotXLbl.setText(unicode(siteMap.xRotate))
-        self.rotYLbl.setText(unicode(siteMap.yRotate))
-        self.rotZLbl.setText(unicode(siteMap.zRotate))
-        self.scaleLbl.setText(unicode(siteMap.scale))
+        self.transXLbl.setText(StringUtils.toUnicode(siteMap.xTranslate))
+        self.transZLbl.setText(StringUtils.toUnicode(siteMap.zTranslate))
+        self.rotXLbl.setText(StringUtils.toUnicode(siteMap.xRotate))
+        self.rotYLbl.setText(StringUtils.toUnicode(siteMap.yRotate))
+        self.rotZLbl.setText(StringUtils.toUnicode(siteMap.zRotate))
+        self.scaleLbl.setText(StringUtils.toUnicode(siteMap.scale))
 
 #___________________________________________________________________________________________________ refreshTrackwayUI
     def refreshTrackwayUI(self, dict):
@@ -729,13 +727,13 @@ class TrackwayManagerWidget(PyGlassWidget):
             selectedCount   = len(cmds.ls(selection=True))
 
         # Display the total number of tracks currently in the Maya scene
-        self.totalTrackCountLbl.setText('Total:  ' + unicode(totalTrackCount))
+        self.totalTrackCountLbl.setText('Total:  ' + StringUtils.toUnicode(totalTrackCount))
 
         # Now determine how many tracks have their COMPLETED source flag set
-        self.completedTrackCountLbl.setText('Completed:  ' + unicode(completedCount))
+        self.completedTrackCountLbl.setText('Completed:  ' + StringUtils.toUnicode(completedCount))
 
         # And show how many are currently selected
-        self.selectedTrackCountLbl.setText('Selected:  ' + unicode(selectedCount))
+        self.selectedTrackCountLbl.setText('Selected:  ' + StringUtils.toUnicode(selectedCount))
 
 
 #___________________________________________________________________________________________________ _lock
@@ -772,15 +770,15 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         t = selectedTracks[0]
-        print 'in handleCompletedCkbx, and t.completed = %s' % t.completed
+        print('in handleCompletedCkbx, and t.completed = %s' % t.completed)
         t.updateFromNode()
-        print 'in handleCompletedCkbx, after updateFromNode, t.completed = %s' % t.completed
+        print('in handleCompletedCkbx, after updateFromNode, t.completed = %s' % t.completed)
 
-        print 'in handleCompletedCkbx, completed checkbox = %s' % self.completedCkbx.isChecked()
+        print('in handleCompletedCkbx, completed checkbox = %s' % self.completedCkbx.isChecked())
         t.completed = self.completedCkbx.isChecked()
-        print 'in handleCompletedCkbx, then completed checkbox = %s' % self.completedCkbx.isChecked()
-        print 'in handleCompletedCkbx, and t.completed = %s' % t.completed
-        print 'in handleCompletedCkbx, also t.marked = %s and t.locked is %s' % (t.marked, t.locked)
+        print('in handleCompletedCkbx, then completed checkbox = %s' % self.completedCkbx.isChecked())
+        print('in handleCompletedCkbx, and t.completed = %s' % t.completed)
+        print('in handleCompletedCkbx, also t.marked = %s and t.locked is %s' % (t.marked, t.locked))
         t.updateNode()
 
         self.refreshTrackUI(t.toDict())
@@ -1375,9 +1373,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = selectedTracks[0]
         t.updateFromNode()
 
-        print '>>> in handleMarkedCkbx t.locked=%s, t.completed=%s, t.marked=%s' % (t.locked, t.completed, t.marked)
+        print('>>> in handleMarkedCkbx t.locked=%s, t.completed=%s, t.marked=%s' % (t.locked, t.completed, t.marked))
         t.marked = self.markedCkbx.isChecked()
-        print '>>> in handleMarkedCkbx:  t.marked then is %s' % t.marked
+        print('>>> in handleMarkedCkbx:  t.marked then is %s' % t.marked)
         t.updateNode()
 
         self.closeSession(commit=True)
@@ -1511,7 +1509,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         t = selectedTracks[-1]
 
-        print 'in handlPullBtn:  completed = %s' % t.completed
+        print('in handlPullBtn:  completed = %s' % t.completed)
 
 
         props = t.toDict()
@@ -1640,7 +1638,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             if layer.endswith(self.LAYER_SUFFIX):
                nodes.extend(cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True))
         cmds.select(nodes)
-        print "%s nodes selected" %len(nodes)
+        print("%s nodes selected" %len(nodes))
 
 #___________________________________________________________________________________________________ handleSelectByIndex
     def handleSelectByIndex(self):
@@ -2072,7 +2070,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                 windowTitle=u'Tool Error')
             return
 
-        print 'saving svg file'
+        print('saving svg file')
 
         # place the federal coordinates as a text string 20 cm above the marker
         site = self.currentDrawing.siteMap

@@ -2,6 +2,10 @@
 # (C)2013-2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+from pyaid.dict.DictUtils import DictUtils
+from pyaid.string.StringUtils import StringUtils
+
 import sqlalchemy as sqla
 from PySide import QtGui
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
@@ -81,8 +85,8 @@ class TrackwayLoaderWidget(PyGlassWidget):
         query = session.query(sqla.distinct(getattr(model, filterDef['enum'].name)))
 
         if filterDict:
-            for key,value in filterDict.iteritems():
-                if isinstance(value, basestring):
+            for key,value in DictUtils.iter(filterDict):
+                if StringUtils.isStringType(value):
                     query = query.filter(getattr(model, key) == value)
                 else:
                     query = query.filter(getattr(model, key).in_(value))

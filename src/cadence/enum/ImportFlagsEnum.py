@@ -2,6 +2,8 @@
 # (C)2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 #___________________________________________________________________________________________________ ImportFlagsEnum
 class ImportFlagsEnum(object):
     """A class for..."""

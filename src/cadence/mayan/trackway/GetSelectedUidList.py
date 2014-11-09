@@ -2,6 +2,8 @@
 # (C)2013
 # Kent A. Stevens
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from nimble import cmds
 from nimble import NimbleScriptBase
 

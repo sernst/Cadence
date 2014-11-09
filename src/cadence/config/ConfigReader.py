@@ -2,10 +2,19 @@
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import re
 import os
 import json
-import ConfigParser
+import sys
+from pyaid.dict.DictUtils import DictUtils
+from pyaid.string.StringUtils import StringUtils
+
+if sys.version > '3':
+    import configparser as ConfigParser
+else:
+    import ConfigParser
 
 from pyaid.ArgsUtils import ArgsUtils
 
@@ -37,7 +46,7 @@ class ConfigReader(object):
         )
 
         if self._filenames:
-            for n,v in self._filenames.iteritems():
+            for n,v in DictUtils.iter(self._filenames):
                 if not v:
                     continue
 
@@ -49,7 +58,7 @@ class ConfigReader(object):
                 if os.path.exists(path):
                     parser.read(path)
                 else:
-                    raise Exception, path + ' config file does not exist!'
+                    raise Exception(path + ' config file does not exist!')
 
                 self._configs[n] = self._configParserToDict(parser)
 
@@ -75,8 +84,8 @@ class ConfigReader(object):
         parts = propertyID.split('_')
 
         if parts[0] not in self._configs:
-            raise Exception, 'No %s config exists. Unable to set property %s on unknown config.' % \
-                             (parts[0], propertyID)
+            raise Exception('No %s config exists. Unable to set property %s on unknown config.' % \
+                             (parts[0], propertyID))
 
         return self._setValue(*parts, value=value)
 
@@ -85,7 +94,7 @@ class ConfigReader(object):
         if not overrides:
             return False
 
-        for n,v in overrides.iteritems():
+        for n,v in DictUtils.iter(overrides):
             currentValue = self.get(n)
 
             # Vector assignment override case
@@ -108,15 +117,15 @@ class ConfigReader(object):
         parts = propertyID.split('_')
 
         if parts[0] not in self._configs:
-            raise Exception, 'No %s config exists. Unable to access property %s' % \
-                             (parts[0], propertyID)
+            raise Exception('No %s config exists. Unable to access property %s' % \
+                             (parts[0], propertyID))
 
         return self._getValue(*parts, defaultValue=default)
 
 #___________________________________________________________________________________________________ getOverrides
     def getOverrides(self):
         out = dict()
-        for n,v in self._overrides.iteritems():
+        for n,v in DictUtils.iter(self._overrides):
             out[n] = v
 
         return out
@@ -137,7 +146,7 @@ class ConfigReader(object):
     @classmethod
     def _fromSerializedDict(cls, src):
         out = dict()
-        for n,v in src.iteritems():
+        for n,v in DictUtils.iter(src):
             if isinstance(v, dict):
                 if 'objectType' in v:
                     if v['objectType'] == Vector3D.__name__:
@@ -152,7 +161,7 @@ class ConfigReader(object):
     @classmethod
     def _toSerializedDict(cls, src):
         out = dict()
-        for n,v in src.iteritems():
+        for n,v in DictUtils.iter(src):
             if isinstance(v, Vector3D):
                 v = v.toSerialDict()
             elif isinstance(v, dict):
@@ -179,7 +188,7 @@ class ConfigReader(object):
                 elif value.startswith(ConfigReader._JSON_PREFIX):
                     value = json.loads(value[len(ConfigReader._JSON_PREFIX):])
 
-                elif isinstance(value, basestring) and (value in ['None', 'none', '']):
+                elif StringUtils.isStringType(value) and (value in ['None', 'none', '']):
                     value = None
 
                 elif test in ['on', 'true', 'yes']:
@@ -189,7 +198,7 @@ class ConfigReader(object):
                 elif ConfigReader._NUMERIC_REGEX.match(test):
                     try:
                         value = float(value) if test.find('.') else int(value)
-                    except Exception, err:
+                    except Exception:
                         pass
                 s[opt] = value
 
@@ -211,7 +220,7 @@ class ConfigReader(object):
                 return g.get(key)
             else:
                 return defaultValue
-        except Exception, err:
+        except Exception:
             return defaultValue
 
 #___________________________________________________________________________________________________ _setValue
@@ -226,5 +235,5 @@ class ConfigReader(object):
                 g = dict()
                 config[group] = g
             g[key] = value
-        except Exception, err:
+        except Exception:
             return False

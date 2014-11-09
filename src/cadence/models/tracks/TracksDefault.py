@@ -2,14 +2,15 @@
 # (C)2013-2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import re
+from pyaid.dict.DictUtils import DictUtils
 
 import sqlalchemy as sqla
-
 from pyaid.radix.Base64 import Base64
 from pyaid.reflection.Reflection import Reflection
 from pyaid.string.StringUtils import StringUtils
-
 from pyglass.sqlalchemy.PyGlassModelsDefault import PyGlassModelsDefault
 from pyglass.sqlalchemy.ConcretePyGlassModelsMeta import ConcretePyGlassModelsMeta
 
@@ -84,7 +85,7 @@ class TracksDefault(PyGlassModelsDefault):
     @property
     def name(self):
         """ Human-readable display name for the track, based of its properties. """
-        number = unicode(int(self.number)) if self.number else u'-'
+        number = StringUtils.toUnicode(int(self.number)) if self.number else u'-'
         return (u'L' if self.left else u'R') + (u'P' if self.pes else u'M') + number
     @name.setter
     def name(self, value):
@@ -122,7 +123,7 @@ class TracksDefault(PyGlassModelsDefault):
         model = self.__class__
         try:
             return session.query(self.__class__).filter(model.next == self.uid).first()
-        except Exception, err:
+        except Exception as err:
             return None
 
 #___________________________________________________________________________________________________ getNextTrack
@@ -195,7 +196,7 @@ class TracksDefault(PyGlassModelsDefault):
     def equivalentProps(self, **kwargs):
         """ Iterates through the kwargs and checks whether or not the values for each kwarg
             property to see if it matches the value for this track instance. """
-        for n,v in kwargs.iteritems():
+        for n,v in DictUtils.iter(kwargs):
             if getattr(self, n) != v:
                 return False
         return True
@@ -212,7 +213,7 @@ class TracksDefault(PyGlassModelsDefault):
         """ Loads based on the current values set for the track. This form of loading is useful
             when the uid is not available, e.g. when importing data from the spreadsheet. """
         query = session.query(cls)
-        for key,value in kwargs.iteritems():
+        for key,value in DictUtils.iter(kwargs):
             query = query.filter(getattr(cls, key) == value)
         return query.all()
 
@@ -254,4 +255,7 @@ class TracksDefault(PyGlassModelsDefault):
 #___________________________________________________________________________________________________ __unicode__
     def __unicode__(self):
         return u'<%s[%s] uid[%s] %s>' % (
-            self.__class__.__name__, unicode(self.i), unicode(self.uid), unicode(self.fingerprint))
+            self.__class__.__name__,
+            StringUtils.toUnicode(self.i),
+            StringUtils.toUnicode(self.uid),
+            StringUtils.toUnicode(self.fingerprint))

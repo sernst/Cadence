@@ -2,16 +2,19 @@
 # (C)2013-2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import os
 
 from pyaid.file.FileUtils import FileUtils
 from pyaid.OsUtils import OsUtils
+from pyaid.string.StringUtils import StringUtils
 from pyaid.system.SystemUtils import SystemUtils
 from pyglass.elements.PyGlassElementUtils import PyGlassElementUtils
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
-from cadence.data.SitemapImporterRemoteThread import SitemapImporterRemoteThread
 
+from cadence.data.SitemapImporterRemoteThread import SitemapImporterRemoteThread
 from cadence.data.TrackExporterRemoteThread import TrackExporterRemoteThread
 from cadence.data.TrackMergeRemoteThread import TrackMergeRemoteThread
 from cadence.enum.UserConfigEnum import UserConfigEnum
@@ -90,7 +93,7 @@ class DatabaseManagerWidget(PyGlassWidget):
             defaultPath=self.mainWindow.appConfig.get(UserConfigEnum.LAST_BROWSE_PATH) )
 
         self.mainWindow.hideLoading(self)
-        if not path or not isinstance(path, basestring):
+        if not path or not StringUtils.isStringType(path):
             self.mainWindow.toggleInteractivity(True)
             return
 
@@ -129,7 +132,7 @@ class DatabaseManagerWidget(PyGlassWidget):
 
         self.mainWindow.hideLoading(self)
 
-        if not path or not isinstance(path, basestring):
+        if not path or not StringUtils.isStringType(path):
             self.mainWindow.toggleInteractivity(True)
             return
 
@@ -162,9 +165,9 @@ class DatabaseManagerWidget(PyGlassWidget):
         actionType = 'Export' if isinstance(self._thread, TrackExporterRemoteThread) else 'Import'
 
         if not event.target.success:
-            print 'ERROR: %s Failed' % actionType
-            print '  OUTPUT:', event.target.output
-            print '  ERROR:', event.target.error
+            print('ERROR: %s Failed' % actionType)
+            print('  OUTPUT:', event.target.output)
+            print('  ERROR:', event.target.error)
             PyGlassBasicDialogManager.openOk(
                 parent=self,
                 header='ERROR',
@@ -260,7 +263,7 @@ class DatabaseManagerWidget(PyGlassWidget):
         try:
             if os.path.exists(savePath):
                 SystemUtils.remove(savePath, throwError=True)
-        except Exception, err:
+        except Exception as err:
             self.mainWindow.appendStatus(
                 self, u'<span style="color:#CC3333">ERROR: Unable to access database save location.</span>')
             self.mainWindow.showStatusDone(self)
@@ -268,7 +271,7 @@ class DatabaseManagerWidget(PyGlassWidget):
 
         try:
             SystemUtils.move(sourcePath, savePath)
-        except Exception, err:
+        except Exception as err:
             self.mainWindow.appendStatus(
                 self, u'<span style="color:#CC3333;">ERROR: Unable to modify existing database file.</span>')
             self.mainWindow.showStatusDone(self)
@@ -276,7 +279,7 @@ class DatabaseManagerWidget(PyGlassWidget):
 
         try:
             SystemUtils.copy(path, sourcePath)
-        except Exception, err:
+        except Exception as err:
             SystemUtils.move(savePath, sourcePath)
             self.mainWindow.appendStatus(
                 self, u'<span style="color:#CC3333;">ERROR: Unable to copy new database file.</span>')

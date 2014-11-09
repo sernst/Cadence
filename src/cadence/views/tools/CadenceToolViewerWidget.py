@@ -2,10 +2,10 @@
 # (C)2013-2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from PySide import QtGui
-
 from pyaid.ClassUtils import ClassUtils
-
 from pyglass.gui.scrollArea.SimpleScrollArea import SimpleScrollArea
 from pyglass.web.PyGlassWebView import PyGlassWebView
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
@@ -88,7 +88,7 @@ class CadenceToolViewerWidget(PyGlassWidget):
             try:
                 widgetClass = ClassUtils.dynamicImport(d['module'])
                 self.addWidgetChild(d['id'], widgetClass)
-            except Exception, err:
+            except Exception as err:
                 self.mainWindow.log.writeError([
                     'Activating Tool',
                     'ID: ' + str(d['id']),

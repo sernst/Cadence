@@ -2,6 +2,8 @@
 # (C)2012 http://GaitGenerator.threeaddone.com
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import os
 
 from pyaid.ArgsUtils import ArgsUtils
@@ -125,15 +127,15 @@ class GaitGenerator(object):
 
 #___________________________________________________________________________________________________ echo
     def echo(self):
-        print '\n', 100*'=','GAIT GENERATION RESULTS:'
-        print 100*'-', 'LEFT HIND:'
-        print self._leftHind.echo()
-        print 100*'-', 'LEFT FORE:'
-        print self._leftFore.echo()
-        print 100*'-', 'RIGHT FORE:'
-        print self._rightFore.echo()
-        print 100*'-', 'RIGHT HIND:'
-        print self._rightHind.echo()
+        print('\n', 100*'=','GAIT GENERATION RESULTS:')
+        print(100*'-', 'LEFT HIND:')
+        print(self._leftHind.echo())
+        print(100*'-', 'LEFT FORE:')
+        print(self._leftFore.echo())
+        print(100*'-', 'RIGHT FORE:')
+        print(self._rightFore.echo())
+        print(100*'-', 'RIGHT HIND:')
+        print(self._rightHind.echo())
 
 #___________________________________________________________________________________________________ toCadenceData
     def toCadenceData(self):

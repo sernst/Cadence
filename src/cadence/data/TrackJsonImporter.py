@@ -2,14 +2,18 @@
 # (C)2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from pyaid.debug.Logger import Logger
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
+
 from cadence.data.TrackExporter import TrackExporter
 from cadence.enum.TrackPropEnum import TrackPropEnumOps
 from cadence.enum.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
+
 
 #___________________________________________________________________________________________________ TrackJsonImporter
 class TrackJsonImporter(object):
@@ -49,7 +53,7 @@ class TrackJsonImporter(object):
 
         try:
             tracksData = JSON.fromFile(self._path, gzipped=compressed)
-        except Exception, err:
+        except Exception as err:
             self._logger.writeError('ERROR: Unable to read JSON import file', err)
             return False
 
@@ -161,7 +165,7 @@ class TrackJsonImporter(object):
     def _getTrackByProps(cls, data, session, model):
         searchData = dict()
 
-        for name,value in data.iteritems():
+        for name,value in DictUtils.iter(data):
             enum = TrackPropEnumOps.getTrackPropEnumByName(name)
             if not enum:
                 continue
@@ -176,10 +180,6 @@ class TrackJsonImporter(object):
 #___________________________________________________________________________________________________ __repr__
     def __repr__(self):
         return self.__str__()
-
-#___________________________________________________________________________________________________ __unicode__
-    def __unicode__(self):
-        return unicode(self.__str__())
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):

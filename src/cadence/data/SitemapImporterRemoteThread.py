@@ -2,6 +2,8 @@
 # (C)2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import os
 import csv
 
@@ -53,7 +55,7 @@ class SitemapImporterRemoteThread(RemoteExecutionThread):
             with open(self._path, 'rU') as f:
                 try:
                     reader = csv.reader(f, delimiter=',', quotechar='"')
-                except Exception, err:
+                except Exception as err:
                     self._writeError({
                         'message':u'ERROR: Unable to read CSV file "%s"' % self._path,
                         'error':err })
@@ -69,22 +71,20 @@ class SitemapImporterRemoteThread(RemoteExecutionThread):
                     # includes the header row (if it exists) with the column names
                     try:
                         index = int(row[0])
-                    except Exception, err:
+                    except Exception as err:
                         continue
 
                     rowDict = dict()
                     for column in Reflection.getReflectionList(SitemapCsvColumnEnum):
                         value = row[column.index]
-
-                        if not isinstance(value, unicode):
-                            value = StringUtils.strToUnicode(value)
+                        value = StringUtils.strToUnicode(value)
 
                         if value != u'' or value is None:
                             rowDict[column.name] = value
 
                     self._fromSpreadsheetEntry(rowDict, session)
 
-        except Exception, err:
+        except Exception as err:
             if not self._session:
                 session.rollback()
                 session.close()
@@ -132,7 +132,7 @@ class SitemapImporterRemoteThread(RemoteExecutionThread):
         source = {}
 
         if 'data' in data:
-            for n,v in data['data'].iteritems():
+            for n,v in DictUtils.iter(data['data']):
                 source[u' '.join(n.split(u'_')).title()] = v
 
         indexPrefix = u''
@@ -145,7 +145,7 @@ class SitemapImporterRemoteThread(RemoteExecutionThread):
 
         if 'existing' in data:
             source = {}
-            for n,v in JSON.fromString(data['existing'].snapshot).iteritems():
+            for n,v in DictUtils.iter(JSON.fromString(data['existing'].snapshot)):
                 source[u' '.join(n.split(u'_')).title()] = v
             result.append(u'CONFLICT: ' + DictUtils.prettyPrint(source))
 

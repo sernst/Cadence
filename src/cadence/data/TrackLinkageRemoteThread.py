@@ -1,11 +1,13 @@
 # TrackLinkageRemoteThread.py
 # (C)2014
 # Scott Ernst
-from cadence.data.TrackLinkConnector import TrackLinkConnector
 
-from cadence.models.tracks.Tracks_Track import Tracks_Track
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
+
+from cadence.data.TrackLinkConnector import TrackLinkConnector
+from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ TrackLinkageRemoteThread
 class TrackLinkageRemoteThread(RemoteExecutionThread):
@@ -37,7 +39,7 @@ class TrackLinkageRemoteThread(RemoteExecutionThread):
                 tlc.run(self._tracks, session)
             else:
                 tlc.runAll(session)
-        except Exception, err:
+        except Exception as err:
             if not self._session:
                 session.close()
 

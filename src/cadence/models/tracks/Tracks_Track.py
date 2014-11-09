@@ -2,6 +2,8 @@
 # (C)2013-2014
 # Scott Ernst and Kent A. Stevens
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import nimble
 
 from cadence.enum.SourceFlagsEnum import SourceFlagsEnum
@@ -42,7 +44,7 @@ class Tracks_Track(TracksDefault):
         """ Getter returns a boolean indicating whether the 'completed' source flag is set. """
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
-        print 'in the getter for completed flag:  flags = %s and value = %s' % (flags, SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED))
+        print('in the getter for completed flag:  flags = %s and value = %s' % (flags, SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED)))
         return SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED)
     @completed.setter
     def completed(self, value):
@@ -50,11 +52,11 @@ class Tracks_Track(TracksDefault):
         # preserve the state of any other flags
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
-        print 'in the setter for completed flag:  flags = %s and value = %s' % (flags, value)
+        print('in the setter for completed flag:  flags = %s and value = %s' % (flags, value))
         if value:
-            print 'in completed:  about to do set, flags = %s and sourceFlags = %s' % (flags, self.sourceFlags)
+            print('in completed:  about to do set, flags = %s and sourceFlags = %s' % (flags, self.sourceFlags))
             self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.COMPLETED)
-            print 'in completed:  finished set, and source flags = %s' % self.sourceFlags
+            print('in completed:  finished set, and source flags = %s' % self.sourceFlags)
         else:
             self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.COMPLETED)
 
@@ -117,7 +119,7 @@ class Tracks_Track(TracksDefault):
             props=self.toMayaNodeDict(),
             runInMaya=True)
         if not out.success:
-            print 'Error in CreateNode:', out.error
+            print('Error in CreateNode:', out.error)
             return None
 
         self.nodeName = out.payload.get('nodeName')
@@ -151,7 +153,7 @@ class Tracks_Track(TracksDefault):
             nodeName=self.nodeName,
             runInMaya=True)
         if result.payload.get('error'):
-            print 'Error in updateFromNode:', result.payload.get('message')
+            print('Error in updateFromNode:', result.payload.get('message'))
             return False
 
         self.nodeName = result.payload.get('nodeName')

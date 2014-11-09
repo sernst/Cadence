@@ -2,6 +2,8 @@
 # (C)2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from PySide import QtGui
 from pyaid.ArgsUtils import ArgsUtils
 from pyaid.string.StringUtils import StringUtils
@@ -73,10 +75,10 @@ class StatusWidget(PyGlassWidget):
         self.statusText.moveCursor(QtGui.QTextCursor.End)
         self.statusText.moveCursor(QtGui.QTextCursor.StartOfLine)
 
-        print u'\n' + 60*u'-'
-        print text
-        print u'--- RESULT ---'
-        print self.statusText.toHtml()
+        print(u'\n' + 60*u'-')
+        print(text)
+        print(u'--- RESULT ---')
+        print(self.statusText.toHtml())
 
 #___________________________________________________________________________________________________ showStatusDone
     def showStatusDone(self):

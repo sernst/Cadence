@@ -2,8 +2,9 @@
 # (C)2014
 # Scott Ernst
 
-from PySide import QtGui
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+from PySide import QtGui
 from pyglass.gui.PyGlassGuiUtils import PyGlassGuiUtils
 from pyglass.elements.PyGlassElement import PyGlassElement
 from pyglass.themes.ColorSchemes import ColorSchemes

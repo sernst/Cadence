@@ -2,13 +2,18 @@
 # (C)2012 http://cadence.threeaddone.com
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import os
 import json
 
 from pyaid.ArgsUtils import ArgsUtils
+from pyaid.dict.DictUtils import DictUtils
+from pyaid.string.StringUtils import StringUtils
 
 from cadence.config.ConfigReader import ConfigReader
 from cadence.shared.io.channel.DataChannel import DataChannel
+
 
 #___________________________________________________________________________________________________ CadenceData
 class CadenceData(object):
@@ -70,7 +75,7 @@ class CadenceData(object):
 
 #___________________________________________________________________________________________________ toString
     def echo(self):
-        print self.toString()
+        print(self.toString())
 
 #___________________________________________________________________________________________________ toString
     def toString(self):
@@ -137,7 +142,7 @@ class CadenceData(object):
             for v in channels:
                 self.addChannel(v)
         elif isinstance(channels, dict):
-            for n,v in channels.iteritems():
+            for n,v in DictUtils.iter(channels):
                 self.addChannel(v)
 
 #___________________________________________________________________________________________________ loadFile
@@ -159,15 +164,15 @@ class CadenceData(object):
         if not os.path.exists(sourcePath):
             sourcePath = os.path.join(CadenceData.ROOT_DATA_PATH, path)
             if not os.path.exists(sourcePath):
-                print 'FAILED: Unable to load Cadence data from missing file ' + path
+                print('FAILED: Unable to load Cadence data from missing file ' + path)
                 return False
 
         try:
             f    = open(sourcePath, 'r')
             data = f.read()
             f.close()
-        except Exception, err:
-            print 'FAILED: Unable to load Cadence data from file ' + path, err
+        except Exception as err:
+            print('FAILED: Unable to load Cadence data from file ' + path, err)
             return False
 
         return self.load(data)
@@ -187,11 +192,11 @@ class CadenceData(object):
         if not data:
             return False
 
-        if isinstance(data, basestring):
+        if StringUtils.isStringType(data):
             try:
                 data = json.loads(data)
-            except Exception, err:
-                print 'FAILED: Loading Cadence data from JSON string.', err
+            except Exception as err:
+                print('FAILED: Loading Cadence data from JSON string.', err)
                 return False
 
         if CadenceData._NAME_KEY in data:
@@ -236,8 +241,8 @@ class CadenceData(object):
 
         try:
             data = json.dumps(data)
-        except Exception, err:
-            print 'FAILED: Writing Cadence data.', err
+        except Exception as err:
+            print('FAILED: Writing Cadence data.', err)
             return None
 
         if folder:
@@ -250,15 +255,15 @@ class CadenceData(object):
             try:
                 if not os.path.exists(outDir):
                     os.makedirs(outDir)
-            except Exception, err:
-                print 'FAILED: Unable to create output directory: ' + str(outDir)
+            except Exception as err:
+                print('FAILED: Unable to create output directory: ' + str(outDir))
                 return None
 
             try:
-                f = open(path, 'w')
+                f = open(StringUtils.toUnicode(path), 'w+')
                 f.write(data)
                 f.close()
-            except Exception, err:
-                print 'FAILED: Writing Cadence file.', err
+            except Exception as err:
+                print('FAILED: Writing Cadence file.', err)
 
         return data

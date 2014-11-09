@@ -2,6 +2,8 @@
 # (C)2014
 # Kent A. Stevens
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import svgwrite
 from svgwrite import mm
 
@@ -183,7 +185,7 @@ class CadenceDrawing(object):
             if group:
                 group.add(obj)
             else:
-                print 'line:  %s is not a valid group ID' % groupId
+                print('line:  %s is not a valid group ID' % groupId)
                 return
         else:
             self._drawing.add(obj)
@@ -216,7 +218,7 @@ class CadenceDrawing(object):
             if group:
                 group.add(obj)
             else:
-                print 'polyLine:  %s is not a valid group ID' % groupId
+                print('polyLine:  %s is not a valid group ID' % groupId)
                 return
         else:
             self._drawing.add(obj)
@@ -251,7 +253,7 @@ class CadenceDrawing(object):
             if group:
                 group.add(obj)
             else:
-                print 'rect:  %s is not a valid group ID' % groupId
+                print('rect:  %s is not a valid group ID' % groupId)
                 return
         else:
             self._drawing.add(obj)
@@ -279,7 +281,7 @@ class CadenceDrawing(object):
             if group:
                 group.add(obj)
             else:
-                print 'circle:  %s is not a valid group ID' % groupId
+                print('circle:  %s is not a valid group ID' % groupId)
                 return
         else:
             self._drawing.add(obj)
@@ -307,7 +309,7 @@ class CadenceDrawing(object):
             if group:
                 group.add(obj)
             else:
-                print 'ellipse:  %s is not a valid group ID' % groupId
+                print('ellipse:  %s is not a valid group ID' % groupId)
                 return
         else:
             self._drawing.add(obj)
@@ -332,7 +334,7 @@ class CadenceDrawing(object):
             if group:
                 group.add(obj)
             else:
-                print 'text:  %s is not a valid group ID' % groupId
+                print('text:  %s is not a valid group ID' % groupId)
                 return
         else:
 
@@ -417,7 +419,7 @@ class CadenceDrawing(object):
 
         element = self.groups[id]
         if not element:
-            print 'CadenceDrawing.use:  %s is not a valid group id' % id
+            print('CadenceDrawing.use:  %s is not a valid group id' % id)
             return
 
         instance = self._drawing.use(element, **extra)

@@ -2,6 +2,9 @@
 # (C)2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+from pyaid.dict.DictUtils import DictUtils
+
 from cadence.models.tracks.TracksDefault import TracksDefault
 # AS NEEDED: from cadence.models.tracks.Tracks_Track import Tracks_Track
 
@@ -25,11 +28,11 @@ class Tracks_TrackStore(TracksDefault):
             to export changes made in a database to serial format for storage. """
 
         out = dict()
-        for key,value in comparison.iteritems():
+        for key,value in DictUtils.iter(comparison):
             if getattr(self, key, value) != value:
                 out[key] = value
 
-        if len(out.keys()) == 0:
+        if len(list(out.keys())) == 0:
             return None
 
         out['uid'] = self.uid

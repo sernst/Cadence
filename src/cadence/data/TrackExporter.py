@@ -2,10 +2,13 @@
 # (C)2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from pyaid.debug.Logger import Logger
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
 from pyaid.number.NumericUtils import NumericUtils
+from pyaid.string.StringUtils import StringUtils
 
 from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
 
@@ -71,7 +74,7 @@ class TrackExporter(object):
             index += 1
             if index in indices:
                 self.logger.write(
-                    u'<div style="color:#33CC33">%s%% Complete</div>' % unicode(
+                    u'<div style="color:#33CC33">%s%% Complete</div>' % StringUtils.toUnicode(
                         10*(indices.index(index) + 1)))
 
         self.logger.write(u'<div style="color:#33CC33">100% Complete</div>')
@@ -87,10 +90,10 @@ class TrackExporter(object):
         try:
             JSON.toFile(path, self.results, pretty=pretty, gzipped=gzipped, throwError=True)
             return True
-        except Exception, err:
+        except Exception as err:
             self.logger.writeError([
                 u'ERROR: Unable to write export file',
-                u'PATH: ' + unicode(path)], err)
+                u'PATH: ' + StringUtils.toUnicode(path)], err)
             return False
 
 #===================================================================================================
@@ -102,7 +105,7 @@ class TrackExporter(object):
 
 #___________________________________________________________________________________________________ __unicode__
     def __unicode__(self):
-        return unicode(self.__str__())
+        return StringUtils.toUnicode(self.__str__())
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):
