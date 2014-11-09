@@ -2,7 +2,6 @@
 # (C)2012-2014
 # Scott Ernst and Kent A. Stevens
 
-import math
 import nimble
 
 from nimble import cmds
@@ -278,26 +277,23 @@ class TrackwayManagerWidget(PyGlassWidget):
         i       = 0
         entries = []
 
+        session = self.getSession()
         while i < iMax:
-            self.getSession()
-            session = model.createSession()
             query   = session.query(model)
             batch   = uidList[i*size : (i + 1)*size]
             query   = query.filter(model.uid.in_(batch))
             query   = query.filter(model.sourceFlags.op('&')(flag) == state)
             entries += query.all()
             i       += 1
-            self.closeSession(commit=False)
 
         if i*size < len(uidList):
-            session = model.createSession()
             query   = session.query(model)
             batch   = uidList[i*size :]
             query   = query.filter(model.uid.in_(batch))
             query   = query.filter(model.sourceFlags.op('&')(flag) == state)
             entries += query.all()
-            self.closeSession(commit=False)
 
+        self.closeSession(commit=False)
         return entries if len(entries) > 0 else None
 
 #___________________________________________________________________________________________________ getLastTrack
@@ -463,9 +459,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         type    = trackwayName[0]
         number  = trackwayName[1:]
 
+        session = self.getSession()
         while i < iMax:
-            self.getSession()
-            session = model.createSession()
             query   = session.query(model)
             batch   = uidList[i*size : (i + 1)*size]
             query   = query.filter(model.uid.in_(batch))
@@ -473,18 +468,16 @@ class TrackwayManagerWidget(PyGlassWidget):
             query   = query.filter(model.trackwayNumber == number)
             entries += query.all()
             i       += 1
-            self.closeSession(commit=False)
 
         if i*size < len(uidList):
-            session = model.createSession()
             query   = session.query(model)
             batch   = uidList[i*size :]
             query   = query.filter(model.uid.in_(batch))
             query   = query.filter(model.trackwayType == type)
             query   = query.filter(model.trackwayNumber == number)
             entries += query.all()
-            self.closeSession(commit=False)
 
+        self.closeSession(commit=False)
         return entries if len(entries) > 0 else None
 
 #___________________________________________________________________________________________________ getTrackwayNames
@@ -608,29 +601,28 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.trackwayLE.setText('')
 
 #___________________________________________________________________________________________________ refreshTrackUI
-    def refreshTrackUI(self, dict):
+    def refreshTrackUI(self, props):
         """ The track properties aspect of the UI display is updated based on a dictionary derived
             from a given track model instance. """
 
-        self.getSession()
-        self.widthSbx.setValue(100.0*dict[TrackPropEnum.WIDTH.name])
-        self.widthLbl.setText('Width: [%2.0f]' % (100.0*dict[TrackPropEnum.WIDTH_MEASURED.name]))
+        self.widthSbx.setValue(100.0*props[TrackPropEnum.WIDTH.name])
+        self.widthLbl.setText('Width: [%2.0f]' % (100.0*props[TrackPropEnum.WIDTH_MEASURED.name]))
 
-        self.lengthSbx.setValue(100.0*dict[TrackPropEnum.LENGTH.name])
-        self.lengthLbl.setText('Length: [%2.0f]' % (100.0*dict[TrackPropEnum.LENGTH_MEASURED.name]))
+        self.lengthSbx.setValue(100.0*props[TrackPropEnum.LENGTH.name])
+        self.lengthLbl.setText('Length: [%2.0f]' % (100.0*props[TrackPropEnum.LENGTH_MEASURED.name]))
 
-        self.widthUncertaintySbx.setValue(100.0*dict[TrackPropEnum.WIDTH_UNCERTAINTY.maya])
-        self.lengthUncertaintySbx.setValue(100.0*dict[TrackPropEnum.LENGTH_UNCERTAINTY.maya])
+        self.widthUncertaintySbx.setValue(100.0*props[TrackPropEnum.WIDTH_UNCERTAINTY.maya])
+        self.lengthUncertaintySbx.setValue(100.0*props[TrackPropEnum.LENGTH_UNCERTAINTY.maya])
 
-        rotation = dict[TrackPropEnum.ROTATION.name]
+        rotation = props[TrackPropEnum.ROTATION.name]
         if rotation < 0.0:
             rotation += 360.0
         self.rotationSbx.setValue(rotation)
 
-        self.rotationUncertaintySbx.setValue(dict[TrackPropEnum.ROTATION_UNCERTAINTY.name])
+        self.rotationUncertaintySbx.setValue(props[TrackPropEnum.ROTATION_UNCERTAINTY.name])
 
         # set the checkboxes 'Completed', 'Locked', and 'Marked' according to the source flags
-        f = dict[TrackPropEnum.SOURCE_FLAGS.name]
+        f = props[TrackPropEnum.SOURCE_FLAGS.name]
         locked    = SourceFlagsEnum.get(f, SourceFlagsEnum.LOCKED)
         marked    = SourceFlagsEnum.get(f, SourceFlagsEnum.MARKED)
         completed = SourceFlagsEnum.get(f, SourceFlagsEnum.COMPLETED)
@@ -642,16 +634,16 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.completedCkbx.setChecked(completed)
 
         # likewise the special 'Hidden' attribute
-        self.hiddenCkbx.setChecked(dict[TrackPropEnum.HIDDEN.name])
+        self.hiddenCkbx.setChecked(props[TrackPropEnum.HIDDEN.name])
 
-        self.lengthRatioSbx.setValue(dict[TrackPropEnum.LENGTH_RATIO.name])
+        self.lengthRatioSbx.setValue(props[TrackPropEnum.LENGTH_RATIO.name])
 
-        self.noteLE.setText(dict[TrackPropEnum.NOTE.name])
+        self.noteLE.setText(props[TrackPropEnum.NOTE.name])
 
-        left   = dict[TrackPropEnum.LEFT.name]
-        pes    = dict[TrackPropEnum.PES.name]
-        number = dict[TrackPropEnum.NUMBER.name]
-        index  = dict[TrackPropEnum.INDEX.name]
+        left   = props[TrackPropEnum.LEFT.name]
+        pes    = props[TrackPropEnum.PES.name]
+        number = props[TrackPropEnum.NUMBER.name]
+        index  = props[TrackPropEnum.INDEX.name]
         name   = (u'L' if left else u'R') + (u'P' if pes else u'M') + number if number else u'-'
         self.trackNameLE.setText(name)
         self.trackIndexLE.setText(unicode(index))
@@ -666,7 +658,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ refreshTrackSiteUI
     def refreshTrackSiteUI(self, siteMap):
         """ The data for the given track site index is updated. """
-        self.getSession()
         self.trackSiteNameLbl.setText(siteMap.filename)
 
         self.federalEastLbl.setText(unicode(siteMap.federalEast))
@@ -691,7 +682,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ refreshTrackwayUI
     def refreshTrackwayUI(self, dict):
         """ The trackway UI is populated with values based on the specified properties. """
-        self.getSession()
         site = dict.get(TrackPropEnum.SITE.name)
         if not site:
             site = ''
@@ -725,7 +715,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ Run a script to return a list of all Maya Track Nodes so we can get a count of both the
             total number of tracks in the scene and of those that are completed. """
 
-        self.getSession()
         uidList = self.getUidList()
 
         if not uidList:
@@ -754,7 +743,6 @@ class TrackwayManagerWidget(PyGlassWidget):
     def handleCompletedCkbx(self):
         """ The COMPLETED source flag for the selected track (or tracks) is set or cleared, based
             on the value of the checkbox. """
-        #self.getSession()
 
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
@@ -818,8 +806,6 @@ class TrackwayManagerWidget(PyGlassWidget):
             a straight line extrapolation of the given track and its previous track. The next track
             node is also given the averaged orientation and length and width uncertainties
             associated with the last two tracks. """
-
-        self.getSession()
 
         selectedTracks = self.getSelectedTracks()
         if selectedTracks is None:
@@ -914,8 +900,6 @@ class TrackwayManagerWidget(PyGlassWidget):
             placed in a straight line extrapolation of the given track and its next track. The
             previous track node is also given the averaged orientation and length and width
             uncertainties associated with the the next two tracks. """
-
-        self.getSession()
 
         selectedTracks = self.getSelectedTracks()
         if selectedTracks is None:
@@ -1132,7 +1116,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         if len(selectedTracks) != 1:
             return
 
-        self.getSession()
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
 
@@ -1169,8 +1152,6 @@ class TrackwayManagerWidget(PyGlassWidget):
     def handleInterpolate(self):
         """ Based on a previous and next tracks to a given (single) selected track node t, the
             parameters are interpolated. """
-
-        self.getSession()
 
         selectedTracks = self.getSelectedTracks()
         if selectedTracks is None:
@@ -1231,7 +1212,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         if len(selectedTracks) != 1:
             return
 
-        self.getSession()
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
         t.length = self.lengthSbx.value()/100.0
@@ -1249,7 +1229,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         if len(selectedTracks) != 1:
             return
 
-        self.getSession()
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
         t.lengthUncertainty = self.lengthUncertaintySbx.value()/100.0
@@ -1267,8 +1246,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         if len(selectedTracks) != 1:
             return
-
-        self.getSession()
 
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
@@ -1334,8 +1311,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         if len(selectedTracks) != 1:
             return
 
-        self.getSession()
-
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
 
@@ -1357,7 +1332,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ This track has its MARKED source flag set or cleared, based on the value of the
             checkbox. """
 
-        self.getSession()
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return
@@ -1406,8 +1380,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         if len(selectedTracks) != 1:
             return
-
-        self.getSession()
 
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
@@ -1504,13 +1476,15 @@ class TrackwayManagerWidget(PyGlassWidget):
             t.updateFromNode()
 
         t = selectedTracks[-1]
-        dict = t.toDict()
-        self.refreshTrackwayUI(dict)
+        props = t.toDict()
+        self.refreshTrackwayUI(props)
 
         if len(selectedTracks) == 1:
-            self.refreshTrackUI(dict)
+            self.refreshTrackUI(props)
         else:
             self.clearTrackUI()
+
+        self.closeSession()
 
 #___________________________________________________________________________________________________ handleRotationSBox
     def handleRotationSbx(self):
@@ -1522,7 +1496,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         if len(selectedTracks) != 1:
             return
 
-        self.getSession()
         t = selectedTracks[0]
         t.updateFromNode()
 
@@ -1541,7 +1514,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         if len(selectedTracks) != 1:
             return
 
-        self.getSession()
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
         t.rotationUncertainty = self.rotationUncertaintySbx.value()
@@ -2142,7 +2114,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         if len(selectedTracks) != 1:
             return
 
-        self.getSession()
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
         t.width = self.widthSbx.value()/100.0
@@ -2160,7 +2131,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         if len(selectedTracks) != 1:
             return
 
-        self.getSession()
         t = selectedTracks[0]
         t.updateFromNode() # use this opportunity to capture the current state of the Maya node
         t.widthUncertainty = self.widthUncertaintySbx.value()/100.0
