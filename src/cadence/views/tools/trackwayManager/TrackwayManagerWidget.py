@@ -746,6 +746,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
+            self.closeSession()
+            self._lock = False
             return
 
         if len(selectedTracks) != 1:
@@ -1476,6 +1478,10 @@ class TrackwayManagerWidget(PyGlassWidget):
             t.updateFromNode()
 
         t = selectedTracks[-1]
+
+        print 'in handlPullBtn:  completed = %s' % t.completed
+
+
         props = t.toDict()
         self.refreshTrackwayUI(props)
 
