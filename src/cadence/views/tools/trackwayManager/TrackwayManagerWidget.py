@@ -2356,13 +2356,19 @@ class TrackwayManagerWidget(PyGlassWidget):
         return self._session
 
 #___________________________________________________________________________________________________ closeSession
-    def closeSession(self, commit =True):
+    def closeSession(self, commit =True, unlock =True):
         """ Closes a session and indicates such by nulling out model and session. """
         if self._session is not None:
             if commit:
                 self._session.commit()
             self._session.close()
+            self._session = None
+            if unlock:
+                self.unlock()
             return True
 
         self._session = None
+        if unlock:
+            self.unlock()
+
         return False
