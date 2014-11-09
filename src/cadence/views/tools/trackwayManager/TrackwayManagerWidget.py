@@ -2363,6 +2363,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                 self._session.commit()
             self._session.close()
             self._session = None
+
             if unlock:
                 self.unlock()
             return True
