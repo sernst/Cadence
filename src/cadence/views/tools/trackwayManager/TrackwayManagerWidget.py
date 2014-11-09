@@ -78,6 +78,7 @@ class TrackwayManagerWidget(PyGlassWidget):
     def __init__(self, parent, **kwargs):
         super(TrackwayManagerWidget, self).__init__(parent, **kwargs)
 
+        self._uiLock  = False
         self._session = None
 
         self.firstBtn.setIcon(QtGui.QIcon(self.getResourcePath('mediaIcons', 'first.png')))
@@ -737,6 +738,19 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.selectedTrackCountLbl.setText('Selected:  ' + unicode(selectedCount))
 
 
+#___________________________________________________________________________________________________ _lock
+    def _lock(self):
+        """_lockUi doc..."""
+        if self._uiLock:
+            return False
+        self._uiLock = True
+        return True
+
+#___________________________________________________________________________________________________ _unlock
+    def _unlock(self):
+        """_unlockU doc..."""
+        self._uiLock = False
+
 #===================================================================================================
 #                                                                T R A C K   T A B   H A N D L E R S
 #___________________________________________________________________________________________________ handleCompletedCkbx
@@ -744,13 +758,17 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ The COMPLETED source flag for the selected track (or tracks) is set or cleared, based
             on the value of the checkbox. """
 
+        if not self._lock():
+            return
+
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             self.closeSession()
-            self._lock = False
+            self._unlock()
             return
 
         if len(selectedTracks) != 1:
+            self._unlock()
             return
 
         t = selectedTracks[0]
@@ -774,18 +792,32 @@ class TrackwayManagerWidget(PyGlassWidget):
 #           self.lockedCkbx.setChecked(True)
 
         self.closeSession(commit=True)
+        self._unlock()
+
 #___________________________________________________________________________________________________ handleCountsBtn
     def handleCountsBtn(self):
         """ This updates the total number of tracks in the scene and the number completed. """
+        if not self._lock():
+            return
+
         self.refreshTrackCountsUI()
+
+        self.closeSession()
+        self._unlock()
 
 #___________________________________________________________________________________________________ handleErasePathsBtn
     def handleErasePathsBtn(self):
         """ Deletes all curves representing paths (e.g., connecting a given track series). """
+        if not self._lock():
+            return
+
         curves = cmds.editDisplayLayerMembers(self.PATH_LAYER, query=True, noRecurse=True)
         for curve in curves:
             cmds.delete(curve)
         cmds.delete(self.PATH_LAYER)
+
+        self.closeSession()
+        self._unlock()
 
 #___________________________________________________________________________________________________ handleExportAllTrackwaysBtn
     def handleExportAllTrackwaysBtn(self):
