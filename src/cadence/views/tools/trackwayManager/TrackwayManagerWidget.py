@@ -2,25 +2,18 @@
 # (C)2012-2014
 # Scott Ernst and Kent A. Stevens
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import nimble
-from nimble import cmds
 from PySide import QtGui
-from pyaid.string.StringUtils import StringUtils
+
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
-from cadence.models.tracks.Tracks_Track import Tracks_Track
-from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
+
 from cadence.svg.CadenceDrawing import CadenceDrawing
-from cadence.util.maya.MayaUtils import MayaUtils
-from cadence.mayan.trackway import GetSelectedUidList
-from cadence.mayan.trackway import GetUidList
-from cadence.mayan.trackway import GetTrackNodeData
+
+from cadence.views.tools.trackwayManager.TrackwayManager import TrackwayManager
 
 #___________________________________________________________________________________________________ TrackwayManagerWidget
 class TrackwayManagerWidget(PyGlassWidget):
@@ -29,11 +22,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         their attributes.  Tracks in Maya are represented by track nodes, each a transform node
         with an additional attribute specifying the UID of that track.  The transform's scale,
         position, and rotation (about Y) are used to intrinsically represent track dimensions,
-        position, and orientation.  Track models are accessed by query based on the UID, and for a
-        given session. """
+        position, and orientation.  Track models are accessed by query based on the UID. """
+
 #===================================================================================================
 #                                                                                       C L A S S
-    RESOURCE_FOLDER_PREFIX = ['tools']
 
     FETCH_TRACK_BY_NAME    = 'Fetch Track by NAME'
     FETCH_TRACK_BY_INDEX   = 'Fetch Track by INDEX'
@@ -54,9 +46,9 @@ class TrackwayManagerWidget(PyGlassWidget):
     UNLINK_SELECTED      = 'UNLINK Selected Tracks'
     SET_TO_MEASURED      = 'Set to MEASURED Dimensions'
 
-    SET_UNCERTAINTY_LOW      = 'Set Uncertainties LOW'
-    SET_UNCERTAINTY_MODERATE = 'Set Uncertainties MODERATE'
-    SET_UNCERTAINTY_HIGH     = 'Set Uncertainties HIGH'
+    SET_UNCERTAINTY_LOW      = 'Set Uncertainties LOW'          # for exceptional tracks
+    SET_UNCERTAINTY_MODERATE = 'Set Uncertainties MODERATE'     # a reasonable default
+    SET_UNCERTAINTY_HIGH     = 'Set Uncertainties HIGH'         # for incomplete or circular tracks
 
     DIMENSION_UNCERTAINTY_LOW      = 0.01
     DIMENSION_UNCERTAINTY_MODERATE = 0.03
@@ -66,12 +58,6 @@ class TrackwayManagerWidget(PyGlassWidget):
     ROTATION_UNCERTAINTY_MODERATE = 10.0
     ROTATION_UNCERTAINTY_HIGH     = 30.0
 
-    LAYER_SUFFIX = '_Trackway_Layer'
-    PATH_LAYER   = 'Track_Path_Layer'
-
-    FIT_FACTOR  = 0.4
-    CADENCE_CAM = 'CadenceCam'
-
 #___________________________________________________________________________________________________ __init__
     def __init__(self, parent, **kwargs):
         super(TrackwayManagerWidget, self).__init__(parent, **kwargs)
@@ -79,6 +65,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._uiLock  = False
         self._session = None
 
+        # create an instance of a TrackwayManager to deal with the database and the Maya scene
+        self._trackwayManager = TrackwayManager()
+
+        # provide conventional arrow icons for the navigation buttons
         self.firstBtn.setIcon(QtGui.QIcon(self.getResourcePath('mediaIcons', 'first.png')))
         self.prevBtn.setIcon( QtGui.QIcon(self.getResourcePath('mediaIcons', 'prev.png')))
         self.nextBtn.setIcon( QtGui.QIcon(self.getResourcePath('mediaIcons', 'next.png')))
@@ -144,9 +134,9 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.EXTRAPOLATE_PREVIOUS,
             self.INTERPOLATE_TRACK,
             self.SET_TO_MEASURED,
-            self.SET_UNCERTAINTY_LOW,      # for exceptional tracks
-            self.SET_UNCERTAINTY_MODERATE, # a reasonable default
-            self.SET_UNCERTAINTY_HIGH,     # for incomplete or nearly circular tracks
+            self.SET_UNCERTAINTY_LOW,
+            self.SET_UNCERTAINTY_MODERATE,
+            self.SET_UNCERTAINTY_HIGH,
             self.LINK_SELECTED,
             self.UNLINK_SELECTED)
 
@@ -190,8 +180,10 @@ class TrackwayManagerWidget(PyGlassWidget):
 #                                                                                        P U B L I C
 #
 #___________________________________________________________________________________________________ enableTrackUI
-    def enableTrackUI(self, enable):
-        """ The track ui is either enabled (if passed True) or disabled (if passed False). """
+    def enableTrackUI(self, enable =True):
+        """ The track ui is either enabled (if passed True) or disabled (if passed False). This
+            is useful for tracks that are locked to prevent accidental modification. """
+
         self.widthLbl.setEnabled(enable)
         self.widthSbx.setEnabled(enable)
         self.widthUncertaintySbx.setEnabled(enable)
@@ -213,342 +205,15 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.trackNameLE.setEnabled(enable)
         self.trackIndexLE.setEnabled(enable)
 
-#___________________________________________________________________________________________________ getAllTracksInMaya
-    def getAllTracksInMaya(self):
-        """ Returns a list of all tracks that are currently loaded into Maya. """
-        uidList = self.getUidList()
-
-        # and from this list of UIDs, compile the corresponding list of track instances
-        tracks  = []
-        for uid in uidList:
-            tracks.append(self.getTrackByUid(uid))
-        return tracks if len(tracks) > 0 else None
-
-#___________________________________________________________________________________________________ getCompletedTracks
-    def getCompletedTracks(self, completed, uidList=None):
-        """ Returns a list of all tracks within the scene that are either completed or incomplete,
-            depending on the boolean kwarg. """
-        if not uidList:
-            uidList = self.getUidList()
-        # now, given a list of UIDs of those track currently in the Maya scene, determine which
-        # are completed (or incomplete), and return those as a list of tracks
-        tracks = self.getFlaggedTracks(uidList, SourceFlagsEnum.COMPLETED, completed)
-        return tracks
-
-#___________________________________________________________________________________________________ getFirstTrack
-    def getFirstTrack(self):
-        """ Returns the track model corresponding to the first track in a series. """
-        selectedTracks = self.getSelectedTracks()
-        if not selectedTracks:
-            return None
-
-        t = selectedTracks[0]
-        p = self.getPreviousTrack(t)
-
-        while p is not None:
-            t = p
-            p = self.getPreviousTrack(p)
-        return t
-
-#___________________________________________________________________________________________________ getFirstSelectedTrack
-    def getFirstSelectedTrack(self):
-        """ Returns the track model corresponding to the first of a series of selected nodes. """
-        selectedTracks = self.getSelectedTracks()
-        if not selectedTracks:
-            return None
-
-        t = selectedTracks[0]
-        p = self.getPreviousTrack(t)
-
-        while p in selectedTracks:
-            t = p
-            p = self.getPreviousTrack(p)
-        return t
-
-#___________________________________________________________________________________________________ getFlaggedTracks
-    def getFlaggedTracks(self, uidList, flag, set=True):
-        """ Creates a list of all tracks that have a given source flag either set or cleared,
-            based on the boolean argument set. """
-        model   = Tracks_Track.MASTER
-        state   = flag if set else 0
-        size    = 200
-        iMax    = len(uidList)/size
-        i       = 0
-        entries = []
-
-        session = self.getSession()
-        while i < iMax:
-            query   = session.query(model)
-            batch   = uidList[i*size : (i + 1)*size]
-            query   = query.filter(model.uid.in_(batch))
-            query   = query.filter(model.sourceFlags.op('&')(flag) == state)
-            entries += query.all()
-            i       += 1
-
-        if i*size < len(uidList):
-            query   = session.query(model)
-            batch   = uidList[i*size :]
-            query   = query.filter(model.uid.in_(batch))
-            query   = query.filter(model.sourceFlags.op('&')(flag) == state)
-            entries += query.all()
-
-        self.closeSession(commit=False)
-        return entries if len(entries) > 0 else None
-
-#___________________________________________________________________________________________________ getLastTrack
-    def getLastTrack(self):
-        """ Returns the track model corresponding to the last track in a series. """
-        selectedTracks = self.getSelectedTracks()
-        if not selectedTracks:
-            return None
-
-        t = selectedTracks[-1]
-        n = self.getNextTrack(t)
-
-        while n is not None:
-            t = n
-            n = self.getNextTrack(n)
-        return t
-
-#___________________________________________________________________________________________________ getLastSelectedTrack
-    def getLastSelectedTrack(self):
-        """ Returns the track model corresponding to the last of a series of selected nodes. """
-        selectedTracks = self.getSelectedTracks()
-        if not selectedTracks:
-            return None
-
-        t = selectedTracks[-1]
-        n = self.getNextTrack(t)
-        while n in selectedTracks:
-            t = n
-            n = self.getNextTrack(n)
-        return t
-
-#___________________________________________________________________________________________________ getNextTrack
-    def getNextTrack(self, track):
-        """ This method just encapsulates the session getter. """
-        return track.getNextTrack(self.getSession())
-
-#___________________________________________________________________________________________________ getPreviousTrack
-    def getPreviousTrack(self, track):
-        """ This method just encapsulates the session getter. """
-        return track.getPreviousTrack(self.getSession())
-
-# __________________________________________________________________________________________________ getSelectedTracks
-    def getSelectedTracks(self):
-        """ This returns a list of track model instances corresponding to the track nodes that are
-            currently selected.  To achieve this, it first runs a remote script to get a list of
-            track UIDs from the selected Maya track nodes. A list of the corresponding track models
-            is then returned. """
-        conn   = nimble.getConnection()
-        result = conn.runPythonModule(GetSelectedUidList, runInMaya=True)
-
-        # Check to see if the remote command execution was successful
-        if not result.success:
-            PyGlassBasicDialogManager.openOk(
-                self,
-                'Failed UID Query',
-                'Unable to get selected UID list from Maya',
-                'Error')
-            return None
-
-        # from this UID list, create the corresponding track list
-        selectedUidList = result.payload['selectedUidList']
-        if len(selectedUidList) == 0:
-            return None
-
-        tracks = []
-        for uid in selectedUidList:
-            tracks.append(self.getTrackByUid(uid))
-        return tracks
-
-#___________________________________________________________________________________________________ getSiteMap
-    def getSiteMap(self, index):
-        """ If the track site specified by the given index is valid, a Tracks_TrackSite instance is
-            returned, otherwise None. """
-
-        model   = Tracks_SiteMap.MASTER
-        session = self.getSession()
-        siteMap = session.query(model).filter(model.index == index).first()
-
-        # close this session to release the database lock
-        session.close()
-
-        # an indicator that the site siteMap table is not yet populated for this index, check the scale
-        if not siteMap or siteMap.scale == 0:
-            return None
-        else:
-            return siteMap
-
-#___________________________________________________________________________________________________ getTrackByUid
-    def getTrackByUid(self, uid):
-        """ This gets the track model instance corresponding to a given uid. """
-        model = Tracks_Track.MASTER
-        return model.getByUid(uid, self.getSession())
-
-#___________________________________________________________________________________________________ getTracksByUid
-    def getTracksByProperties(self, **kwargs):
-        """ This gets the track model instances with specified properties. """
-        model = Tracks_Track.MASTER
-        return model.getByProperties(self.getSession(), **kwargs)
-
-#___________________________________________________________________________________________________ getTrackByName
-    def getTrackByName(self, name, **kwargs):
-        """ This gets the track model instance by name (plus trackway properties). """
-        model = Tracks_Track.MASTER
-        return model.getByName(name, self.getSession(), **kwargs)
-
-#___________________________________________________________________________________________________ getTrackNode
-    def getTrackNode(self, track):
-        """ This gets the (transient) node name corresponding to a given track, or returns None if
-            that track has not yet been loaded into Maya. """
-
-        # ask for nothing, then get nothing in return
-        if track is None:
-            return None
-
-        conn   = nimble.getConnection()
-        result = conn.runPythonModule(
-            GetTrackNodeData,
-            uid=track.uid,
-            nodeName=track.nodeName,
-            runInMaya=True)
-
-        if result.payload.get('error'):
-            print('Error in updateFromNode:', result.payload.get('message'))
-            return False
-
-        return result.payload.get('nodeName')
-
-#___________________________________________________________________________________________________ getTrackSetNode
-    def getTrackSetNode(cls):
-        """ This is redundunt with the version in TrackSceneUtils, but running locally. Note that
-            if no TrackSetNode is found, it does not create one. """
-
-        for node in cmds.ls(exactType='objectSet'):
-            if node == CadenceEnvironment.TRACKWAY_SET_NODE_NAME:
-                return node
-
-        return None
-
- #__________________________________________________________________________________________________ getTrackSeries
-    def getTrackSeries(self):
-        """ Steps backward from any selected track to the first track, then creates a list of all
-            track models in a given series, in order. """
-
-        series = []
-        track  = self.getFirstTrack()
-
-        while track:
-            series.append(track)
-            track = self.getNextTrack(track)
-
-        return series if len(series) > 0 else None
-
-#___________________________________________________________________________________________________ getTrackway
-    def getTrackway(self, uidList, trackwayName):
-        """ Creates a list of all tracks that have Maya tracknodes (hence are in the uidList) and
-            have the specified trackwayName (hence trackway type and trackway number. """
-
-        model   = Tracks_Track.MASTER
-        size    = 200
-        iMax    = len(uidList)/size
-        i       = 0
-        entries = []
-        type    = trackwayName[0]
-        number  = trackwayName[1:]
-
-        session = self.getSession()
-        while i < iMax:
-            query   = session.query(model)
-            batch   = uidList[i*size : (i + 1)*size]
-            query   = query.filter(model.uid.in_(batch))
-            query   = query.filter(model.trackwayType == type)
-            query   = query.filter(model.trackwayNumber == number)
-            entries += query.all()
-            i       += 1
-
-        if i*size < len(uidList):
-            query   = session.query(model)
-            batch   = uidList[i*size :]
-            query   = query.filter(model.uid.in_(batch))
-            query   = query.filter(model.trackwayType == type)
-            query   = query.filter(model.trackwayNumber == number)
-            entries += query.all()
-
-        self.closeSession(commit=False)
-        return entries if len(entries) > 0 else None
-
-#___________________________________________________________________________________________________ getTrackwayNames
-    def getTrackwayNames(self, site, level, sector):
-        """ Compiles a list of the names of trackways for a specified site/level/sector. In some
-            tracksites, for some levels, a given trackway name (such as S1) may appear in two
-            sectors. Hence it is necessary to fully qualify the trackway name with site, level, and
-            sector. """
-
-        props = { TrackPropEnum.SITE.name:site,
-                  TrackPropEnum.LEVEL.name:level,
-                  TrackPropEnum.SECTOR.name:sector }
-        # now get all tracks in this trackway (that share this combination of site/level/sector)
-        tracks = self.getTracksByProperties(**props)
-
-        # that list of track instances will be used to compile all trackway names (with duplicates)
-        trackwayNames = []
-        for track in tracks:
-            trackwayName = '%s%s' % (track.trackwayType, track.trackwayNumber)
-            trackwayNames.append(trackwayName)
-
-        # remove the duplicates, sort 'em and return 'em
-        trackwayNames = list(set(trackwayNames))
-        trackwayNames.sort()
-
-        return trackwayNames if len(trackwayNames) > 0 else None
-
-#___________________________________________________________________________________________________ getTrackwayPropertiesFromUI
-    def getTrackwayPropertiesFromUI(self):
-        """ Returns a dictionary of trackway properties, extracted from the UI. """
-        dict = { TrackPropEnum.SITE.name:self.siteLE.text(),
-            TrackPropEnum.YEAR.name:self.yearLE.text(),
-            TrackPropEnum.SECTOR.name:self.sectorLE.text(),
-            TrackPropEnum.LEVEL.name:self.levelLE.text() }
-
-        trackway = self.trackwayLE.text()
-        if trackway:
-            dict[TrackPropEnum.TRACKWAY_TYPE.name]   = self.trackwayLE.text()[0]
-            dict[TrackPropEnum.TRACKWAY_NUMBER.name] = self.trackwayLE.text()[1:]
-
-        return dict
-
-#___________________________________________________________________________________________________ getUidList
-    def getUidList(self):
-        """ Returns a list of the UIDs of all track nodes currently loaded into Maya. """
-        conn   = nimble.getConnection()
-        result = conn.runPythonModule(GetUidList, runInMaya=True)
-
-        # and check to see if the remote command execution was successful
-        if not result.success:
-            PyGlassBasicDialogManager.openOk(
-                self,
-                'Failed UID Query',
-                'Unable to get UID list from Maya',
-                'Error')
-            return None
-
-        return result.payload['uidList']
-#___________________________________________________________________________________________________ selectTrack
-    def selectTrack(self, track):
-        """ Select the node corresponding to this track model instance, then focus the camera
-            upon this node. """
-
-        cmds.select(self.getTrackNode(track))
-        self.setCameraFocus()
-
+#
 #===================================================================================================
 #                                                                  T R A C K  U I  U T I L I T I E S
 
 #___________________________________________________________________________________________________ clearTrackUI
     def clearTrackUI(self):
-        """ Clears out the text fields associated with the track parameters in the UI. """
+        """ Clears out the text fields associated with the track parameters in the UI. This is
+            called by several handlers that invalidate the track information in the UI. """
+
         self.widthLbl.setText('Width:  [%4s]' % '')
         self.widthSbx.setValue(0)
         self.widthUncertaintySbx.setValue(0)
@@ -573,7 +238,9 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ clearTrackSiteUI
     def clearTrackSiteUI(self):
-        """ This clears the track site data in the Trackways tab. """
+        """ This clears the track site data in the Trackways tab. In fact, this is used only by
+            handleTrackSiteIndexSbx. """
+
         self.trackSiteNameLbl.setText(u'')
         self.federalEastLbl.setText(u'')
         self.federalNorthLbl.setText(u'')
@@ -592,7 +259,10 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ clearTrackwayUI
     def clearTrackwayUI(self):
-        """ Clears the banner at the top of the UI. """
+        """ Clears the banner at the top of the UI. This is called by a few handlers that invalidate
+            the trackway information in the UI (such as handleSelectCompleted, which selects all
+            tracks that are completed, which might involve multiple trackways. """
+
         self.siteLE.setText('')
         self.yearLE.setText('')
         self.sectorLE.setText('')
@@ -601,51 +271,55 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ refreshTrackUI
     def refreshTrackUI(self, props):
-        """ The track properties aspect of the UI display is updated based on a dictionary derived
-            from a given track model instance. """
+        """ The track properties aspect of the UI display is updated based on props, a dictionary
+            compiling the properies for a given track model instance. """
 
-        self.widthSbx.setValue(100.0*props[TrackPropEnum.WIDTH.name])
-        self.widthLbl.setText('Width: [%2.0f]' % (100.0*props[TrackPropEnum.WIDTH_MEASURED.name]))
+        width               = props[TrackPropEnum.WIDTH.name]
+        widthMeasured       = props[TrackPropEnum.WIDTH_MEASURED.name]
+        length              = props[TrackPropEnum.LENGTH.name]
+        lengthMeasured      = props[TrackPropEnum.LENGTH_MEASURED.name]
+        widthUncertainty    = props[TrackPropEnum.WIDTH_UNCERTAINTY.maya]
+        lengthUncertainty   = props[TrackPropEnum.LENGTH_UNCERTAINTY.maya]
+        rotation            = props[TrackPropEnum.ROTATION.name]
+        rotationUncertainty = props[TrackPropEnum.ROTATION_UNCERTAINTY.name]
+        sourceFlags         = props[TrackPropEnum.SOURCE_FLAGS.name]
+        hidden              = props[TrackPropEnum.HIDDEN.name]
+        lengthRatio         = props[TrackPropEnum.LENGTH_RATIO.name]
+        note                = props[TrackPropEnum.NOTE.name]
+        left                = props[TrackPropEnum.LEFT.name]
+        pes                 = props[TrackPropEnum.PES.name]
+        number              = props[TrackPropEnum.NUMBER.name]
+        index               = props[TrackPropEnum.INDEX.name]
 
-        self.lengthSbx.setValue(100.0*props[TrackPropEnum.LENGTH.name])
-        self.lengthLbl.setText('Length: [%2.0f]' % (100.0*props[TrackPropEnum.LENGTH_MEASURED.name]))
+        self.widthSbx.setValue(100.0*width)
+        self.widthLbl.setText('Width: [%2.0f]' % 100.0*widthMeasured)
+        self.lengthSbx.setValue(100.0*length)
+        self.lengthLbl.setText('Length: [%2.0f]' % 100.0*lengthMeasured)
+        self.widthUncertaintySbx.setValue(100.0*widthUncertainty)
+        self.lengthUncertaintySbx.setValue(100.0*lengthUncertainty)
 
-        self.widthUncertaintySbx.setValue(100.0*props[TrackPropEnum.WIDTH_UNCERTAINTY.maya])
-        self.lengthUncertaintySbx.setValue(100.0*props[TrackPropEnum.LENGTH_UNCERTAINTY.maya])
-
-        rotation = props[TrackPropEnum.ROTATION.name]
         if rotation < 0.0:
             rotation += 360.0
         self.rotationSbx.setValue(rotation)
-
-        self.rotationUncertaintySbx.setValue(props[TrackPropEnum.ROTATION_UNCERTAINTY.name])
+        self.rotationUncertaintySbx.setValue(rotationUncertainty)
 
         # set the checkboxes 'Completed', 'Locked', and 'Marked' according to the source flags
-        f = props[TrackPropEnum.SOURCE_FLAGS.name]
-        locked    = SourceFlagsEnum.get(f, SourceFlagsEnum.LOCKED)
-        marked    = SourceFlagsEnum.get(f, SourceFlagsEnum.MARKED)
-        completed = SourceFlagsEnum.get(f, SourceFlagsEnum.COMPLETED)
-
-        print('in refreshTrackUI:  the source flags (f) is %s, and completed = %s' % (f, completed))
-        print('     locked=%s, marked=%s, completed=%s' % (locked, marked, completed))
+        locked    = SourceFlagsEnum.get(sourceFlags, SourceFlagsEnum.LOCKED)
+        marked    = SourceFlagsEnum.get(sourceFlags, SourceFlagsEnum.MARKED)
+        completed = SourceFlagsEnum.get(sourceFlags, SourceFlagsEnum.COMPLETED)
+        print 'in refreshTrackUI:  source flags=%s, and completed=%s' % (sourceFlags, completed)
+        print '     locked=%s, marked=%s, completed=%s' % (locked, marked, completed)
         self.lockedCkbx.setChecked(locked)
         self.markedCkbx.setChecked(marked)
         self.completedCkbx.setChecked(completed)
 
-        # likewise the special 'Hidden' attribute
-        self.hiddenCkbx.setChecked(props[TrackPropEnum.HIDDEN.name])
+        self.hiddenCkbx.setChecked(hidden)
+        self.lengthRatioSbx.setValue(lengthRatio)
+        self.noteLE.setText(note)
 
-        self.lengthRatioSbx.setValue(props[TrackPropEnum.LENGTH_RATIO.name])
-
-        self.noteLE.setText(props[TrackPropEnum.NOTE.name])
-
-        left   = props[TrackPropEnum.LEFT.name]
-        pes    = props[TrackPropEnum.PES.name]
-        number = props[TrackPropEnum.NUMBER.name]
-        index  = props[TrackPropEnum.INDEX.name]
         name   = (u'L' if left else u'R') + (u'P' if pes else u'M') + number if number else u'-'
         self.trackNameLE.setText(name)
-        self.trackIndexLE.setText(StringUtils.toUnicode(index))
+        self.trackIndexLE.setText(unicode(index))
 
         # now, depending on whether this track is locked or unlocked, disable/enable the UI
         # locked = SourceFlagsEnum.get(f, SourceFlagsEnum.LOCKED)
@@ -656,27 +330,25 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ refreshTrackSiteUI
     def refreshTrackSiteUI(self, siteMap):
-        """ The data for the given track site index is updated. """
+        """ The data displayed for the given track site index is updated. Note that the siteMap
+            argument is a Tracks_SiteMap model instance. """
+
         self.trackSiteNameLbl.setText(siteMap.filename)
 
-        self.federalEastLbl.setText(StringUtils.toUnicode(siteMap.federalEast))
-        self.federalNorthLbl.setText(StringUtils.toUnicode(siteMap.federalNorth))
-
-        self.mapLeftLbl.setText(StringUtils.toUnicode(siteMap.left))
-        self.mapTopLbl.setText(StringUtils.toUnicode(siteMap.top))
-
-        self.mapWidthLbl.setText(StringUtils.toUnicode(siteMap.width))
-        self.mapHeightLbl.setText(StringUtils.toUnicode(siteMap.height))
-
-        self.xFedLbl.setText(StringUtils.toUnicode(siteMap.xFederal))
-        self.yFedLbl.setText(StringUtils.toUnicode(siteMap.yFederal))
-
-        self.transXLbl.setText(StringUtils.toUnicode(siteMap.xTranslate))
-        self.transZLbl.setText(StringUtils.toUnicode(siteMap.zTranslate))
-        self.rotXLbl.setText(StringUtils.toUnicode(siteMap.xRotate))
-        self.rotYLbl.setText(StringUtils.toUnicode(siteMap.yRotate))
-        self.rotZLbl.setText(StringUtils.toUnicode(siteMap.zRotate))
-        self.scaleLbl.setText(StringUtils.toUnicode(siteMap.scale))
+        self.federalEastLbl.setText(unicode(siteMap.federalEast))
+        self.federalNorthLbl.setText(unicode(siteMap.federalNorth))
+        self.mapLeftLbl.setText(unicode(siteMap.left))
+        self.mapTopLbl.setText(unicode(siteMap.top))
+        self.mapWidthLbl.setText(unicode(siteMap.width))
+        self.mapHeightLbl.setText(unicode(siteMap.height))
+        self.xFedLbl.setText(unicode(siteMap.xFederal))
+        self.yFedLbl.setText(unicode(siteMap.yFederal))
+        self.transXLbl.setText(unicode(siteMap.xTranslate))
+        self.transZLbl.setText(unicode(siteMap.zTranslate))
+        self.rotXLbl.setText(unicode(siteMap.xRotate))
+        self.rotYLbl.setText(unicode(siteMap.yRotate))
+        self.rotZLbl.setText(unicode(siteMap.zRotate))
+        self.scaleLbl.setText(unicode(siteMap.scale))
 
 #___________________________________________________________________________________________________ refreshTrackwayUI
     def refreshTrackwayUI(self, dict):
@@ -714,7 +386,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ Run a script to return a list of all Maya Track Nodes so we can get a count of both the
             total number of tracks in the scene and of those that are completed. """
 
-        uidList = self.getUidList()
+        uidList = self._trackwayManager.getUidList()
 
         if not uidList:
             totalTrackCount = 0
@@ -722,32 +394,34 @@ class TrackwayManagerWidget(PyGlassWidget):
             selectedCount   = 0
         else:
             totalTrackCount = len(uidList)
-            completedTracks = self.getCompletedTracks(True, uidList)
+            completedTracks = self._trackwayManager.getCompletedTracks(True, uidList)
             completedCount  = len(completedTracks) if completedTracks else 0
-            selectedCount   = len(cmds.ls(selection=True))
+            selectedCount   = len(self._trackwayManager.getSelectedTracks())
 
         # Display the total number of tracks currently in the Maya scene
-        self.totalTrackCountLbl.setText('Total:  ' + StringUtils.toUnicode(totalTrackCount))
+        self.totalTrackCountLbl.setText('Total:  ' + unicode(totalTrackCount))
 
         # Now determine how many tracks have their COMPLETED source flag set
-        self.completedTrackCountLbl.setText('Completed:  ' + StringUtils.toUnicode(completedCount))
+        self.completedTrackCountLbl.setText('Completed:  ' + unicode(completedCount))
 
         # And show how many are currently selected
-        self.selectedTrackCountLbl.setText('Selected:  ' + StringUtils.toUnicode(selectedCount))
+        self.selectedTrackCountLbl.setText('Selected:  ' + unicode(selectedCount))
 
+#___________________________________________________________________________________________________ getTrackwayPropertiesFromUI
+    def getTrackwayPropertiesFromUI(self):
+        """ Returns a dictionary of trackway properties, extracted from the UI. """
+        props = {
+            TrackPropEnum.SITE.name:self.siteLE.text(),
+            TrackPropEnum.YEAR.name:self.yearLE.text(),
+            TrackPropEnum.SECTOR.name:self.sectorLE.text(),
+            TrackPropEnum.LEVEL.name:self.levelLE.text() }
 
-#___________________________________________________________________________________________________ _lock
-    def _lock(self):
-        """_lockUi doc..."""
-        if self._uiLock:
-            return False
-        self._uiLock = True
-        return True
+        trackway = self.trackwayLE.text()
+        if trackway:
+            props[TrackPropEnum.TRACKWAY_TYPE.name]   = self.trackwayLE.text()[0]
+            props[TrackPropEnum.TRACKWAY_NUMBER.name] = self.trackwayLE.text()[1:]
 
-#___________________________________________________________________________________________________ _unlock
-    def _unlock(self):
-        """_unlockU doc..."""
-        self._uiLock = False
+        return props
 
 #===================================================================================================
 #                                                                T R A C K   T A B   H A N D L E R S
@@ -770,15 +444,14 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         t = selectedTracks[0]
-        print('in handleCompletedCkbx, and t.completed = %s' % t.completed)
+        print 'in handleCompletedCkbx, and t.completed=%s' % t.completed
         t.updateFromNode()
-        print('in handleCompletedCkbx, after updateFromNode, t.completed = %s' % t.completed)
-
-        print('in handleCompletedCkbx, completed checkbox = %s' % self.completedCkbx.isChecked())
+        print 'in handleCompletedCkbx, after updateFromNode, t.completed=%s' % t.completed
+        print 'in handleCompletedCkbx, completed checkbox=%s' % self.completedCkbx.isChecked()
         t.completed = self.completedCkbx.isChecked()
-        print('in handleCompletedCkbx, then completed checkbox = %s' % self.completedCkbx.isChecked())
-        print('in handleCompletedCkbx, and t.completed = %s' % t.completed)
-        print('in handleCompletedCkbx, also t.marked = %s and t.locked is %s' % (t.marked, t.locked))
+        print 'in handleCompletedCkbx, then completed checkebox=%s' % self.completedCkbx.isChecked()
+        print 'in handleCompletedCkbx, and t.completed=%s' % t.completed
+        print 'in handleCompletedCkbx, also t.marked=%s and t.locked=%s' % (t.marked, t.locked)
         t.updateNode()
 
         self.refreshTrackUI(t.toDict())
@@ -809,28 +482,15 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not self._lock():
             return
 
-        curves = cmds.editDisplayLayerMembers(self.PATH_LAYER, query=True, noRecurse=True)
-        for curve in curves:
-            cmds.delete(curve)
-        cmds.delete(self.PATH_LAYER)
+        self._trackwayManager.deleteAllPaths()
 
         self.closeSession()
         self._unlock()
 
 #___________________________________________________________________________________________________ handleExportAllTrackwaysBtn
     def handleExportAllTrackwaysBtn(self):
-        """ Creates an svg file (to scale with the tracksite) indicating the position and the
-            uncertainty in width and length of each track. """
-
-        layers = cmds.ls( type='displayLayer')
-        if not layers:
-            return
-
-        nodes  = []
-        for layer in layers:
-            if layer.endswith(self.LAYER_SUFFIX):
-                nodes.extend(cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True))
-        cmds.select(nodes)
+        """ tbd """
+        pass
 
 #___________________________________________________________________________________________________ handleExtrapolateNext
     def handleExtrapolateNext(self):
@@ -1042,8 +702,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                 'Error')
             return
 
-        if not cmds.objExists('CadenceCam'):
-            self.initializeCadenceCam()
+        self._trackwayManager.initializeCadenceCam()
 
         t = tracks[0]
 
@@ -1058,11 +717,11 @@ class TrackwayManagerWidget(PyGlassWidget):
             t.rotationUncertainty = self.ROTATION_UNCERTAINTY_MODERATE
 
         # set this track's position to that of the CadenceCam
-        t.x = cmds.getAttr(self.CADENCE_CAM + '.translateX')
-        t.z = cmds.getAttr(self.CADENCE_CAM + '.translateZ')
+        t.x, t.z = self._trackwayManager.getCadenceCamLocation()
 
         t.updateNode()
-        cmds.select(self.getTrackNode(t))
+        self._trackwayManager.selectTrack(t)
+
         t.updateFromNode()
         self.refreshTrackUI(t.toDict())
 
@@ -1089,8 +748,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                'Error')
             return
 
-        if not cmds.objExists(self.CADENCE_CAM):
-            self. initializeCadenceCam()
+        self._trackwayManager.initializeCadenceCam()
 
         t = tracks[0]
 
@@ -1105,11 +763,10 @@ class TrackwayManagerWidget(PyGlassWidget):
             t.rotationUncertainty = self.ROTATION_UNCERTAINTY_MODERATE
 
         # set this track's position to that of the CadenceCam
-        t.x = cmds.getAttr(self.CADENCE_CAM + '.translateX')
-        t.z = cmds.getAttr(self.CADENCE_CAM + '.translateZ')
+        t.x, t.z = self._trackwayManager.getCadenceCamLocation()
 
         t.updateNode()
-        cmds.select(self.getTrackNode(t))
+        self._trackwayManager.selectTrack(t)
         t.updateFromNode()
         self.refreshTrackUI(t.toDict())
         self.refreshTrackwayUI(t.toDict())
@@ -1117,7 +774,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 # __________________________________________________________________________________________________ handleFirstBtn
     def handleFirstBtn(self):
         """ Get the first track, select the corresponding node, and focus the camera on it. """
-        t = self.getFirstTrack()
+        t = self._trackwayManager.getFirstTrack()
         if t is None:
             return
 
@@ -1223,7 +880,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ Get the last track, select the corresponding node, focus the camera on it, and update
             the UIs"""
 
-        t = self.getLastTrack()
+        t = self._trackwayManager.getLastTrack()
         if t is None:
             return
 
@@ -1245,7 +902,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         t = selectedTracks[0]
-        t.updateFromNode() # use this opportunity to capture the current state of the Maya node
+        t.updateFromNode()  # ???????????????????????? should this be done in selectTrack itself? ?????????????????
         t.length = self.lengthSbx.value()/100.0
         t.updateNode()
 
@@ -1280,7 +937,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         t = selectedTracks[0]
-        t.updateFromNode() # use this opportunity to capture the current state of the Maya node
+        t.updateFromNode()
 
         t.lengthRatio = self.lengthRatioSbx.value()
 
@@ -1364,7 +1021,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ This track has its MARKED source flag set or cleared, based on the value of the
             checkbox. """
 
-        selectedTracks = self.getSelectedTracks()
+        selectedTracks = self._trackwayManager.getSelectedTracks()
         if not selectedTracks:
             return
         if len(selectedTracks) != 1:
@@ -1373,9 +1030,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = selectedTracks[0]
         t.updateFromNode()
 
-        print('>>> in handleMarkedCkbx t.locked=%s, t.completed=%s, t.marked=%s' % (t.locked, t.completed, t.marked))
+        print '>>> in handleMarkedCkbx t.locked=%s, t.completed=%s, t.marked=%s' % (t.locked, t.completed, t.marked)
         t.marked = self.markedCkbx.isChecked()
-        print('>>> in handleMarkedCkbx:  t.marked then is %s' % t.marked)
+        print '>>> in handleMarkedCkbx:  t.marked then is %s' % t.marked
         t.updateNode()
 
         self.closeSession(commit=True)
@@ -1509,8 +1166,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         t = selectedTracks[-1]
 
-        print('in handlPullBtn:  completed = %s' % t.completed)
-
+        print 'in handlPullBtn:  completed = %s' % t.completed
 
         props = t.toDict()
         self.refreshTrackwayUI(props)
@@ -1575,10 +1231,10 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.handleSelectByIndex()
 
         elif self.selectionMethod1Cmbx.currentText() == self.SELECT_SERIES_BEFORE:
-            self.handleSelectSeriesBefore()
+            self.handleSelectTracksBefore()
 
         elif self.selectionMethod1Cmbx.currentText() == self.SELECT_SERIES_AFTER:
-            self.handleSelectSeriesAfter()
+            self.handleSelectTracksAfter()
 
         elif self.selectionMethod1Cmbx.currentText() == self.SELECT_TRACK_SERIES:
             self.handleSelectSeries()
@@ -1610,10 +1266,10 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.handleSelectByIndex()
 
         elif self.selectionMethod2Cmbx.currentText() == self.SELECT_SERIES_BEFORE:
-            self.handleSelectSeriesBefore()
+            self.handleSelectTracksBefore()
 
         elif self.selectionMethod2Cmbx.currentText() == self.SELECT_SERIES_AFTER:
-            self.handleSelectSeriesAfter()
+            self.handleSelectTracksAfter()
 
         elif self.selectionMethod2Cmbx.currentText() == self.SELECT_TRACK_SERIES:
             self.handleSelectSeries()
@@ -1632,13 +1288,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ handleSelectAllTrackwaysBtn
     def handleSelectAllTrackwaysBtn(self):
         """ A list of all track nodes across all layers is compiled and selected. """
-        layers = cmds.ls( type='displayLayer')
-        nodes  = []
-        for layer in layers:
-            if layer.endswith(self.LAYER_SUFFIX):
-               nodes.extend(cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True))
-        cmds.select(nodes)
-        print("%s nodes selected" %len(nodes))
+        self._trackwayManager.selectAllTracks()
 
 #___________________________________________________________________________________________________ handleSelectByIndex
     def handleSelectByIndex(self):
@@ -1676,7 +1326,7 @@ class TrackwayManagerWidget(PyGlassWidget):
     def handleSelectCadenceCamBtn(self):
         """ Handles the selection of the CadenceCam. """
         self.initializeCadenceCam()
-        cmds.lookThru(self.CADENCE_CAM)
+        self._trackwayManager.selectCadenceCam()
 
         selectedTracks = self.getSelectedTracks()
         if selectedTracks is None:
@@ -1701,7 +1351,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             COMPLETED source flag set).  Batch this task into sublists due to limitations. This is
             also used with False passed in to select those tracks that are not yet completed. """
         # turn off all current selections
-        cmds.select(clear=True)
+        self._trackwayManager.selectTrack(None)
 
         # first get a list of tracks that are either completed or incomplete
         tracks = self.getCompletedTracks(completed=completed)
@@ -1713,14 +1363,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                 'No %s tracks selected' % 'completed' if completed else 'incomplete')
             return
 
-        # now get a list of the nodes for those tracks, so they can be selected in Maya
-        nodes= []
-        for t in tracks:
-            nodes.append(self.getTrackNode(t))
-
-        # and pass that list to Maya to be selected
-        if nodes:
-            cmds.select(nodes)
+        self._trackwayManager.selectTracks(tracks)
 
         self.clearTrackUI()
         self.clearTrackwayUI()
@@ -1730,11 +1373,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         """ Selects all marked track nodes (those with UIDs in the scene that have their
             MARKED source flag set).  Batch this task into sublists due to limitations. """
 
-        uidList = self.getUidList()
-
-        # so we have a list of UIDs of those track currently in the Maya scene
-        tracks = self.getFlaggedTracks(uidList, SourceFlagsEnum.MARKED, marked)
-
+        tracks = self._trackwayManager.getMarkedTracks()
         if not tracks:
             PyGlassBasicDialogManager.openOk(
                 self,
@@ -1742,12 +1381,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                 'There are no marked tracks in this scene.')
             return
 
-        nodes= []
-        for t in tracks:
-            nodes.append(self.getTrackNode(t))
-
-        if nodes:
-            cmds.select(nodes)
+        self._trackwayManager.selectTracks(tracks)
 
         self.clearTrackUI()
         self.clearTrackwayUI()
@@ -1766,23 +1400,25 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         t = incompleteTracks[0]
         t.updateNode()
-        cmds.select(self.getTrackNode(t))
+        self._trackwayManager.selectTrack(t)
+
+        # update the UIs accordingly
         self.refreshTrackwayUI(t.toDict())
         self.refreshTrackUI(t.toDict())
-        self.setCameraFocus()
+        self._trackwayManager.setCameraFocus()
 
 #___________________________________________________________________________________________________ handleSelectPerspectiveBtn
     def handleSelectPerspectiveBtn(self):
         """ This selects the persp camera. """
-        cmds.lookThru('persp')
+        self._trackwayManager.selectPerspectiveCam()
 
-        selectedTracks = self.getSelectedTracks()
+        selectedTracks = self._trackwayManager.getSelectedTracks()
         if selectedTracks is None:
             self.clearTrackwayUI()
             self.clearTrackUI()
             return
 
-        for t in selectedTracks:
+        for t in selectedTracks:  #?????????????????????????????? AGAIN, DOES THIS HAPPEN BEST IN SELECT??????????????
             t.updateFromNode()
 
         if len(selectedTracks) == 1:
@@ -1796,68 +1432,38 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ handleSelectSeries
     def handleSelectSeries(self):
         """ Select in Maya the nodes for the entire track series based on the given selection. """
-        tracks = self.getTrackSeries()
+        tracks = self._trackwayManager.getTrackSeries()
         if tracks is None:
             return
 
+        # select the Maya track nodes
+        self._trackwayManager.selectTracks(tracks)
+
         # The path of track series is visualized as a piecewise-linear curve added to the PATH_LAYER
-        path  = self.createPathFromTrackSeries(tracks)
-        curve = self.createCurve(path)
-        layer = self.PATH_LAYER
-        self.createLayer(layer)
-        cmds.editDisplayLayerMembers(layer, curve, noRecurse=True)
+        self._trackwayManager.addPath(tracks)
 
-        # Next, select the Maya track nodes
-        nodes = list()
-        for t in tracks:
-            nodes.append(self.getTrackNode(t))
-        if len(nodes) == 0:
-            return
-
-        cmds.select(nodes)
-
-#___________________________________________________________________________________________________ handleSelectSeriesAfter
-    def handleSelectSeriesAfter(self):
-        """ Selects all track nodes after the last of the currently-selected track(s). """
-        t = self.getLastSelectedTrack()
-        if t is None:
-           return
-
-        nodes = []
-        track = self.getNextTrack(t)
-        while track:
-             nodes.append(self.getTrackNode(track))
-             track = self.getNextTrack(track)
-
-        if len(nodes) > 0:
-            cmds.select(nodes)
-
-#___________________________________________________________________________________________________ handleSelectSeriesBefore
-    def handleSelectSeriesBefore(self):
+#___________________________________________________________________________________________________ handleSelectTracksBefore
+    def handleSelectTracksBefore(self):
         """ Selects all track nodes up to (but excluding) the first currently-selected track(s). """
         track = self.getFirstSelectedTrack()
-        if track is None:
-            return
+        if track:
+            self._trackwayManager.selectTracksBefore(track)
 
-        nodes = []
-        track = self.getPreviousTrack(track)
-        while track:
-            nodes.append(self.getTrackNode(track))
-            track = self.getPreviousTrack(track)
-
-        if len(nodes) > 0:
-            cmds.select(nodes)
+#___________________________________________________________________________________________________ handleSelectTracksAfter
+    def handleSelectTracksAfter(self):
+        """ Selects all track nodes after the last of the currently-selected track(s). """
+        track = self.getLastSelectedTrack()
+        if track:
+            self._trackwayManager.selectTracksAfter(track)
 
 #___________________________________________________________________________________________________ handleSelectTrackwayBtn
-    def handleSelectTrackwayBtn(self, trackway=None):
+    def handleSelectTrackwayBtn(self):
         """ Trackways are selected by Trackway type and number (such as S18). First put the trackway
             into a layer if it is not already, then select the members of that track. """
         # compose the name of the layer from the trackway name in the combo box
         layer = self.trackwayCmbx.currentText() + self.LAYER_SUFFIX
 
-        # get the members (which are track nodes) and select them
-        nodes = cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True)
-        cmds.select(nodes)
+        self._trackwayManager.selectTracksInLayer(layer)
 
 #___________________________________________________________________________________________________ handleSetToMeasuredDimensions
     def handleSetToMeasuredDimensions(self):
@@ -1955,21 +1561,16 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ handleShowAllTrackwaysBtn
     def handleShowAllTrackwaysBtn(self, visible=True):
         """ This straightforwardly sets all layers either visible (default) or invisible. """
-        layers = cmds.ls( type='displayLayer')
-        for layer in layers:
-            if layer.endswith(self.LAYER_SUFFIX):
-                cmds.setAttr('%s.visibility' % layer, visible)
+        self._trackwayManager.setAllLayersVisible(visible)
 
 #___________________________________________________________________________________________________ handleShowTrackwayBtn
     def handleShowTrackwayBtn(self, visible=True):
-        """ With the tracks comprising each trackway (e.g., S18) placed in their own layer, the
-            visibility of each trackway is controlled by the corresponding layer visiblity. """
+        """ With the tracks comprising each trackway (e.g., S18) placed in their own layer, with a
+            corresponding layer name (e.g., S18_layer) the visibility of each trackway is controlled
+            by the corresponding layer visiblity. """
 
-        # compose the name of the layer from the trackway name in the combo box
-        layer = self.trackwayCmbx.currentText() + self.LAYER_SUFFIX
-
-        # then set that layer either visible or invisible according to the kwarg
-        cmds.setAttr('%s.visibility' % layer, visible)
+        trackwayName = self.trackwayCmbx.currentText()
+        self._trackwayManager.showTrackway(trackwayName)
 
 #___________________________________________________________________________________________________ handleSvgAddSelectedBtn
     def handleSvgAddSelectedBtn(self):
@@ -2070,7 +1671,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                 windowTitle=u'Tool Error')
             return
 
-        print('saving svg file')
+        print 'saving svg file'
 
         # place the federal coordinates as a text string 20 cm above the marker
         site = self.currentDrawing.siteMap
@@ -2097,11 +1698,12 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ handleTrackSiteIndexSbx
     def handleTrackSiteIndexSbx(self):
-        """ The tracksites are indexed in a table (see Tracks_SiteMap).  That index provides a
-            means to select a given tracksite from the UI. """
+        """ Tracksites are indexed in a database table (see Tracks_SiteMap).  That same index
+            provides a convenient but slightly arcane means to select a given tracksite by selection
+            of a spinbox integer value in the UI. """
 
         index   = self.trackSiteIndexSbx.value()
-        siteMap = self.getSiteMap(index)
+        siteMap = self._trackwayManager.getSiteMap(index)
 
         if siteMap is None:
             self.clearTrackSiteUI()
@@ -2133,10 +1735,15 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ handleUpdateLayersBtn
     def handleUpdateLayersBtn(self):
-        """ The layers are initialized automatically by the initializer but if one loads additional
-            trackways, this adds the corresponding layers and populates them. """
+        """ A set of Maya display layers is constructed, one for each trackway, and the names of
+            these trackways (e.g. S18) are placed in a combo box, permitting selection of a specific
+            trackways from the UI. """
 
-        self.initializeLayers()
+        # the method that initializes the layers returns a list of the names of all trackways
+        trackwayNames = self._trackwayManager.initializeLayers()
+
+        # add those trackway names to the combo box
+        self.trackwayCmbx.addItems(trackwayNames)
 
 #___________________________________________________________________________________________________ handleWidthSbx
     def handleWidthSbx(self):
@@ -2160,7 +1767,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ handleWidthUncertaintySbx
     def handleWidthUncertaintySbx(self):
         """ The width uncertainty of the selected track is adjusted. """
-        selectedTracks = self.getSelectedTracks()
+        selectedTracks = self._trackwayManager.getSelectedTracks()
         if not selectedTracks:
             return
 
@@ -2168,146 +1775,13 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         t = selectedTracks[0]
-        t.updateFromNode() # use this opportunity to capture the current state of the Maya node
+
         t.widthUncertainty = self.widthUncertaintySbx.value()/100.0
         t.updateNode()
         self.closeSession(commit=True)
 
-
 #===================================================================================================
-#                                                      D I S P L A Y   L A Y E R  U T I L I T I E S
-
-#___________________________________________________________________________________________________ addTrackwayToLayer
-    def addTrackwayToLayer(self, layer, tracks):
-        """ Populates the specified display layer with the track nodes corresponding to the
-            specified tracks. """
-        nodes = []
-        for track in tracks:
-            trackNode = self.getTrackNode(track)
-            if trackNode:
-                nodes.append(trackNode)
-
-        if len(nodes) == 0:
-            return
-
-        cmds.editDisplayLayerMembers(layer, nodes, noRecurse=True)
-
-#___________________________________________________________________________________________________ createLayer
-    def createLayer(self, layer, useExisting=True):
-        """ Creates a layer with the specified name. """
-        if useExisting and cmds.objExists(layer):
-            return
-        # Since nothing should be selected when creating a new display layer, save selection
-        priorSelection = MayaUtils.getSelectedTransforms()
-        cmds.select(clear=True)
-        cmds.createDisplayLayer(name=layer)
-        #  Restore the prior state of selection
-        MayaUtils.setSelection(priorSelection)
-
-#___________________________________________________________________________________________________ deleteLayer
-    def deleteLayer(self, layer):
-        """ Removes a display layer. """
-        if not cmds.objExists(layer):
-            cmds.delete(layer)
-
-#___________________________________________________________________________________________________ initializeLayers
-    def initializeLayers(self):
-        """ Creates a new layer for each trackway in this site/level/sector, based on the first UID
-            found (returned by getUidList).  It is important to load into the Maya scene only
-            trackways from a common combination of site, level, and sector, since a given trackway
-            may be redundantly defined in different sectors for a given site and level. """
-
-        # first delete any current display layers
-        layers = cmds.ls( type='displayLayer')
-        for layer in layers:
-            if (layer.endswith(self.LAYER_SUFFIX)):
-                cmds.delete(layer)
-
-        # get the current UID list so we can extract the site, year, sector, and level information
-        uidList = self.getUidList()
-
-        if not uidList:
-            return
-
-        # we'll use the first track as representative of the site/level/sector presumed to be
-        # in common with all tracks in this scene.
-        track         = self.getTrackByUid(uidList[0])
-        trackwayNames = self.getTrackwayNames(track.site, track.level, track.sector)
-
-        # then for each trackway name (such as 'S1') create a corresponding layer with the
-        # LAYER_SUFFIX, then populate it with the track nodes of the tracks comprising that trackway
-        for trackwayName in trackwayNames:
-            layer = '%s%s' % (trackwayName, self.LAYER_SUFFIX)
-
-            # then make the layer
-            self.createLayer(layer)
-
-            # get the list of tracks for this trackway (filtering on site, level, sector and name)
-            trackway = self.getTrackway(uidList, trackwayName)
-            if trackway and len(trackway) > 0:
-                self.addTrackwayToLayer(layer, trackway)
-
-        # add those trackway names to the combo box
-        self.trackwayCmbx.addItems(trackwayNames)
-
-
-        # and finally, refresh the trackway UI
-        props = { TrackPropEnum.SITE.name:track.site,
-                  TrackPropEnum.LEVEL.name:track.level,
-                  TrackPropEnum.YEAR.name:track.year,
-                  TrackPropEnum.SECTOR.name:track.sector }
-
-        self.refreshTrackwayUI(props)
-
-
-#===================================================================================================
-#                                                                          M I S C E L L A N E O U S
-
-#___________________________________________________________________________________________________ createCurve
-    def createCurve(self, points, degree=1):
-        """ Creates a named curve through the given list of points, of given degree, and added to
-            the given layer. """
-
-        return cmds.curve(point=points, degree=degree)
-
-#___________________________________________________________________________________________________ createPathFromTrackSeries
-    def createPathFromTrackSeries(self, tracks):
-        """ Creates a list of the (x, z) track coordinates from a given track series.  Note that
-            hidden tracks are not included, nor are tracks that are still at the origin. The
-            path is specified as a list of 3D points, with the y coordinate zeroed out."""
-
-        path = []
-        for track in tracks:
-            if not track.hidden and track.x != 0.0 and track.z != 0.0:
-                path.append((track.x, 0.0, track.z))
-        return path
-
-#___________________________________________________________________________________________________ initializeCadenceCam
-    def initializeCadenceCam(self):
-        """ This creates an orthographic camera that looks down the Y axis onto the XZ plane, and
-            rotated so that the AI file track labels are legible.  This camera is positioned so
-            that the given track nodeName is centered in its field by setCameraFocus. """
-
-        if cmds.objExists(self.CADENCE_CAM):
-            return
-
-        c = cmds.camera(
-            orthographic=True,
-            nearClipPlane=1,
-            farClipPlane=100000,
-            orthographicWidth=500)
-        cmds.setAttr(c[0] + '.visibility', False)
-        cmds.rename(c[0], self.CADENCE_CAM)
-        cmds.rotate(-90, 180, 0)
-        cmds.move(0, 100, 0, self.CADENCE_CAM, absolute=True)
-
-#___________________________________________________________________________________________________ setCameraFocus
-    def setCameraFocus(self):
-        """ Center the current camera (CadenceCam or persp) on the currently selected node. If
-            using the CadenceCam, the view is fitted to FIT_FACTOR; with the persp camera, it is
-            not so contrained. """
-
-        cmds.viewFit(fitFactor=self.FIT_FACTOR, animate=True)
+#                                                                                   P R I V A T E
 
 #___________________________________________________________________________________________________ _activateWidgetDisplayImpl
     def _activateWidgetDisplayImpl(self, **kwargs):
@@ -2324,11 +1798,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.setVisible(True)
 
         # now that Nimble is active, get Maya ready for Cadence, starting with the CadenceCam
-        priorSelection = MayaUtils.getSelectedTransforms()
-        self.initializeCadenceCam()
-
-        # then have the Trackway Manager's UI display data for the current Maya selection (if any)
-        MayaUtils.setSelection(priorSelection)
+        self._trackwayManager.initializeCadenceCam()
 
         # update the track UI and trackway UI based on what might be selected already
         self.handlePullBtn()
@@ -2336,35 +1806,24 @@ class TrackwayManagerWidget(PyGlassWidget):
         # display summary counts of loaded, completed, and selected tracks
         self.refreshTrackCountsUI()
 
+
 #___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
     def _deactivateWidgetDisplayImpl(self, **kwargs):
-        """ When the widget is closed commit any unfinished database changes. """
-        self.closeSession(commit=True)
+        """ Commit any unfinished database changes when the widget is closed. """
+        self._closeSession(commit=True)
 
-#___________________________________________________________________________________________________ getSession
-    def getSession(self):
-        """ Access to model instances is based on the current model and session, stored in two
-            local instance variables so that multiple operations can be performed before closing this
-            given session. """
+#___________________________________________________________________________________________________ _lock
+    def _lock(self):
+        """ Used to prevent chain reactions of UI widget handlers calling other handlers.  Each
+            handler sets the lock by calling this, and if successful, the code continues in that
+            handler else makes an early return.."""
 
-        if self._session is not None:
-            return self._session
+        if self._uiLock:
+            return False
+        self._uiLock = True
+        return True
 
-        self._session = Tracks_Track.MASTER.createSession()
-        return self._session
-
-#___________________________________________________________________________________________________ closeSession
-    def closeSession(self, commit =True, unlock =True):
-        """ Closes a session and indicates such by nulling out model and session. """
-        session = self._session
-        self._session = None
-
-        if session:
-            if commit:
-                session.commit()
-            session.close()
-
-        if unlock:
-            self.unlock()
-
-        return bool(session is not None)
+#___________________________________________________________________________________________________ _unlock
+    def _unlock(self):
+        """ Each UI widget handler must unlock on exit. """
+        self._uiLock = False
