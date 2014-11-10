@@ -2,6 +2,8 @@
 # (C)2012-2014
 # Kent A. Stevens and Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import nimble
 
 from nimble import cmds
@@ -9,8 +11,8 @@ from nimble import cmds
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 
 from cadence.CadenceEnvironment import CadenceEnvironment
-from cadence.enum.TrackPropEnum import TrackPropEnum
-from cadence.enum.SourceFlagsEnum import SourceFlagsEnum
+from cadence.enums.TrackPropEnum import TrackPropEnum
+from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
 
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
@@ -282,7 +284,7 @@ class TrackwayManager(object):
             runInMaya=True)
 
         if result.payload.get('error'):
-            print 'Error in updateFromNode:', result.payload.get('message')
+            print('Error in updateFromNode:', result.payload.get('message'))
             return False
 
         return result.payload.get('nodeName')
@@ -440,7 +442,7 @@ class TrackwayManager(object):
             if layer.endswith(self.LAYER_SUFFIX):
                nodes.extend(cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True))
         cmds.select(nodes)
-        print "in selectAllTracks: %s nodes selected" %len(nodes)
+        print("in selectAllTracks: %s nodes selected" %len(nodes))
 
 #___________________________________________________________________________________________________ selectTrack
     def selectTrack(self, track):
