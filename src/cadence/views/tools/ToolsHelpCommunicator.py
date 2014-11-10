@@ -50,7 +50,7 @@ class ToolsHelpCommunicator(PyGlassCommunicator):
                 self._content = markdown.markdown(md)
             else:
                 return False
-        except Exception as err:
+        except Exception:
             return False
 
         self.callUpdate()

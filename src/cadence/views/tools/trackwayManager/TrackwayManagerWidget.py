@@ -12,8 +12,8 @@ from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 
 from cadence.CadenceEnvironment import CadenceEnvironment
-from cadence.enum.TrackPropEnum import TrackPropEnum
-from cadence.enum.SourceFlagsEnum import SourceFlagsEnum
+from cadence.enums.TrackPropEnum import TrackPropEnum
+from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 from cadence.svg.CadenceDrawing import CadenceDrawing

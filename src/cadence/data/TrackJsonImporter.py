@@ -9,8 +9,8 @@ from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
 
 from cadence.data.TrackExporter import TrackExporter
-from cadence.enum.TrackPropEnum import TrackPropEnumOps
-from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.enums.TrackPropEnum import TrackPropEnumOps
+from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
 

@@ -108,11 +108,12 @@ class CadenceMainWindow(PyGlassWindow):
 #___________________________________________________________________________________________________ _initializeImpl
     def _initializeImpl(self, *args, **kwargs):
         # Initialize databases
+        import cadence.models.tracks as tracks
+        print(tracks.DATABASE_URL)
         super(CadenceMainWindow, self)._initializeImpl()
 
 #___________________________________________________________________________________________________ _firstShowImpl
     def _firstShowImpl(self):
-        self.loadWidgets()
         self.hideLoading(self)
         self.setActiveWidget('home')
 

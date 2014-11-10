@@ -13,7 +13,7 @@ from pyglass.elements.DataListWidgetItem import DataListWidgetItem
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
 from cadence.data.TrackLinkageRemoteThread import TrackLinkageRemoteThread
-from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.mayan.trackway.plugin import CreateTrackNodes
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.util.threading.RunPythonModuleThread import RunPythonModuleThread

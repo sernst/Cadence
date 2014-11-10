@@ -14,8 +14,9 @@ from pyglass.themes.ColorSchemes import ColorSchemes
 from pyglass.themes.ThemeColorBundle import ThemeColorBundle
 
 from cadence.CadenceEnvironment import CadenceEnvironment
-from cadence.enum.UserConfigEnum import UserConfigEnum
+from cadence.enums.UserConfigEnum import UserConfigEnum
 from cadence.mayan.trackway import InitializeTrackwayScene
+
 
 #___________________________________________________________________________________________________ CadenceNimbleStatusElement
 class CadenceNimbleStatusElement(PyGlassElement):
@@ -42,7 +43,6 @@ class CadenceNimbleStatusElement(PyGlassElement):
         super(CadenceNimbleStatusElement, self).__init__(parent, **kwargs)
         self._colors      = None
         self._status      = False
-        self._timer       = None
         self._activeCheck = False
         self._canceled    = False
         self.disabled     = not enabled
@@ -63,18 +63,21 @@ class CadenceNimbleStatusElement(PyGlassElement):
 
         btn = QtGui.QPushButton(self._buttonBox)
         btn.setText(u'Connect')
+        # noinspection PyUnresolvedReferences
         btn.clicked.connect(self._handleRetryClick)
         buttonLayout.addWidget(btn)
         self._runBtn = btn
 
         btn = QtGui.QPushButton(self._buttonBox)
         btn.setText(u'Cancel')
+        # noinspection PyUnresolvedReferences
         btn.clicked.connect(self._handleCancelClick)
         buttonLayout.addWidget(btn)
         self._cancelBtn = btn
 
         btn = QtGui.QPushButton(self._buttonBox)
         btn.setText(u'Initialize Scene')
+        # noinspection PyUnresolvedReferences
         btn.clicked.connect(self._handleInitializeSceneClick)
         btn.setVisible(False)
         buttonLayout.addWidget(btn)
@@ -128,9 +131,10 @@ class CadenceNimbleStatusElement(PyGlassElement):
         self._cancelBtn.setVisible(not self._status)
         self._iniBtn.setVisible(self._status)
 
-        self.repaint()
+        self.update()
 
         if not self._status and not self.disabled:
+            # noinspection PyCallByClass,PyTypeChecker
             QtCore.QTimer.singleShot(10000, self._handleTimer)
         self._activeCheck = False
 
@@ -138,12 +142,12 @@ class CadenceNimbleStatusElement(PyGlassElement):
 #                                                                               P R O T E C T E D
 
 #___________________________________________________________________________________________________ _handleTimer
-    @QtCore.Slot()
-    def _handleTimer(self, *args, **kwargs):
+    def _handleTimer(self):
         if self._canceled:
             return
 
         if not self.isOnDisplay:
+            # noinspection PyCallByClass,PyTypeChecker
             QtCore.QTimer.singleShot(20000, self._handleTimer)
         else:
             self.refresh()

@@ -7,8 +7,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from pyglass.compile.PyGlassApplicationCompiler import PyGlassApplicationCompiler
 from pyglass.compile.SiteLibraryEnum import SiteLibraryEnum
 
-from cadence.CadenceApplication import CadenceApplication
-
 #___________________________________________________________________________________________________ CadenceCompiler
 class CadenceCompiler(PyGlassApplicationCompiler):
     """A class for..."""
@@ -39,6 +37,7 @@ class CadenceCompiler(PyGlassApplicationCompiler):
 #___________________________________________________________________________________________________ GS: applicationClass
     @property
     def applicationClass(self):
+        from cadence.CadenceApplication import CadenceApplication
         return CadenceApplication
 
 #___________________________________________________________________________________________________ GS: iconPath

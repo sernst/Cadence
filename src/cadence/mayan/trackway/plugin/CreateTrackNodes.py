@@ -2,8 +2,10 @@
 # (C)2013-2014
 # Kent A. Stevens and Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from nimble import NimbleScriptBase
-from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.enums.TrackPropEnum import TrackPropEnum
 
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 

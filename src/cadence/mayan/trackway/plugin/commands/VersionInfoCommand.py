@@ -2,7 +2,13 @@
 # (C)2014
 # Scott Ernst
 
-from maya import OpenMaya
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+try:
+    # noinspection PyUnresolvedReferences,PyUnresolvedReferences
+    from maya import OpenMaya
+except Exception:
+    maya = None
 
 from pyaid.ArgsUtils import ArgsUtils
 
@@ -39,7 +45,7 @@ class VersionInfoCommand(ElixirCommand):
 #___________________________________________________________________________________________________ _runImpl
     def _runImpl(self):
         if self.hasArg('-echo'):
-            print 'Cadence Trackway Plugin: %s.%s.%s:%s' % self.PLUGIN_VERSION
+            print('Cadence Trackway Plugin: %s.%s.%s:%s' % self.PLUGIN_VERSION)
         out = OpenMaya.MIntArray()
         for element in self.PLUGIN_VERSION:
             out.append(int(element))

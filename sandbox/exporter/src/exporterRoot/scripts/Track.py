@@ -5,7 +5,7 @@
 
 from nimble import cmds
 
-from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.enums.TrackPropEnum import TrackPropEnum
 
 #___________________________________________________________________________________________________ Track
 class Track(object):

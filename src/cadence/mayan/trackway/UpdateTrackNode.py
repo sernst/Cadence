@@ -7,7 +7,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from nimble import cmds
 from nimble import NimbleScriptBase
 
-from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.enums.TrackPropEnum import TrackPropEnum
 
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 

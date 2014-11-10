@@ -14,7 +14,7 @@ from pyaid.reflection.Reflection import Reflection
 from pyaid.string.StringUtils import StringUtils
 
 from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
-from cadence.enum.SitemapCsvColumnEnum import SitemapCsvColumnEnum
+from cadence.enums.SitemapCsvColumnEnum import SitemapCsvColumnEnum
 
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 

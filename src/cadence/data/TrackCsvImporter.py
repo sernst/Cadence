@@ -10,9 +10,9 @@ from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
 from pyaid.reflection.Reflection import Reflection
 from pyaid.string.StringUtils import StringUtils
-from cadence.enum.ImportFlagsEnum import ImportFlagsEnum
-from cadence.enum.SnapshotFlagsEnum import SnapshotFlagsEnum
-from cadence.enum.TrackCsvColumnEnum import TrackCsvColumnEnum
+from cadence.enums.ImportFlagsEnum import ImportFlagsEnum
+from cadence.enums.SnapshotFlagsEnum import SnapshotFlagsEnum
+from cadence.enums.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
 

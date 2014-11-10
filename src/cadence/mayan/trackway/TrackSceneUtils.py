@@ -11,7 +11,7 @@ from nimble import cmds
 from pyaid.reflection.Reflection import Reflection
 
 from cadence.CadenceEnvironment import CadenceEnvironment
-from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.util.maya.MayaUtils import MayaUtils
 from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
 from cadence.util.shading.ShadingUtils import ShadingUtils

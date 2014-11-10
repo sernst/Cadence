@@ -10,7 +10,7 @@ PyGlassEnvironment.initializeExplicitAppSettings(
 
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
-from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.enums.TrackPropEnum import TrackPropEnum
 
 models = {'Track':Tracks_Track.MASTER, 'Track Store':Tracks_TrackStore.MASTER}
 session = Tracks_Track.MASTER.createSession()

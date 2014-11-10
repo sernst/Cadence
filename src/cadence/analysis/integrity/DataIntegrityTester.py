@@ -6,8 +6,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from pyaid.string.StringUtils import StringUtils
 
-from cadence.enum.SourceFlagsEnum import SourceFlagsEnum
-from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
+from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ DataIntegrityTester

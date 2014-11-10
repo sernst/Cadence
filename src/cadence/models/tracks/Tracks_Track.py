@@ -6,7 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import nimble
 
-from cadence.enum.SourceFlagsEnum import SourceFlagsEnum
+from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
 
 from cadence.mayan.trackway import GetTrackNodeData
 from cadence.mayan.trackway import UpdateTrackNode

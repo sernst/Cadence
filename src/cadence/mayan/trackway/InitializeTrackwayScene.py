@@ -8,7 +8,11 @@ from nimble import cmds
 from nimble.mayan.NimbleScriptBase import NimbleScriptBase
 
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
-from cadence.mayan.trackway.plugin import CadenceTrackwayPlugin
+
+try:
+    from cadence.mayan.trackway.plugin import CadenceTrackwayPlugin
+except Exception:
+    print('[WARNING]: Maya plugin functionality has been disabled')
 
 #___________________________________________________________________________________________________ InitializeTrackwayScene
 class InitializeTrackwayScene(NimbleScriptBase):

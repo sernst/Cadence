@@ -56,7 +56,7 @@ class CadenceToolViewerWidget(PyGlassWidget):
         sep = LineSeparatorWidget(w, False)
         l.addWidget(sep)
 
-        self._helpComm    = ToolsHelpCommunicator()
+        self._helpComm = ToolsHelpCommunicator()
         web = PyGlassWebView(w, communicator=self._helpComm, debug=True)
         web.openUrl('http://web.localhost.com/help/toolHelpContainer.html')
         web.setFixedWidth(360)
@@ -79,6 +79,8 @@ class CadenceToolViewerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _activateWidgetDisplayImpl
     def _activateWidgetDisplayImpl(self, **kwargs):
+        super(CadenceToolViewerWidget, self)._activateWidgetDisplayImpl(**kwargs)
+
         d = kwargs.get('definition', None)
         self._definition = d
 
@@ -115,5 +117,6 @@ class CadenceToolViewerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
     def _deactivateWidgetDisplayImpl(self, **kwargs):
+        super(CadenceToolViewerWidget, self)._deactivateWidgetDisplayImpl(**kwargs)
         self.clearActiveWidget()
         self._helpBox.setVisible(False)

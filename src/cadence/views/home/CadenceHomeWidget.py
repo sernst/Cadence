@@ -12,7 +12,7 @@ from pyglass.gui.scrollArea.SimpleScrollArea import SimpleScrollArea
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from pyglass.widgets.LineSeparatorWidget import LineSeparatorWidget
 
-from cadence.enum.UserConfigEnum import UserConfigEnum
+from cadence.enums.UserConfigEnum import UserConfigEnum
 from cadence.views.home.CadenceMayaStatusElement import CadenceMayaStatusElement
 from cadence.views.home.CadenceNimbleStatusElement import CadenceNimbleStatusElement
 
@@ -93,6 +93,7 @@ class CadenceHomeWidget(PyGlassWidget):
 
         btn = QtGui.QPushButton(w)
         btn.setText('Open')
+        # noinspection PyUnresolvedReferences
         btn.clicked.connect(self._handleOpenTool)
         l.addWidget(btn)
         data['btn'] = btn
@@ -132,9 +133,11 @@ class CadenceHomeWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _handleOpenTool
     def _handleOpenTool(self):
+        # From the pushbutton get the element
         element = self.sender().parent().parent()
-        self.mainWindow.showLoading(
-            self.mainWindow.getWidgetFromID('toolViewer'),
-            u'Opening Tool')
+
+        w = self.mainWindow.getWidgetFromID('toolViewer')
+        print(w)
+        self.mainWindow.showLoading(w, u'Opening Tool')
         self.refreshGui()
         self.mainWindow.setActiveWidget('toolViewer', args=element.userData)

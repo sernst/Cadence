@@ -39,9 +39,9 @@ class CadenceMayaStatusElement(PyGlassElement):
     def __init__(self, parent, **kwargs):
         """Creates a new instance of CadenceNimbleStatusElement."""
         super(CadenceMayaStatusElement, self).__init__(parent, **kwargs)
-        self._colors      = None
-        self._status      = False
-        self._thread      = None
+        self._colors  = None
+        self._running = False
+        self._status  = False
 
         mainLayout = self._getLayout(self, QtGui.QVBoxLayout)
         self.setContentsMargins(6, 6, 6, 6)
@@ -76,9 +76,10 @@ class CadenceMayaStatusElement(PyGlassElement):
 
 #___________________________________________________________________________________________________ refresh
     def refresh(self):
-        if self._thread is not None:
+        if self._running:
             return
 
+        self._running = True
         self._colors = ThemeColorBundle(ColorSchemes.BLUE)
         self._status = False
         self._label.setText(self._CHECKING_LABEL)
@@ -87,8 +88,9 @@ class CadenceMayaStatusElement(PyGlassElement):
 
         CadenceEnvironment.MAYA_IS_INITIALIZED = False
 
-        self._thread = MayaIniRemoteThread(self.mainWindow, False, False, check=True)
-        self._thread.execute(self._handleMayaCheckResults)
+        MayaIniRemoteThread(
+            self.mainWindow, False, False, check=True, verbose=False).execute(
+            self._handleMayaCheckResults)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -99,6 +101,8 @@ class CadenceMayaStatusElement(PyGlassElement):
 
 #___________________________________________________________________________________________________ _handleMayaCheckResults
     def _handleMayaCheckResults(self, event):
+        self._running = False
+
         if event.target.output['success']:
             # Run an ls command looking for the time nodeName (to prevent large returns)
             self._colors = ThemeColorBundle(ColorSchemes.GREEN)
@@ -118,5 +122,4 @@ class CadenceMayaStatusElement(PyGlassElement):
 
         self._refreshBtn.setEnabled(not self._status)
         self._buttonBox.setVisible(not self._status)
-        self.repaint()
-        self._thread = None
+        self.update()

@@ -13,17 +13,18 @@ from pyaid.reflection.Reflection import Reflection
 from pyaid.string.StringUtils import StringUtils
 from pyglass.sqlalchemy.PyGlassModelsDefault import PyGlassModelsDefault
 from pyglass.sqlalchemy.ConcretePyGlassModelsMeta import ConcretePyGlassModelsMeta
+import six
 
 from cadence.CadenceEnvironment import CadenceEnvironment
-from cadence.enum.TrackPropEnum import TrackPropEnum
+from cadence.enums.TrackPropEnum import TrackPropEnum
 
 #___________________________________________________________________________________________________ TracksDefault
+@six.add_metaclass(ConcretePyGlassModelsMeta)
 class TracksDefault(PyGlassModelsDefault):
 
 #===================================================================================================
 #                                                                                       C L A S S
 
-    __metaclass__ = ConcretePyGlassModelsMeta
     __abstract__  = True
 
     # Used to break trackway specifier into separate type and number entries

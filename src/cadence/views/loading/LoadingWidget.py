@@ -58,6 +58,7 @@ class LoadingWidget(ApplicationLevelWidget):
 
 #___________________________________________________________________________________________________ _activateWidgetDisplayImpl
     def _activateWidgetDisplayImpl(self, **kwargs):
+        super(LoadingWidget, self)._activateWidgetDisplayImpl(**kwargs)
         self.target     = ArgsUtils.get('target', None, kwargs)
         self.header     = ArgsUtils.get('header', None, kwargs)
         self.info       = ArgsUtils.get('info', None, kwargs)
@@ -66,6 +67,7 @@ class LoadingWidget(ApplicationLevelWidget):
 
 #___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
     def _deactivateWidgetDisplayImpl(self, **kwargs):
+        super(LoadingWidget, self)._deactivateWidgetDisplayImpl(**kwargs)
         self.isShowing = False
         self._animatedIcon.stop()
 

@@ -17,7 +17,7 @@ from pyglass.widgets.PyGlassWidget import PyGlassWidget
 from cadence.data.SitemapImporterRemoteThread import SitemapImporterRemoteThread
 from cadence.data.TrackExporterRemoteThread import TrackExporterRemoteThread
 from cadence.data.TrackMergeRemoteThread import TrackMergeRemoteThread
-from cadence.enum.UserConfigEnum import UserConfigEnum
+from cadence.enums.UserConfigEnum import UserConfigEnum
 from cadence.data.TrackImporterRemoteThread import TrackImporterRemoteThread
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 

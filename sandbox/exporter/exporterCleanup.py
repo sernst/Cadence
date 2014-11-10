@@ -1,7 +1,7 @@
 from pyaid.json.JSON import JSON
 
-from cadence.enum.TrackPropEnum import TrackPropEnum
-from cadence.enum.TrackPropEnum import TrackPropEnumOps
+from cadence.enums.TrackPropEnum import TrackPropEnum
+from cadence.enums.TrackPropEnum import TrackPropEnumOps
 
 data = JSON.fromFile('/Users/scott/Desktop/test.json')
 result = []
