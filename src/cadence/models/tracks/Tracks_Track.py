@@ -33,6 +33,7 @@ class Tracks_Track(TracksDefault):
         """ A cached value for the name of the Maya nodeName representing this track if one exists,
             which is updated each time a create/update operation on the nodeName occurs. Can be
             incorrect if the nodeName was renamed between such operations. """
+
         return self.fetchTransient('nodeName')
     @nodeName.setter
     def nodeName(self, value):
@@ -44,7 +45,6 @@ class Tracks_Track(TracksDefault):
         """ Getter returns a boolean indicating whether the 'completed' source flag is set. """
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
-        print('in the getter for completed flag:  flags = %s and value = %s' % (flags, SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED)))
         return SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED)
     @completed.setter
     def completed(self, value):
@@ -52,11 +52,8 @@ class Tracks_Track(TracksDefault):
         # preserve the state of any other flags
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
-        print('in the setter for completed flag:  flags = %s and value = %s' % (flags, value))
         if value:
-            print('in completed:  about to do set, flags = %s and sourceFlags = %s' % (flags, self.sourceFlags))
             self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.COMPLETED)
-            print('in completed:  finished set, and source flags = %s' % self.sourceFlags)
         else:
             self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.COMPLETED)
 
@@ -99,6 +96,7 @@ class Tracks_Track(TracksDefault):
     def inMaya(self):
         """ A boolean that returns true if the track is loaded into Maya (i.e., there is a track
             node with that UID). """
+
         return
 
 
@@ -108,10 +106,11 @@ class Tracks_Track(TracksDefault):
 #___________________________________________________________________________________________________ createTrackNode
     def createTrackNode(self):
         """ Create a visual representation of a track, to signify the position, dimensions (length
-            and width), and rotation of either a manus or pes print.  The representation has
+            and width), and rotation of either a manus or pes track.  The representation has
             basic dimensions of one meter so that the scale in x and z equates to the width and
             length of the manus or pes in fractional meters (e.g., 0.5 = 50 cm).  The node is
             prohibited from changing in y (elevation) or to rotate about either x or z. """
+
         conn = nimble.getConnection()
         out  = conn.runPythonModule(
             CreateTrackNode,
@@ -130,6 +129,7 @@ class Tracks_Track(TracksDefault):
     def updateNode(self):
         """ Sends values to Maya nodeName representation of the track to synchronize the values in
             the model and the nodeName. """
+
         conn   = nimble.getConnection()
         result = conn.runPythonModule(
             UpdateTrackNode,
@@ -146,6 +146,7 @@ class Tracks_Track(TracksDefault):
     def updateFromNode(self):
         """ Retrieves Maya values from the nodeName representation of the track and updates this
             model instance with those values. """
+
         conn   = nimble.getConnection()
         result = conn.runPythonModule(
             GetTrackNodeData,
@@ -177,6 +178,7 @@ class Tracks_Track(TracksDefault):
     def getMatchingTrackStore(self, session):
         """ Returns the Tracks_Track instance that corresponds to this Tracks_TrackStore instance
             if such an instance exists. """
+
         from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
         model  = Tracks_TrackStore.MASTER
         result = session.query(model).filter(model.uid == self.uid).all()

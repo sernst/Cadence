@@ -120,7 +120,9 @@ class TracksDefault(PyGlassModelsDefault):
 
 #___________________________________________________________________________________________________ getPreviousTrack
     def getPreviousTrack(self, session):
-        """ Returns the previous track in the series if such a track exists """
+        """ Returns the previous track in the series if such a track exists.  It is found by
+            querying tro find that other model instance whose 'next' matches this uid. """
+
         model = self.__class__
         try:
             return session.query(self.__class__).filter(model.next == self.uid).first()
@@ -130,7 +132,9 @@ class TracksDefault(PyGlassModelsDefault):
 #___________________________________________________________________________________________________ getNextTrack
     def getNextTrack(self, session):
         """ Returns the next track in the series if such a track exists.  Unlike getPreviousTrack,
-            the next track's uid is explicitly stored in the attribute next, waiting to be used. """
+            the next track's uid is explicitly stored in the attribute next, waiting to be used.  A
+            query is still required to get the Track_track model instance for that uid. """
+
         if self.next is None:
             return None
         return self.getByUid(self.next, session=session)
@@ -141,6 +145,7 @@ class TracksDefault(PyGlassModelsDefault):
             the data object should be valid names of the enumerated values in the TrackPropEnum
             class and the values valid entries for each key in the database class. This method can
             be used to load a track object from disk into a database model. """
+
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if enum == TrackPropEnum.UID:
                 continue
@@ -151,6 +156,7 @@ class TracksDefault(PyGlassModelsDefault):
     def toDict(self, uniqueOnly =False):
         """ Returns a dictionary containing the keys and current values of the track object
             with no dependency on a database session object. """
+
         out = dict(id=self.id, uid=self.uid)
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if uniqueOnly and not enum.unique:
@@ -206,6 +212,7 @@ class TracksDefault(PyGlassModelsDefault):
     @classmethod
     def getByUid(cls, uid, session):
         """ Returns the Tracks_Track model instance for the given UID (universally unique id). """
+
         return session.query(cls).filter(cls.uid == uid).first()
 
 #___________________________________________________________________________________________________ getByProperties

@@ -28,7 +28,6 @@ class SourceFlagsEnum(object):
     @classmethod
     def set(cls, flags, flag):
         """ Sets the specified flag in flags. """
-        print('in SourceFlagsEnum set:  flags = %s and flag = %s, hence %s' % (flags, flag, flags | flag))
         return flags | flag
 
 #___________________________________________________________________________________________________ clear
