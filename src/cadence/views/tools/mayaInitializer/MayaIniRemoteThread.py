@@ -24,7 +24,7 @@ class MayaIniRemoteThread(RemoteExecutionThread):
         """Creates a new instance of MayaIniRemoteThread."""
         super(MayaIniRemoteThread, self).__init__(parent, **kwargs)
         self._test      = test
-        self._verbose   = verbose
+        self._verbose   = True
         self._install   = install
         self._check     = check
         self._output    = {}
