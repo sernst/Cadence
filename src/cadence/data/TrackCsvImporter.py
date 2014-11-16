@@ -2,6 +2,8 @@
 # (C)2013-2014
 # Scott Ernst
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import re
 import csv
 
@@ -55,7 +57,10 @@ class TrackCsvImporter(object):
 
         with open(self._path, 'rU') as f:
             try:
-                reader = csv.reader(f, delimiter=',', quotechar='"')
+                reader = csv.reader(
+                    f,
+                    delimiter=StringUtils.toStr2(','),
+                    quotechar=StringUtils.toStr2('"'))
             except Exception as err:
                 self._writeError({
                     'message':u'ERROR: Unable to read CSV file "%s"' % self._path,
