@@ -687,6 +687,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.selectTrack(p)
         self.refreshTrackUI(p.toDict())
         self._trackwayManager.setCameraFocus()
+        p.updateNode()
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
@@ -731,12 +732,14 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         track.updateNode()
 
+        # and select it
+        self._trackwayManager.selectTrack(track)
+
         # and refresh the UI
         self.refreshTrackUI(track.toDict())
         self.refreshTrackwayUI(track.toDict())
 
-        # and select it
-        self._trackwayManager.selectTrack(track)
+
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
@@ -762,8 +765,6 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._unlock()
             return
 
-        self._trackwayManager.initializeCadenceCam()
-
         track = tracks[0]
 
         # if track length or width (or both) were not measured originally, posit high uncertainties
@@ -780,10 +781,11 @@ class TrackwayManagerWidget(PyGlassWidget):
         track.x, track.z = self._trackwayManager.getCadenceCamLocation()
 
         track.updateNode()
+        props = track.toDict()
 
         # and refresh the UI
-        self.refreshTrackUI(track.toDict())
-        self.refreshTrackwayUI(track.toDict())
+        self.refreshTrackwayUI(props)
+        self.refreshTrackUI(props)
 
         # and select it
         self._trackwayManager.selectTrack(track)

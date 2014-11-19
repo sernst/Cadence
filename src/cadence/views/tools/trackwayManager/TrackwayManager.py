@@ -37,7 +37,7 @@ class TrackwayManager(object):
 
     LAYER_SUFFIX = '_Trackway_Layer'
     PATH_LAYER   = 'Track_Path_Layer'
-    FIT_FACTOR   = 0.4
+    FIT_FACTOR   = 0.2
     CADENCE_CAM  = 'CadenceCam'
 
 #___________________________________________________________________________________________________ __init__
@@ -569,12 +569,14 @@ class TrackwayManager(object):
         """ Selects the CadenceCam. """
 
         cmds.lookThru(self.CADENCE_CAM)
+        self.setCameraFocus()
 
 #___________________________________________________________________________________________________ selectPerspectiveCam
     def selectPerspectiveCam(self):
         """ Selects the default perspective camera. """
 
         cmds.lookThru('persp')
+        self.setCameraFocus()
 
 #___________________________________________________________________________________________________ getCadenceCamLocation
     def getCadenceCamLocation(self):
