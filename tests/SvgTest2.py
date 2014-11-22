@@ -11,15 +11,9 @@
 #       database import correctly locates the database file and initializes the model classes to
 #       that file.
 
-from pyaid.file.FileUtils import FileUtils
-
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 
-location = FileUtils.getDirectoryOf(__file__)
-
-PyGlassEnvironment.initializeExplicitAppSettings(
-    FileUtils.createPath(location, '..', 'resources', isDir=True),
-    FileUtils.createPath(location, '..', 'resources', 'local', isDir=True) )
+PyGlassEnvironment.initializeFromInternalPath(__file__)
 
 #---------------------------------------------------------------------------------------------------
 # RUN TEST SCRIPT

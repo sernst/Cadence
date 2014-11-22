@@ -16,9 +16,11 @@ from pyglass.sqlalchemy.ConcretePyGlassModelsMeta import ConcretePyGlassModelsMe
 import six
 
 from cadence.CadenceEnvironment import CadenceEnvironment
+from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
 from cadence.enums.TrackPropEnum import TrackPropEnum
 
 #___________________________________________________________________________________________________ TracksDefault
+# noinspection PyAttributeOutsideInit
 @six.add_metaclass(ConcretePyGlassModelsMeta)
 class TracksDefault(PyGlassModelsDefault):
 
@@ -30,17 +32,17 @@ class TracksDefault(PyGlassModelsDefault):
     # Used to break trackway specifier into separate type and number entries
     _TRACKWAY_PATTERN = re.compile('(?P<type>[A-Za-z]+)[\s\t]*(?P<number>[0-9]+)')
 
-    _uid                 = sqla.Column(sqla.Unicode,     default=u'')
-    _site                = sqla.Column(sqla.Unicode,     default=u'')
-    _year                = sqla.Column(sqla.Unicode,     default=u'')
-    _level               = sqla.Column(sqla.Unicode,     default=u'')
-    _sector              = sqla.Column(sqla.Unicode,     default=u'')
-    _trackwayType        = sqla.Column(sqla.Unicode,     default=u'')
-    _trackwayNumber      = sqla.Column(sqla.Unicode,     default=u'')
-    _number              = sqla.Column(sqla.Unicode,     default=u'')
-    _snapshot            = sqla.Column(sqla.Unicode,     default=u'')
-    _note                = sqla.Column(sqla.UnicodeText, default=u'')
-    _next                = sqla.Column(sqla.Unicode,     default=u'')
+    _uid                 = sqla.Column(sqla.Unicode,     default='')
+    _site                = sqla.Column(sqla.Unicode,     default='')
+    _year                = sqla.Column(sqla.Unicode,     default='')
+    _level               = sqla.Column(sqla.Unicode,     default='')
+    _sector              = sqla.Column(sqla.Unicode,     default='')
+    _trackwayType        = sqla.Column(sqla.Unicode,     default='')
+    _trackwayNumber      = sqla.Column(sqla.Unicode,     default='')
+    _number              = sqla.Column(sqla.Unicode,     default='')
+    _snapshot            = sqla.Column(sqla.Unicode,     default='')
+    _note                = sqla.Column(sqla.UnicodeText, default='')
+    _next                = sqla.Column(sqla.Unicode,     default='')
     _left                = sqla.Column(sqla.Boolean,     default=True)
     _pes                 = sqla.Column(sqla.Boolean,     default=True)
     _hidden              = sqla.Column(sqla.Boolean,     default=False)
@@ -72,10 +74,15 @@ class TracksDefault(PyGlassModelsDefault):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
         super(TracksDefault, self).__init__(**kwargs)
-        self.uid = CadenceEnvironment.createUniqueId(u'track')
+        self.uid = CadenceEnvironment.createUniqueId('track')
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: isComplete
+    @property
+    def isComplete(self):
+        return SourceFlagsEnum.get(self.sourceFlags, SourceFlagsEnum.COMPLETED)
 
 #___________________________________________________________________________________________________ GS: id
     @property
@@ -86,54 +93,70 @@ class TracksDefault(PyGlassModelsDefault):
     @property
     def name(self):
         """ Human-readable display name for the track, based of its properties. """
-        number = StringUtils.toUnicode(int(self.number)) if self.number else u'-'
-        return (u'L' if self.left else u'R') + (u'P' if self.pes else u'M') + number
+        number = StringUtils.toUnicode(int(self.number)) if self.number else '-'
+        return ('L' if self.left else 'R') + ('P' if self.pes else 'M') + number
     @name.setter
     def name(self, value):
         value = value.strip()
 
-        if StringUtils.begins(value.upper(), [u'M', u'P']):
-            self.left = value[1].upper() == u'L'
-            self.pes  = value[0].upper() == u'P'
+        if StringUtils.begins(value.upper(), ['M', 'P']):
+            self.left = value[1].upper() == 'L'
+            self.pes  = value[0].upper() == 'P'
         else:
-            self.left = value[0].upper() == u'L'
-            self.pes  = value[1].upper() == u'P'
+            self.left = value[0].upper() == 'L'
+            self.pes  = value[1].upper() == 'P'
         self.number = value[2:].upper()
 
 #___________________________________________________________________________________________________ GS: fingerprint
     @property
     def fingerprint(self):
         """ String created from the uniquely identifying track properties. """
-        return u'-'.join([
-            getattr(self, TrackPropEnum.SITE.name, u''),
-            getattr(self, TrackPropEnum.LEVEL.name, u''),
-            getattr(self, TrackPropEnum.SECTOR.name, u''),
-            getattr(self, TrackPropEnum.TRACKWAY_TYPE.name, u''),
-            getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, u'0'),
-            getattr(self, TrackPropEnum.YEAR.name, u''),
-            u'LEFT' if getattr(self, TrackPropEnum.LEFT.name, False) else u'RIGHT',
-            u'PES' if getattr(self, TrackPropEnum.PES.name, False) else u'MANUS',
-            getattr(self, TrackPropEnum.NUMBER.name, u'0') ])
+        return '%s-%s' % (
+            self.trackSeriesFingerprint,
+            getattr(self, TrackPropEnum.NUMBER.name, '0') )
+
+#___________________________________________________________________________________________________ GS: trackSeriesFingerprint
+    @property
+    def trackSeriesFingerprint(self):
+        return '-'.join([
+            self.trackwayFingerprint,
+            'LEFT' if getattr(self, TrackPropEnum.LEFT.name, False) else 'RIGHT',
+            'PES' if getattr(self, TrackPropEnum.PES.name, False) else 'MANUS' ])
+
+#___________________________________________________________________________________________________ GS: trackwayFingerprint
+    @property
+    def trackwayFingerprint(self):
+        return '-'.join([
+            getattr(self, TrackPropEnum.SITE.name, ''),
+            getattr(self, TrackPropEnum.LEVEL.name, ''),
+            getattr(self, TrackPropEnum.SECTOR.name, ''),
+            getattr(self, TrackPropEnum.TRACKWAY_TYPE.name, ''),
+            getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0'),
+            getattr(self, TrackPropEnum.YEAR.name, '') ])
 
 #===================================================================================================
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ getPreviousTrack
-    def getPreviousTrack(self, session):
+    def getPreviousTrack(self, session =None):
         """ Returns the previous track in the series if such a track exists.  It is found by
             querying tro find that other model instance whose 'next' matches this uid. """
-
+        if not session:
+            session = self.mySession
         model = self.__class__
+
         try:
-            return session.query(self.__class__).filter(model.next == self.uid).first()
-        except Exception as err:
+            return session.query(model).filter(model.next == self.uid).first()
+        except Exception:
             return None
 
 #___________________________________________________________________________________________________ getNextTrack
-    def getNextTrack(self, session):
+    def getNextTrack(self, session =None):
         """ Returns the next track in the series if such a track exists.  Unlike getPreviousTrack,
             the next track's uid is explicitly stored in the attribute next, waiting to be used.  A
             query is still required to get the Track_track model instance for that uid. """
+        if not session:
+            session = self.mySession
 
         if self.next is None:
             return None
@@ -190,13 +213,16 @@ class TracksDefault(PyGlassModelsDefault):
         return out
 
 #___________________________________________________________________________________________________ findExistingTracks
-    def findExistingTracks(self, session):
+    def findExistingTracks(self, session =None):
         """ Searches the database for an existing track that matches the current values of the UID
             in this track instance and returns a result list of any duplicates found. """
-        query = session.query(self.__class__)
+        if not session:
+            session = self.mySession
+        model = self.__class__
+        query = session.query(model)
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if enum.unique:
-                query = query.filter(getattr(self.__class__, enum.name) == getattr(self, enum.name))
+                query = query.filter(getattr(model, enum.name) == getattr(self, enum.name))
         return query.all()
 
 #___________________________________________________________________________________________________ equivalentProps
@@ -212,8 +238,10 @@ class TracksDefault(PyGlassModelsDefault):
     @classmethod
     def getByUid(cls, uid, session):
         """ Returns the Tracks_Track model instance for the given UID (universally unique id). """
-
-        return session.query(cls).filter(cls.uid == uid).first()
+        try:
+            return session.query(cls).filter(cls.uid == uid).first()
+        except Exception:
+            return None
 
 #___________________________________________________________________________________________________ getByProperties
     @classmethod
@@ -236,12 +264,12 @@ class TracksDefault(PyGlassModelsDefault):
             return None
 
         # confusingly, the name might be found in one of two formats, e.g., either LM3 or ML3
-        if StringUtils.begins(name.upper(), [u'M', u'P']):
-            left = name[1].upper() == u'L'
-            pes  = name[0].upper() == u'P'
+        if StringUtils.begins(name.upper(), ['M', 'P']):
+            left = name[1].upper() == 'L'
+            pes  = name[0].upper() == 'P'
         else:
-            left = name[0].upper() == u'L'
-            pes  = name[1].upper() == u'P'
+            left = name[0].upper() == 'L'
+            pes  = name[1].upper() == 'P'
         number = name[2:].upper()
         kwargs[TrackPropEnum.LEFT.name]   = left
         kwargs[TrackPropEnum.PES.name]    = pes
@@ -262,7 +290,7 @@ class TracksDefault(PyGlassModelsDefault):
 
 #___________________________________________________________________________________________________ __unicode__
     def __unicode__(self):
-        return u'<%s[%s] uid[%s] %s>' % (
+        return '<%s[%s] uid[%s] %s>' % (
             self.__class__.__name__,
             StringUtils.toUnicode(self.i),
             StringUtils.toUnicode(self.uid),

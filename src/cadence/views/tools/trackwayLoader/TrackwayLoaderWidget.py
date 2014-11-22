@@ -59,6 +59,7 @@ class TrackwayLoaderWidget(PyGlassWidget):
             flBoxLayout.addWidget(label)
 
             fl = QtGui.QListWidget(self)
+            # noinspection PyUnresolvedReferences
             fl.itemSelectionChanged.connect(self._handleFilterChange)
             fl.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
             fl.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)

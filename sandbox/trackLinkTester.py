@@ -1,7 +1,5 @@
-import os
-
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
-PyGlassEnvironment.initializeCreatePathAppSettings(os.path.abspath(os.curdir), '..', isDir=True)
+PyGlassEnvironment.initializeFromInternalPath(__file__)
 
 from cadence.data.TrackLinkConnector import TrackLinkConnector
 from cadence.models.tracks.Tracks_Track import Tracks_Track

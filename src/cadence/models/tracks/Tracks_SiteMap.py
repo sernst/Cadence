@@ -73,12 +73,11 @@ class Tracks_SiteMap(FlagsTracksDefault):
 
         return [self.federalEast, self.federalNorth]
 
-#___________________________________________________________________________________________________ getAllTracks
-    def getAllTracks(self, session =None):
-        """ This operates on the current siteMap, which is populated with the specifics for a given
-            track site.  The three-letter site abbreviation (e.g., BSY, TCH) and the level can be
-            parsed the filename, based on the (informal-but-thus-far-valid) naming convention for
-            the sitemap file. """
+#___________________________________________________________________________________________________ getTracksQuery
+    def getTracksQuery(self, session =None):
+        """ This method returns an SQLAlchemy query object within the specified session, or a new
+            session if none is specified, that can be used to retrieve all tracks within this
+            sitemap. """
 
         model = Tracks_Track.MASTER
 
@@ -92,9 +91,24 @@ class Tracks_SiteMap(FlagsTracksDefault):
         level = filename.partition('_')[-1].rpartition(' ')[0]
 
         if session is None:
-            session = model.createSession()
+            session = self.mySession
 
         query = session.query(model).filter(model.site == site)
-        query = query.filter(model.level == level)
+        return query.filter(model.level == level)
 
-        return query.all()
+#___________________________________________________________________________________________________ getAllTracks
+    def getAllTracks(self, session =None):
+        """ This operates on the current siteMap, which is populated with the specifics for a given
+            track site.  The three-letter site abbreviation (e.g., BSY, TCH) and the level can be
+            parsed the filename, based on the (informal-but-thus-far-valid) naming convention for
+            the sitemap file. """
+
+        return self.getTracksQuery(session=session).all()
+
+#===================================================================================================
+#                                                                               I N T R I N S I C
+
+#___________________________________________________________________________________________________ __str__
+    def __str__(self):
+        """__str__ doc..."""
+        return '<Sitemap[%s|%s] "%s">' % (self.i, self.index, self.filename)

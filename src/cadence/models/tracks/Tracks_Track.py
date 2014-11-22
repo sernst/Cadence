@@ -15,6 +15,7 @@ from cadence.models.tracks.TracksDefault import TracksDefault
 # AS NEEDED: from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
 
 #___________________________________________________________________________________________________ Tracks_Track
+# noinspection PyAttributeOutsideInit
 class Tracks_Track(TracksDefault):
     """ Database model representation of a track with all the attributes and information for a
         specific track as well connectivity information for the track within its series. """
@@ -90,15 +91,6 @@ class Tracks_Track(TracksDefault):
             self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.MARKED)
         else:
             self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.MARKED)
-
-#___________________________________________________________________________________________________ inMaya
-    @property
-    def inMaya(self):
-        """ A boolean that returns true if the track is loaded into Maya (i.e., there is a track
-            node with that UID). """
-
-        return
-
 
 #===================================================================================================
 #                                                                                     P U B L I C

@@ -4,14 +4,14 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from pyaid.string.StringUtils import StringUtils
+from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+PyGlassEnvironment.initializeFromInternalPath(__file__)
 
-from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
-from cadence.enums.TrackPropEnum import TrackPropEnum
-from cadence.models.tracks.Tracks_Track import Tracks_Track
+from cadence.analysis.AnalyzerBase import AnalyzerBase
+
 
 #___________________________________________________________________________________________________ DataIntegrityTester
-class DataIntegrityTester(object):
+class DataIntegrityTester(AnalyzerBase):
     """A class for..."""
 
 #===================================================================================================
@@ -20,18 +20,7 @@ class DataIntegrityTester(object):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
         """Creates a new instance of DataIntegrityTester."""
-        pass
-
-#===================================================================================================
-#                                                                                   G E T / S E T
-
-#___________________________________________________________________________________________________ GS: propertyName
-    @property
-    def propertyName(self):
-        return None
-    @propertyName.setter
-    def propertyName(self, value):
-        pass
+        super(DataIntegrityTester, self).__init__(**kwargs)
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -39,23 +28,11 @@ class DataIntegrityTester(object):
 #___________________________________________________________________________________________________ run
     def run(self):
         """Doc..."""
-        self._getTracks()
+        for sitemap in self._getSitemaps():
+            print('SITEMAP:', sitemap)
+            for t in self._getTrackways(sitemap):
+                print('  * TRACKWAY:', t)
         return True
-
-#===================================================================================================
-#                                                                               P R O T E C T E D
-
-#___________________________________________________________________________________________________ _getTracks
-    def _getTracks(self):
-        """Doc..."""
-
-        model   = Tracks_Track.MASTER
-        session = model.createSession()
-        column  = getattr(model, TrackPropEnum.SOURCE_FLAGS.name)
-        result  = session.query(model).filter(column.op('&')(SourceFlagsEnum.COMPLETED) == 1).all()
-
-        print('Result:', len(result))
-
 
 #===================================================================================================
 #                                                                               I N T R I N S I C
@@ -64,10 +41,26 @@ class DataIntegrityTester(object):
     def __repr__(self):
         return self.__str__()
 
-#___________________________________________________________________________________________________ __unicode__
-    def __unicode__(self):
-        return StringUtils.toUnicode(self.__str__())
-
 #___________________________________________________________________________________________________ __str__
     def __str__(self):
         return '<%s>' % self.__class__.__name__
+
+####################################################################################################
+####################################################################################################
+
+#___________________________________________________________________________________________________ _main_
+def _main_():
+    import argparse
+    import textwrap
+    dedent = textwrap.dedent
+    parser = argparse.ArgumentParser()
+
+    parser.description = dedent("""
+        DataIntegrityTester does...""")
+
+    dit = DataIntegrityTester()
+    dit.run()
+
+#___________________________________________________________________________________________________ RUN MAIN
+if __name__ == '__main__':
+    _main_()

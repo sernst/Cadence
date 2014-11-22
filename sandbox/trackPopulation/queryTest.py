@@ -1,13 +1,6 @@
-from pyaid.file.FileUtils import FileUtils
-from pyaid.json.JSON import JSON
-
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 
-# Set the path targets for database access outside of a PyGlass application
-myDir = FileUtils.getDirectoryOf(__file__)
-PyGlassEnvironment.initializeExplicitAppSettings(
-    FileUtils.createPath(myDir, '..', '..', 'resources', isDir=True),
-    FileUtils.createPath(myDir, '..', '..', 'resources', 'local', isDir=True) )
+PyGlassEnvironment.initializeFromInternalPath(__file__)
 
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
