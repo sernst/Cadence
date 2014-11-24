@@ -120,8 +120,8 @@ class TracksDefault(PyGlassModelsDefault):
     def trackSeriesFingerprint(self):
         return '-'.join([
             self.trackwayFingerprint,
-            'LEFT' if getattr(self, TrackPropEnum.LEFT.name, False) else 'RIGHT',
-            'PES' if getattr(self, TrackPropEnum.PES.name, False) else 'MANUS' ])
+            'L' if getattr(self, TrackPropEnum.LEFT.name, False) else 'R',
+            'P' if getattr(self, TrackPropEnum.PES.name, False) else 'M' ])
 
 #___________________________________________________________________________________________________ GS: trackwayFingerprint
     @property

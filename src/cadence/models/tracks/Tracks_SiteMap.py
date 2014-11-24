@@ -3,6 +3,7 @@
 # Scott Ernst and Kent A. Stevens
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+from pyaid.string.StringUtils import StringUtils
 
 import sqlalchemy as sqla
 
@@ -108,7 +109,12 @@ class Tracks_SiteMap(FlagsTracksDefault):
 #===================================================================================================
 #                                                                               I N T R I N S I C
 
+#___________________________________________________________________________________________________ __unicode__
+    def __unicode__(self):
+        """__unicode__ doc..."""
+        return StringUtils.toText(self.__str__())
+
 #___________________________________________________________________________________________________ __str__
     def __str__(self):
         """__str__ doc..."""
-        return '<Sitemap[%s|%s] "%s">' % (self.i, self.index, self.filename)
+        return '<Sitemap[%s | %s] "%s">' % (self.i, self.index, self.filename)

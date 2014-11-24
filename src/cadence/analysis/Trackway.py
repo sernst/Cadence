@@ -4,10 +4,10 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-#*************************************************************************************************** Trackway
+
 from cadence.analysis.TrackSeries import TrackSeries
 
-
+#*************************************************************************************************** Trackway
 class Trackway(object):
     """A class for..."""
 
@@ -27,6 +27,29 @@ class Trackway(object):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+#___________________________________________________________________________________________________ GS: seriesList
+    @property
+    def seriesList(self):
+        return [self.leftPes, self.rightPes, self.leftManus, self.rightManus]
+
+#___________________________________________________________________________________________________ GS: count
+    @property
+    def count(self):
+        count = 0
+        for series in self.seriesList:
+            if series:
+                count += series.count
+        return count
+
+#___________________________________________________________________________________________________ GS: hiddenCount
+    @property
+    def hiddenCount(self):
+        count = 0
+        for series in self.seriesList:
+            if series:
+                count += len(series.hiddenTracks)
+        return count
+
 #___________________________________________________________________________________________________ GS: sitemap
     @property
     def sitemap(self):
@@ -37,7 +60,7 @@ class Trackway(object):
     def fingerprint(self):
         if self._fingerprint:
             return self._fingerprint
-        for series in [self.leftPes, self.rightPes, self.leftManus, self.rightManus]:
+        for series in self.seriesList:
             if series and series[0]:
                 return series[0].trackwayFingerprint
 
@@ -87,9 +110,7 @@ class Trackway(object):
         if not isinstance(series, TrackSeries):
             series = TrackSeries(tracks=series, trackway=self)
 
-        attr = '%s%s' % (
-            'left' if series.tracks[0].left else 'right',
-            'Pes' if series.tracks[0].pes else 'Manus')
+        attr = '%s%s' % ('left' if series.left else 'right', 'Pes' if series.pes else 'Manus')
 
         if not allowReplace and getattr(self, attr):
             return False
@@ -109,7 +130,7 @@ class Trackway(object):
         return '<%s "%s" | %s.%s %s.%s>' % (
             self.__class__.__name__,
             self.fingerprint,
-            self.leftPes.count if self.leftPes else '-',
-            self.rightPes.count if self.leftPes else '-',
-            self.leftManus.count if self.leftPes else '-',
-            self.rightManus.count if self.leftPes else '-')
+            self.leftPes.count if self.leftPes else '*',
+            self.rightPes.count if self.rightPes else '*',
+            self.leftManus.count if self.leftManus else '*',
+            self.rightManus.count if self.rightManus else '*')
