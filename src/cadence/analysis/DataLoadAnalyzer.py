@@ -49,14 +49,16 @@ class DataLoadAnalyzer(AnalyzerBase):
 
 #___________________________________________________________________________________________________ _analyzeSitemap
     def _analyzeSitemap(self, stage, sitemap):
-        """createLoadReport doc..."""
+        """_analyzeSitemap doc..."""
+        self.logger.write('%s' % sitemap)
 
         smCount = 0
         smHidCount = 0
 
-        self.logger.write('%s' % sitemap)
+        for t in sitemap.getTrackways():
+            if not t.count:
+                continue
 
-        for t in self.getTrackways(sitemap, loadHidden=True):
             tc  = t.count
             thc = t.hiddenCount
 

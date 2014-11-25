@@ -7,23 +7,17 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import os
 
 from pyaid.config.ConfigsDict import ConfigsDict
+from pyaid.config.SettingsConfig import SettingsConfig
 from pyaid.debug.Logger import Logger
-from pyaid.dict.DictUtils import DictUtils
 from pyaid.file.FileUtils import FileUtils
-from pyaid.list.ListUtils import ListUtils
 from pyaid.system.SystemUtils import SystemUtils
-
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+
 from cadence.analysis.AnalysisStage import AnalysisStage
 
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
-from cadence.analysis.TrackSeries import TrackSeries
-from cadence.analysis.Trackway import Trackway
-from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
-from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
-from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 try:
     import matplotlib.pyplot as plt
@@ -47,6 +41,7 @@ class AnalyzerBase(object):
         self._loadHidden = kwargs.get('loadHidden', False)
         self._tempPath   = kwargs.get('tempPath')
         self._stages     = []
+        self._sitemaps   = []
         self._currentStage = None
 
         self._plotFigures = dict()
@@ -59,6 +54,11 @@ class AnalyzerBase(object):
                 headerless=True,
                 removeIfExists=True,
                 timestampFileSuffix=False)
+
+        self._defaultRootPath = PyGlassEnvironment.getRootLocalResourcePath('analysis', isDir=True)
+
+        self._settings = SettingsConfig(
+            FileUtils.makeFilePath(self._defaultRootPath, 'analysis.json'), pretty=True)
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -86,7 +86,7 @@ class AnalyzerBase(object):
 #___________________________________________________________________________________________________ GS: analysisRootPath
     @property
     def analysisRootPath(self):
-        return PyGlassEnvironment.getRootLocalResourcePath('analysis', isDir=True)
+        return self._settings.fetch('OUTPUT_PATH', self._defaultRootPath)
 
 #___________________________________________________________________________________________________ GS: tempPath
     @property
@@ -106,6 +106,14 @@ class AnalyzerBase(object):
 
 #===================================================================================================
 #                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ getStage
+    def getStage(self, key):
+        """getStage doc..."""
+        for stage in self._stages:
+            if stage.key == key:
+                return stage
+        return None
 
 #___________________________________________________________________________________________________ createStage
     def createStage(self, key, **kwargs):
@@ -135,6 +143,8 @@ class AnalyzerBase(object):
 #___________________________________________________________________________________________________ run
     def run(self):
         """run doc..."""
+        print('[TARGET]: %s' % self.analysisRootPath)
+
         myRootPath = self.getPath(isDir=True)
         if not os.path.exists(myRootPath):
             os.makedirs(myRootPath)
@@ -213,65 +223,12 @@ class AnalyzerBase(object):
 
 #___________________________________________________________________________________________________ getSitemaps
     def getSitemaps(self):
-        model   = Tracks_SiteMap.MASTER
-        session = self.getTracksSession()
-        return session.query(model).all()
+        if not self._sitemaps:
+            model   = Tracks_SiteMap.MASTER
+            session = self.getTracksSession()
+            self._sitemaps = session.query(model).all()
 
-#___________________________________________________________________________________________________ getTrackSeries
-    @classmethod
-    def getTrackSeries(cls, sitemap, loadHidden =False, loadIncomplete =False):
-        """getTrackSeries doc..."""
-        series  = dict()
-        model   = Tracks_Track.MASTER
-        column  = getattr(model, TrackPropEnum.SOURCE_FLAGS.name)
-        query   = sitemap.getTracksQuery()
-
-        if not loadIncomplete:
-            query = query.filter(column.op('&')(SourceFlagsEnum.COMPLETED) == 1)
-
-        if not loadHidden:
-            query = query.filter(model.hidden == False)
-        result = query.all()
-
-        for track in result:
-            fingerprint = track.trackSeriesFingerprint
-            if not fingerprint in series:
-                series[fingerprint] = TrackSeries(sitemap=sitemap)
-
-            s = series[fingerprint]
-            if track.hidden:
-                s.hiddenTracks.append(track)
-            else:
-                s.tracks.append(track)
-
-        out = []
-        for n, s in DictUtils.iter(series):
-            s.sort()
-            out.append(s)
-
-        ListUtils.sortObjectList(out, 'fingerprint', inPlace=True)
-        return out
-
-#___________________________________________________________________________________________________ getTrackways
-    @classmethod
-    def getTrackways(cls, sitemap, loadHidden =False, loadIncomplete =False):
-        """getTrackways doc..."""
-
-        trackways = dict()
-        for series in cls.getTrackSeries(sitemap, loadHidden, loadIncomplete):
-            firstTrack = series.tracks[0] if series.tracks else series.hiddenTracks[0]
-            fingerprint = firstTrack.trackwayFingerprint
-            if fingerprint not in trackways:
-                trackways[fingerprint] = Trackway(sitemap=sitemap, fingerprint=fingerprint)
-            if not trackways[fingerprint].addSeries(series, allowReplace=False):
-                raise ValueError('Ambiguous track series encountered in trackway %s' % fingerprint)
-
-        out = []
-        for n, v in DictUtils.iter(trackways):
-            out.append(v)
-
-        ListUtils.sortObjectList(out, 'fingerprint', inPlace=True)
-        return out
+        return self._sitemaps
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

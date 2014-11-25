@@ -3,12 +3,18 @@
 # Scott Ernst and Kent A. Stevens
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-from pyaid.string.StringUtils import StringUtils
+from pyaid.config.ConfigsDict import ConfigsDict
 
+from pyaid.dict.DictUtils import DictUtils
+from pyaid.list.ListUtils import ListUtils
+from pyaid.string.StringUtils import StringUtils
 import sqlalchemy as sqla
 
+from cadence.analysis.TrackSeries import TrackSeries
+from cadence.analysis.Trackway import Trackway
 from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
-from cadence.models.tracks.Tracks_Track import Tracks_Track
+
+# AS NEEDED: from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ Tracks_SiteMap
 class Tracks_SiteMap(FlagsTracksDefault):
@@ -62,6 +68,19 @@ class Tracks_SiteMap(FlagsTracksDefault):
         super(Tracks_SiteMap, self).__init__(**kwargs)
 
 #===================================================================================================
+#                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: cache
+    @property
+    def cache(self):
+        """ Caching object used during analysis to store transient data related to this sitemap """
+        out = self.fetchTransient('cache')
+        if not out:
+            out = ConfigsDict()
+            self.putTransient('cache', out)
+        return out
+
+#===================================================================================================
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ getFederalCoordinates
@@ -80,6 +99,7 @@ class Tracks_SiteMap(FlagsTracksDefault):
             session if none is specified, that can be used to retrieve all tracks within this
             sitemap. """
 
+        from cadence.models.tracks.Tracks_Track import Tracks_Track
         model = Tracks_Track.MASTER
 
         filename = self.filename
@@ -105,6 +125,54 @@ class Tracks_SiteMap(FlagsTracksDefault):
             the sitemap file. """
 
         return self.getTracksQuery(session=session).all()
+
+#___________________________________________________________________________________________________ getTrackways
+    def getTrackways(self):
+        """getTrackways doc..."""
+        existing = self.fetchTransient('trackways')
+        if existing is not None:
+            return existing
+
+        trackways = dict()
+        for series in self._getTrackSeries():
+            fingerprint = series.trackwayFingerprint
+            if fingerprint not in trackways:
+                trackways[fingerprint] = Trackway(sitemap=self, fingerprint=fingerprint)
+            if not trackways[fingerprint].addSeries(series, allowReplace=False):
+                raise ValueError('Ambiguous track series encountered in trackway %s' % fingerprint)
+
+        out = []
+        for n, v in DictUtils.iter(trackways):
+            out.append(v)
+
+        ListUtils.sortObjectList(out, 'fingerprint', inPlace=True)
+        self.putTransient('trackways', out)
+        return out
+
+#===================================================================================================
+#                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _getTrackSeries
+    def _getTrackSeries(self):
+        """getTrackSeries doc..."""
+
+        series = dict()
+        for track in self.getAllTracks():
+            fingerprint = track.trackSeriesFingerprint
+            if not fingerprint in series:
+                series[fingerprint] = TrackSeries(sitemap=self)
+
+            s = series[fingerprint]
+            s.addTrack(track)
+
+        out = []
+        for n, s in DictUtils.iter(series):
+            s.sort()
+            out.append(s)
+
+        ListUtils.sortObjectList(out, 'fingerprint', inPlace=True)
+        return out
+
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

@@ -35,13 +35,13 @@ class AnalysisStage(object):
         self._key   = key
         self._cache = ConfigsDict()
 
-        self._analyzeCallback   = kwargs.get('analyze')
-        self._preStageCallback  = kwargs.get('pre')
-        self._postStageCallback = kwargs.get('post')
-        self._sitemapCallback   = kwargs.get('sitemap')
-        self._seriesCallback    = kwargs.get('series')
-        self._trackwayCallback  = kwargs.get('trackway')
-        self._trackCallback     = kwargs.get('track')
+        self._analyzeCallback       = kwargs.get('analyze')
+        self._preStageCallback      = kwargs.get('pre')
+        self._postStageCallback     = kwargs.get('post')
+        self._sitemapCallback       = kwargs.get('sitemap')
+        self._seriesCallback        = kwargs.get('series')
+        self._trackwayCallback      = kwargs.get('trackway')
+        self._trackCallback         = kwargs.get('track')
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -143,11 +143,9 @@ class AnalysisStage(object):
     def _analyze(self):
         """_analyze doc..."""
 
-        if self._analyzeCallback and not self._analyzeCallback(self):
-            return
-
-        for sitemap in self.owner.getSitemaps():
-            self._analyzeSitemap(sitemap)
+        if not self._analyzeCallback or self._analyzeCallback(self):
+            for sitemap in self.owner.getSitemaps():
+                self._analyzeSitemap(sitemap)
 
 #___________________________________________________________________________________________________ _analyzeSitemap
     def _analyzeSitemap(self, sitemap):
@@ -156,7 +154,7 @@ class AnalysisStage(object):
         if self._sitemapCallback and not self._sitemapCallback(self, sitemap):
             return
 
-        for tw in self.owner.getTrackways(sitemap, loadHidden=self.owner.loadHidden):
+        for tw in sitemap.getTrackways():
             self._analyzeTrackway(tw, sitemap)
 
 #___________________________________________________________________________________________________ _analyzeTrackway

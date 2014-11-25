@@ -3,7 +3,7 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-
+from pyaid.config.ConfigsDict import ConfigsDict
 
 from cadence.analysis.TrackSeries import TrackSeries
 
@@ -23,9 +23,15 @@ class Trackway(object):
         self._rightPes      = None
         self._leftManus     = None
         self._rightManus    = None
+        self._cache         = ConfigsDict()
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: cache
+    @property
+    def cache(self):
+        return self._cache
 
 #___________________________________________________________________________________________________ GS: seriesList
     @property
@@ -39,6 +45,15 @@ class Trackway(object):
         for series in self.seriesList:
             if series:
                 count += series.count
+        return count
+
+#___________________________________________________________________________________________________ GS: totalCount
+    @property
+    def totalCount(self):
+        count = 0
+        for series in self.seriesList:
+            if series:
+                count += series.totalCount
         return count
 
 #___________________________________________________________________________________________________ GS: hiddenCount

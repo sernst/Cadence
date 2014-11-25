@@ -151,7 +151,7 @@ class StrideLengthStage(AnalysisStage):
         count = 0
 
         with open(self.getPath('Stride-Length-Deviations.csv'), 'wb') as csvfile:
-            fieldnames = ['UID', 'Fingerprint', 'Deviation', 'Value (m)']
+            fieldnames = ['UID', 'Fingerprint', 'Deviation', 'Measured', 'Entered', 'Value (m)']
             writer = csv.DictWriter(
                 csvfile, fieldnames=fieldnames, dialect=csv.excel)
             writer.writeheader()
@@ -167,13 +167,18 @@ class StrideLengthStage(AnalysisStage):
                     writer.writerow({
                         'Fingerprint':track.fingerprint,
                         'UID':track.uid,
+                        'Measured':NumericUtils.roundToSigFigs(entry['measured'], 3),
+                        'Entered':NumericUtils.roundToSigFigs(entry['distance'], 3),
                         'Deviation':sigmaCount,
                         'Value (m)':valuePU.label.encode('latin-1')})
 
-                    self.logger.write('  * %s%s%s%s' % (
+                    self.logger.write('  * %s%s%s%s%s' % (
                         StringUtils.extendToLength(track.fingerprint, 32),
                         StringUtils.extendToLength('%s' % sigmaCount, 16),
                         StringUtils.extendToLength('(%s m)' % valuePU.label, 20),
+                        StringUtils.extendToLength('[%s <-> %s]' % (
+                            NumericUtils.roundToSigFigs(entry['distance'], 3),
+                            NumericUtils.roundToSigFigs(entry['measured'], 3)), 20),
                         track.uid))
 
         percentage = NumericUtils.roundToOrder(100.0*float(count)/float(len(self.entries)), -2)
