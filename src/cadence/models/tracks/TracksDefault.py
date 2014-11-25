@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 from pyaid.dict.DictUtils import DictUtils
+from pyaid.json.JSON import JSON
 
 import sqlalchemy as sqla
 from pyaid.radix.Base64 import Base64
@@ -133,6 +134,20 @@ class TracksDefault(PyGlassModelsDefault):
             getattr(self, TrackPropEnum.TRACKWAY_TYPE.name, ''),
             getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0'),
             getattr(self, TrackPropEnum.YEAR.name, '') ])
+
+#___________________________________________________________________________________________________ GS: snapshotData
+    @property
+    def snapshotData(self):
+        try:
+            return JSON.fromString(self.snapshot)
+        except Exception:
+            return None
+    @snapshotData.setter
+    def snapshotData(self, value):
+        if not value:
+            self.snaphost = ''
+        else:
+            self.snapshot = JSON.asString(value)
 
 #===================================================================================================
 #                                                                                     P U B L I C

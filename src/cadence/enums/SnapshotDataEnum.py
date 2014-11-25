@@ -1,11 +1,11 @@
-# SnapshotFlagsEnum.py
+# SnapshotDataEnum.py
 # (C)2014
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-#___________________________________________________________________________________________________ SnapshotFlagsEnum
-class SnapshotFlagsEnum(object):
+#___________________________________________________________________________________________________ SnapshotDataEnum
+class SnapshotDataEnum(object):
     """A class for..."""
 
 #===================================================================================================

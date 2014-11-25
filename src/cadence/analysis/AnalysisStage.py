@@ -4,7 +4,14 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from collections import namedtuple
+import numpy as np
+from PyPDF2.merger import PdfFileMerger
+from PyPDF2.pdf import PdfFileReader
+
 from pyaid.config.ConfigsDict import ConfigsDict
+from pyaid.number.NumericUtils import NumericUtils
+from pyaid.string.StringUtils import StringUtils
 
 try:
     import matplotlib.pyplot as plt
@@ -17,6 +24,8 @@ class AnalysisStage(object):
 
 #===================================================================================================
 #                                                                                       C L A S S
+
+    VALUE_UNCERTAINTY = namedtuple('VALUE_UNCERTAINTY', ['mean', 'std', 'label'])
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
@@ -84,6 +93,37 @@ class AnalysisStage(object):
         self._analyze()
         self._postAnalyze()
 
+#___________________________________________________________________________________________________ mergePdfs
+    def mergePdfs(self, paths, fileName =None):
+        """mergePdfs doc..."""
+
+        merger = PdfFileMerger()
+        for p in paths:
+            merger.append(PdfFileReader(file(p, 'rb')))
+
+        if not fileName:
+            fileName = '%s-Report.pdf' % self.__class__.__name__
+        merger.write(file(self.getPath(fileName), 'wb'))
+
+#___________________________________________________________________________________________________ getMeanAndDeviation
+    def getMeanAndDeviation(self, values, displayLabel =None):
+        """getMeanAndDeviation doc..."""
+        mean    = np.mean(values, dtype=np.float64)
+        std     = np.std(values, dtype=np.float64)
+        out     = self.toValueUncertainty(mean, std)
+        if displayLabel:
+            self.logger.write('%s: %s' % (displayLabel, out.label))
+        return out
+
+#___________________________________________________________________________________________________ toValueUncertainty
+    @classmethod
+    def toValueUncertainty(cls, value, uncertainty):
+        """toValueUncertaintyString doc..."""
+        uncertainty = NumericUtils.roundToSigFigs(uncertainty, 1)
+        value       = NumericUtils.roundToOrder(value, NumericUtils.orderOfLeastSigFig(uncertainty))
+        return cls.VALUE_UNCERTAINTY(
+            value, uncertainty, '%s %s %s' % (value, StringUtils.unichr(0x00B1), uncertainty))
+
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
@@ -117,35 +157,34 @@ class AnalysisStage(object):
             return
 
         for tw in self.owner.getTrackways(sitemap, loadHidden=self.owner.loadHidden):
-            self._analyzeTrackway(tw)
+            self._analyzeTrackway(tw, sitemap)
 
 #___________________________________________________________________________________________________ _analyzeTrackway
-    def _analyzeTrackway(self, trackway):
+    def _analyzeTrackway(self, trackway, sitemap):
         """_analyzeTrackway doc..."""
 
-        if self._trackwayCallback and not self._trackwayCallback(self, trackway):
+        if self._trackwayCallback and not self._trackwayCallback(self, trackway, sitemap):
             return
 
-        for s in trackway.seriesList:
-            self._analyzeTrackSeries(s)
+        for series in trackway.seriesList:
+            if series:
+                self._analyzeTrackSeries(series, trackway, sitemap)
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
-    def _analyzeTrackSeries(self, series):
+    def _analyzeTrackSeries(self, series, trackway, sitemap):
         """_analyzeTrackSeries doc..."""
-        if not series:
-            return
 
-        if self._seriesCallback and not self._seriesCallback(self, series):
+        if self._seriesCallback and not self._seriesCallback(self, series, trackway, sitemap):
             return
 
         for t in series.tracks:
-            self._analyzeTrack(t)
+            self._analyzeTrack(t, series, trackway, sitemap)
 
 #___________________________________________________________________________________________________ _analyzeTrack
-    def _analyzeTrack(self, track):
+    def _analyzeTrack(self, track, series, trackway, sitemap):
         """_analyzeTrack doc..."""
         if self._trackCallback:
-            self._trackCallback(self, track)
+            self._trackCallback(self, track, series, trackway, sitemap)
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

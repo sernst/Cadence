@@ -3,8 +3,6 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-from PyPDF2.merger import PdfFileMerger
-from PyPDF2.pdf import PdfFileReader
 
 import numpy as np
 from pyaid.number.NumericUtils import NumericUtils
@@ -12,6 +10,7 @@ from pyaid.string.StringUtils import StringUtils
 from pyaid.time.TimeUtils import TimeUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
+
 
 #*************************************************************************************************** DeviationsStage
 class DeviationsStage(AnalysisStage):
@@ -61,7 +60,7 @@ class DeviationsStage(AnalysisStage):
         self.cache.set('noLength', 0)
 
 #___________________________________________________________________________________________________ _analyzeTrack
-    def _analyzeTrack(self, track):
+    def _analyzeTrack(self, track, series, trackway, sitemap):
         """Doc..."""
         data = dict(track=track)
 
@@ -105,10 +104,7 @@ class DeviationsStage(AnalysisStage):
         self.logger.write('='*80 + '\nFRACTIONAL UNCERTAINTY ERROR')
         self._process('Uncertainty Error', 'wDelta', 'wDelta', absoluteOnly=True)
 
-        merger = PdfFileMerger()
-        for p in self._paths:
-            merger.append(PdfFileReader(file(p, 'rb')))
-        merger.write(file(self.getPath('%s-Report.pdf' % self.__class__.__name__), 'wb'))
+        self.mergePdfs(self._paths)
 
 #___________________________________________________________________________________________________ _process
     def _process(self, label, widthKey, lengthKey, absoluteOnly =False):
@@ -134,15 +130,9 @@ class DeviationsStage(AnalysisStage):
             ('widths', ws, 'Width', 'b'),
             ('lengths', ls, 'Length', 'r')]
 
-        wMean = np.mean(ws, dtype=np.float64)
-        wStd  = NumericUtils.roundToSigFigs(np.std(ws, dtype=np.float64), 1)
-        wMean = NumericUtils.roundToOrder(wMean, NumericUtils.orderOfLeastSigFig(wStd))
-        self.logger.write('Width %ss: %s %s %s' % (label, wMean, StringUtils.unichr(0x00B1), wStd))
 
-        lMean = np.mean(ls, dtype=np.float64)
-        lStd  = NumericUtils.roundToSigFigs(np.std(ls, dtype=np.float64), 1)
-        lMean = NumericUtils.roundToOrder(lMean, NumericUtils.orderOfLeastSigFig(lStd))
-        self.logger.write('Length %ss: %s %s %s' % (label, lMean, StringUtils.unichr(0x00B1), lStd))
+        wRes = self.getMeanAndDeviation(ws, 'Width %ss' % label)
+        lRes = self.getMeanAndDeviation(ls, 'Length %ss' % label)
 
         for data in plotList:
             if not absoluteOnly:
@@ -169,8 +159,8 @@ class DeviationsStage(AnalysisStage):
 
         count = 0
         for entry in self.entries:
-            widthDevSigma  = NumericUtils.roundToOrder(abs(entry.get(widthKey, 0.0)/wStd), -2)
-            lengthDevSigma = NumericUtils.roundToOrder(abs(entry.get(lengthKey, 0.0)/lStd), -1)
+            widthDevSigma  = NumericUtils.roundToOrder(abs(entry.get(widthKey, 0.0)/wRes.std), -2)
+            lengthDevSigma = NumericUtils.roundToOrder(abs(entry.get(lengthKey, 0.0)/lRes.std), -1)
             if widthDevSigma > 2.0 or lengthDevSigma > 2.0:
                 count += 1
                 track = entry['track']

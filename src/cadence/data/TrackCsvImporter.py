@@ -13,7 +13,7 @@ from pyaid.json.JSON import JSON
 from pyaid.reflection.Reflection import Reflection
 from pyaid.string.StringUtils import StringUtils
 from cadence.enums.ImportFlagsEnum import ImportFlagsEnum
-from cadence.enums.SnapshotFlagsEnum import SnapshotFlagsEnum
+from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
 from cadence.enums.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
@@ -439,7 +439,7 @@ class TrackCsvImporter(object):
                 TCCE.MANUS_STRIDE_FACTOR, None, 1.0)
 
             if strideLength:
-                snapshot[SnapshotFlagsEnum.STRIDE_LENGTH] = 0.01*float(strideLength)*float(strideFactor)
+                snapshot[SnapshotDataEnum.STRIDE_LENGTH] = 0.01*float(strideLength)*float(strideFactor)
         except Exception as err:
             print(Logger().echoError(u'STRIDE PARSE ERROR:', err))
 
@@ -453,7 +453,7 @@ class TrackCsvImporter(object):
                 None, IFE.HIGH_WIDTH_ANGULATION_UNCERTAINTY )
 
             if widthAngulation:
-                snapshot[SnapshotFlagsEnum.WIDTH_ANGULATION_PATTERN] = 0.01*float(widthAngulation)
+                snapshot[SnapshotDataEnum.WIDTH_ANGULATION_PATTERN] = 0.01*float(widthAngulation)
         except Exception as err:
             print(Logger().echoError(u'WIDTH ANGULATION PARSE ERROR:', err))
 
@@ -469,7 +469,7 @@ class TrackCsvImporter(object):
                 None, IFE.HIGH_PACE_UNCERTAINTY )
 
             if pace:
-                snapshot[SnapshotFlagsEnum.PACE] = 0.01*float(pace)
+                snapshot[SnapshotDataEnum.PACE] = 0.01*float(pace)
         except Exception as err:
             print(Logger().echoError(u'PACE PARSE ERROR:', err))
 
@@ -483,7 +483,7 @@ class TrackCsvImporter(object):
                 None, IFE.HIGH_WIDTH_ANGULATION_UNCERTAINTY )
 
             if paceAngulation:
-                snapshot[SnapshotFlagsEnum.PACE_ANGULATION_PATTERN] = float(paceAngulation)
+                snapshot[SnapshotDataEnum.PACE_ANGULATION_PATTERN] = float(paceAngulation)
         except Exception as err:
             print(Logger().echoError(u'PACE ANGULATION PARSE ERROR:', err))
 
@@ -499,7 +499,7 @@ class TrackCsvImporter(object):
                 None, IFE.HIGH_PROGRESSION_UNCERTAINTY )
 
             if progression:
-                snapshot[SnapshotFlagsEnum.PROGRESSION] = 0.01*float(progression)
+                snapshot[SnapshotDataEnum.PROGRESSION] = 0.01*float(progression)
         except Exception as err:
             print(Logger().echoError(u'PROGRESSION PARSE ERROR:', err))
 
@@ -512,7 +512,7 @@ class TrackCsvImporter(object):
                 None, IFE.HIGH_GLENO_ACETABULAR_UNCERTAINTY )
 
             if gad:
-                snapshot[SnapshotFlagsEnum.GLENO_ACETABULAR_LENGTH] = 0.01*float(gad)
+                snapshot[SnapshotDataEnum.GLENO_ACETABULAR_LENGTH] = 0.01*float(gad)
         except Exception as err:
             print(Logger().echoError(u'GLENO-ACETABULAR DISTANCE PARSE ERROR:', err))
 
