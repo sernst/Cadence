@@ -4,7 +4,6 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import csv
 import math
 
 import numpy as np
@@ -13,6 +12,7 @@ from pyaid.string.StringUtils import StringUtils
 from pyaid.time.TimeUtils import TimeUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
+from cadence.analysis.CsvWriter import CsvWriter
 from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
 
 
@@ -67,13 +67,17 @@ class StrideLengthStage(AnalysisStage):
 
             stride    = float(stride)
             nextTrack = series.tracks[index + 1]
+            if track.next != nextTrack.uid:
+                self.logger.write(
+                    '[ERROR]: Invalid track ordering (%s -> %s)' % (track.uid, nextTrack.uid))
 
+            # Convert entered positions from centimeters to meters
             x     = 0.01*float(track.x)
             z     = 0.01*float(track.z)
             xNext = 0.01*float(nextTrack.x)
             zNext = 0.01*float(nextTrack.z)
 
-            distance  = math.sqrt(math.pow(xNext - x, 2) + math.pow(zNext - z, 2))
+            distance = math.sqrt(math.pow(xNext - x, 2) + math.pow(zNext - z, 2))
 
             trackUncertainty = math.sqrt(
                 math.pow(track.widthUncertainty, 2) +
@@ -97,7 +101,7 @@ class StrideLengthStage(AnalysisStage):
             delta      = distance - stride
             fractional = delta/distance
 
-            self.entries.append(dict(
+            entry = dict(
                 track=track,
                 delta=delta,
                     # Absolute difference between calculated and measured distance
@@ -107,8 +111,11 @@ class StrideLengthStage(AnalysisStage):
                     # Distance measured in the field
                 error=distanceError,
                     # Uncertainty in calculated distance
-                fractional=fractional))
+                fractional=fractional)
                     # Fractional error between calculated and measured distance
+
+            self.entries.append(entry)
+            track.cache.set('strideData', entry)
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
@@ -130,7 +137,6 @@ class StrideLengthStage(AnalysisStage):
 #___________________________________________________________________________________________________ _process
     def _process(self):
         """_processDeviations doc..."""
-        pl      = self.plot
         errors  = []
 
         for entry in self.entries:
@@ -150,36 +156,44 @@ class StrideLengthStage(AnalysisStage):
 
         count = 0
 
-        with open(self.getPath('Stride-Length-Deviations.csv'), 'wb') as csvfile:
-            fieldnames = ['UID', 'Fingerprint', 'Deviation', 'Measured', 'Entered', 'Value (m)']
-            writer = csv.DictWriter(
-                csvfile, fieldnames=fieldnames, dialect=csv.excel)
-            writer.writeheader()
+        csv = CsvWriter()
+        csv.path = self.getPath('Stride-Length-Deviations.csv', isFile=True)
+        csv.addFields(
+            ('uid', 'UID'),
+            ('fingerprint', 'Fingerprint'),
+            ('entered', 'Entered (m)'),
+            ('measured', 'Measured (m)'),
+            ('dev', 'Deviation'),
+            ('value', 'Value (m)'))
 
-            for entry in self.entries:
-                sigmaMag = 0.03 + res.std
-                sigmaCount = NumericUtils.roundToOrder(abs(entry['delta']/sigmaMag), -2)
-                if sigmaCount >= 2.0:
-                    count += 1
-                    track = entry['track']
-                    valuePU = self.toValueUncertainty(abs(entry['delta']), entry['error'])
+        for entry in self.entries:
+            sigmaMag = 0.03 + res.std
+            sigmaCount = NumericUtils.roundToOrder(abs(entry['delta']/sigmaMag), -2)
+            entry['sigmaDev'] = sigmaCount
+            if sigmaCount >= 2.0:
+                count += 1
+                track = entry['track']
+                valuePU = self.toValueUncertainty(abs(entry['delta']), entry['error'])
 
-                    writer.writerow({
-                        'Fingerprint':track.fingerprint,
-                        'UID':track.uid,
-                        'Measured':NumericUtils.roundToSigFigs(entry['measured'], 3),
-                        'Entered':NumericUtils.roundToSigFigs(entry['distance'], 3),
-                        'Deviation':sigmaCount,
-                        'Value (m)':valuePU.label.encode('latin-1')})
+                csv.addRow({
+                    'fingerprint':track.fingerprint,
+                    'uid':track.uid,
+                    'measured':NumericUtils.roundToSigFigs(entry['measured'], 3),
+                    'entered':NumericUtils.roundToSigFigs(entry['distance'], 3),
+                    'dev':sigmaCount,
+                    'value':valuePU.label.encode('latin-1')})
 
-                    self.logger.write('  * %s%s%s%s%s' % (
-                        StringUtils.extendToLength(track.fingerprint, 32),
-                        StringUtils.extendToLength('%s' % sigmaCount, 16),
-                        StringUtils.extendToLength('(%s m)' % valuePU.label, 20),
-                        StringUtils.extendToLength('[%s <-> %s]' % (
-                            NumericUtils.roundToSigFigs(entry['distance'], 3),
-                            NumericUtils.roundToSigFigs(entry['measured'], 3)), 20),
-                        track.uid))
+                self.logger.write('  * %s%s%s%s%s' % (
+                    StringUtils.extendToLength(track.fingerprint, 32),
+                    StringUtils.extendToLength('%s' % sigmaCount, 16),
+                    StringUtils.extendToLength('(%s m)' % valuePU.label, 20),
+                    StringUtils.extendToLength('[%s <-> %s]' % (
+                        NumericUtils.roundToSigFigs(entry['distance'], 3),
+                        NumericUtils.roundToSigFigs(entry['measured'], 3)), 20),
+                    track.uid))
+
+        if not csv.save():
+            self.logger.write('[ERROR]: Failed to save CSV file %s' % csv.path)
 
         percentage = NumericUtils.roundToOrder(100.0*float(count)/float(len(self.entries)), -2)
         self.logger.write('%s significant %ss (%s%%)' % (count, label.lower(), percentage))

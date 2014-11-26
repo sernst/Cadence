@@ -1,4 +1,4 @@
-# DataIntegrityAnalyzer.py
+# IntegrityAnalyzer.py
 # (C)2014
 # Scott Ernst
 
@@ -10,8 +10,8 @@ PyGlassEnvironment.initializeFromInternalPath(__file__)
 from cadence.analysis.integrity.DeviationsStage import DeviationsStage
 from cadence.analysis.AnalyzerBase import AnalyzerBase
 
-#___________________________________________________________________________________________________ DataIntegrityAnalyzer
-class DataIntegrityAnalyzer(AnalyzerBase):
+#___________________________________________________________________________________________________ IntegrityAnalyzer
+class IntegrityAnalyzer(AnalyzerBase):
     """A class for..."""
 
 #===================================================================================================
@@ -19,8 +19,8 @@ class DataIntegrityAnalyzer(AnalyzerBase):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
-        """Creates a new instance of DataIntegrityAnalyzer."""
-        super(DataIntegrityAnalyzer, self).__init__(**kwargs)
+        """Creates a new instance of IntegrityAnalyzer."""
+        super(IntegrityAnalyzer, self).__init__(**kwargs)
         self.addStage(DeviationsStage('deviations', self))
 
 ####################################################################################################
@@ -34,9 +34,9 @@ def _main_():
     parser = argparse.ArgumentParser()
 
     parser.description = dedent("""
-        DataIntegrityAnalyzer does...""")
+        IntegrityAnalyzer does...""")
 
-    dit = DataIntegrityAnalyzer()
+    dit = IntegrityAnalyzer()
     dit.run()
 
 #___________________________________________________________________________________________________ RUN MAIN

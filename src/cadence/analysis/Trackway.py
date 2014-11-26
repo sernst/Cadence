@@ -19,14 +19,39 @@ class Trackway(object):
         """Creates a new instance of Trackway."""
         self._fingerprint   = fingerprint
         self._sitemap       = sitemap
-        self._leftPes       = None
-        self._rightPes      = None
-        self._leftManus     = None
-        self._rightManus    = None
+        self._leftPes       = TrackSeries(sitemap=sitemap, trackway=self)
+        self._rightPes      = TrackSeries(sitemap=sitemap, trackway=self)
+        self._leftManus     = TrackSeries(sitemap=sitemap, trackway=self)
+        self._rightManus    = TrackSeries(sitemap=sitemap, trackway=self)
         self._cache         = ConfigsDict()
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: isReady
+    @property
+    def isReady(self):
+        """ Specifies whether or not this track series is ready for analysis """
+        for s in self.seriesList:
+            if not s.isReady:
+                return False
+        return True
+
+#___________________________________________________________________________________________________ GS: isValid
+    @property
+    def isValid(self):
+        for s in self.seriesList:
+            if not s.isValid:
+                return False
+        return True
+
+#___________________________________________________________________________________________________ GS: isComplete
+    @property
+    def isComplete(self):
+        for s in self.seriesList:
+            if not s.isComplete:
+                return False
+        return True
 
 #___________________________________________________________________________________________________ GS: cache
     @property
@@ -63,6 +88,15 @@ class Trackway(object):
         for series in self.seriesList:
             if series:
                 count += len(series.hiddenTracks)
+        return count
+
+#___________________________________________________________________________________________________ GS: incompleteCount
+    @property
+    def incompleteCount(self):
+        count = 0
+        for series in self.seriesList:
+            if series:
+                count += len(series.incompleteTracks)
         return count
 
 #___________________________________________________________________________________________________ GS: sitemap
@@ -119,19 +153,23 @@ class Trackway(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ addSeries
-    def addSeries(self, series, allowReplace =True):
-        """addSeries doc..."""
-        if not isinstance(series, TrackSeries):
-            series = TrackSeries(tracks=series, trackway=self)
+#___________________________________________________________________________________________________ addTrack
+    def addTrack(self, track):
+        """addTrack doc..."""
+        if track.left and track.pes:
+            self.leftPes.addTrack(track)
+        elif track.left:
+            self.leftManus.addTrack(track)
+        elif track.pes:
+            self.rightPes.addTrack(track)
+        else:
+            self.rightManus.addTrack(track)
 
-        attr = '%s%s' % ('left' if series.left else 'right', 'Pes' if series.pes else 'Manus')
-
-        if not allowReplace and getattr(self, attr):
-            return False
-
-        setattr(self, attr, series)
-        return True
+#___________________________________________________________________________________________________ sortAll
+    def sortAll(self):
+        """sortAll doc..."""
+        for series in self.seriesList:
+            series.sort()
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

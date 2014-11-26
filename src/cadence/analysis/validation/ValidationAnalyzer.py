@@ -5,6 +5,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+from cadence.analysis.validation.TrackwayPlotStrideStage import TrackwayPlotStrideStage
+
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
 from cadence.analysis.validation.StrideLengthStage import StrideLengthStage
@@ -22,6 +24,7 @@ class ValidationAnalyzer(AnalyzerBase):
         """Creates a new instance of ValidationAnalyzer."""
         super(ValidationAnalyzer, self).__init__(**kwargs)
         self.addStage(StrideLengthStage('strideLength', self))
+        self.addStage(TrackwayPlotStrideStage('stridePlots', self))
 
 ####################################################################################################
 ####################################################################################################

@@ -23,10 +23,34 @@ class TrackSeries(object):
         self._hiddenTracks  = kwargs.get('hiddenTracks', [])
         self._sitemap       = kwargs.get('sitemap')
         self._trackway      = kwargs.get('trackway')
+        self._isValid       = True
         self._cache         = ConfigsDict()
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: isReady
+    @property
+    def isReady(self):
+        """ Specifies whether or not this track series is ready for analysis """
+        return self.isComplete and self.isValid
+
+#___________________________________________________________________________________________________ GS: trackwayKey
+    @property
+    def trackwayKey(self):
+        if self.pes and self.left:
+            return 'leftPes'
+        elif self.pes:
+            return 'rightPes'
+        elif self.left:
+            return 'leftManus'
+        else:
+            return 'rightManus'
+
+#___________________________________________________________________________________________________ GS: isValid
+    @property
+    def isValid(self):
+        return self._isValid
 
 #___________________________________________________________________________________________________ GS: cache
     @property
@@ -155,9 +179,32 @@ class TrackSeries(object):
 #___________________________________________________________________________________________________ sort
     def sort(self):
         """sort doc..."""
-        ListUtils.sortObjectList(self.tracks,           'number', inPlace=True)
-        ListUtils.sortObjectList(self.incompleteTracks, 'number', inPlace=True)
-        ListUtils.sortObjectList(self.hiddenTracks,     'number', inPlace=True)
+        if not self.tracks:
+            return
+
+        source = ListUtils.sortObjectList(self.tracks, 'number', reversed=True)
+        out = []
+
+        prev = None
+        for track in source:
+            if not track.next:
+                prev = track
+                break
+
+        if not prev:
+            return False
+
+        while prev:
+            out.append(prev)
+            prev = self._findPreviousTrack(prev, source)
+
+        if not len(out) == len(source):
+            self._isValid = True
+            # raise ValueError('Unable to sort tracks in series. Missing or invalid linkages.')
+
+        out.reverse()
+        self._tracks = out
+        return True
 
 #___________________________________________________________________________________________________ _getFirstTrack
     def _getFirstTrack(self, allowHidden =True, allowIncomplete =True):
@@ -169,6 +216,15 @@ class TrackSeries(object):
         if allowIncomplete and self.incompleteTracks:
             return self.incompleteTracks[0]
 
+        return None
+
+#___________________________________________________________________________________________________ _findPreviousTrack
+    @classmethod
+    def _findPreviousTrack(cls, track, trackList):
+        """_findPreviousTrack doc..."""
+        for t in trackList:
+            if t.next == track.uid:
+                return t
         return None
 
 #===================================================================================================

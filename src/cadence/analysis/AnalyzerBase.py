@@ -10,13 +10,12 @@ from pyaid.config.ConfigsDict import ConfigsDict
 from pyaid.config.SettingsConfig import SettingsConfig
 from pyaid.debug.Logger import Logger
 from pyaid.file.FileUtils import FileUtils
+from pyaid.string.StringUtils import StringUtils
 from pyaid.system.SystemUtils import SystemUtils
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
-
-from cadence.analysis.AnalysisStage import AnalysisStage
-
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
+from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 
 try:
@@ -63,6 +62,11 @@ class AnalyzerBase(object):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+#___________________________________________________________________________________________________ GS: plotFigures
+    @property
+    def plotFigures(self):
+        return self._plotFigures
+
 #___________________________________________________________________________________________________ GS: stages
     @property
     def stages(self):
@@ -92,12 +96,11 @@ class AnalyzerBase(object):
     @property
     def tempPath(self):
         if not self._tempPath:
-            return FileUtils.makeFolderPath(self.analysisRootPath, 'temp')
+            return FileUtils.makeFolderPath(self._defaultRootPath, 'temp')
         return self._tempPath
     @tempPath.setter
     def tempPath(self, value):
         self._tempPath = value
-
 
 #___________________________________________________________________________________________________ GS: loadHidden
     @property
@@ -181,17 +184,32 @@ class AnalyzerBase(object):
         return result[0]
 
 #___________________________________________________________________________________________________ getFigure
-    def getFigure(self, key):
+    def getFigure(self, key, setActive =True):
         """createFigure doc..."""
         if key in self._plotFigures:
-            return self._plotFigures[key]
+            out = self._plotFigures[key]
+            if setActive:
+                plt.figure(out.number)
         return None
 
+#___________________________________________________________________________________________________ closeFigure
+    def closeFigure(self, key):
+        """closeFigure doc..."""
+        if key not in self._plotFigures:
+            return
+
+        figure = self._plotFigures[key]
+        plt.close(figure)
+        del self._plotFigures[key]
+
 #___________________________________________________________________________________________________ savePlotFile
-    def saveFigure(self, key, path, close =True, **kwargs):
+    def saveFigure(self, key, path =None, close =True, **kwargs):
         """savePlotFile doc..."""
         if not plt or key not in self._plotFigures:
             return False
+
+        if not path:
+            path = self.getTempPath('%s-%s.pdf' % (key, StringUtils.getRandomString(16)), isFile=True)
 
         figure = self._plotFigures[key]
 
@@ -200,8 +218,8 @@ class AnalyzerBase(object):
 
         figure.savefig(path, **kwargs)
         if close:
-            plt.close(figure)
-            del self._plotFigures[key]
+            self.closeFigure(key)
+        return path
 
 #___________________________________________________________________________________________________ getTracksSession
     def getTracksSession(self):

@@ -165,7 +165,7 @@ class AnalysisStage(object):
             return
 
         for series in trackway.seriesList:
-            if series:
+            if series.isValid and series.isComplete:
                 self._analyzeTrackSeries(series, trackway, sitemap)
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries

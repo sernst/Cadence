@@ -3,14 +3,13 @@
 # Scott Ernst and Kent A. Stevens
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-from pyaid.config.ConfigsDict import ConfigsDict
 
+from pyaid.config.ConfigsDict import ConfigsDict
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.list.ListUtils import ListUtils
 from pyaid.string.StringUtils import StringUtils
 import sqlalchemy as sqla
 
-from cadence.analysis.TrackSeries import TrackSeries
 from cadence.analysis.Trackway import Trackway
 from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
 
@@ -134,45 +133,20 @@ class Tracks_SiteMap(FlagsTracksDefault):
             return existing
 
         trackways = dict()
-        for series in self._getTrackSeries():
-            fingerprint = series.trackwayFingerprint
+        for track in self.getAllTracks():
+            fingerprint = track.trackwayFingerprint
             if fingerprint not in trackways:
                 trackways[fingerprint] = Trackway(sitemap=self, fingerprint=fingerprint)
-            if not trackways[fingerprint].addSeries(series, allowReplace=False):
-                raise ValueError('Ambiguous track series encountered in trackway %s' % fingerprint)
+            trackways[fingerprint].addTrack(track)
 
         out = []
         for n, v in DictUtils.iter(trackways):
+            v.sortAll()
             out.append(v)
 
         ListUtils.sortObjectList(out, 'fingerprint', inPlace=True)
         self.putTransient('trackways', out)
         return out
-
-#===================================================================================================
-#                                                                               P R O T E C T E D
-
-#___________________________________________________________________________________________________ _getTrackSeries
-    def _getTrackSeries(self):
-        """getTrackSeries doc..."""
-
-        series = dict()
-        for track in self.getAllTracks():
-            fingerprint = track.trackSeriesFingerprint
-            if not fingerprint in series:
-                series[fingerprint] = TrackSeries(sitemap=self)
-
-            s = series[fingerprint]
-            s.addTrack(track)
-
-        out = []
-        for n, s in DictUtils.iter(series):
-            s.sort()
-            out.append(s)
-
-        ListUtils.sortObjectList(out, 'fingerprint', inPlace=True)
-        return out
-
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

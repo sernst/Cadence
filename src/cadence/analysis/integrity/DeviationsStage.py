@@ -13,6 +13,9 @@ from cadence.analysis.AnalysisStage import AnalysisStage
 
 
 #*************************************************************************************************** DeviationsStage
+from cadence.analysis.CsvWriter import CsvWriter
+
+
 class DeviationsStage(AnalysisStage):
     """A class for..."""
 
@@ -157,6 +160,14 @@ class DeviationsStage(AnalysisStage):
         self.owner.saveFigure('twoD', path)
         self._paths.append(path)
 
+        csv = CsvWriter()
+        csv.path = self.getPath('%s-Deviations.csv' % label.replace(' ', '-'), isFile=True)
+        csv.addFields(
+            ('uid', 'UID'),
+            ('fingerprint', 'Fingerprint'),
+            ('wSigma', 'Width Deviation'),
+            ('lSigma', 'Length Deviation'))
+
         count = 0
         for entry in self.entries:
             widthDevSigma  = NumericUtils.roundToOrder(abs(entry.get(widthKey, 0.0)/wRes.std), -2)
@@ -164,10 +175,20 @@ class DeviationsStage(AnalysisStage):
             if widthDevSigma > 2.0 or lengthDevSigma > 2.0:
                 count += 1
                 track = entry['track']
+
+                csv.createRow(
+                    uid=track.uid,
+                    fingerprint=track.fingerprint,
+                    wSigma=widthDevSigma,
+                    lSigma=lengthDevSigma)
+
                 self.logger.write('  * %s%s%s' % (
                     StringUtils.extendToLength(track.fingerprint, 32),
                     StringUtils.extendToLength('(%s, %s)' % (widthDevSigma, lengthDevSigma), 16),
                     track.uid))
+
+        if not csv.save():
+            self.logger.write('[ERROR]: Failed to save CSV file to %s' % csv.path)
 
         percentage = NumericUtils.roundToOrder(100.0*float(count)/float(len(self.entries)), -2)
         self.logger.write('%s significant %ss (%s%%)' % (count, label.lower(), percentage))
