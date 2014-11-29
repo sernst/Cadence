@@ -15,18 +15,23 @@ class Trackway(object):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, sitemap =None, fingerprint =None):
+    def __init__(self, sitemap, trackway):
         """Creates a new instance of Trackway."""
-        self._fingerprint   = fingerprint
         self._sitemap       = sitemap
-        self._leftPes       = TrackSeries(sitemap=sitemap, trackway=self)
-        self._rightPes      = TrackSeries(sitemap=sitemap, trackway=self)
-        self._leftManus     = TrackSeries(sitemap=sitemap, trackway=self)
-        self._rightManus    = TrackSeries(sitemap=sitemap, trackway=self)
+        self._trackway      = trackway
+        self._leftPes       = TrackSeries(self)
+        self._rightPes      = TrackSeries(self)
+        self._leftManus     = TrackSeries(self)
+        self._rightManus    = TrackSeries(self)
         self._cache         = ConfigsDict()
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: trackway
+    @property
+    def trackway(self):
+        return self._trackway
 
 #___________________________________________________________________________________________________ GS: isReady
     @property

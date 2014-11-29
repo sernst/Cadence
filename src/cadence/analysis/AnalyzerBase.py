@@ -35,15 +35,16 @@ class AnalyzerBase(object):
         """Creates a new instance of AnalyzerBase."""
         self._tracksSession = kwargs.get('tracksSession')
 
-        self._cache      = ConfigsDict(kwargs.get('cacheData'))
-        self._logger     = kwargs.get('logger')
-        self._loadHidden = kwargs.get('loadHidden', False)
-        self._tempPath   = kwargs.get('tempPath')
-        self._stages     = []
-        self._sitemaps   = []
-        self._currentStage = None
-
-        self._plotFigures = dict()
+        self._cache         = ConfigsDict(kwargs.get('cacheData'))
+        self._logger        = kwargs.get('logger')
+        self._loadHidden    = kwargs.get('loadHidden', False)
+        self._tempPath      = kwargs.get('tempPath')
+        self._stages        = []
+        self._sitemaps      = []
+        self._trackways     = dict()
+        self._trackSeries   = dict()
+        self._plotFigures   = dict()
+        self._currentStage  = None
 
         if not self._logger:
             self._logger = Logger(
@@ -247,6 +248,26 @@ class AnalyzerBase(object):
             self._sitemaps = session.query(model).all()
 
         return self._sitemaps
+
+#___________________________________________________________________________________________________ getTrackways
+    def getTrackways(self, sitemap):
+        """getTrackways doc..."""
+        if sitemap.uid in self._trackways:
+            return self._trackways[sitemap.uid]
+
+        trackways = sitemap.getTrackways()
+        self._trackways[sitemap.uid] = trackways
+        return trackways
+
+#___________________________________________________________________________________________________ getTrackwaySeries
+    def getTrackwaySeries(self, trackway):
+        """getTrackSeries doc..."""
+        if trackway.uid in self._trackSeries:
+            return self._trackSeries[trackway.uid]
+
+        series = trackway.getTrackSeries()
+        self._trackSeries[trackway.uid] = series
+        return series
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

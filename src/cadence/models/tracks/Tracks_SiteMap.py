@@ -5,15 +5,14 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from pyaid.config.ConfigsDict import ConfigsDict
-from pyaid.dict.DictUtils import DictUtils
-from pyaid.list.ListUtils import ListUtils
+from pyaid.radix.Base36 import Base36
 from pyaid.string.StringUtils import StringUtils
 import sqlalchemy as sqla
 
-from cadence.analysis.Trackway import Trackway
 from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
 
 # AS NEEDED: from cadence.models.tracks.Tracks_Track import Tracks_Track
+# AS NEEDED: from cadence.models.tracks.Tracks_Trackway import Tracks_Trackway
 
 #___________________________________________________________________________________________________ Tracks_SiteMap
 class Tracks_SiteMap(FlagsTracksDefault):
@@ -40,6 +39,8 @@ class Tracks_SiteMap(FlagsTracksDefault):
     __tablename__ = u'sitemaps'
 
     _index               = sqla.Column(sqla.Integer,     default=0)
+    _name                = sqla.Column(sqla.Unicode,     default=u'')
+    _level               = sqla.Column(sqla.Unicode,     default=u'')
     _filename            = sqla.Column(sqla.Unicode,     default=u'')
     _federalEast         = sqla.Column(sqla.Integer,     default=0)
     _federalNorth        = sqla.Column(sqla.Integer,     default=0)
@@ -68,6 +69,11 @@ class Tracks_SiteMap(FlagsTracksDefault):
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: uid
+    @property
+    def uid(self):
+        return Base36.to36(self.index)
 
 #___________________________________________________________________________________________________ GS: cache
     @property
@@ -101,20 +107,17 @@ class Tracks_SiteMap(FlagsTracksDefault):
         from cadence.models.tracks.Tracks_Track import Tracks_Track
         model = Tracks_Track.MASTER
 
-        filename = self.filename
-
-        if not filename:
+        if not self.filename:
             print('getAllTracks: filename invalid')
             return
 
-        site  = self.filename[0:3]
-        level = filename.partition('_')[-1].rpartition(' ')[0]
+        site  = self.name
+        level = self.level
 
         if session is None:
             session = self.mySession
 
-        query = session.query(model).filter(model.site == site)
-        return query.filter(model.level == level)
+        return session.query(model).filter(model.site == site).filter(model.level == level)
 
 #___________________________________________________________________________________________________ getAllTracks
     def getAllTracks(self, session =None):
@@ -128,25 +131,25 @@ class Tracks_SiteMap(FlagsTracksDefault):
 #___________________________________________________________________________________________________ getTrackways
     def getTrackways(self):
         """getTrackways doc..."""
-        existing = self.fetchTransient('trackways')
-        if existing is not None:
-            return existing
+        trackways = []
 
-        trackways = dict()
-        for track in self.getAllTracks():
-            fingerprint = track.trackwayFingerprint
-            if fingerprint not in trackways:
-                trackways[fingerprint] = Trackway(sitemap=self, fingerprint=fingerprint)
-            trackways[fingerprint].addTrack(track)
+        from cadence.models.tracks.Tracks_Trackway import Tracks_Trackway
+        model = Tracks_Trackway.MASTER
+        for tw in self.mySession.query(model).filter(model.siteMapIndex == self.index).all():
+            tw.sitemap = self
+            trackways.append(tw)
+        return trackways
 
-        out = []
-        for n, v in DictUtils.iter(trackways):
-            v.sortAll()
-            out.append(v)
+#___________________________________________________________________________________________________ GS: getNameFromFilename
+    @classmethod
+    def getNameFromFilename(cls, filename):
+        """ Name of the sitemap as determined by its filename """
+        return filename[0:3]
 
-        ListUtils.sortObjectList(out, 'fingerprint', inPlace=True)
-        self.putTransient('trackways', out)
-        return out
+#___________________________________________________________________________________________________ GS: getLevelFromFilename
+    @classmethod
+    def getLevelFromFilename(cls, filename):
+        return filename.partition('_')[-1].rpartition(' ')[0]
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

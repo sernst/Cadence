@@ -10,12 +10,10 @@ from pyaid.string.StringUtils import StringUtils
 from pyaid.time.TimeUtils import TimeUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
-
-
-#*************************************************************************************************** DeviationsStage
 from cadence.analysis.CsvWriter import CsvWriter
 
 
+#*************************************************************************************************** DeviationsStage
 class DeviationsStage(AnalysisStage):
     """A class for..."""
 

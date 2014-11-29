@@ -78,6 +78,12 @@ class StrideLengthStage(AnalysisStage):
             zNext = 0.01*float(nextTrack.z)
 
             distance = math.sqrt(math.pow(xNext - x, 2) + math.pow(zNext - z, 2))
+            if not distance:
+                self.logger.write([
+                    '[WARNING]: Invalid track separation of 0.0. Ignoring track',
+                    'TRACK: %s [%s]' % (track.fingerprint, track.uid),
+                    'NEXT: %s [%s]' % (nextTrack.fingerprint, track.uid)])
+                continue
 
             trackUncertainty = math.sqrt(
                 math.pow(track.widthUncertainty, 2) +

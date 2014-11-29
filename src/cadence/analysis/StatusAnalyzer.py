@@ -6,9 +6,12 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from pyaid.ArgsUtils import ArgsUtils
 from pyaid.number.NumericUtils import NumericUtils
+from pyaid.system.SystemUtils import SystemUtils
 
 from cadence.analysis.AnalyzerBase import AnalyzerBase
 from cadence.analysis.CsvWriter import CsvWriter
+from cadence.models.tracks.Tracks_Track import Tracks_Track
+
 
 #*************************************************************************************************** StatusAnalyzer
 class StatusAnalyzer(AnalyzerBase):
@@ -23,182 +26,209 @@ class StatusAnalyzer(AnalyzerBase):
         ArgsUtils.addIfMissing('loadHidden', True, kwargs)
         super(StatusAnalyzer, self).__init__(**kwargs)
 
-        self._sitemapCsv = None
-        self._trackwayCsv = None
-        self.createStage(
-            key='count',
-            sitemap=self._analyzeSitemap,
-            post=self._postCount)
-
-#===================================================================================================
-#                                                                                   G E T / S E T
-
-#___________________________________________________________________________________________________ GS: incompleteCount
-    @property
-    def incompleteCount(self):
-        return self.cache.get('incompleteCount', 0)
-    @incompleteCount.setter
-    def incompleteCount(self, value):
-        self.cache.set('incompleteCount', value, 0)
-
-#___________________________________________________________________________________________________ GS: count
-    @property
-    def count(self):
-        return self.cache.get('count', 0)
-    @count.setter
-    def count(self, value):
-        self.cache.set('count', value, 0)
-
-#___________________________________________________________________________________________________ GS: hiddenCount
-    @property
-    def hiddenCount(self):
-        return self.cache.get('hiddenCount', 0)
-    @hiddenCount.setter
-    def hiddenCount(self, value):
-        self.cache.set('hiddenCount', value, 0)
+        self.count              = 0
+        self.ignoredCount       = 0
+        self.incompleteCount    = 0
+        self._sitemapCsv        = None
+        self._trackwayCsv       = None
+        self._orphanCsv         = None
+        self._unknownCsv        = None
+        self._allTracks         = None
+        self.createStage(key='count', sitemap=self._analyzeSitemap, post=self._postCount)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
+        csv = CsvWriter()
+        csv.path = self.getPath('Unknown-Track-Report.csv')
+        csv.addFields(
+            ('fingerprint', 'Fingerprint'),
+            ('uid', 'UID') )
+        self._unknownCsv = csv
+
+        csv = CsvWriter()
+        csv.path = self.getPath('Ignored-Track-Report.csv')
+        csv.addFields(
+            ('sitemap', 'Sitemap Name'),
+            ('fingerprint', 'Fingerprint'),
+            ('hidden', 'Hidden'),
+            ('orphan', 'Orphaned'),
+            ('uid', 'UID') )
+        self._orphanCsv = csv
+
         smCsv = CsvWriter()
         smCsv.path = self.getPath('Sitemap-Report.csv')
         smCsv.addFields(
             ('name', 'Sitemap Name'),
-            ('complete', 'Complete'),
-            ('hidden', 'Hidden'),
+            ('ignores', 'Ignored'),
+            ('count', 'Count'),
             ('incomplete', 'Incomplete'),
-            ('total', 'Total'),
-            ('completion', 'Completion (%)'))
+            ('completion', 'Completion (%)') )
         self._sitemapCsv = smCsv
 
         twCsv = CsvWriter()
         twCsv.path = self.getPath('Trackway-Report.csv')
         twCsv.addFields(
-            ('fingerprint', 'Fingerprint'),
+            ('name', 'Name'),
             ('leftPes', 'Left Pes'),
             ('rightPes', 'Right Pes'),
             ('leftManus', 'Left Manus'),
             ('rightManus', 'Right Manus'),
-            ('hidden', 'Hidden'),
             ('incomplete', 'Incomplete'),
             ('total', 'Total'),
             ('ready', 'Analysis Ready'),
             ('complete', 'Completion (%)') )
         self._trackwayCsv = twCsv
 
-#___________________________________________________________________________________________________ _addSitemapCsvRow
-    def _addSitemapCsvRow(self, sitemap, complete, hidden, incomplete):
-        """_addSitemapCsvRow doc..."""
-        total = complete + hidden + incomplete
+        self._allTracks = dict()
 
-        if total == 0:
+        #-------------------------------------------------------------------------------------------
+        # CREATE ALL TRACK LISTING
+        #       This list is used to find tracks that are not referenced by relationships to
+        #       sitemaps, which would never be loaded by standard analysis methods
+        model = Tracks_Track.MASTER
+        session = model.createSession()
+        for t in session.query(model).all():
+            self._allTracks[t.uid] = {'uid':t.uid, 'fingerprint':t.fingerprint}
+        session.close()
+
+#___________________________________________________________________________________________________ _addSitemapCsvRow
+    def _addSitemapCsvRow(self, sitemap, count, incomplete, ignores):
+        """_addSitemapCsvRow doc..."""
+
+        if count == 0:
             completion = 0
         else:
-            completion = NumericUtils.roundToOrder(
-                100.0*float(complete + hidden)/float(total), -2)
+            completion = NumericUtils.roundToOrder(100.0*float(count - incomplete)/float(count), -2)
 
         self._sitemapCsv.createRow(
             name=sitemap.filename,
-            complete=complete,
-            hidden=hidden,
+            count=count,
+            ignores=ignores,
             incomplete=incomplete,
-            completion=completion,
-            total=total)
+            completion=completion)
 
 #___________________________________________________________________________________________________ _addTrackwayCsvRow
     def _addTrackwayCsvRow(self, trackway):
         """_addTrackwayCsvRow doc..."""
-        series = dict()
-        hidden = 0
-        incomplete = 0
-        for s in trackway.seriesList:
-            hidden += len(s.hiddenTracks)
-            incomplete += len(s.incompleteTracks)
-            series[s.trackwayKey] = '%s%s' % (
-                int(s.count), '' if s.isValid and s.isComplete else '*')
+        series      = dict()
+        count       = 0
+        incomplete  = 0
+        isReady     = True
 
-        completion = NumericUtils.roundToOrder(
-            100.0*float(trackway.count)/float(trackway.totalCount), -2)
+        for key, s in self.getTrackwaySeries(trackway).items():
+            isReady     = isReady and s.isReady
+            count      += s.count
+            incomplete += len(s.incompleteTracks)
+
+            suffix = ''
+            if not s.isValid:
+                suffix += '*'
+            if not s.isComplete:
+                suffix += '...'
+
+            series[s.trackwayKey] = '%s%s' % (int(s.count), suffix)
+
+        completion = NumericUtils.roundToOrder(100.0*float(count - incomplete)/float(count), -2)
 
         self._trackwayCsv.createRow(
-            fingerprint=trackway.fingerprint,
-            hidden=hidden,
+            name=trackway.name,
             incomplete=incomplete,
-            total=trackway.totalCount,
-            ready='YES' if trackway.isReady else 'NO',
+            total=count,
+            ready='YES' if isReady else 'NO',
             complete=completion,
             **series)
 
+        return count, incomplete
+
 #___________________________________________________________________________________________________ _analyzeSitemap
+    # noinspection PyUnusedLocal
     def _analyzeSitemap(self, stage, sitemap):
         """_analyzeSitemap doc..."""
         self.logger.write('%s' % sitemap)
 
-        smCount = 0
-        smHidCount = 0
-        smInCompCount = 0
+        smCount         = 0
+        smInCompCount   = 0
+        ignores         = 0
 
-        for t in sitemap.getTrackways():
-            self._addTrackwayCsvRow(t)
+        #-------------------------------------------------------------------------------------------
+        # SITE MAP TRACKS
+        #       Iterate through all the tracks within a sitemap and look for hidden or orphaned
+        #       tracks to account for any that may not be loaded by standard means. Any tracks
+        #       found this way are removed from the all list created above, which specifies that
+        #       they were found by other means.
+        for t in sitemap.getAllTracks():
+            if t.uid in self._allTracks:
+                del self._allTracks[t.uid]
 
-            tc  = t.count
-            thc = t.hiddenCount
-            tic = t.incompleteCount
+            if not t.hidden and t.next:
+                continue
 
-            self.count          += tc
-            self.hiddenCount    += thc
+            prev = t.getPreviousTrack()
+            if prev and not t.hidden:
+                continue
+
+            self.ignoredCount += 1
+            ignores += 1
+
+            isOrphaned = not t.next and not prev
+
+            self._orphanCsv.createRow(
+                fingerprint=t.fingerprint,
+                orphan='YES' if isOrphaned else 'NO',
+                hidden='YES' if t.hidden else 'NO',
+                uid=t.uid,
+                sitemap=sitemap.filename)
+
+        #-------------------------------------------------------------------------------------------
+        # TRACKWAYS
+        #       Iterate over the trackways within the current site
+        for t in self.getTrackways(sitemap):
+            stats = self._addTrackwayCsvRow(t)
+
+            tc  = stats[0]
+            tic = stats[1]
+
+            self.count           += tc
             self.incompleteCount += tic
-            smCount             += tc
-            smHidCount          += thc
-            smInCompCount       += tic
+            smCount              += tc
+            smInCompCount        += tic
 
-            h = ('(%s) = %s' % (thc, tc + thc)) if thc else ''
-            self.logger.write('   * %s [TRACKS: %s%s]' % (t, tc, h))
+            self.logger.write('   * %s [TRACKS: %s]' % (t, tc))
 
-        self._addSitemapCsvRow(sitemap, smCount, smHidCount, smInCompCount)
-        if smCount or smHidCount:
-            h = ('(%s) = %s' % (smHidCount, smCount + smHidCount)) if smHidCount else ''
-            self.logger.write('   * TOTAL TRACKS: %s%s' % (smCount, h))
+        self._addSitemapCsvRow(sitemap, smCount, smInCompCount, ignores)
+        if smCount:
+            self.logger.write('   * TOTAL TRACKS: %s' % smCount)
+
+        if ignores:
+            self.logger.write('   * IGNORED TRACKS: %s' % ignores)
 
 #___________________________________________________________________________________________________ _postAnalyze
+    # noinspection PyUnusedLocal
     def _postCount(self, stage):
+        count       = self.count
+        ignoreCount = self.ignoredCount
+        self.logger.write('TOTAL TRACKS: %s + (%s ignored) = %s' % (
+            count, ignoreCount, count + ignoreCount))
 
-        count    = self.count
-        hidCount = self.hiddenCount
-
-        h = ('(%s) = %s' % (hidCount, count + hidCount)) if hidCount else ''
-        self.logger.write('TOTAL TRACKS: %s%s' % (count, h))
+        SystemUtils.remove(self._unknownCsv.path)
+        if self._allTracks:
+            for uid, data in self._allTracks.items():
+                self._unknownCsv.createRow(uid=uid, fingerprint=data['fingerprint'])
+            self._unknownCsv.save()
 
         self._trackwayCsv.save()
         self._sitemapCsv.save()
+        self._orphanCsv.save()
 
 ####################################################################################################
 ####################################################################################################
 
 #___________________________________________________________________________________________________ _main_
 def _main_():
-    import argparse
-    import textwrap
-    dedent = textwrap.dedent
-    parser = argparse.ArgumentParser()
-
-    parser.description = dedent("""
-        When AnalyzerBase is run from the command line directly, it will output a report of the
-        load process to the log, which is used to verify that the tracks and structure being
-        loaded by analyzer classes matches the expected load counts based on data entry.""")
-
-    #-----------------------------------------------------------------------------------------------
-    # Optional Arguments
-    parser.add_argument(
-        '-lp', '--logPath', dest='logFolderPath', type=str, help=dedent("""
-            The path to a folder where you wish the log file to be stored where the report
-            data is written. If omitted the report data will only appear in stdout."""))
-
-    args = parser.parse_args()
-    c = StatusAnalyzer(logFolderPath=args.logFolderPath)
-    c.run()
+    StatusAnalyzer().run()
 
 #___________________________________________________________________________________________________ RUN MAIN
 if __name__ == '__main__':

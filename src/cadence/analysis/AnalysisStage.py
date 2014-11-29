@@ -154,7 +154,7 @@ class AnalysisStage(object):
         if self._sitemapCallback and not self._sitemapCallback(self, sitemap):
             return
 
-        for tw in sitemap.getTrackways():
+        for tw in self.owner.getTrackways(sitemap):
             self._analyzeTrackway(tw, sitemap)
 
 #___________________________________________________________________________________________________ _analyzeTrackway
@@ -164,8 +164,8 @@ class AnalysisStage(object):
         if self._trackwayCallback and not self._trackwayCallback(self, trackway, sitemap):
             return
 
-        for series in trackway.seriesList:
-            if series.isValid and series.isComplete:
+        for key, series in self.owner.getTrackwaySeries(trackway).items():
+            if series.isReady:
                 self._analyzeTrackSeries(series, trackway, sitemap)
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries

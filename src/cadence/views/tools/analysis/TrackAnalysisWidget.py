@@ -7,7 +7,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from pyglass.threading.FunctionRemoteExecutionThread import FunctionRemoteExecutionThread
 
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
-from cadence.analysis.integrity.DataIntegrityTester import DataIntegrityTester
 
 #___________________________________________________________________________________________________ TrackAnalysisWidget
 class TrackAnalysisWidget(PyGlassWidget):
@@ -35,8 +34,9 @@ class TrackAnalysisWidget(PyGlassWidget):
 #___________________________________________________________________________________________________ _runIntegrityTests
     @classmethod
     def _runIntegrityTests(cls):
-        tester = DataIntegrityTester()
-        return tester.run()
+        # tester = DataIntegrityTester()
+        # return tester.run()
+        pass
 
 #===================================================================================================
 #                                                                                 H A N D L E R S

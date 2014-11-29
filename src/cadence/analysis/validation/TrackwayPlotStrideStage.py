@@ -27,18 +27,18 @@ class TrackwayPlotStrideStage(AnalysisStage):
     def _analyzeTrackway(self, trackway, sitemap):
         pl = self.plot
 
-        self.owner.createFigure(trackway.fingerprint)
+        self.owner.createFigure(trackway.uid)
         pl.xlabel('Track Index')
         pl.ylabel('Stride Length (m)')
-        pl.title(trackway.fingerprint)
+        pl.title(trackway.name)
         pl.grid(True)
 
         super(TrackwayPlotStrideStage, self)._analyzeTrackway(trackway, sitemap)
 
         if trackway.cache.get('doStridePlot', False):
-            self._paths.append(self.owner.saveFigure(trackway.fingerprint))
-            self.logger.write('[PLOTTED]: Strides for %s' % trackway.fingerprint)
-        self.owner.closeFigure(trackway.fingerprint)
+            self._paths.append(self.owner.saveFigure(trackway.uid))
+            self.logger.write('[PLOTTED]: Strides for "%s"' % trackway.name)
+        self.owner.closeFigure(trackway.uid)
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackSeries(self, series, trackway, sitemap):
@@ -54,7 +54,7 @@ class TrackwayPlotStrideStage(AnalysisStage):
         lw    = []
         sizes = []
 
-        self.owner.getFigure(trackway.fingerprint)
+        self.owner.getFigure(trackway.uid)
         for track in series.tracks:
             entry = track.cache.get('strideData')
             if not entry:

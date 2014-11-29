@@ -107,8 +107,12 @@ class SitemapImporterRemoteThread(RemoteExecutionThread):
         model = Tracks_SiteMap.MASTER
         sitemap = model()
 
+        filename = data.get(SitemapCsvColumnEnum.FILENAME.name, u'')
+
+        sitemap.name         = Tracks_SiteMap.getNameFromFilename(filename)
+        sitemap.level        = Tracks_SiteMap.getLevelFromFilename(filename)
         sitemap.index        = int(data[SitemapCsvColumnEnum.INDEX.name])
-        sitemap.filename     = data.get(SitemapCsvColumnEnum.FILENAME.name, u'')
+        sitemap.filename     = filename
         sitemap.federalNorth = float(data.get(SitemapCsvColumnEnum.FEDERAL_NORTH.name, 0))
         sitemap.federalEast  = float(data.get(SitemapCsvColumnEnum.FEDERAL_EAST.name, 0))
         sitemap.left         = float(data.get(SitemapCsvColumnEnum.LEFT.name, 0))

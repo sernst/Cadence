@@ -130,10 +130,10 @@ class TracksDefault(PyGlassModelsDefault):
         return '-'.join([
             getattr(self, TrackPropEnum.SITE.name, ''),
             getattr(self, TrackPropEnum.LEVEL.name, ''),
+            getattr(self, TrackPropEnum.YEAR.name, ''),
             getattr(self, TrackPropEnum.SECTOR.name, ''),
             getattr(self, TrackPropEnum.TRACKWAY_TYPE.name, ''),
-            getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0'),
-            getattr(self, TrackPropEnum.YEAR.name, '') ])
+            getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0') ])
 
 #___________________________________________________________________________________________________ GS: snapshotData
     @property

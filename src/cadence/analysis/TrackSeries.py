@@ -3,9 +3,10 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
 from pyaid.config.ConfigsDict import ConfigsDict
 
-from pyaid.list.ListUtils import ListUtils
+from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #*************************************************************************************************** TrackSeries
 class TrackSeries(object):
@@ -15,14 +16,12 @@ class TrackSeries(object):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, **kwargs):
+    def __init__(self, trackway, firstTrackUid):
         """Creates a new instance of TrackSeries."""
-        self._fingerprint   = kwargs.get('fingerprint')
-        self._tracks        = kwargs.get('tracks', [])
-        self._incomplete    = kwargs.get('incomplete', [])
-        self._hiddenTracks  = kwargs.get('hiddenTracks', [])
-        self._sitemap       = kwargs.get('sitemap')
-        self._trackway      = kwargs.get('trackway')
+        self._trackway      = trackway
+        self._firstTrackUid = firstTrackUid
+        self._tracks        = []
+        self._incomplete    = []
         self._isValid       = True
         self._cache         = ConfigsDict()
 
@@ -61,7 +60,7 @@ class TrackSeries(object):
     @property
     def left(self):
         try:
-            return self._getFirstTrack().left
+            return self.tracks[0].left
         except Exception:
             return True
 
@@ -69,7 +68,7 @@ class TrackSeries(object):
     @property
     def pes(self):
         try:
-            return self._getFirstTrack().pes
+            return self.tracks[0].pes
         except Exception:
             return True
 
@@ -78,33 +77,12 @@ class TrackSeries(object):
     def count(self):
         return len(self.tracks) if self.tracks else 0
 
-
-#___________________________________________________________________________________________________ GS: totalCount
-    @property
-    def totalCount(self):
-        return self.count + \
-            (len(self.hiddenTracks) if self.hiddenTracks else 0) + \
-            (len(self.incompleteTracks) if self.incompleteTracks else 0)
-
 #___________________________________________________________________________________________________ GS: fingerprint
     @property
     def fingerprint(self):
-        if self._fingerprint:
-            return self._fingerprint
-        track = self._getFirstTrack()
+        track = self.tracks[0]
         if track:
             return track.trackSeriesFingerprint
-        return None
-    @fingerprint.setter
-    def fingerprint(self, value):
-        self._fingerprint = value
-
-#___________________________________________________________________________________________________ GS: trackwayFingerprint
-    @property
-    def trackwayFingerprint(self):
-        track = self._getFirstTrack()
-        if track:
-            return track.trackwayFingerprint
         return None
 
 #___________________________________________________________________________________________________ GS: isComplete
@@ -115,15 +93,7 @@ class TrackSeries(object):
 #___________________________________________________________________________________________________ GS: sitemap
     @property
     def sitemap(self):
-        if self._sitemap:
-            return self._sitemap
-        try:
-            return self.trackway.sitemap
-        except Exception:
-            return None
-    @sitemap.setter
-    def sitemap(self, value):
-        self._sitemap = value
+        return self.trackway.sitemap
 
 #___________________________________________________________________________________________________ GS: trackway
     @property
@@ -143,16 +113,6 @@ class TrackSeries(object):
     def tracks(self, value):
         self._tracks = value
 
-#___________________________________________________________________________________________________ GS: hiddenTracks
-    @property
-    def hiddenTracks(self):
-        if self._hiddenTracks is None:
-            self._hiddenTracks = []
-        return self._hiddenTracks
-    @hiddenTracks.setter
-    def hiddenTracks(self, value):
-        self._hiddenTracks = value
-
 #___________________________________________________________________________________________________ GS: incompleteTracks
     @property
     def incompleteTracks(self):
@@ -166,66 +126,23 @@ class TrackSeries(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ addTrack
-    def addTrack(self, track):
-        """addTrack doc..."""
-        if not track.isComplete:
-            self.incompleteTracks.append(track)
-        elif track.hidden:
-            self.hiddenTracks.append(track)
-        else:
+#___________________________________________________________________________________________________ load
+    def load(self):
+        """load doc..."""
+        if not self._firstTrackUid:
+            return True
+
+        model   = Tracks_Track.MASTER
+        session = self.trackway.mySession
+
+        nextTrackUid = self._firstTrackUid
+        while nextTrackUid:
+            track = session.query(model).filter(model.uid == nextTrackUid).first()
             self.tracks.append(track)
-
-#___________________________________________________________________________________________________ sort
-    def sort(self):
-        """sort doc..."""
-        if not self.tracks:
-            return
-
-        source = ListUtils.sortObjectList(self.tracks, 'number', reversed=True)
-        out = []
-
-        prev = None
-        for track in source:
-            if not track.next:
-                prev = track
-                break
-
-        if not prev:
-            return False
-
-        while prev:
-            out.append(prev)
-            prev = self._findPreviousTrack(prev, source)
-
-        if not len(out) == len(source):
-            self._isValid = True
-            # raise ValueError('Unable to sort tracks in series. Missing or invalid linkages.')
-
-        out.reverse()
-        self._tracks = out
+            if not track.isComplete:
+                self.incompleteTracks.append(track)
+            nextTrackUid = track.next
         return True
-
-#___________________________________________________________________________________________________ _getFirstTrack
-    def _getFirstTrack(self, allowHidden =True, allowIncomplete =True):
-        """_getFirstTrack doc..."""
-        if self.tracks:
-            return self.tracks[0]
-        if allowHidden and self.hiddenTracks:
-            return self.hiddenTracks[0]
-        if allowIncomplete and self.incompleteTracks:
-            return self.incompleteTracks[0]
-
-        return None
-
-#___________________________________________________________________________________________________ _findPreviousTrack
-    @classmethod
-    def _findPreviousTrack(cls, track, trackList):
-        """_findPreviousTrack doc..."""
-        for t in trackList:
-            if t.next == track.uid:
-                return t
-        return None
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

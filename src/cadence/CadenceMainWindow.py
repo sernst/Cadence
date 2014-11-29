@@ -7,6 +7,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from PySide import QtCore
 
 from pyaid.OsUtils import OsUtils
+from pyglass.alembic.AlembicUtils import AlembicUtils
 
 from pyglass.windows.PyGlassWindow import PyGlassWindow
 
@@ -109,7 +110,9 @@ class CadenceMainWindow(PyGlassWindow):
     def _initializeImpl(self, *args, **kwargs):
         # Initialize databases
         import cadence.models.tracks as tracks
-        print(tracks.DATABASE_URL)
+        headRevision = AlembicUtils.getHeadDatabaseRevision(databaseUrl=tracks.DATABASE_URL)
+        myRevision = AlembicUtils.getCurrentDatabaseRevision(databaseUrl=tracks.DATABASE_URL)
+        print('[TRACKS]: %s [HEAD %s]' % (myRevision, headRevision))
         super(CadenceMainWindow, self)._initializeImpl()
 
 #___________________________________________________________________________________________________ _firstShowImpl

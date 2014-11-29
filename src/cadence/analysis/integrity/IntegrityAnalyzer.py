@@ -28,16 +28,7 @@ class IntegrityAnalyzer(AnalyzerBase):
 
 #___________________________________________________________________________________________________ _main_
 def _main_():
-    import argparse
-    import textwrap
-    dedent = textwrap.dedent
-    parser = argparse.ArgumentParser()
-
-    parser.description = dedent("""
-        IntegrityAnalyzer does...""")
-
-    dit = IntegrityAnalyzer()
-    dit.run()
+    IntegrityAnalyzer().run()
 
 #___________________________________________________________________________________________________ RUN MAIN
 if __name__ == '__main__':

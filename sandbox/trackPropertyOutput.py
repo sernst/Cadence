@@ -11,8 +11,9 @@ from cadence.models.tracks.Tracks_Track import Tracks_Track
 model   = Tracks_Track.MASTER
 session = model.createSession()
 
-# result  = session.query(model).filter(model.next == 'track1l2i9-11m-PUWPXFEwGDdF').all()
-result  = session.query(model).filter(model.i == 'track1l2hr-Ek-Kf3UpiZYHm2L').all()
+result  = session.query(model).filter(model.uid == 'track1l2i9-11o-zTs69ewQDfdS').all()
 
 for track in result:
+    print('FINGERPRINT:', track.fingerprint)
+    print('PREVIOUS:', track.getPreviousTrack())
     print(DictUtils.prettyPrint(track.toDict()))
