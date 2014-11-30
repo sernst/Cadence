@@ -1,30 +1,28 @@
-# StatusAnalyzer.py
+# TrackwayLoadStage.py
 # (C)2014
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-
-from pyaid.ArgsUtils import ArgsUtils
 from pyaid.number.NumericUtils import NumericUtils
 from pyaid.system.SystemUtils import SystemUtils
 
-from cadence.analysis.AnalyzerBase import AnalyzerBase
+from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.CsvWriter import CsvWriter
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 
-#*************************************************************************************************** StatusAnalyzer
-class StatusAnalyzer(AnalyzerBase):
+
+#*************************************************************************************************** TrackwayLoadStage
+class TrackwayLoadStage(AnalysisStage):
     """A class for..."""
 
 #===================================================================================================
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, **kwargs):
-        """Creates a new instance of StatusAnalyzer."""
-        ArgsUtils.addIfMissing('loadHidden', True, kwargs)
-        super(StatusAnalyzer, self).__init__(**kwargs)
+    def __init__(self, key, owner, **kwargs):
+        """Creates a new instance of TrackwayLoadStage."""
+        super(TrackwayLoadStage, self).__init__(key, owner, **kwargs)
 
         self.count              = 0
         self.ignoredCount       = 0
@@ -34,7 +32,6 @@ class StatusAnalyzer(AnalyzerBase):
         self._orphanCsv         = None
         self._unknownCsv        = None
         self._allTracks         = None
-        self.createStage(key='count', sitemap=self._analyzeSitemap, post=self._postCount)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -44,18 +41,18 @@ class StatusAnalyzer(AnalyzerBase):
         csv = CsvWriter()
         csv.path = self.getPath('Unknown-Track-Report.csv')
         csv.addFields(
-            ('fingerprint', 'Fingerprint'),
-            ('uid', 'UID') )
+            ('uid', 'UID'),
+            ('fingerprint', 'Fingerprint') )
         self._unknownCsv = csv
 
         csv = CsvWriter()
         csv.path = self.getPath('Ignored-Track-Report.csv')
         csv.addFields(
+            ('uid', 'UID'),
             ('sitemap', 'Sitemap Name'),
             ('fingerprint', 'Fingerprint'),
             ('hidden', 'Hidden'),
-            ('orphan', 'Orphaned'),
-            ('uid', 'UID') )
+            ('orphan', 'Orphaned') )
         self._orphanCsv = csv
 
         smCsv = CsvWriter()
@@ -118,7 +115,7 @@ class StatusAnalyzer(AnalyzerBase):
         incomplete  = 0
         isReady     = True
 
-        for key, s in self.getTrackwaySeries(trackway).items():
+        for key, s in self.owner.getTrackwaySeries(trackway).items():
             isReady     = isReady and s.isReady
             count      += s.count
             incomplete += len(s.incompleteTracks)
@@ -145,7 +142,7 @@ class StatusAnalyzer(AnalyzerBase):
 
 #___________________________________________________________________________________________________ _analyzeSitemap
     # noinspection PyUnusedLocal
-    def _analyzeSitemap(self, stage, sitemap):
+    def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
         self.logger.write('%s' % sitemap)
 
@@ -185,7 +182,7 @@ class StatusAnalyzer(AnalyzerBase):
         #-------------------------------------------------------------------------------------------
         # TRACKWAYS
         #       Iterate over the trackways within the current site
-        for t in self.getTrackways(sitemap):
+        for t in self.owner.getTrackways(sitemap):
             stats = self._addTrackwayCsvRow(t)
 
             tc  = stats[0]
@@ -206,8 +203,7 @@ class StatusAnalyzer(AnalyzerBase):
             self.logger.write('   * IGNORED TRACKS: %s' % ignores)
 
 #___________________________________________________________________________________________________ _postAnalyze
-    # noinspection PyUnusedLocal
-    def _postCount(self, stage):
+    def _postAnalyze(self):
         count       = self.count
         ignoreCount = self.ignoredCount
         self.logger.write('TOTAL TRACKS: %s + (%s ignored) = %s' % (
@@ -222,14 +218,3 @@ class StatusAnalyzer(AnalyzerBase):
         self._trackwayCsv.save()
         self._sitemapCsv.save()
         self._orphanCsv.save()
-
-####################################################################################################
-####################################################################################################
-
-#___________________________________________________________________________________________________ _main_
-def _main_():
-    StatusAnalyzer().run()
-
-#___________________________________________________________________________________________________ RUN MAIN
-if __name__ == '__main__':
-    _main_()

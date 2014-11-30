@@ -37,7 +37,6 @@ class AnalyzerBase(object):
 
         self._cache         = ConfigsDict(kwargs.get('cacheData'))
         self._logger        = kwargs.get('logger')
-        self._loadHidden    = kwargs.get('loadHidden', False)
         self._tempPath      = kwargs.get('tempPath')
         self._stages        = []
         self._sitemaps      = []
@@ -102,11 +101,6 @@ class AnalyzerBase(object):
     @tempPath.setter
     def tempPath(self, value):
         self._tempPath = value
-
-#___________________________________________________________________________________________________ GS: loadHidden
-    @property
-    def loadHidden(self):
-        return self._loadHidden
 
 #===================================================================================================
 #                                                                                     P U B L I C
