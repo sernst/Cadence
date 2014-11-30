@@ -1,5 +1,5 @@
-# Vector3D.py
-# (C)2012
+# Vector2D.py
+# (C)2014
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -8,8 +8,8 @@ import math
 
 from pyaid.ArgsUtils import ArgsUtils
 
-#___________________________________________________________________________________________________ Vector3D
-class Vector3D(object):
+#___________________________________________________________________________________________________ Vector2D
+class Vector2D(object):
     """A class for..."""
 
 #===================================================================================================
@@ -17,16 +17,15 @@ class Vector3D(object):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, *args, **kwargs):
-        """Creates a new instance of Vector3D."""
-        if args and isinstance(args[0], list):
-            self._values = args[0] + []
-        elif args and isinstance(args[0], Vector3D):
-            self._values = [args[0].x, args[0].y, args[0].z]
+        """Creates a new instance of Vector2D."""
+        if args and isinstance(args[0], (list, tuple)):
+            self._values = list(args[0]) + []
+        elif args and isinstance(args[0], Vector2D):
+            self._values = [args[0].x, args[0].y]
         else:
-            x            = ArgsUtils.get('x', 0.0, kwargs, args, 0)
-            y            = ArgsUtils.get('y', 0.0, kwargs, args, 1)
-            z            = ArgsUtils.get('z', 0.0, kwargs, args, 2)
-            self._values = [x, y, z]
+            x = ArgsUtils.get('x', 0.0, kwargs, args, 0)
+            y = ArgsUtils.get('y', 0.0, kwargs, args, 1)
+            self._values = [x, y]
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -41,35 +40,50 @@ class Vector3D(object):
     def magnitudeSquared(self):
         mag = 0.0
         for v in self._values:
-            mag += v*v
+            mag += float(v)*float(v)
         return mag
 
 #___________________________________________________________________________________________________ GS: x
     @property
     def x(self):
-        return self._values[0]
+        return float(self._values[0])
     @x.setter
     def x(self, value):
-        self._values[0] = value
+        self._values[0] = float(value)
 
 #___________________________________________________________________________________________________ GS: y
     @property
     def y(self):
-        return self._values[1]
+        return float(self._values[1])
     @y.setter
     def y(self, value):
-        self._values[1] = value
+        self._values[1] = float(value)
 
 #___________________________________________________________________________________________________ GS: z
     @property
     def z(self):
-        return self._values[2]
+        return float(self._values[2])
     @z.setter
     def z(self, value):
-        self._values[2] = value
+        self._values[2] = float(value)
 
 #===================================================================================================
 #                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ dot
+    def dot(self, vec =None):
+        """dot doc..."""
+        if not vec:
+            vec = self
+        return self.x*vec.x + self.y*vec.y
+
+#___________________________________________________________________________________________________ angleBetween
+    def angleBetween(self, vec2D, asDegrees =False):
+        """angleBetween doc..."""
+        angle = math.acos(self.dot(vec2D)/(self.magnitude*vec2D.magnitude))
+        if asDegrees:
+            return 180/math.pi*angle
+        return angle
 
 #___________________________________________________________________________________________________ updateValues
     def updateValues(self, *args, **kwargs):
@@ -81,15 +95,18 @@ class Vector3D(object):
         if y is not None:
             self.y = y
 
-        z = ArgsUtils.get('z', None, kwargs, args, 2)
-        if z is not None:
-            self.z = z
-
         return True
 
+#___________________________________________________________________________________________________ setMagnitude
+    def setMagnitude(self, length =1.0):
+        """setMagnitude doc..."""
+        mag = math.sqrt(self.x*self.x + self.y*self.y)
+        self.x *= length/mag
+        self.y *= length/mag
+
 #___________________________________________________________________________________________________ normalize
-    def normalize(self, length =1.0):
-        pass
+    def normalize(self):
+        self.setMagnitude(1.0)
 
 #___________________________________________________________________________________________________ toList
     def toList(self):
@@ -99,17 +116,16 @@ class Vector3D(object):
     def toSerialDict(self):
         return {
             'objectType':self.__class__.__name__,
-            'args':self.toList()
-        }
+            'args':self.toList() }
 
 #___________________________________________________________________________________________________ clone
     def clone(self):
-        return Vector3D(self)
+        return Vector2D(self)
 
 #___________________________________________________________________________________________________ fromSerialDict
     @classmethod
     def fromSerialDict(cls, value):
-        return Vector3D(*value['args'])
+        return Vector2D(*value['args'])
 
 #___________________________________________________________________________________________________ fromConfig
     @classmethod
@@ -118,13 +134,4 @@ class Vector3D(object):
         out    = []
         for coordinate in source:
             out.append(float(coordinate.strip()))
-        return Vector3D(*out)
-
-#===================================================================================================
-#                                                                               P R O T E C T E D
-
-#___________________________________________________________________________________________________ _validateTargetPosition
-    def _validateTargetPosition(self):
-        """Doc..."""
-        return False
-
+        return Vector2D(*out)

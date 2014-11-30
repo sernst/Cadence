@@ -1,4 +1,4 @@
-# DeviationsStage.py
+# LengthWidthStage.py
 # (C)2014
 # Scott Ernst
 
@@ -13,8 +13,8 @@ from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.CsvWriter import CsvWriter
 
 
-#*************************************************************************************************** DeviationsStage
-class DeviationsStage(AnalysisStage):
+#*************************************************************************************************** LengthWidthStage
+class LengthWidthStage(AnalysisStage):
     """A class for..."""
 
 #===================================================================================================
@@ -22,8 +22,8 @@ class DeviationsStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
-        """Creates a new instance of DeviationsStage."""
-        super(DeviationsStage, self).__init__(key, owner, **kwargs)
+        """Creates a new instance of LengthWidthStage."""
+        super(LengthWidthStage, self).__init__(key, owner, **kwargs)
         self._paths = []
 
 #===================================================================================================

@@ -7,7 +7,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
-from cadence.analysis.integrity.DeviationsStage import DeviationsStage
+from cadence.analysis.integrity.RotationStage import RotationStage
+from cadence.analysis.integrity.LengthWidthStage import LengthWidthStage
 from cadence.analysis.AnalyzerBase import AnalyzerBase
 
 #___________________________________________________________________________________________________ IntegrityAnalyzer
@@ -21,15 +22,12 @@ class IntegrityAnalyzer(AnalyzerBase):
     def __init__(self, **kwargs):
         """Creates a new instance of IntegrityAnalyzer."""
         super(IntegrityAnalyzer, self).__init__(**kwargs)
-        self.addStage(DeviationsStage('deviations', self))
+        self.addStage(LengthWidthStage('lengthWidth', self))
+        self.addStage(RotationStage('rotation', self))
 
 ####################################################################################################
 ####################################################################################################
-
-#___________________________________________________________________________________________________ _main_
-def _main_():
-    IntegrityAnalyzer().run()
 
 #___________________________________________________________________________________________________ RUN MAIN
 if __name__ == '__main__':
-    _main_()
+    IntegrityAnalyzer().run()
