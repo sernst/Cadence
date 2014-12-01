@@ -1,4 +1,4 @@
-# IntegrityAnalyzer.py
+# ComparisonAnalyzer.py
 # (C)2014
 # Scott Ernst
 
@@ -7,12 +7,12 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
-from cadence.analysis.integrity.RotationStage import RotationStage
-from cadence.analysis.integrity.LengthWidthStage import LengthWidthStage
+from cadence.analysis.comparison.RotationStage import RotationStage
+from cadence.analysis.comparison.LengthWidthStage import LengthWidthStage
 from cadence.analysis.AnalyzerBase import AnalyzerBase
 
-#___________________________________________________________________________________________________ IntegrityAnalyzer
-class IntegrityAnalyzer(AnalyzerBase):
+#___________________________________________________________________________________________________ ComparisonAnalyzer
+class ComparisonAnalyzer(AnalyzerBase):
     """A class for..."""
 
 #===================================================================================================
@@ -20,8 +20,8 @@ class IntegrityAnalyzer(AnalyzerBase):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
-        """Creates a new instance of IntegrityAnalyzer."""
-        super(IntegrityAnalyzer, self).__init__(**kwargs)
+        """Creates a new instance of ComparisonAnalyzer."""
+        super(ComparisonAnalyzer, self).__init__(**kwargs)
         self.addStage(LengthWidthStage('lengthWidth', self))
         self.addStage(RotationStage('rotation', self))
 
@@ -30,4 +30,4 @@ class IntegrityAnalyzer(AnalyzerBase):
 
 #___________________________________________________________________________________________________ RUN MAIN
 if __name__ == '__main__':
-    IntegrityAnalyzer().run()
+    ComparisonAnalyzer().run()

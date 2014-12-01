@@ -5,14 +5,15 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import math
+
 from pyaid.number.NumericUtils import NumericUtils
 
 from pyaid.string.StringUtils import StringUtils
-from pyaid.time.TimeUtils import TimeUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.CsvWriter import CsvWriter
 from cadence.util.math2D.Vector2D import Vector2D
+
 
 
 #*************************************************************************************************** RotationStage
@@ -25,7 +26,11 @@ class RotationStage(AnalysisStage):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of RotationStage."""
-        super(RotationStage, self).__init__(key, owner, **kwargs)
+        super(RotationStage, self).__init__(
+            key, owner,
+            label='Rotation Comparison',
+            **kwargs)
+
         self._paths = []
         self._diffs = []
         self._csv   = None
@@ -36,10 +41,6 @@ class RotationStage(AnalysisStage):
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
         """_preAnalyze doc..."""
-        self.logger.write('\n'.join([
-            'ROTATION INTEGRITY ANALYSIS',
-            'Run on %s' % TimeUtils.toZuluFormat().replace('T', ' at ') ]))
-
         self._diffs = []
 
         csv   = CsvWriter()
@@ -50,6 +51,7 @@ class RotationStage(AnalysisStage):
             ('delta', 'Difference'),
             ('entered', 'Entered'),
             ('measured', 'Measured'),
+            ('deviation', 'Deviation (sigmas)'),
             ('relative', 'Relative'),
             ('axis', 'Axis'),
             ('axisPairing', 'Axis Pairing'))
@@ -109,26 +111,50 @@ class RotationStage(AnalysisStage):
 
             rmDeg = 180.0/math.pi*rm
 
-            diff = abs(track.rotation - rmDeg)
-            self._diffs.append(diff)
+            measuredUnc = 5.0/180.0*math.pi
+            measuredUnc += 0.03/math.sqrt(1 - math.pow(strideLine.x, 2))
+            measuredUncDeg = 180.0/math.pi*measuredUnc
+            measuredDeg = NumericUtils.toValueUncertainty(rmDeg, measuredUncDeg)
 
-            self._csv.createRow(
+            enteredUncDeg = track.rotationUncertainty
+            enteredUnc = math.pi/180.0*enteredUncDeg
+            enteredDeg = NumericUtils.toValueUncertainty(track.rotation, track.rotationUncertainty)
+
+            diffDeg = NumericUtils.toValueUncertainty(
+                abs(enteredDeg.value - measuredDeg.value),
+                enteredUncDeg + measuredUncDeg)
+
+            self._diffs.append(diffDeg.value)
+
+            deviation = diffDeg.value/diffDeg.uncertainty
+
+            data = dict(
                 uid=track.uid,
                 fingerprint=track.fingerprint,
-                entered=NumericUtils.roundToOrder(track.rotation, -2),
-                measured=NumericUtils.roundToOrder(rmDeg, -2),
-                delta=NumericUtils.roundToOrder(diff, -2),
+                entered=enteredDeg.label,
+                measured=measuredDeg.label,
+                delta=NumericUtils.roundToOrder(diffDeg.value, -2),
+                deviation=NumericUtils.roundToSigFigs(deviation, 3),
                 relative=NumericUtils.roundToOrder(track.rotationMeasured, -2),
                 axis=NumericUtils.roundToOrder(180.0/math.pi*rAxis, -2),
                 axisPairing='PREV' if pt else 'NEXT')
+            self._csv.createRow(**data)
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
         """_postAnalyze doc..."""
         self._csv.save()
 
-        self._paths.append(self._makePlot('Rotation', self._diffs, histRange=[0, 360]))
-        self._paths.append(self._makePlot('Rotation', self._diffs, histRange=[0, 360], isLog=True))
+        self._paths.append(self._makePlot(
+            label='Rotation Differences',
+            data=self._diffs,
+            histRange=[0, 360]))
+
+        self._paths.append(self._makePlot(
+            label='Rotation Differences',
+            data=self._diffs,
+            histRange=[0, 360],
+            isLog=True))
 
         self.mergePdfs(self._paths)
         self._paths = []
@@ -142,7 +168,7 @@ class RotationStage(AnalysisStage):
 
         pl.hist(data, binCount, range=histRange, log=isLog, facecolor=color, alpha=0.75)
         pl.title('%s Distribution%s' % (label, ' (log)' if isLog else ''))
-        pl.xlabel('Difference')
+        pl.xlabel('Difference (Degrees)')
         pl.ylabel('Frequency')
         pl.grid(True)
 

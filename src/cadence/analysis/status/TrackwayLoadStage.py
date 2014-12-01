@@ -22,7 +22,10 @@ class TrackwayLoadStage(AnalysisStage):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of TrackwayLoadStage."""
-        super(TrackwayLoadStage, self).__init__(key, owner, **kwargs)
+        super(TrackwayLoadStage, self).__init__(
+            key, owner,
+            label='Database Load',
+            **kwargs)
 
         self.count              = 0
         self.ignoredCount       = 0

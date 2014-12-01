@@ -26,7 +26,10 @@ class StrideLengthStage(AnalysisStage):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of StrideLengthStage."""
-        super(StrideLengthStage, self).__init__(key, owner, **kwargs)
+        super(StrideLengthStage, self).__init__(
+            key, owner,
+            label='Stride Length',
+            **kwargs)
         self._paths = []
 
 #===================================================================================================
@@ -128,17 +131,16 @@ class StrideLengthStage(AnalysisStage):
         """_postAnalyze doc..."""
         self._paths = []
 
-        outputHeader = [
-            'STRIDE LENGTH ANALYSIS',
-            'Run on %s' % TimeUtils.toZuluFormat().replace('T', ' at '),
-            'Processed %s tracks' % len(self.entries),
-            '%s tracks with no stride data' % self.noData]
-        self.logger.write('\n'.join(outputHeader))
-
         self.logger.write('='*80 + '\nFRACTIONAL ERROR (Measured vs Entered)')
         self._process()
 
         self.mergePdfs(self._paths)
+
+#___________________________________________________________________________________________________ _getFooterArgs
+    def _getFooterArgs(self):
+        return [
+            'Processed %s tracks' % len(self.entries),
+            '%s tracks with no stride data' % self.noData]
 
 #___________________________________________________________________________________________________ _process
     def _process(self):
@@ -148,7 +150,8 @@ class StrideLengthStage(AnalysisStage):
         for entry in self.entries:
             errors.append(entry['fractional'])
 
-        res = self.getMeanAndDeviation(errors, 'Fractional Stride Error')
+        res = NumericUtils.getMeanAndDeviation(errors)
+        self.logger.write('Fractional Stride Error %s' % res.label)
 
         label = 'Fractional Stride Errors'
         d     = errors
@@ -173,13 +176,13 @@ class StrideLengthStage(AnalysisStage):
             ('value', 'Value (m)'))
 
         for entry in self.entries:
-            sigmaMag = 0.03 + res.std
+            sigmaMag = 0.03 + res.uncertainty
             sigmaCount = NumericUtils.roundToOrder(abs(entry['delta']/sigmaMag), -2)
             entry['sigmaDev'] = sigmaCount
             if sigmaCount >= 2.0:
                 count += 1
                 track = entry['track']
-                valuePU = self.toValueUncertainty(abs(entry['delta']), entry['error'])
+                valuePU = NumericUtils.toValueUncertainty(abs(entry['delta']), entry['error'])
 
                 csv.addRow({
                     'fingerprint':track.fingerprint,
@@ -187,7 +190,7 @@ class StrideLengthStage(AnalysisStage):
                     'measured':NumericUtils.roundToSigFigs(entry['measured'], 3),
                     'entered':NumericUtils.roundToSigFigs(entry['distance'], 3),
                     'dev':sigmaCount,
-                    'value':valuePU.label.encode('latin-1')})
+                    'value':valuePU.label})
 
                 self.logger.write('  * %s%s%s%s%s' % (
                     StringUtils.extendToLength(track.fingerprint, 32),

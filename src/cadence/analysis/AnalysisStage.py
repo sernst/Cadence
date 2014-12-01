@@ -5,13 +5,12 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import namedtuple
-import numpy as np
+
 from PyPDF2.merger import PdfFileMerger
 from PyPDF2.pdf import PdfFileReader
-
 from pyaid.config.ConfigsDict import ConfigsDict
-from pyaid.number.NumericUtils import NumericUtils
-from pyaid.string.StringUtils import StringUtils
+from pyaid.time.TimeUtils import TimeUtils
+
 
 try:
     import matplotlib.pyplot as plt
@@ -28,12 +27,14 @@ class AnalysisStage(object):
     VALUE_UNCERTAINTY = namedtuple('VALUE_UNCERTAINTY', ['mean', 'std', 'label'])
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, key, owner, **kwargs):
+    def __init__(self, key, owner, label =None, **kwargs):
         """Creates a new instance of AnalysisStage."""
         self.owner = owner
 
         self._key   = key
         self._cache = ConfigsDict()
+        self._label = label if label else self.__class__.__name__
+        self._startTime = None
 
         self._analyzeCallback       = kwargs.get('analyze')
         self._preStageCallback      = kwargs.get('pre')
@@ -89,9 +90,13 @@ class AnalysisStage(object):
 #___________________________________________________________________________________________________ analyze
     def analyze(self):
         """analyze doc..."""
+
+        self._startTime = TimeUtils.getNowDatetime()
+        self._writeHeader()
         self._preAnalyze()
         self._analyze()
         self._postAnalyze()
+        self._writeFooter()
 
 #___________________________________________________________________________________________________ mergePdfs
     def mergePdfs(self, paths, fileName =None):
@@ -105,39 +110,30 @@ class AnalysisStage(object):
             fileName = '%s-Report.pdf' % self.__class__.__name__
         merger.write(file(self.getPath(fileName), 'wb'))
 
-#___________________________________________________________________________________________________ getMeanAndDeviation
-    def getMeanAndDeviation(self, values, displayLabel =None):
-        """getMeanAndDeviation doc..."""
-        mean    = np.mean(values, dtype=np.float64)
-        std     = np.std(values, dtype=np.float64)
-        out     = self.toValueUncertainty(mean, std)
-        if displayLabel:
-            self.logger.write('%s: %s' % (displayLabel, out.label))
-        return out
-
-#___________________________________________________________________________________________________ toValueUncertainty
-    @classmethod
-    def toValueUncertainty(cls, value, uncertainty):
-        """toValueUncertaintyString doc..."""
-        uncertainty = NumericUtils.roundToSigFigs(uncertainty, 1)
-        value       = NumericUtils.roundToOrder(value, NumericUtils.orderOfLeastSigFig(uncertainty))
-        return cls.VALUE_UNCERTAINTY(
-            value, uncertainty, '%s %s %s' % (value, StringUtils.unichr(0x00B1), uncertainty))
-
 #===================================================================================================
 #                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _writeHeader
+    def _writeHeader(self):
+        """_writeHeader doc..."""
+
+        self.logger.write('\n' + 80*'*')
+        self.logger.write('\n'.join([
+            '[STARTED]: %s ANALYSIS STAGE' % self._label.upper(),
+            'Run on %s' % TimeUtils.toZuluFormat(self._startTime).replace('T', ' at ')]
+            + self._getHeaderArgs()))
+
+#___________________________________________________________________________________________________ _getHeaderArgs
+    # noinspection PyMethodMayBeStatic
+    def _getHeaderArgs(self):
+        """_getHeaderArgs doc..."""
+        return []
 
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
         """_preAnalyze doc..."""
         if self._preStageCallback:
             self._preStageCallback(self)
-
-#___________________________________________________________________________________________________ _postAnalyze
-    def _postAnalyze(self):
-        """_postAnalyze doc..."""
-        if self._postStageCallback:
-            self._postStageCallback(self)
 
 #___________________________________________________________________________________________________ _analyze
     def _analyze(self):
@@ -183,6 +179,32 @@ class AnalysisStage(object):
         """_analyzeTrack doc..."""
         if self._trackCallback:
             self._trackCallback(self, track, series, trackway, sitemap)
+
+#___________________________________________________________________________________________________ _postAnalyze
+    def _postAnalyze(self):
+        """_postAnalyze doc..."""
+        if self._postStageCallback:
+            self._postStageCallback(self)
+
+#___________________________________________________________________________________________________ _writeFooter
+    def _writeFooter(self):
+        """_writeHeader doc..."""
+
+        elapsed = TimeUtils.getElapsedTime(
+            startDateTime=self._startTime,
+            endDateTime=TimeUtils.getNowDatetime(),
+            toUnit=TimeUtils.MILLISECONDS)
+
+        self.logger.write('\n' + 80*'*')
+        self.logger.write('\n'.join([
+            '[COMPLETE]: %s ANALYSIS STAGE' % self._label.upper(),
+            'Elapsed Time: %s' % TimeUtils.toPrettyElapsedTime(elapsed)] + self._getFooterArgs()))
+
+#___________________________________________________________________________________________________ _getFooterArgs
+    # noinspection PyMethodMayBeStatic
+    def _getFooterArgs(self):
+        """_getHeaderArgs doc..."""
+        return []
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

@@ -7,10 +7,10 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import numpy as np
 from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
-from pyaid.time.TimeUtils import TimeUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.CsvWriter import CsvWriter
+
 
 
 #*************************************************************************************************** LengthWidthStage
@@ -23,7 +23,10 @@ class LengthWidthStage(AnalysisStage):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of LengthWidthStage."""
-        super(LengthWidthStage, self).__init__(key, owner, **kwargs)
+        super(LengthWidthStage, self).__init__(
+            key, owner,
+            label='Length & Width Comparison',
+            **kwargs)
         self._paths = []
 
 #===================================================================================================
@@ -91,14 +94,6 @@ class LengthWidthStage(AnalysisStage):
         """_postAnalyze doc..."""
         self._paths = []
 
-        outputHeader = [
-            'DEVIATION INTEGRITY ANALYSIS',
-            'Run on %s' % TimeUtils.toZuluFormat().replace('T', ' at '),
-            'Processed %s tracks' % len(self.entries),
-            '%s tracks with no measured width' % self.cache.get('noWidths'),
-            '%s tracks with no measured length' % self.cache.get('noLengths') ]
-        self.logger.write('\n'.join(outputHeader))
-
         self.logger.write('='*80 + '\nFRACTIONAL ERROR (Measured vs Entered)')
         self._process('Error', 'wDev', 'lDev')
 
@@ -106,6 +101,13 @@ class LengthWidthStage(AnalysisStage):
         self._process('Uncertainty Error', 'wDelta', 'wDelta', absoluteOnly=True)
 
         self.mergePdfs(self._paths)
+
+#___________________________________________________________________________________________________ _getFooterArgs
+    def _getFooterArgs(self):
+        return [
+            'Processed %s tracks' % len(self.entries),
+            '%s tracks with no measured width' % self.cache.get('noWidths'),
+            '%s tracks with no measured length' % self.cache.get('noLengths') ]
 
 #___________________________________________________________________________________________________ _process
     def _process(self, label, widthKey, lengthKey, absoluteOnly =False):
@@ -132,8 +134,10 @@ class LengthWidthStage(AnalysisStage):
             ('lengths', ls, 'Length', 'r')]
 
 
-        wRes = self.getMeanAndDeviation(ws, 'Width %ss' % label)
-        lRes = self.getMeanAndDeviation(ls, 'Length %ss' % label)
+        wRes = NumericUtils.getMeanAndDeviation(ws)
+        self.logger.write('Width %ss' % wRes.label)
+        lRes = NumericUtils.getMeanAndDeviation(ls)
+        self.logger.write('Length %ss' % lRes.label)
 
         for data in plotList:
             if not absoluteOnly:
@@ -168,8 +172,8 @@ class LengthWidthStage(AnalysisStage):
 
         count = 0
         for entry in self.entries:
-            widthDevSigma  = NumericUtils.roundToOrder(abs(entry.get(widthKey, 0.0)/wRes.std), -2)
-            lengthDevSigma = NumericUtils.roundToOrder(abs(entry.get(lengthKey, 0.0)/lRes.std), -1)
+            widthDevSigma  = NumericUtils.roundToOrder(abs(entry.get(widthKey, 0.0)/wRes.uncertainty), -2)
+            lengthDevSigma = NumericUtils.roundToOrder(abs(entry.get(lengthKey, 0.0)/lRes.uncertainty), -1)
             if widthDevSigma > 2.0 or lengthDevSigma > 2.0:
                 count += 1
                 track = entry['track']

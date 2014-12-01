@@ -17,7 +17,10 @@ class TrackwayPlotStrideStage(AnalysisStage):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of TrackwayPlotStrideStage."""
-        super(TrackwayPlotStrideStage, self).__init__(key, owner, **kwargs)
+        super(TrackwayPlotStrideStage, self).__init__(
+            key, owner,
+            label='Stride Length Plotting',
+            **kwargs)
         self._paths = []
 
 #===================================================================================================

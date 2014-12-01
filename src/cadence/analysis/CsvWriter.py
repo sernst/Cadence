@@ -78,8 +78,11 @@ class CsvWriter(object):
                 writer.writeheader()
                 for row in self.rows:
                     result = dict()
-                    for k, v in row.items():
-                        result[self._fields[k]] = v
+                    for key, name in self._fields.items():
+                        value = row.get(key, '')
+                        if StringUtils.isTextType(value):
+                            value = value.encode('latin-1')
+                        result[name] = value
                     writer.writerow(result)
             return True
         except Exception:
