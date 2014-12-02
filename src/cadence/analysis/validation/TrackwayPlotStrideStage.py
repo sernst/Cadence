@@ -4,7 +4,12 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import re
+
+from pyaid.color.ColorValue import ColorValue
+
 from cadence.analysis.AnalysisStage import AnalysisStage
+
 
 
 #*************************************************************************************************** TrackwayPlotStrideStage
@@ -40,7 +45,6 @@ class TrackwayPlotStrideStage(AnalysisStage):
 
         if trackway.cache.get('doStridePlot', False):
             self._paths.append(self.owner.saveFigure(trackway.uid))
-            self.logger.write('[PLOTTED]: Strides for "%s"' % trackway.name)
         self.owner.closeFigure(trackway.uid)
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
@@ -53,9 +57,8 @@ class TrackwayPlotStrideStage(AnalysisStage):
         pl    = self.plot
         x     = []
         y     = []
-        cols  = []
+        error = []
         lw    = []
-        sizes = []
 
         self.owner.getFigure(trackway.uid)
         for track in series.tracks:
@@ -63,19 +66,31 @@ class TrackwayPlotStrideStage(AnalysisStage):
             if not entry:
                 continue
 
-            x.append(track.number)
-            y.append(entry['distance'])
-            cols.append((0 if entry['sigmaDev'] < 2.0 else 1.0, 0, 0))
+            try:
+                xv = int(track.number)
+            except Exception:
+                xv = int(re.sub(r'[^0-9]+', '', track.number))
+
+            x.append(xv)
+            y.append(entry['entered'].value)
+            error.append(entry['entered'].uncertainty)
             lw.append(2.0)
-            sizes.append(30.0)
 
         if len(x) < 2:
             return
 
         trackway.cache.set('doStridePlot', True)
 
-        # sizes = 20.0 + 100.0*np.array(sizes)/min(1.0, max(*sizes))
-        pl.scatter(x, y, s=sizes, c=cols, marker='|' if series.pes else '_', linewidths=lw, alpha=0.5)
+        if series.left and series.pes:
+            color = ColorValue('blue')
+        elif series.pes:
+            color = ColorValue('sky blue')
+        elif series.left:
+            color = ColorValue('green')
+        else:
+            color = ColorValue('light green')
+
+        pl.errorbar(x, y, yerr=error, fmt='o', color=color.web)
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):

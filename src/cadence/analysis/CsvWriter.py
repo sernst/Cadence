@@ -19,9 +19,10 @@ class CsvWriter(object):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
         """Creates a new instance of CsvWriter."""
-        self._fields    = OrderedDict()
-        self.path       = kwargs.get('path')
-        self.rows       = kwargs.get('rows', [])
+        self.path               = kwargs.get('path')
+        self.rows               = kwargs.get('rows', [])
+        self.autoIndexFieldName = kwargs.get('autoIndexFieldName', None)
+        self._fields            = OrderedDict()
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -72,12 +73,22 @@ class CsvWriter(object):
 #___________________________________________________________________________________________________ save
     def save(self):
         """save doc..."""
+        index = 0
+        names = self.fieldNames
+        if self.autoIndexFieldName:
+            names.insert(0, self.autoIndexFieldName)
+
         try:
             with open(self.path, 'wb') as f:
-                writer = csv.DictWriter(f, fieldnames=self.fieldNames, dialect=csv.excel)
+                writer = csv.DictWriter(f, fieldnames=names, dialect=csv.excel)
                 writer.writeheader()
                 for row in self.rows:
                     result = dict()
+
+                    if self.autoIndexFieldName:
+                        index += 1
+                        result[self.autoIndexFieldName] = index
+
                     for key, name in self._fields.items():
                         value = row.get(key, '')
                         if StringUtils.isTextType(value):

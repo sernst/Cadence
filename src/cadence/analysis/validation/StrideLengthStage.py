@@ -9,7 +9,6 @@ import math
 import numpy as np
 from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
-from pyaid.time.TimeUtils import TimeUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.CsvWriter import CsvWriter
@@ -31,6 +30,7 @@ class StrideLengthStage(AnalysisStage):
             label='Stride Length',
             **kwargs)
         self._paths = []
+        self._csv   = None
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -56,6 +56,18 @@ class StrideLengthStage(AnalysisStage):
         """_preDeviations doc..."""
         self.cache.set('entries', [])
         self.cache.set('noData', 0)
+
+        csv = CsvWriter()
+        csv.path = self.getPath('Stride-Length-Deviations.csv', isFile=True)
+        csv.autoIndexFieldName = 'Index'
+        csv.addFields(
+            ('uid', 'UID'),
+            ('fingerprint', 'Fingerprint'),
+            ('entered', 'Entered (m)'),
+            ('measured', 'Measured (m)'),
+            ('dev', 'Deviation (sigma)'),
+            ('delta', 'Fractional Error (%)'))
+        self._csv = csv
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackSeries(self, series, trackway, sitemap):
@@ -107,21 +119,25 @@ class StrideLengthStage(AnalysisStage):
             errorNextTrackZ = nextUncertainty*zDelta/distance
             distanceError   = errorNextTrackX + errorTrackX + errorNextTrackZ + errorTrackZ
 
-            delta      = distance - stride
-            fractional = delta/distance
+            entered = NumericUtils.toValueUncertainty(distance, distanceError)
+            measured = NumericUtils.toValueUncertainty(stride, 0.06)
+
+            delta      = entered.value - measured.value
+            deviation  = delta/(measured.uncertainty + entered.uncertainty)
+            fractional = delta/measured.value
 
             entry = dict(
                 track=track,
-                delta=delta,
                     # Absolute difference between calculated and measured distance
-                distance=distance,
+                delta=delta,
                     # Calculated distance from AI-based data entry
-                measured=stride,
-                    # Distance measured in the field
-                error=distanceError,
-                    # Uncertainty in calculated distance
-                fractional=fractional)
+                entered=entered,
+                    # Measured distance from the catalog
+                measured=measured,
                     # Fractional error between calculated and measured distance
+                fractional=fractional,
+                    # Sigma deviations between
+                deviation=deviation)
 
             self.entries.append(entry)
             track.cache.set('strideData', entry)
@@ -163,49 +179,33 @@ class StrideLengthStage(AnalysisStage):
         self._paths.append(self._makePlot('Absolute ' + label, d, histRange=(0.0, 1.0)))
         self._paths.append(self._makePlot('Absolute ' + label, d, isLog=True, histRange=(0.0, 1.0)))
 
-        count = 0
-
-        csv = CsvWriter()
-        csv.path = self.getPath('Stride-Length-Deviations.csv', isFile=True)
-        csv.addFields(
-            ('uid', 'UID'),
-            ('fingerprint', 'Fingerprint'),
-            ('entered', 'Entered (m)'),
-            ('measured', 'Measured (m)'),
-            ('dev', 'Deviation'),
-            ('value', 'Value (m)'))
+        highDeviationCount = 0
 
         for entry in self.entries:
             sigmaMag = 0.03 + res.uncertainty
             sigmaCount = NumericUtils.roundToOrder(abs(entry['delta']/sigmaMag), -2)
-            entry['sigmaDev'] = sigmaCount
-            if sigmaCount >= 2.0:
-                count += 1
-                track = entry['track']
-                valuePU = NumericUtils.toValueUncertainty(abs(entry['delta']), entry['error'])
+            entry['meanDeviation'] = sigmaCount
+            entry['highMeanDeviation'] = False
 
-                csv.addRow({
+            if sigmaCount >= 2.0:
+                entry['highMeanDeviation'] = True
+                highDeviationCount += 1
+                track = entry['track']
+                delta = NumericUtils.roundToSigFigs(100.0*abs(entry['delta']), 3)
+
+                self._csv.addRow({
                     'fingerprint':track.fingerprint,
                     'uid':track.uid,
-                    'measured':NumericUtils.roundToSigFigs(entry['measured'], 3),
-                    'entered':NumericUtils.roundToSigFigs(entry['distance'], 3),
+                    'measured':entry['measured'].label,
+                    'entered':entry['entered'].label,
                     'dev':sigmaCount,
-                    'value':valuePU.label})
+                    'delta':delta})
 
-                self.logger.write('  * %s%s%s%s%s' % (
-                    StringUtils.extendToLength(track.fingerprint, 32),
-                    StringUtils.extendToLength('%s' % sigmaCount, 16),
-                    StringUtils.extendToLength('(%s m)' % valuePU.label, 20),
-                    StringUtils.extendToLength('[%s <-> %s]' % (
-                        NumericUtils.roundToSigFigs(entry['distance'], 3),
-                        NumericUtils.roundToSigFigs(entry['measured'], 3)), 20),
-                    track.uid))
+        if not self._csv.save():
+            self.logger.write('[ERROR]: Failed to save CSV file %s' % self._csv.path)
 
-        if not csv.save():
-            self.logger.write('[ERROR]: Failed to save CSV file %s' % csv.path)
-
-        percentage = NumericUtils.roundToOrder(100.0*float(count)/float(len(self.entries)), -2)
-        self.logger.write('%s significant %ss (%s%%)' % (count, label.lower(), percentage))
+        percentage = NumericUtils.roundToOrder(100.0*float(highDeviationCount)/float(len(self.entries)), -2)
+        self.logger.write('%s significant %ss (%s%%)' % (highDeviationCount, label.lower(), percentage))
         if percentage > (100.0 - 95.45):
             self.logger.write(
                 '[WARNING]: Large deviation count exceeds normal distribution expectations.')
