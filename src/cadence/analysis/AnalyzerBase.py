@@ -133,6 +133,19 @@ class AnalyzerBase(object):
         """createOutputPath doc..."""
         return FileUtils.createPath(self.analysisRootPath, self.__class__.__name__, *args, **kwargs)
 
+#___________________________________________________________________________________________________ getTempFilePath
+    def getTempFilePath(self, name =None, extension =None, *args):
+        """getTempFilePath doc..."""
+        if not name:
+            name = StringUtils.getRandomString(16)
+        if extension:
+            extension = '.' + extension.strip('.')
+            if not name.endswith(extension):
+                name += extension
+
+        args = list(args) + [name]
+        return FileUtils.makeFilePath(self.tempPath, *args)
+
 #___________________________________________________________________________________________________ getTempPath
     def getTempPath(self, *args, **kwargs):
         """getTempPath doc..."""
@@ -141,7 +154,7 @@ class AnalyzerBase(object):
 #___________________________________________________________________________________________________ run
     def run(self):
         """run doc..."""
-        print('[TARGET]: %s' % self.analysisRootPath)
+        print('[OUTPUT PATH]: %s' % self.analysisRootPath)
 
         myRootPath = self.getPath(isDir=True)
         if not os.path.exists(myRootPath):

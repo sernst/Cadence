@@ -83,6 +83,10 @@ class AnalysisStage(object):
         """getPath doc..."""
         return self.owner.getPath(*args, **kwargs)
 
+#___________________________________________________________________________________________________ getTempFilePath
+    def getTempFilePath(self, name =None, extension =None, *args):
+        return self.owner.getTempFilePath(name=name, extension=extension, *args)
+
 #___________________________________________________________________________________________________ GS: getTempPath
     def getTempPath(self, *args, **kwargs):
         return self.owner.getTempPath(*args, **kwargs)

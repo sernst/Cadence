@@ -5,8 +5,10 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
+import math
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
+from pyaid.number.NumericUtils import NumericUtils
 
 import sqlalchemy as sqla
 from pyaid.radix.Base64 import Base64
@@ -79,6 +81,38 @@ class TracksDefault(PyGlassModelsDefault):
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: xValue
+    @property
+    def xValue(self):
+        """ Returns the x value as an uncertainty named tuple in units of meters """
+        r    = math.pi/180.0*float(self.rotation)
+        rUnc = math.pi/180.0*float(self.rotationUncertainty)
+        wUnc = self.widthUncertainty
+        lUnc = self.lengthUncertainty
+        xUnc = lUnc*abs(math.sin(r)) + wUnc*abs(math.cos(r)) \
+            + rUnc*abs(lUnc*math.cos(r) - wUnc*math.sin(r))
+
+        return NumericUtils.toValueUncertainty(0.01*self.x, xUnc)
+
+#___________________________________________________________________________________________________ GS: zValue
+    @property
+    def zValue(self):
+        """ Returns the z value as an uncertainty named tuple in units of meters """
+        r    = math.pi/180.0*float(self.rotation)
+        rUnc = math.pi/180.0*float(self.rotationUncertainty)
+        wUnc = self.widthUncertainty
+        lUnc = self.lengthUncertainty
+        zUnc = lUnc*abs(math.cos(r)) + wUnc*abs(math.sin(r)) \
+            + rUnc*abs(wUnc*math.cos(r) - lUnc*math.sin(r))
+
+        return NumericUtils.toValueUncertainty(0.01*self.z, zUnc)
+
+#___________________________________________________________________________________________________ GS: yValue
+    @property
+    def yValue(self):
+        return self._yValue
+
 
 #___________________________________________________________________________________________________ GS: isComplete
     @property

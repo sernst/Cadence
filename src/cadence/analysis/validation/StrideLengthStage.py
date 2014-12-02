@@ -11,13 +11,14 @@ from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
-from cadence.analysis.CsvWriter import CsvWriter
+from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
 
 
 #*************************************************************************************************** StrideLengthStage
 class StrideLengthStage(AnalysisStage):
-    """A class for..."""
+    """ The primary analysis stage for validating the stride lengths between the digitally entered
+        data and the catalog data measured in the field. """
 
 #===================================================================================================
 #                                                                                       C L A S S
@@ -29,24 +30,10 @@ class StrideLengthStage(AnalysisStage):
             key, owner,
             label='Stride Length',
             **kwargs)
-        self._paths = []
-        self._csv   = None
-
-#===================================================================================================
-#                                                                                   G E T / S E T
-
-#___________________________________________________________________________________________________ GS: widths
-    @property
-    def entries(self):
-        return self.cache.get('entries')
-
-#___________________________________________________________________________________________________ GS: noWidths
-    @property
-    def noData(self):
-        return self.cache.get('noData', 0)
-    @noData.setter
-    def noData(self, value):
-        self.cache.set('noData', value)
+        self._paths  = []
+        self._csv    = None
+        self.noData  = 0
+        self.entries = []
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -54,8 +41,8 @@ class StrideLengthStage(AnalysisStage):
 #___________________________________________________________________________________________________ _preDeviations
     def _preAnalyze(self):
         """_preDeviations doc..."""
-        self.cache.set('entries', [])
-        self.cache.set('noData', 0)
+        self.noData = 0
+        self.entries = []
 
         csv = CsvWriter()
         csv.path = self.getPath('Stride-Length-Deviations.csv', isFile=True)

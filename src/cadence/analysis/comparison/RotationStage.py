@@ -11,7 +11,7 @@ from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
-from cadence.analysis.CsvWriter import CsvWriter
+from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.util.math2D.Vector2D import Vector2D
 
 

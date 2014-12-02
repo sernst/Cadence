@@ -7,7 +7,7 @@ from pyaid.number.NumericUtils import NumericUtils
 from pyaid.system.SystemUtils import SystemUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
-from cadence.analysis.CsvWriter import CsvWriter
+from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 
@@ -43,6 +43,7 @@ class TrackwayLoadStage(AnalysisStage):
     def _preAnalyze(self):
         csv = CsvWriter()
         csv.path = self.getPath('Unknown-Track-Report.csv')
+        csv.autoIndexFieldName = 'Index'
         csv.addFields(
             ('uid', 'UID'),
             ('fingerprint', 'Fingerprint') )
@@ -50,6 +51,7 @@ class TrackwayLoadStage(AnalysisStage):
 
         csv = CsvWriter()
         csv.path = self.getPath('Ignored-Track-Report.csv')
+        csv.autoIndexFieldName = 'Index'
         csv.addFields(
             ('uid', 'UID'),
             ('sitemap', 'Sitemap Name'),
@@ -60,6 +62,7 @@ class TrackwayLoadStage(AnalysisStage):
 
         smCsv = CsvWriter()
         smCsv.path = self.getPath('Sitemap-Report.csv')
+        csv.autoIndexFieldName = 'Index'
         smCsv.addFields(
             ('name', 'Sitemap Name'),
             ('ignores', 'Ignored'),
@@ -70,6 +73,7 @@ class TrackwayLoadStage(AnalysisStage):
 
         twCsv = CsvWriter()
         twCsv.path = self.getPath('Trackway-Report.csv')
+        csv.autoIndexFieldName = 'Index'
         twCsv.addFields(
             ('name', 'Name'),
             ('leftPes', 'Left Pes'),
@@ -147,7 +151,6 @@ class TrackwayLoadStage(AnalysisStage):
     # noinspection PyUnusedLocal
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
-        self.logger.write('%s' % sitemap)
 
         smCount         = 0
         smInCompCount   = 0
@@ -196,14 +199,7 @@ class TrackwayLoadStage(AnalysisStage):
             smCount              += tc
             smInCompCount        += tic
 
-            self.logger.write('   * %s [TRACKS: %s]' % (t, tc))
-
         self._addSitemapCsvRow(sitemap, smCount, smInCompCount, ignores)
-        if smCount:
-            self.logger.write('   * TOTAL TRACKS: %s' % smCount)
-
-        if ignores:
-            self.logger.write('   * IGNORED TRACKS: %s' % ignores)
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
@@ -216,6 +212,7 @@ class TrackwayLoadStage(AnalysisStage):
         if self._allTracks:
             for uid, data in self._allTracks.items():
                 self._unknownCsv.createRow(uid=uid, fingerprint=data['fingerprint'])
+            self.logger.write('UNKNOWN TRACK COUNT: %s' % self._unknownCsv.count)
             self._unknownCsv.save()
 
         self._trackwayCsv.save()
