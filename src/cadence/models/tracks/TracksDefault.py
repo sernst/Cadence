@@ -19,6 +19,7 @@ from pyglass.sqlalchemy.ConcretePyGlassModelsMeta import ConcretePyGlassModelsMe
 import six
 
 from cadence.CadenceEnvironment import CadenceEnvironment
+from cadence.analysis.shared.PositionValue2D import PositionValue2D
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
 from cadence.enums.TrackPropEnum import TrackPropEnum
 
@@ -82,6 +83,16 @@ class TracksDefault(PyGlassModelsDefault):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+#___________________________________________________________________________________________________ GS: positionValue
+    @property
+    def positionValue(self):
+        """ Returns a PositionValue2D instance for the position of this track using the 2D RHS
+            adjustment of z -> x and x -> y """
+        p2d = PositionValue2D()
+        p2d.xFromUncertaintyValue(self.zValue)
+        p2d.yFromUncertaintyValue(self.xValue)
+        return p2d
+
 #___________________________________________________________________________________________________ GS: xValue
     @property
     def xValue(self):
@@ -93,7 +104,7 @@ class TracksDefault(PyGlassModelsDefault):
         xUnc = lUnc*abs(math.sin(r)) + wUnc*abs(math.cos(r)) \
             + rUnc*abs(lUnc*math.cos(r) - wUnc*math.sin(r))
 
-        return NumericUtils.toValueUncertainty(0.01*self.x, xUnc)
+        return NumericUtils.toValueUncertainty(0.01*float(self.x), xUnc)
 
 #___________________________________________________________________________________________________ GS: zValue
     @property
@@ -106,13 +117,7 @@ class TracksDefault(PyGlassModelsDefault):
         zUnc = lUnc*abs(math.cos(r)) + wUnc*abs(math.sin(r)) \
             + rUnc*abs(wUnc*math.cos(r) - lUnc*math.sin(r))
 
-        return NumericUtils.toValueUncertainty(0.01*self.z, zUnc)
-
-#___________________________________________________________________________________________________ GS: yValue
-    @property
-    def yValue(self):
-        return self._yValue
-
+        return NumericUtils.toValueUncertainty(0.01*float(self.z), zUnc)
 
 #___________________________________________________________________________________________________ GS: isComplete
     @property

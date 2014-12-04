@@ -1,4 +1,4 @@
-# StrideLengthStage.py
+# PaceLengthStage.py
 # (C)2014
 # Scott Ernst
 
@@ -10,12 +10,13 @@ from pyaid.string.StringUtils import StringUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
+from cadence.analysis.shared.LineSegment2D import LineSegment2D
 from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
 
 
 
-#*************************************************************************************************** StrideLengthStage
-class StrideLengthStage(AnalysisStage):
+#*************************************************************************************************** PaceLengthStage
+class PaceLengthStage(AnalysisStage):
     """ The primary analysis stage for validating the stride lengths between the digitally entered
         data and the catalog data measured in the field. """
 
@@ -24,14 +25,15 @@ class StrideLengthStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
-        """Creates a new instance of StrideLengthStage."""
-        super(StrideLengthStage, self).__init__(
+        """Creates a new instance of PaceLengthStage."""
+        super(PaceLengthStage, self).__init__(
             key, owner,
-            label='Stride Length',
+            label='Pace Length',
             **kwargs)
         self._paths  = []
         self._csv    = None
         self.noData  = 0
+        self.count   = 0
         self.entries = []
 
 #===================================================================================================
@@ -44,7 +46,7 @@ class StrideLengthStage(AnalysisStage):
         self.entries = []
 
         csv = CsvWriter()
-        csv.path = self.getPath('Stride-Length-Deviations.csv', isFile=True)
+        csv.path = self.getPath('Pace-Length-Deviations.csv', isFile=True)
         csv.autoIndexFieldName = 'Index'
         csv.addFields(
             ('uid', 'UID'),
@@ -52,31 +54,93 @@ class StrideLengthStage(AnalysisStage):
             ('entered', 'Entered (m)'),
             ('measured', 'Measured (m)'),
             ('dev', 'Deviation (sigma)'),
-            ('delta', 'Fractional Error (%)'))
+            ('delta', 'Fractional Error (%)'),
+            ('pairedFingerprint', 'Track Pair Fingerprint'),
+            ('pairedUid', 'Track Pair UID') )
         self._csv = csv
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
-    def _analyzeTrackSeries(self, series, trackway, sitemap):
+    def _analyzeTrackway(self, trackway, sitemap):
+        data = self.owner.getTrackwaySeries(trackway)
+        l = data['leftManus']
+        r = data['rightManus']
 
-        for index in range(series.count - 1):
+        if l.count and l.isReady and r.count and r.isReady:
+            self._analyzeSeriesPair(l, r)
+            self._analyzeSeriesPair(r, l)
+
+        l = data['leftPes']
+        r = data['rightPes']
+
+        if l.count and l.isReady and r.count and r.isReady:
+            self._analyzeSeriesPair(l, r)
+            self._analyzeSeriesPair(r, l)
+
+#___________________________________________________________________________________________________ _analyzeSeriesPair
+    def _analyzeSeriesPair(self, series, pair):
+        """_analyzeSeriesPair doc..."""
+
+        for index in range(series.count):
             track   = series.tracks[index]
             data    = track.snapshotData
-            stride  = data.get(SnapshotDataEnum.STRIDE_LENGTH)
-            if stride is None:
+            pace    = data.get(SnapshotDataEnum.PACE)
+            if pace is None:
                 self.noData += 1
                 continue
 
-            stride    = float(stride)
-            nextTrack = series.tracks[index + 1]
-            if track.next != nextTrack.uid:
-                self.logger.write(
-                    '[ERROR]: Invalid track ordering (%s -> %s)' % (track.uid, nextTrack.uid))
+            pace = float(pace)
+            position = track.positionValue
 
-            posTrack = track.positionValue
-            posNext  = nextTrack.positionValue
+            if track != series.tracks[-1]:
+                nextTrack = series.tracks[index + 1]
+                if track.next != nextTrack.uid:
+                    self.logger.write('[ERROR]: Invalid track ordering (%s -> %s)' % (
+                        track.uid, nextTrack.uid))
+                nextPosition = nextTrack.positionValue
+            elif index == 0:
+                continue
+            else:
+                # Extrapolate using the position of the previous print to get a nextPosition
+                # value for use in finding the pace track pair
+                lastTrack = series.tracks[index - 1]
+                line = LineSegment2D(start=lastTrack.positionValue, end=position)
+                try:
+                    line.postExtendLine(line.length.raw)
+                except Exception:
+                    self.logger.write([
+                        '[ERROR]: Invalid separation between tracks',
+                        'TRACK: %s' % track,
+                        'LAST TRACK: %s' % lastTrack])
+                    continue
+
+                nextPosition = line.end.clone()
+
+            pairTrack = None
+            distance = 1.0e8
+
+            if track.fingerprint.startswith('BEB-515-2009-1-S-21-L-M'):
+                print(track.fingerprint)
+
+            for pt in pair.tracks:
+                try:
+                    pos = pt.positionValue
+                    d = nextPosition.distanceTo(pos).raw + position.distanceTo(pos).raw
+                except Exception:
+                    continue
+
+                if d < distance:
+                    pairTrack = pt
+                    distance = d
+
+            if not pairTrack:
+                self.logger.write([
+                    '[ERROR]: No pair track found for pace calculation',
+                    'TRACK: %s' % track,
+                    'NEXT TRACK: %s' % nextTrack])
+                continue
 
             try:
-                entered = posTrack.distanceTo(posNext)
+                entered = position.distanceTo(pairTrack.positionValue)
             except Exception:
                 self.logger.write([
                     '[WARNING]: Invalid track separation of 0.0. Ignoring track',
@@ -84,10 +148,11 @@ class StrideLengthStage(AnalysisStage):
                     'NEXT: %s [%s]' % (nextTrack.fingerprint, track.uid)])
                 continue
 
-            measured   = NumericUtils.toValueUncertainty(stride, 0.06)
+            measured   = NumericUtils.toValueUncertainty(pace, 0.06)
             delta      = entered.value - measured.value
             deviation  = delta/(measured.uncertainty + entered.uncertainty)
             fractional = delta/measured.value
+            self.count += 1
 
             entry = dict(
                 track=track,
@@ -100,10 +165,11 @@ class StrideLengthStage(AnalysisStage):
                     # Fractional error between calculated and measured distance
                 fractional=fractional,
                     # Sigma deviations between
-                deviation=deviation)
+                deviation=deviation,
+                pairTrack=pairTrack)
 
             self.entries.append(entry)
-            track.cache.set('strideData', entry)
+            track.cache.set('paceData', entry)
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
@@ -119,7 +185,7 @@ class StrideLengthStage(AnalysisStage):
     def _getFooterArgs(self):
         return [
             'Processed %s tracks' % len(self.entries),
-            '%s tracks with no stride data' % self.noData]
+            '%s tracks with no pace data' % self.noData]
 
 #___________________________________________________________________________________________________ _process
     def _process(self):
@@ -130,9 +196,9 @@ class StrideLengthStage(AnalysisStage):
             errors.append(entry['fractional'])
 
         res = NumericUtils.getMeanAndDeviation(errors)
-        self.logger.write('Fractional Stride Error %s' % res.label)
+        self.logger.write('Fractional Pace Error %s' % res.label)
 
-        label = 'Fractional Stride Errors'
+        label = 'Fractional Pace Errors'
         d     = errors
         self._paths.append(self._makePlot(label, d, histRange=(-1.0, 1.0)))
         self._paths.append(self._makePlot(label, d, isLog=True, histRange=(-1.0, 1.0)))
@@ -156,13 +222,23 @@ class StrideLengthStage(AnalysisStage):
                 track = entry['track']
                 delta = NumericUtils.roundToSigFigs(100.0*abs(entry['delta']), 3)
 
+                pairTrack = entry.get('pairTrack')
+                if pairTrack:
+                    pairedFingerprint = pairTrack.fingerprint
+                    pairedUid         = pairTrack.uid
+                else:
+                    pairedFingerprint = ''
+                    pairedUid         = ''
+
                 self._csv.addRow({
                     'fingerprint':track.fingerprint,
                     'uid':track.uid,
                     'measured':entry['measured'].label,
                     'entered':entry['entered'].label,
                     'dev':sigmaCount,
-                    'delta':delta})
+                    'delta':delta,
+                    'pairedUid':pairedUid,
+                    'pairedFingerprint':pairedFingerprint})
 
         if not self._csv.save():
             self.logger.write('[ERROR]: Failed to save CSV file %s' % self._csv.path)
@@ -193,4 +269,5 @@ class StrideLengthStage(AnalysisStage):
         path = self.getTempPath('%s.pdf' % StringUtils.getRandomString(16), isFile=True)
         self.owner.saveFigure('makePlot', path)
         return path
+
 

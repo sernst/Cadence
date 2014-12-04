@@ -1,21 +1,17 @@
-# ValidationAnalyzer.py
+# CurvatureAnalyzer.py
 # (C)2014
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
-from cadence.analysis.validation.PaceLengthStage import PaceLengthStage
-from cadence.analysis.validation.TrackwayPlotPaceStage import TrackwayPlotPaceStage
-from cadence.analysis.validation.TrackwayPlotStrideStage import TrackwayPlotStrideStage
-
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
-from cadence.analysis.validation.StrideLengthStage import StrideLengthStage
+from cadence.analysis.curvature.SeriesCurvatureStage import SeriesCurvatureStage
 from cadence.analysis.AnalyzerBase import AnalyzerBase
 
-#___________________________________________________________________________________________________ ValidationAnalyzer
-class ValidationAnalyzer(AnalyzerBase):
+#___________________________________________________________________________________________________ CurvatureAnalyzer
+class CurvatureAnalyzer(AnalyzerBase):
     """A class for..."""
 
 #===================================================================================================
@@ -23,17 +19,13 @@ class ValidationAnalyzer(AnalyzerBase):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
-        """Creates a new instance of ValidationAnalyzer."""
-        super(ValidationAnalyzer, self).__init__(**kwargs)
-        self.addStage(StrideLengthStage('strideLength', self))
-        self.addStage(TrackwayPlotStrideStage('stridePlots', self))
-        self.addStage(PaceLengthStage('paceLength', self))
-        self.addStage(TrackwayPlotPaceStage('pacePlots', self))
+        """Creates a new instance of CurvatureAnalyzer."""
+        super(CurvatureAnalyzer, self).__init__(**kwargs)
+        self.addStage(SeriesCurvatureStage('seriesCurves', self))
 
 ####################################################################################################
 ####################################################################################################
 
 #___________________________________________________________________________________________________ RUN MAIN
 if __name__ == '__main__':
-    ValidationAnalyzer().run()
-
+    CurvatureAnalyzer().run()

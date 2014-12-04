@@ -116,7 +116,7 @@ class Tracks_Trackway(FlagsTracksDefault):
         # Iterate over every track in the database
         tested = []
         for track in result:
-            if track in tested:
+            if track in tested or track.hidden:
                 continue
 
             prev = track
