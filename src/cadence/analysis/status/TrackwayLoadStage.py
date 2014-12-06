@@ -34,6 +34,8 @@ class TrackwayLoadStage(AnalysisStage):
         self._trackwayCsv       = None
         self._orphanCsv         = None
         self._unknownCsv        = None
+        self._unprocessedCsv    = None
+        self._soloTrackCsv      = None
         self._allTracks         = None
 
 #===================================================================================================
@@ -41,6 +43,24 @@ class TrackwayLoadStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
+        csv = CsvWriter()
+        csv.path = self.getPath('Solo-Track-Report.csv')
+        csv.autoIndexFieldName = 'Index'
+        csv.addFields(
+            ('uid', 'UID'),
+            ('fingerprint', 'Fingerprint') )
+        self._soloTrackCsv = csv
+
+        csv = CsvWriter()
+        csv.path = self.getPath('Unprocessed-Track-Report.csv')
+        csv.autoIndexFieldName = 'Index'
+        csv.addFields(
+            ('uid', 'UID'),
+            ('fingerprint', 'Fingerprint'),
+            ('previous', 'Previous Track UID'),
+            ('next', 'Next Track UID') )
+        self._unprocessedCsv = csv
+
         csv = CsvWriter()
         csv.path = self.getPath('Unknown-Track-Report.csv')
         csv.autoIndexFieldName = 'Index'
@@ -60,21 +80,22 @@ class TrackwayLoadStage(AnalysisStage):
             ('orphan', 'Orphaned') )
         self._orphanCsv = csv
 
-        smCsv = CsvWriter()
-        smCsv.path = self.getPath('Sitemap-Report.csv')
+        csv = CsvWriter()
+        csv.path = self.getPath('Sitemap-Report.csv')
         csv.autoIndexFieldName = 'Index'
-        smCsv.addFields(
+        csv.addFields(
             ('name', 'Sitemap Name'),
+            ('unprocessed', 'Unprocessed'),
             ('ignores', 'Ignored'),
             ('count', 'Count'),
             ('incomplete', 'Incomplete'),
             ('completion', 'Completion (%)') )
-        self._sitemapCsv = smCsv
+        self._sitemapCsv = csv
 
-        twCsv = CsvWriter()
-        twCsv.path = self.getPath('Trackway-Report.csv')
+        csv = CsvWriter()
+        csv.path = self.getPath('Trackway-Report.csv')
         csv.autoIndexFieldName = 'Index'
-        twCsv.addFields(
+        csv.addFields(
             ('name', 'Name'),
             ('leftPes', 'Left Pes'),
             ('rightPes', 'Right Pes'),
@@ -84,7 +105,7 @@ class TrackwayLoadStage(AnalysisStage):
             ('total', 'Total'),
             ('ready', 'Analysis Ready'),
             ('complete', 'Completion (%)') )
-        self._trackwayCsv = twCsv
+        self._trackwayCsv = csv
 
         self._allTracks = dict()
 
@@ -97,55 +118,6 @@ class TrackwayLoadStage(AnalysisStage):
         for t in session.query(model).all():
             self._allTracks[t.uid] = {'uid':t.uid, 'fingerprint':t.fingerprint}
         session.close()
-
-#___________________________________________________________________________________________________ _addSitemapCsvRow
-    def _addSitemapCsvRow(self, sitemap, count, incomplete, ignores):
-        """_addSitemapCsvRow doc..."""
-
-        if count == 0:
-            completion = 0
-        else:
-            completion = NumericUtils.roundToOrder(100.0*float(count - incomplete)/float(count), -2)
-
-        self._sitemapCsv.createRow(
-            name=sitemap.filename,
-            count=count,
-            ignores=ignores,
-            incomplete=incomplete,
-            completion=completion)
-
-#___________________________________________________________________________________________________ _addTrackwayCsvRow
-    def _addTrackwayCsvRow(self, trackway):
-        """_addTrackwayCsvRow doc..."""
-        series      = dict()
-        count       = 0
-        incomplete  = 0
-        isReady     = True
-
-        for key, s in self.owner.getTrackwaySeries(trackway).items():
-            isReady     = isReady and s.isReady
-            count      += s.count
-            incomplete += len(s.incompleteTracks)
-
-            suffix = ''
-            if not s.isValid:
-                suffix += '*'
-            if not s.isComplete:
-                suffix += '...'
-
-            series[s.trackwayKey] = '%s%s' % (int(s.count), suffix)
-
-        completion = NumericUtils.roundToOrder(100.0*float(count - incomplete)/float(count), -2)
-
-        self._trackwayCsv.createRow(
-            name=trackway.name,
-            incomplete=incomplete,
-            total=count,
-            ready='YES' if isReady else 'NO',
-            complete=completion,
-            **series)
-
-        return count, incomplete
 
 #___________________________________________________________________________________________________ _analyzeSitemap
     # noinspection PyUnusedLocal
@@ -162,7 +134,11 @@ class TrackwayLoadStage(AnalysisStage):
         #       tracks to account for any that may not be loaded by standard means. Any tracks
         #       found this way are removed from the all list created above, which specifies that
         #       they were found by other means.
-        for t in sitemap.getAllTracks():
+        tracks    = sitemap.getAllTracks()
+        trackways = self.owner.getTrackways(sitemap)
+        processed = []
+
+        for t in tracks:
             if t.uid in self._allTracks:
                 del self._allTracks[t.uid]
 
@@ -172,6 +148,21 @@ class TrackwayLoadStage(AnalysisStage):
             prev = t.getPreviousTrack()
             if prev and not t.hidden:
                 continue
+            elif not t.hidden:
+                # Check for solo tracks, i.e. tracks that are the only track in their series and
+                # would appear to be orphaned even though they are in a series because the series
+                # itself has no connections
+                soloTrack = False
+                for tw in trackways:
+                    if t.uid in tw.firstTracksList:
+                        soloTrack = True
+                        break
+
+                if soloTrack:
+                    self._soloTrackCsv.createRow(
+                        uid=t.uid,
+                        fingerprint=t.fingerprint)
+                    continue
 
             self.ignoredCount += 1
             ignores += 1
@@ -184,22 +175,78 @@ class TrackwayLoadStage(AnalysisStage):
                 hidden='YES' if t.hidden else 'NO',
                 uid=t.uid,
                 sitemap=sitemap.filename)
+            processed.append(t)
 
         #-------------------------------------------------------------------------------------------
         # TRACKWAYS
         #       Iterate over the trackways within the current site
-        for t in self.owner.getTrackways(sitemap):
-            stats = self._addTrackwayCsvRow(t)
+        for tw in self.owner.getTrackways(sitemap):
+            series          = dict()
+            twCount         = 0
+            twIncomplete    = 0
+            isReady         = True
 
-            tc  = stats[0]
-            tic = stats[1]
+            for key, s in self.owner.getTrackwaySeries(tw).items():
+                isReady         = isReady and s.isReady
+                twCount        += s.count
+                twIncomplete   += len(s.incompleteTracks)
 
-            self.count           += tc
-            self.incompleteCount += tic
-            smCount              += tc
-            smInCompCount        += tic
+                for t in s.tracks:
+                    if t not in processed:
+                        processed.append(t)
 
-        self._addSitemapCsvRow(sitemap, smCount, smInCompCount, ignores)
+                suffix = ''
+                if not s.isValid:
+                    suffix += '*'
+                if not s.isComplete:
+                    suffix += '...'
+
+                series[s.trackwayKey] = '%s%s' % (int(s.count), suffix)
+
+            completion = NumericUtils.roundToOrder(
+                100.0*float(twCount - twIncomplete)/float(twCount), -2)
+
+            self._trackwayCsv.createRow(
+                name=tw.name,
+                incomplete=twIncomplete,
+                total=twCount,
+                ready='YES' if isReady else 'NO',
+                complete=completion,
+                **series)
+
+            self.count           += twCount
+            self.incompleteCount += twIncomplete
+            smCount              += twCount
+            smInCompCount        += twIncomplete
+
+        smUnprocessed = 0
+        if len(processed) != len(tracks):
+            for pt in processed:
+                tracks.remove(pt)
+
+            smUnprocessed = len(tracks)
+            for t in tracks:
+                pt = t.getPreviousTrack()
+                nt = t.getNextTrack()
+                self._unprocessedCsv.createRow(
+                    uid=t.uid,
+                    fingerprint=t.fingerprint,
+                    next=nt.uid if nt else 'NONE',
+                    previous=pt.uid if pt else 'NONE')
+
+        if smCount == 0:
+            completion = 0
+        else:
+            completion = NumericUtils.roundToOrder(
+                100.0*float(smCount - smInCompCount)/float(smCount), -2)
+
+        self._sitemapCsv.createRow(
+            name=sitemap.filename,
+            count=smCount,
+            ignores=ignores,
+            incomplete=smInCompCount,
+            completion=completion,
+            unprocessed=smUnprocessed)
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
@@ -208,13 +255,14 @@ class TrackwayLoadStage(AnalysisStage):
         self.logger.write('TOTAL TRACKS: %s + (%s ignored) = %s' % (
             count, ignoreCount, count + ignoreCount))
 
-        SystemUtils.remove(self._unknownCsv.path)
-        if self._allTracks:
-            for uid, data in self._allTracks.items():
-                self._unknownCsv.createRow(uid=uid, fingerprint=data['fingerprint'])
-            self.logger.write('UNKNOWN TRACK COUNT: %s' % self._unknownCsv.count)
-            self._unknownCsv.save()
+        for uid, data in self._allTracks.items():
+            self._unknownCsv.createRow(uid=uid, fingerprint=data['fingerprint'])
+        self.logger.write('UNKNOWN TRACK COUNT: %s' % self._unknownCsv.count)
+        self._unknownCsv.save()
 
+        self._soloTrackCsv.save()
+        self._unprocessedCsv.save()
         self._trackwayCsv.save()
         self._sitemapCsv.save()
         self._orphanCsv.save()
+

@@ -10,6 +10,9 @@ import csv
 from pyaid.string.StringUtils import StringUtils
 
 #*************************************************************************************************** CsvWriter
+from pyaid.system.SystemUtils import SystemUtils
+
+
 class CsvWriter(object):
     """A class for..."""
 
@@ -22,6 +25,7 @@ class CsvWriter(object):
         self.path               = kwargs.get('path')
         self.rows               = kwargs.get('rows', [])
         self.autoIndexFieldName = kwargs.get('autoIndexFieldName', None)
+        self.removeIfSavedEmpty = kwargs.get('removeIfSavedEmpty', True)
         self._fields            = OrderedDict()
 
 #===================================================================================================
@@ -78,6 +82,10 @@ class CsvWriter(object):
 #___________________________________________________________________________________________________ save
     def save(self):
         """save doc..."""
+        if self.removeIfSavedEmpty and not self.rows:
+            self.remove()
+            return
+
         index = 0
         names = self.fieldNames
         if self.autoIndexFieldName:
@@ -103,6 +111,11 @@ class CsvWriter(object):
             return True
         except Exception:
             return False
+
+#___________________________________________________________________________________________________ remove
+    def remove(self):
+        """remove doc..."""
+        return SystemUtils.remove(self.path)
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

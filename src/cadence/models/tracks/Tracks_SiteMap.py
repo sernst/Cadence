@@ -6,10 +6,10 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from pyaid.config.ConfigsDict import ConfigsDict
 from pyaid.radix.Base36 import Base36
-from pyaid.string.StringUtils import StringUtils
 import sqlalchemy as sqla
 
 from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
+
 
 # AS NEEDED: from cadence.models.tracks.Tracks_Track import Tracks_Track
 # AS NEEDED: from cadence.models.tracks.Tracks_Trackway import Tracks_Trackway
@@ -153,11 +153,6 @@ class Tracks_SiteMap(FlagsTracksDefault):
 
 #===================================================================================================
 #                                                                               I N T R I N S I C
-
-#___________________________________________________________________________________________________ __unicode__
-    def __unicode__(self):
-        """__unicode__ doc..."""
-        return StringUtils.toText(self.__str__())
 
 #___________________________________________________________________________________________________ __str__
     def __str__(self):

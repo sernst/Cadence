@@ -192,15 +192,20 @@ class TracksDefault(PyGlassModelsDefault):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ getPreviousTrack
-    def getPreviousTrack(self, session =None):
+    def getPreviousTrack(self, session =None, getAll =False):
         """ Returns the previous track in the series if such a track exists.  It is found by
-            querying tro find that other model instance whose 'next' matches this uid. """
+            querying to find that other model instance whose 'next' matches this uid. If getAll
+            is True the result returns a list of all tracks with a next value matching this
+            track's UID, which is useful in finding linkage branching errors. """
         if not session:
             session = self.mySession
         model = self.__class__
 
         try:
-            return session.query(model).filter(model.next == self.uid).first()
+            query = session.query(model).filter(model.next == self.uid)
+            if getAll:
+                return query.all()
+            return query.first()
         except Exception:
             return None
 
@@ -343,9 +348,9 @@ class TracksDefault(PyGlassModelsDefault):
 #                                                                               I N T R I N S I C
 
 #___________________________________________________________________________________________________ __unicode__
-    def __unicode__(self):
-        return '<%s[%s] uid[%s] %s>' % (
+    def __str__(self):
+        return StringUtils.toStr2('<%s[%s] uid[%s] %s>' % (
             self.__class__.__name__,
             StringUtils.toUnicode(self.i),
             StringUtils.toUnicode(self.uid),
-            StringUtils.toUnicode(self.fingerprint))
+            StringUtils.toUnicode(self.fingerprint)))

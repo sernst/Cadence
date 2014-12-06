@@ -7,6 +7,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from collections import OrderedDict
 
 from pyaid.config.ConfigsDict import ConfigsDict
+from pyaid.debug.Logger import Logger
 from pyaid.radix.Base36 import Base36
 from pyaid.string.StringUtils import StringUtils
 import sqlalchemy as sqla
@@ -45,6 +46,25 @@ class Tracks_Trackway(FlagsTracksDefault):
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: isEmpty
+    @property
+    def isEmpty(self):
+        return len(self.firstTracksList) == 0
+
+#___________________________________________________________________________________________________ GS: firstTracksList
+    @property
+    def firstTracksList(self):
+        out = []
+        if self.firstLeftPes:
+            out.append(self.firstLeftPes)
+        if self.firstRightPes:
+            out.append(self.firstRightPes)
+        if self.firstLeftManus:
+            out.append(self.firstLeftManus)
+        if self.firstRightManus:
+            out.append(self.firstRightManus)
+        return out
 
 #___________________________________________________________________________________________________ GS: uid
     @property
@@ -91,7 +111,7 @@ class Tracks_Trackway(FlagsTracksDefault):
 
 #___________________________________________________________________________________________________ populateTrackwaysTable
     @classmethod
-    def populateTrackwaysTable(cls, session =None):
+    def populateTrackwaysTable(cls, session =None, logger =None):
         """ Populate the trackways table by removing all existing rows and attempting to calculate
             trackways from the implicit track series defined by the linkages of tracks. This
             operation should only be carried out for initial population purposes as it will
@@ -102,6 +122,9 @@ class Tracks_Trackway(FlagsTracksDefault):
         sitemapModel = Tracks_SiteMap.MASTER
         trackModel   = Tracks_Track.MASTER
         model        = cls.MASTER
+
+        if not logger:
+            logger = Logger(cls, printOut=True)
 
         newSession = False
         if not session:
@@ -139,7 +162,7 @@ class Tracks_Trackway(FlagsTracksDefault):
                     sitemapModel.name == prev.site).filter(
                     sitemapModel.level == prev.level).first()
                 if not siteMap:
-                    print('[WARNING]: No site map found for name "%s" and level "%s"' % (
+                    logger.write('[WARNING]: No site map found for name "%s" and level "%s"' % (
                         prev.site, prev.level))
                 else:
                     tw.siteMapIndex = siteMap.index
@@ -149,13 +172,23 @@ class Tracks_Trackway(FlagsTracksDefault):
                 tw = trackways[prev.trackwayFingerprint]
 
             if prev.left and prev.pes:
+                existing = tw.firstLeftPes
                 tw.firstLeftPes = prev.uid
             elif prev.left:
+                existing = tw.firstLeftManus
                 tw.firstLeftManus = prev.uid
             elif prev.pes:
+                existing = tw.firstRightPes
                 tw.firstRightPes = prev.uid
             else:
+                existing = tw.firstRightManus
                 tw.firstRightManus = prev.uid
+
+            if existing and existing != prev.uid:
+                logger.write([
+                    '[WARNING]: Duplicate tracks found for the same series',
+                    'TRACKS: "%s" AND "%s"' % (existing, prev.uid),
+                    'TRACKWAY: %s' % tw.name])
 
         # Delete all existing rows if any exist
         rowCount = session.query(model).count()
