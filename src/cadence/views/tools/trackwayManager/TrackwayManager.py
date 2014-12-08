@@ -432,6 +432,10 @@ class TrackwayManager(object):
         trackwayNames = list(set(trackwayNames))
         trackwayNames.sort()
 
+        print('in getTrackwayNames:  ')
+        for t in trackwayNames:
+            print(t)
+
         return trackwayNames if len(trackwayNames) > 0 else None
 
 #___________________________________________________________________________________________________ getTrackwayProps
@@ -481,8 +485,8 @@ class TrackwayManager(object):
         if len(nodes) > 0:
             cmds.select(nodes)
 
-#___________________________________________________________________________________________________ selectTracksAfter
-    def selectTracksAfter(self, track):
+#___________________________________________________________________________________________________ selectSeriesAfter
+    def selectSeriesAfter(self, track):
         """ Selects all tracks in a sequence after a given specific track. """
         tracks = self.getTracksAfter(track)
 
@@ -490,13 +494,13 @@ class TrackwayManager(object):
         if tracks:
             self.selectTracks(tracks)
 
-#___________________________________________________________________________________________________ selectTracksBefore
-    def selectTracksBefore(self, track):
+#___________________________________________________________________________________________________ selectSeriesBefore
+    def selectSeriesBefore(self, track):
         """ Selects all tracks in a sequence up to (but not including) a given specific track. """
 
-        tracks = self.getPreviousTrack(track)
+        tracks = self.getTracksBefore(track)
 
-        if tracks:
+        if track:
             self.selectTracks(tracks)
 #___________________________________________________________________________________________________ selectTrackSeries
     def selectTrackSeries(self, track):

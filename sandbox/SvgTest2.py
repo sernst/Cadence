@@ -29,40 +29,40 @@ drawing = CadenceDrawing('test_2.svg', siteMap)
 # --------------------------------------------------------------------------------------------------
 # THIS DEMONSTRATES MAPPING BETWEEN A SITE MAP AND THE SCENE, PLUS SIMPLE SHAPES
 
-#
-# xFed   = siteMap.xFederal
-# yFed   = siteMap.yFederal
-# fMap   = (xFed, yFed)
-# fScene = drawing.projectToScene((xFed, yFed))
-#
-# print "siteMap.index = %s and siteMap.name = %s" % (siteMap.index, siteMap.filename)
-# print 'in siteMap, the federal marker is (%s, %s)' % fMap
-# print 'which projects into the scene as (%s, %s)' % (fScene[0], fScene[1])
-# print 'and projecting back to the map gives (%s, %s)' % drawing.projectToMap((fScene[0], fScene[1]))
-#
-# # place a circle of radius 5 at (10.0, 10.0) in scene coordinates
-# drawing.circle((10, 10), 5)
-#
-# # label it with text at (20, 10)
-# drawing.text("circle of radius 5", (20, 10), scene=True)
-#
-# # now place a 20x40 rect in map coordinates (not scene coordinates) at the federal marker
-# drawing.rect((xFed + 40, yFed), 20, 40, scene=False)
-#
-# # and another smaller one at (10, 20) in map coordinates
-# drawing.rect((10, 20), (4, 8), scene=False)
-#
-#
-# # place the federal coordinates as a text string 20 cm above the marker
-# text = "(%s, %s)" % (drawing.siteMap.federalEast, drawing.siteMap.federalNorth)
-# drawing.text(text, (0, 20), scene=True, stroke='green')
-#
-# # place a 2 cm green unfilled circle atop the federal coordinate marker
-# drawing.circle((0, 0), 2, scene=True, fill='none', stroke='green', stroke_width=1)
-#
-# # place a grid in registration with the 10m grid in the site map, and illustrates the use of a
-# # group which is then instanced multiple times across a drawing.
-# drawing.grid()
+
+xFed   = siteMap.xFederal
+yFed   = siteMap.yFederal
+fMap   = (xFed, yFed)
+fScene = drawing.projectToScene((xFed, yFed))
+
+print "siteMap.index = %s and siteMap.name = %s" % (siteMap.index, siteMap.filename)
+print 'in siteMap, the federal marker is (%s, %s)' % fMap
+print 'which projects into the scene as (%s, %s)' % (fScene[0], fScene[1])
+print 'and projecting back to the map gives (%s, %s)' % drawing.projectToMap((fScene[0], fScene[1]))
+
+# place a circle of radius 5 at (10.0, 10.0) in scene coordinates
+drawing.circle((10, 10), 5)
+
+# label it with text at (20, 10)
+drawing.text("circle of radius 5", (20, 10), scene=True)
+
+# now place a 20x40 rect in map coordinates (not scene coordinates) at the federal marker
+drawing.rect((xFed + 40, yFed), 20, 40, scene=False)
+
+# and another smaller one at (10, 20) in map coordinates
+drawing.rect((10, 20), 4, 8, scene=False)
+
+
+# place the federal coordinates as a text string 20 cm above the marker
+text = "(%s, %s)" % (drawing.siteMap.federalEast, drawing.siteMap.federalNorth)
+drawing.text(text, (0, 20), scene=True, stroke='green')
+
+# place a 2 cm green unfilled circle atop the federal coordinate marker
+drawing.circle((0, 0), 2, scene=True, fill='none', stroke='green', stroke_width=1)
+
+# place a grid in registration with the 10m grid in the site map, and illustrates the use of a
+# group which is then instanced multiple times across a drawing.
+drawing.grid()
 
 #==================================================================================================
 # TEST POLYLINE

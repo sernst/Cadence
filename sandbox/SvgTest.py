@@ -57,10 +57,10 @@ drawing.circle((10, 10), 5)
 drawing.text("circle of radius 5", (20, 10), scene=True)
 
 # now place another circle and rect in map coordinates (not scene coordinates) at the federal marker
-drawing.rect((xFed + 40, yFed), (20, 20), scene=False)
+drawing.rect((xFed + 40, yFed), 20, 20, scene=False)
 
 # and another smaller one at (10, 20) in map coordinates
-drawing.rect((10, 20), (4, 8), scene=False)
+drawing.rect((10, 20), 4, 8, scene=False)
 
 # and test out polyLine
 xc = 50

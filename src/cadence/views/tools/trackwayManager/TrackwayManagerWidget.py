@@ -32,9 +32,10 @@ class TrackwayManagerWidget(PyGlassWidget):
     SELECT_NEXT_INCOMPLETE = 'Select Next INCOMPLETE'
     SELECT_TRACK_BY_NAME   = 'Select Track by NAME'
     SELECT_TRACK_BY_INDEX  = 'Select Track by INDEX'
+    SELECT_TRACK_BY_UID    = 'Select Track by UID'
     SELECT_SERIES_BEFORE   = 'Select Series BEFORE'
     SELECT_SERIES_AFTER    = 'Select Series AFTER'
-    SELECT_TRACK_SERIES    = 'Select Track SERIES'
+    SELECT_SERIES          = 'Select Track SERIES'
     SELECT_ALL_COMPLETED   = 'Select All COMPLETED'
     SELECT_ALL_INCOMPLETE  = 'Select All INCOMPLETE'
     SELECT_ALL_MARKED      = 'Select All MARKED'
@@ -113,12 +114,14 @@ class TrackwayManagerWidget(PyGlassWidget):
         trackSelectionMethods = (
             self.FETCH_TRACK_BY_NAME,
             self.FETCH_TRACK_BY_INDEX,
+
             self.SELECT_NEXT_INCOMPLETE,
             self.SELECT_TRACK_BY_NAME,
             self.SELECT_TRACK_BY_INDEX,
+            self.SELECT_TRACK_BY_UID,
             self.SELECT_SERIES_BEFORE,
             self.SELECT_SERIES_AFTER,
-            self.SELECT_TRACK_SERIES,
+            self.SELECT_SERIES,
             self.SELECT_ALL_COMPLETED,
             self.SELECT_ALL_INCOMPLETE,
             self.SELECT_ALL_MARKED)
@@ -205,7 +208,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self.noteLE.setEnabled(enable)
         self.trackNameLE.setEnabled(enable)
-        self.trackIndexLE.setEnabled(enable)
+        self.indexLE.setEnabled(enable)
 
 #
 #===================================================================================================
@@ -236,7 +239,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self.noteLE.setText(u'')
         self.trackNameLE.setText(u'')
-        self.trackIndexLE.setText(u'')
+        self.indexLE.setText(u'')
+        self.uidLE.setText(u'')
 
 #___________________________________________________________________________________________________ clearTrackSiteUI
     def clearTrackSiteUI(self):
@@ -270,6 +274,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.sectorLE.setText('')
         self.levelLE.setText('')
         self.trackwayLE.setText('')
+        self.indexLE.setText('')
+        self.uidLE.setText('')
 
 #___________________________________________________________________________________________________ refreshTrackUI
     def refreshTrackUI(self, props):
@@ -292,6 +298,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         pes                 = props[TrackPropEnum.PES.name]
         number              = props[TrackPropEnum.NUMBER.name]
         index               = props[TrackPropEnum.INDEX.name]
+        uid                 = props[TrackPropEnum.UID.name]
 
         self.widthSbx.setValue(100.0*width)
         self.widthLbl.setText('Width: [%2.0f]' % (100.0*widthMeasured))
@@ -319,7 +326,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         name = (u'L' if left else u'R') + (u'P' if pes else u'M') + number if number else u'-'
         self.trackNameLE.setText(name)
-        self.trackIndexLE.setText(StringUtils.toUnicode(index))
+        self.indexLE.setText(StringUtils.toUnicode(index))
+        self.uidLE.setText(StringUtils.toUnicode(uid))
 
         # now, depending on whether this track is locked or unlocked, disable/enable the UI
         # locked = SourceFlagsEnum.get(f, SourceFlagsEnum.LOCKED)
@@ -753,7 +761,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         # with that out of the way, now attempt to get the track instance with the specified index
-        tracks = self._trackwayManager.getTracksByProperties(index=self.trackIndexLE.text())
+        tracks = self._trackwayManager.getTracksByProperties(index=self.indexLE.text())
 
         # just give up if no unique track with that specified index is found
         if not tracks or len(tracks) > 1:
@@ -1348,34 +1356,29 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         if self.selectionMethod1Cmbx.currentText() == self.FETCH_TRACK_BY_NAME:
             self.handleFetchByName()
-
         elif self.selectionMethod1Cmbx.currentText() == self.FETCH_TRACK_BY_INDEX:
             self.handleFetchByIndex()
 
-        elif self.selectionMethod1Cmbx.currentText() == self.SELECT_NEXT_INCOMPLETE:
-            self.handleSelectNextIncomplete()
-
-        elif self.selectionMethod1Cmbx.currentText() == self.SELECT_TRACK_BY_NAME:
-            self.handleSelectByName()
-
         elif self.selectionMethod1Cmbx.currentText() == self.SELECT_TRACK_BY_INDEX:
             self.handleSelectByIndex()
+        elif self.selectionMethod1Cmbx.currentText() == self.SELECT_TRACK_BY_NAME:
+            self.handleSelectByName()
+        elif self.selectionMethod1Cmbx.currentText() == self.SELECT_TRACK_BY_UID:
+            self.handleSelectByUid()
 
-        elif self.selectionMethod1Cmbx.currentText() == self.SELECT_SERIES_BEFORE:
-            self.handleSelectTracksBefore()
-
-        elif self.selectionMethod1Cmbx.currentText() == self.SELECT_SERIES_AFTER:
-            self.handleSelectTracksAfter()
-
-        elif self.selectionMethod1Cmbx.currentText() == self.SELECT_TRACK_SERIES:
+        elif self.selectionMethod1Cmbx.currentText() == self.SELECT_SERIES:
             self.handleSelectSeries()
+        elif self.selectionMethod1Cmbx.currentText() == self.SELECT_SERIES_AFTER:
+            self.handleSelectSeriesAfter()
+        elif self.selectionMethod1Cmbx.currentText() == self.SELECT_SERIES_BEFORE:
+            self.handleSelectSeriesBefore()
 
         elif self.selectionMethod1Cmbx.currentText() == self.SELECT_ALL_COMPLETED:
             self.handleSelectCompleted(True)
-
         elif self.selectionMethod1Cmbx.currentText() == self.SELECT_ALL_INCOMPLETE:
             self.handleSelectCompleted(False)
-
+        elif self.selectionMethod1Cmbx.currentText() == self.SELECT_NEXT_INCOMPLETE:
+            self.handleSelectNextIncomplete()
         elif self.selectionMethod1Cmbx.currentText() == self.SELECT_ALL_MARKED:
             self.handleSelectMarked(True)
 
@@ -1388,31 +1391,29 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         if self.selectionMethod2Cmbx.currentText() == self.FETCH_TRACK_BY_NAME:
             self.handleFetchByName()
-
-        elif self.selectionMethod2Cmbx.currentText() == self.SELECT_NEXT_INCOMPLETE:
-            self.handleSelectNextIncomplete()
-
-        elif self.selectionMethod2Cmbx.currentText() == self.SELECT_TRACK_BY_NAME:
-            self.handleSelectByName()
+        elif self.selectionMethod2Cmbx.currentText() == self.FETCH_TRACK_BY_INDEX:
+            self.handleFetchByIndex()
 
         elif self.selectionMethod2Cmbx.currentText() == self.SELECT_TRACK_BY_INDEX:
             self.handleSelectByIndex()
+        elif self.selectionMethod2Cmbx.currentText() == self.SELECT_TRACK_BY_NAME:
+            self.handleSelectByName()
+        elif self.selectionMethod2Cmbx.currentText() == self.SELECT_TRACK_BY_UID:
+            self.handleSelectByUid()
 
-        elif self.selectionMethod2Cmbx.currentText() == self.SELECT_SERIES_BEFORE:
-            self.handleSelectTracksBefore()
-
-        elif self.selectionMethod2Cmbx.currentText() == self.SELECT_SERIES_AFTER:
-            self.handleSelectTracksAfter()
-
-        elif self.selectionMethod2Cmbx.currentText() == self.SELECT_TRACK_SERIES:
+        elif self.selectionMethod2Cmbx.currentText() == self.SELECT_SERIES:
             self.handleSelectSeries()
+        elif self.selectionMethod2Cmbx.currentText() == self.SELECT_SERIES_AFTER:
+            self.handleSelectSeriesAfter()
+        elif self.selectionMethod2Cmbx.currentText() == self.SELECT_SERIES_BEFORE:
+            self.handleSelectSeriesBefore()
 
         elif self.selectionMethod2Cmbx.currentText() == self.SELECT_ALL_COMPLETED:
             self.handleSelectCompleted(True)
-
         elif self.selectionMethod2Cmbx.currentText() == self.SELECT_ALL_INCOMPLETE:
             self.handleSelectCompleted(False)
-
+        elif self.selectionMethod2Cmbx.currentText() == self.SELECT_NEXT_INCOMPLETE:
+            self.handleSelectNextIncomplete()
         elif self.selectionMethod2Cmbx.currentText() == self.SELECT_ALL_MARKED:
             self.handleSelectMarked(True)
 
@@ -1437,7 +1438,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not self._lock():
             return
 
-        tracks = self._trackwayManager.getTracksByProperties(index=self.trackIndexLE.text())
+        tracks = self._trackwayManager.getTracksByProperties(index=self.indexLE.text())
         if not tracks:
             self._unlock()
             return
@@ -1447,7 +1448,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         t = tracks[0]
-        self.selectTrack(t)
+        self._trackwayManager.selectTrack(t)
 
         self._trackwayManager.setCameraFocus()
         dict = t.toDict()
@@ -1478,6 +1479,28 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.setCameraFocus()
         self.refreshTrackUI(track.toDict())
 
+        self._unlock()
+
+#___________________________________________________________________________________________________ handleSelectByUid
+    def handleSelectByUid(self):
+        """ Handles the selection of a track by its UID. """
+
+        if not self._lock():
+            return
+
+        tracks = self._trackwayManager.getTracksByProperties(uid=self.uidLE.text())
+        if not tracks or len(tracks) != 1:
+            self._unlock()
+            return
+
+        t = tracks[0]
+
+        self._trackwayManager.selectTrack(t)
+
+        self._trackwayManager.setCameraFocus()
+        dict = t.toDict()
+        self.refreshTrackwayUI(dict)
+        self.refreshTrackUI(dict)
         self._unlock()
 
 #___________________________________________________________________________________________________ handleSelectCadenceCamBtn
@@ -1522,7 +1545,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         # first get a list of tracks that are either completed or incomplete
         tracks = self._trackwayManager.getCompletedTracks(completed=completed)
 
-        if len(tracks) == 0:
+        if not tracks:
             PyGlassBasicDialogManager.openOk(
                  self,
                 'None',
@@ -1641,8 +1664,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectTracksBefore
-    def handleSelectTracksBefore(self):
+#___________________________________________________________________________________________________ handleSelectSeriesBefore
+    def handleSelectSeriesBefore(self):
         """ Selects all track nodes up to (but excluding) the first currently-selected track(s). """
 
         if not self._lock():
@@ -1650,21 +1673,21 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         track = self._trackwayManager.getFirstSelectedTrack()
         if track:
-            self._trackwayManager.selectTracksBefore(track)
+            self._trackwayManager.selectSeriesBefore(track)
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectTracksAfter
-    def handleSelectTracksAfter(self):
+#___________________________________________________________________________________________________ handleSelectSeriesAfter
+    def handleSelectSeriesAfter(self):
         """ Selects all track nodes after the last of the currently-selected track(s). """
 
         if not self._lock():
             return
 
-        track = self._trackwayManager.getSelectedTracks()
-        if track:
-            self._trackwayManager.selectTracksAfter(track)
+        tracks = self._trackwayManager.getSelectedTracks()
+        if tracks:
+            self._trackwayManager.selectSeriesAfter(tracks[0])
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
@@ -1678,7 +1701,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         # compose the name of the layer from the trackway name in the combo box
-        layer = self.trackwayCmbx.currentText() + self.LAYER_SUFFIX
+        layer = self.trackwayCmbx.currentText() + self._trackwayManager.LAYER_SUFFIX
 
         self._trackwayManager.selectTracksInLayer(layer)
 
@@ -1738,7 +1761,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         # update the Maya node and the UI
         dict = track.toDict()
-        self.selectTrack(track)
+        self._trackwayManager.selectTrack(track)
         self.refreshTrackUI(dict)
         self._trackwayManager.setCameraFocus()
 
@@ -1838,27 +1861,22 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._unlock()
             return
 
-        self._drawing.createGroup('circle')
-        self._drawing.circle((0, 0), 100, scene=True)
+        self.currentDrawing.createGroup('g')
+        self.currentDrawing.circle((0, 0), 10, scene=False, groupId='g')
 
         for track in tracks:
             x = track.x
             z = track.z
 
-            # Track dimensions are in fractional meters, so multiply by 100 to convert to cm.
-            r = 100*0.5*(track.width/2.0 + track.length/2.0)
-
-            self.currentDrawing.circle(
-                (x, z),
-                r,
-                scene=True,
-                fill='none',
-                stroke='blue',
-                stroke_width=1)
+            self.currentDrawing.use('g', (x, z),
+                scale=track.width, scaleY=track.length,
+                rotation=track.rotation,
+                scene=True, fill='none', stroke='blue', stroke_width=1)
 
             # compute the averge uncertainty in cm (also stored in fractional meters)
+            # The track dimensions stored in the database are in fractional meters, so multiply by
+            # 100 to convert to cm.
             u = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
-
             self.currentDrawing.circle(
                 (x, z),
                 u,

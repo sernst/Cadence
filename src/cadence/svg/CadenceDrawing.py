@@ -159,6 +159,7 @@ class CadenceDrawing(object):
     def mm(self, p):
         """ Appends the units label 'mm' to each value.  Too many cases where svgwrite will not
             allow this suffix, so not currently used. """
+
         return (p[0]*mm, p[1]*mm)
 
 #___________________________________________________________________________________________________ line
@@ -173,8 +174,8 @@ class CadenceDrawing(object):
             p2 = self.projectToMap(p2, scene)
 
         # convert from (scaled) mm to px
-        p1 *= self.pxPerMm
-        p2 *= self.pxPerMm
+        p1 = (self.pxPerMm*p1[0], self.pxPerMm*p1[1])
+        p2 = (self.pxPerMm*p2[0], self.pxPerMm*p2[1])
 
         # create the object
         obj = self._drawing.line(p1, p2, **extra)
@@ -205,8 +206,8 @@ class CadenceDrawing(object):
         # svgwrite does not allow coordinates with the suffix 'mm', hence all values must be in px.
         convertedPoints = list()
         for p in points:
-            x = p[0]*self.pxPerMm
-            y = p[1]*self.pxPerMm
+            x = self.pxPerMm*p[0]
+            y = self.pxPerMm*p[1]
             convertedPoints.append((x, y))
 
         # create the object
@@ -233,16 +234,16 @@ class CadenceDrawing(object):
         xCenter = center[0]
         yCenter = center[1]
         insert  = (xCenter - width/2, yCenter - height/2)
-        size    = (width, height)
 
         # convert from scene coordinates to map coordinates as necessary
         if scene:
             insert = self.projectToMap(insert, scene)
-            size   = [self.scaleToMap(size[0]), self.scaleToMap(size[1])]
+            width  = self.scaleToMap(width)
+            height = self.scaleToMap(height)
 
         # convert from (scaled) mm to px
         insert = (self.pxPerMm*insert[0], self.pxPerMm*insert[1])
-        size   *= self.pxPerMm
+        size   = (self.pxPerMm*width, self.pxPerMm*height)
 
         # create the object
         obj = self._drawing.rect(insert, size, rx, ry, **extra)
