@@ -84,7 +84,7 @@ class SpatialUncertaintyStage(AnalysisStage):
         for t in self._tracks:
             x = t.xValue
             z = t.zValue
-            if max(x.uncertainty, z.uncertainty) < 2.0*average.uncertainty:
+            if max(x.uncertainty, z.uncertainty) <= 2.0*average.uncertainty:
                 continue
 
             largeUncertaintyCount += 1

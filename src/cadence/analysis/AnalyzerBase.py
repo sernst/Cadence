@@ -359,8 +359,6 @@ class AnalyzerBase(object):
             return self._trackSeries[trackway.uid]
 
         series = trackway.getTrackSeries()
-        for ts in series:
-            ts.analysisHierarchy = trackway.analysisHierarchy + [trackway]
         self._trackSeries[trackway.uid] = series
         return series
 
