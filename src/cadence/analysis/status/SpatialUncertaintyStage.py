@@ -78,17 +78,30 @@ class SpatialUncertaintyStage(AnalysisStage):
         average = NumericUtils.getMeanAndDeviation(self._uncs)
         self.logger.write('Average spatial uncertainty: %s' % average.label)
 
+        #-------------------------------------------------------------------------------------------
+        # FIND LARGE UNCERTAINTY TRACKS
         largeUncertaintyCount = 0
         for t in self._tracks:
             x = t.xValue
             z = t.zValue
-            if max(x.uncertainty, z.uncertainty) > 2.0*average.uncertainty:
-                largeUncertaintyCount += 1
-                self._largeUncCsv.createRow(
-                    uid=t.uid,
-                    fingerprint=t.fingerprint,
-                    x=x.label,
-                    z=z.label)
+            if max(x.uncertainty, z.uncertainty) < 2.0*average.uncertainty:
+                continue
+
+            largeUncertaintyCount += 1
+            self._largeUncCsv.createRow(
+                uid=t.uid,
+                fingerprint=t.fingerprint,
+                x=x.label,
+                z=z.label)
+
+            #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            # TODO: [KENT] MAP UNCERTAIN TRACKS
+            #       Here t is an instance of a track that has a large uncertainty value (in excess
+            #       of 2 standard deviations) and should be noted on the map file. I've assigned a
+            #       few variables here that you'll need to add this to the output map file.
+            xSigmas = x.uncertainty
+            zSigmas = z.uncertainty
+            sitemap = t.trackSeries.trackway.sitemap
 
         self.logger.write('%s Tracks with large spatial uncertainties found (%s%%)' % (
             largeUncertaintyCount, NumericUtils.roundToOrder(

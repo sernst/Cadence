@@ -131,13 +131,12 @@ class Tracks_SiteMap(FlagsTracksDefault):
 #___________________________________________________________________________________________________ getTrackways
     def getTrackways(self):
         """getTrackways doc..."""
-        trackways = []
 
         from cadence.models.tracks.Tracks_Trackway import Tracks_Trackway
         model = Tracks_Trackway.MASTER
-        for tw in self.mySession.query(model).filter(model.siteMapIndex == self.index).all():
+        trackways = self.mySession.query(model).filter(model.siteMapIndex == self.index).all()
+        for tw in trackways:
             tw.sitemap = self
-            trackways.append(tw)
         return trackways
 
 #___________________________________________________________________________________________________ GS: getNameFromFilename

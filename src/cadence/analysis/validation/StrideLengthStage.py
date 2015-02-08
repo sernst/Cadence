@@ -5,6 +5,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import numpy as np
+from pyaid.list.ListUtils import ListUtils
 from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
 
@@ -58,7 +59,7 @@ class StrideLengthStage(AnalysisStage):
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackSeries(self, series, trackway, sitemap):
 
-        for index in range(series.count - 1):
+        for index in ListUtils.range(series.count - 1):
             track   = series.tracks[index]
             data    = track.snapshotData
             stride  = data.get(SnapshotDataEnum.STRIDE_LENGTH)

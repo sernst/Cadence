@@ -12,10 +12,10 @@ from pyaid.debug.Logger import Logger
 from pyaid.file.FileUtils import FileUtils
 from pyaid.string.StringUtils import StringUtils
 from pyaid.system.SystemUtils import SystemUtils
+from pyaid.time.TimeUtils import TimeUtils
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
-from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 
 try:
@@ -25,14 +25,35 @@ except Exception:
 
 #*************************************************************************************************** AnalyzerBase
 class AnalyzerBase(object):
-    """A class for..."""
+    """ The abstract base class for all Cadence Analyzers. Each Analyzer acts as a container
+        around one or more AnalysisStage instances and provide these stage objects with the
+        common functionality for that particular Analyzer."""
 
 #===================================================================================================
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
-        """Creates a new instance of AnalyzerBase."""
+        """ Creates a new instance of AnalyzerBase.
+
+            [tracksSession] ~ Session
+                An SqlAlchemy session object into the Cadence tracks database. If no session was
+                specified the analyzer will manage sessions internally (opening and closing them
+                as needed).
+
+            [cacheData] ~ Object | CacheData
+                A caching object on which to store data during analysis at the analyzer level,
+                instead of the stage level.
+
+            [logger] ~ Logger
+                A logger object to use for logging within this analyzer. If no such logger exists,
+                a new logger is created.
+
+            [logFolderPath] ~ String
+                If no logger was specified for the analyzer, this is the absolute path to the
+                folder where the log file should be written. This value is ignored if you specify
+                a logger. """
+
         self._tracksSession = kwargs.get('tracksSession')
 
         self._cache         = ConfigsDict(kwargs.get('cacheData'))
@@ -65,36 +86,56 @@ class AnalyzerBase(object):
 #___________________________________________________________________________________________________ GS: plotFigures
     @property
     def plotFigures(self):
+        """ A dictionary containing the currently open (in the background) PyPlot figures. """
         return self._plotFigures
 
 #___________________________________________________________________________________________________ GS: stages
     @property
     def stages(self):
+        """ A list of the analyzer stages that make up the analysis process of this Analyzer. """
         return self._stages
 
 #___________________________________________________________________________________________________ GS: plot
     @property
     def plot(self):
+        """ A convenience reference to Matplotlib's PyPlot module. Included here so Analyzers do
+            not have to handle failed Matplotlib loading internally. """
         return plt
 
 #___________________________________________________________________________________________________ GS: logger
     @property
     def logger(self):
+        """ The logging object for the Analyzer. """
         return self._logger
 
 #___________________________________________________________________________________________________ GS: cache
     @property
     def cache(self):
+        """ The shared CacheData instance for the analyzer. """
         return self._cache
 
 #___________________________________________________________________________________________________ GS: analysisRootPath
     @property
     def analysisRootPath(self):
+        """ The root folder path where all analyses are stored. This is a top-level directory that
+            should not be accessed directly unless absolutely necessary. In most cases you should
+            use the outputPath property instead. """
         return self._settings.fetch('OUTPUT_PATH', self._defaultRootPath)
+
+#___________________________________________________________________________________________________ GS: outputRootPath
+    @property
+    def outputRootPath(self):
+        """ The root folder where analysis output files for this particular Analyzer should be
+            stored. This path represents a folder within the analysisRootPath property specific
+            to this analyzer. """
+        return FileUtils.makeFolderPath(self.analysisRootPath, self.__class__.__name__)
 
 #___________________________________________________________________________________________________ GS: tempPath
     @property
     def tempPath(self):
+        """ The root folder path where all temporary files created during analysis should be stored.
+            This path is created on demand and always removed at the end of the analysis process,
+            even if the process is aborted by an error in an analysis stage. """
         if not self._tempPath:
             return FileUtils.makeFolderPath(self._defaultRootPath, 'temp')
         return self._tempPath
@@ -107,22 +148,17 @@ class AnalyzerBase(object):
 
 #___________________________________________________________________________________________________ getStage
     def getStage(self, key):
-        """getStage doc..."""
+        """ Returns the analysis stage associated with the specified key or None if no such stage
+            exists. """
         for stage in self._stages:
             if stage.key == key:
                 return stage
         return None
 
-#___________________________________________________________________________________________________ createStage
-    def createStage(self, key, **kwargs):
-        """createStage doc..."""
-        stage = AnalysisStage(key=key, owner=self, **kwargs)
-        self.addStage(stage)
-        return stage
-
 #___________________________________________________________________________________________________ addStage
     def addStage(self, stage):
-        """addStage doc..."""
+        """ Appends the specified stage to this instances stage list if it is not already in the
+            list at another location. """
         if stage in self.stages:
             return
         stage.owner = self
@@ -130,14 +166,33 @@ class AnalyzerBase(object):
 
 #___________________________________________________________________________________________________ getPath
     def getPath(self, *args, **kwargs):
-        """createOutputPath doc..."""
-        return FileUtils.createPath(self.analysisRootPath, self.__class__.__name__, *args, **kwargs)
+        """ Convenience method for creating paths relative to the output root path for this
+            Analyzer. """
+        return FileUtils.createPath(self.outputRootPath, *args, **kwargs)
 
 #___________________________________________________________________________________________________ getTempFilePath
     def getTempFilePath(self, name =None, extension =None, *args):
-        """getTempFilePath doc..."""
+        """ Used to create a temporary file path within this instance's temporary folder.
+            Any file on this path will be automatically removed at the end of the analysis
+            process.
+
+            [name] :: String :: None
+                The desired file name for the desired file within the temporary directory. If no
+                name is specified, a name will be created automatically using the current time
+                (microsecond) and a 16 digit random code for a very low probability of collisions.
+
+            [extension] :: String :: None
+                Specifies the extension to add to this file. The file name is not altered if no
+                extension is specified.
+
+            [*args] :: [String] :: []
+                A list of relative folder prefixes in which the file should reside. For example,
+                if you wish to have a file 'bar' in a folder 'foo' then you would specify 'foo' as
+                the single arg to get a file located at 'foo/bar' within the temporary file. No
+                directory prefixes will be created within this method. """
+
         if not name:
-            name = StringUtils.getRandomString(16)
+            name = TimeUtils.getUidTimecode(suffix=StringUtils.getRandomString(16))
         if extension:
             extension = '.' + extension.strip('.')
             if not name.endswith(extension):
@@ -148,12 +203,15 @@ class AnalyzerBase(object):
 
 #___________________________________________________________________________________________________ getTempPath
     def getTempPath(self, *args, **kwargs):
-        """getTempPath doc..."""
+        """ Creates a path relative to this instance's root temporary path. Uses the
+            FileUtils.createPath() format for args and kwargs. """
         return FileUtils.createPath(self.tempPath, *args, **kwargs)
 
 #___________________________________________________________________________________________________ run
     def run(self):
-        """run doc..."""
+        """ Executes the analysis process, iterating through each of the analysis stages before
+            cleaning up and exiting. """
+
         print('[OUTPUT PATH]: %s' % self.analysisRootPath)
 
         myRootPath = self.getPath(isDir=True)
@@ -186,14 +244,14 @@ class AnalyzerBase(object):
 
 #___________________________________________________________________________________________________ createFigure
     def createFigure(self, key, subplotX =1, subPlotY =1, **kwargs):
-        """createFigure doc..."""
+        """ A convenience method for creating a PyPlot figure that is managed by this analyzer. """
         result = plt.subplots(subplotX, subPlotY, **kwargs)
         self._plotFigures[key] = plt.gcf()
         return result[0]
 
 #___________________________________________________________________________________________________ getFigure
     def getFigure(self, key, setActive =True):
-        """createFigure doc..."""
+        """ Retrieves the managed PyPlot figure for the specified key if such a figure exists. """
         if key in self._plotFigures:
             out = self._plotFigures[key]
             if setActive:
@@ -202,7 +260,7 @@ class AnalyzerBase(object):
 
 #___________________________________________________________________________________________________ closeFigure
     def closeFigure(self, key):
-        """closeFigure doc..."""
+        """ Closes the managed figure specified by its key if such a figure exists. """
         if key not in self._plotFigures:
             return
 
@@ -212,12 +270,29 @@ class AnalyzerBase(object):
 
 #___________________________________________________________________________________________________ savePlotFile
     def saveFigure(self, key, path =None, close =True, **kwargs):
-        """savePlotFile doc..."""
+        """ Saves the specified figure to a file at teh specified path.
+
+            key :: String
+                The key for the figure to be saved. If no such key exists, the method will return
+                false.
+
+            path :: String :: None
+                The absolute file location to where the figure should be saved. If no path is
+                specified the file will be saved as a pdf in this Analyzer's temporary folder.
+
+            close :: Boolean :: True
+                If true, the figure will be closed upon successful completion of the save process.
+
+            [kwargs]
+                Data to be passed directly to the PyPlot Figure.savefig() method, which can be
+                used to further customize how the figure is saved. """
+
         if not plt or key not in self._plotFigures:
             return False
 
         if not path:
-            path = self.getTempPath('%s-%s.pdf' % (key, StringUtils.getRandomString(16)), isFile=True)
+            path = self.getTempPath('%s-%s.pdf' % (
+                key, TimeUtils.getUidTimecode(suffix=StringUtils.getRandomString(16))), isFile=True)
 
         figure = self._plotFigures[key]
 
@@ -231,14 +306,17 @@ class AnalyzerBase(object):
 
 #___________________________________________________________________________________________________ getTracksSession
     def getTracksSession(self):
-        """getTracksSession doc..."""
+        """ Returns a managed session to the tracks database. Used for shared session access across
+            analysis stages, which is used to increase performance by eliminating the overhead in
+            loading large segments of the database multiple times. """
         if self._tracksSession is None:
             self._tracksSession = Tracks_SiteMap.createSession()
         return self._tracksSession
 
 #___________________________________________________________________________________________________ closeTracksSession
-    def closeTracksSession(self, commit =True):
-        """closeTracksSession doc..."""
+    def closeTracksSession(self, commit =False):
+        """ Closes the shared track database session. By default no commit is made because the
+            analyzers should not be writing to the tracks database. """
         if not self._tracksSession:
             return
 
@@ -249,6 +327,10 @@ class AnalyzerBase(object):
 
 #___________________________________________________________________________________________________ getSitemaps
     def getSitemaps(self):
+        """ Retrieves a list of sitemap model instances from the tracks database for use in
+            analysis. These sitemaps are cached for the remainder of the analysis process for
+            data persistence and performance reasons. """
+
         if not self._sitemaps:
             model   = Tracks_SiteMap.MASTER
             session = self.getTracksSession()
@@ -258,7 +340,9 @@ class AnalyzerBase(object):
 
 #___________________________________________________________________________________________________ getTrackways
     def getTrackways(self, sitemap):
-        """getTrackways doc..."""
+        """ Retrieves a list of trackway model instances for the specified sitemap. These trackways
+            are cached for data persistence and performance reasons. """
+
         if sitemap.uid in self._trackways:
             return self._trackways[sitemap.uid]
 
@@ -268,11 +352,15 @@ class AnalyzerBase(object):
 
 #___________________________________________________________________________________________________ getTrackwaySeries
     def getTrackwaySeries(self, trackway):
-        """getTrackSeries doc..."""
+        """ Retrieves a list of TrackSeries instances for the specified trackway. These series are
+            cached for data persistence and performance reasons. """
+
         if trackway.uid in self._trackSeries:
             return self._trackSeries[trackway.uid]
 
         series = trackway.getTrackSeries()
+        for ts in series:
+            ts.analysisHierarchy = trackway.analysisHierarchy + [trackway]
         self._trackSeries[trackway.uid] = series
         return series
 
@@ -282,17 +370,25 @@ class AnalyzerBase(object):
 #___________________________________________________________________________________________________ _preAnalyze
     # noinspection PyMethodMayBeStatic
     def _preAnalyze(self):
-        """_preAnalyze doc..."""
+        """ A pre-analysis hook method that is called just prior to executing the first
+            AnalysisStage and can be overridden to customize the analyzer prior to that phase
+            of the run() method. """
         pass
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
-        """_postAnalyze doc..."""
+        """ A post-analysis hook method that is called just after the final AnalysisStage finishes
+            execution. This method can be overridden to customize the post analysis behavior before
+            the cleanup process. """
         pass
 
 #___________________________________________________________________________________________________ _cleanup
     def _cleanup(self):
-        """_cleanup doc..."""
+        """ A hook method called in the final stages of the run() method after all analysis is
+            complete, and should be overridden if this Analyzer creates any non-standard transient
+            data during its lifetime. Also, this method will be called even if an AnalysisStage
+            aborts due to an exception, so this method should be hardened against exceptions
+            caused by incomplete run execution. """
         pass
 
 #===================================================================================================

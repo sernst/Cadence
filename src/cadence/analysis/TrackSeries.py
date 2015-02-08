@@ -18,6 +18,8 @@ class TrackSeries(object):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, trackway, firstTrackUid):
         """Creates a new instance of TrackSeries."""
+        self.analysisHierarchy = []
+
         self._trackway      = trackway
         self._firstTrackUid = firstTrackUid
         self._tracks        = []
@@ -138,6 +140,7 @@ class TrackSeries(object):
         nextTrackUid = self._firstTrackUid
         while nextTrackUid:
             track = session.query(model).filter(model.uid == nextTrackUid).first()
+            track.trackSeries = self
             self.tracks.append(track)
             if not track.isComplete:
                 self.incompleteTracks.append(track)

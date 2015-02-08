@@ -74,12 +74,23 @@ class Tracks_Trackway(FlagsTracksDefault):
 #___________________________________________________________________________________________________ GS: cache
     @property
     def cache(self):
-        """ Caching object used during analysis to store transient data related to this sitemap """
+        """ Caching object used during analysis to store transient data related to this trackway """
         out = self.fetchTransient('cache')
         if not out:
             out = ConfigsDict()
             self.putTransient('cache', out)
         return out
+
+#___________________________________________________________________________________________________ GS: sitemap
+    @property
+    def sitemap(self):
+        out = self.fetchTransient('sitemap')
+        if not out:
+            return self.getSitemap()
+        return out
+    @sitemap.setter
+    def sitemap(self, value):
+        self.putTransient('sitemap', value)
 
 #===================================================================================================
 #                                                                                     P U B L I C

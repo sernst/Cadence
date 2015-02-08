@@ -184,11 +184,6 @@ class LengthWidthStage(AnalysisStage):
                     wSigma=widthDevSigma,
                     lSigma=lengthDevSigma)
 
-                self.logger.write('  * %s%s%s' % (
-                    StringUtils.extendToLength(track.fingerprint, 32),
-                    StringUtils.extendToLength('(%s, %s)' % (widthDevSigma, lengthDevSigma), 16),
-                    track.uid))
-
         if not csv.save():
             self.logger.write('[ERROR]: Failed to save CSV file to %s' % csv.path)
 

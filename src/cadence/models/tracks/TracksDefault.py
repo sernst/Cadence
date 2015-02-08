@@ -83,6 +83,16 @@ class TracksDefault(PyGlassModelsDefault):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+#___________________________________________________________________________________________________ GS: trackSeries
+    @property
+    def trackSeries(self):
+        """ Used in analysis, this transient data stores a reference to the track series object
+            that owns this track. """
+        return self.fetchTransient('trackSeries')
+    @trackSeries.setter
+    def trackSeries(self, value):
+        self.putTransient('trackSeries', value)
+
 #___________________________________________________________________________________________________ GS: positionValue
     @property
     def positionValue(self):
@@ -184,7 +194,7 @@ class TracksDefault(PyGlassModelsDefault):
     @snapshotData.setter
     def snapshotData(self, value):
         if not value:
-            self.snaphost = ''
+            self.snapshot = ''
         else:
             self.snapshot = JSON.asString(value)
 
