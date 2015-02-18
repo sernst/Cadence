@@ -377,6 +377,7 @@ class TrackSceneUtils(object):
             print('in createTrackNode:  no properties provided')
             return node
 
+
         # Add the new nodeName to the Cadence track scene set, color it, and we're done
         cmds.sets(node, add=trackSetNode)
         cls.colorNode(node, props)
@@ -520,3 +521,4 @@ class TrackSceneUtils(object):
             return cmds.sets(name=CadenceEnvironment.TRACKWAY_SET_NODE_NAME, empty=True)
 
         return None
+

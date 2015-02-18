@@ -14,6 +14,7 @@ from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
 from cadence.svg.CadenceDrawing import CadenceDrawing
 from cadence.views.tools.trackwayManager.TrackwayManager import TrackwayManager
+from cadence.views.tools.trackNodeUtils.TrackNodeUtils import TrackNodeUtils
 
 #___________________________________________________________________________________________________ TrackwayManagerWidget
 class TrackwayManagerWidget(PyGlassWidget):
@@ -27,8 +28,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    FETCH_TRACK_BY_NAME    = 'Fetch Track by NAME'
-    FETCH_TRACK_BY_INDEX   = 'Fetch Track by INDEX'
+    FETCH_TRACK_BY_NAME    = 'Fetch Track by NAME  << CAUTION'
+    FETCH_TRACK_BY_INDEX   = 'Fetch Track by INDEX << CAUTION'
     SELECT_NEXT_INCOMPLETE = 'Select Next INCOMPLETE'
     SELECT_TRACK_BY_NAME   = 'Select Track by NAME'
     SELECT_TRACK_BY_INDEX  = 'Select Track by INDEX'
@@ -46,6 +47,8 @@ class TrackwayManagerWidget(PyGlassWidget):
     LINK_SELECTED        = 'LINK Selected Tracks'
     UNLINK_SELECTED      = 'UNLINK Selected Tracks'
     SET_TO_MEASURED      = 'Set to MEASURED Dimensions'
+    SET_DATUM            = 'Set Datum'
+    SET_LINKS            = 'Set Links'
 
     SET_UNCERTAINTY_LOW      = 'Set Uncertainties LOW'          # for exceptional tracks
     SET_UNCERTAINTY_MODERATE = 'Set Uncertainties MODERATE'     # a reasonable default
@@ -112,13 +115,14 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.selectPerspectiveBtn.clicked.connect(self.handleSelectPerspectiveBtn)
 
         trackSelectionMethods = (
+            self.SELECT_TRACK_BY_NAME,
+            self.SELECT_TRACK_BY_INDEX,
+            self.SELECT_TRACK_BY_UID,
+
             self.FETCH_TRACK_BY_NAME,
             self.FETCH_TRACK_BY_INDEX,
 
             self.SELECT_NEXT_INCOMPLETE,
-            self.SELECT_TRACK_BY_NAME,
-            self.SELECT_TRACK_BY_INDEX,
-            self.SELECT_TRACK_BY_UID,
             self.SELECT_SERIES_BEFORE,
             self.SELECT_SERIES_AFTER,
             self.SELECT_SERIES,
@@ -135,6 +139,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.select2Btn.clicked.connect(self.handleSelect2Btn)
 
         trackOperationMethods = (
+            self.SET_DATUM,
+            self.SET_LINKS,
             self.EXTRAPOLATE_NEXT,
             self.EXTRAPOLATE_PREVIOUS,
             self.INTERPOLATE_TRACK,
@@ -144,6 +150,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.SET_UNCERTAINTY_HIGH,
             self.LINK_SELECTED,
             self.UNLINK_SELECTED)
+
 
         # set up a bank of three combo boxes of operations for convenience access for common tasks
         self.operation1Cmbx.addItems(trackOperationMethods)
@@ -1223,6 +1230,12 @@ class TrackwayManagerWidget(PyGlassWidget):
         elif op == self.UNLINK_SELECTED:
             self.handleUnlink()
 
+        elif op == self.SET_DATUM:
+            self.handleSetDatum()
+
+        elif op == self.SET_LINKS:
+            self.handleSetLinks()
+
 #___________________________________________________________________________________________________ handleOperation1Btn
     def handleOperation1Btn(self):
         """ Passes the selected operation to be performed. """
@@ -1707,6 +1720,64 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
+
+#___________________________________________________________________________________________________ handleSetDatum
+    def handleSetDatum(self):
+        """ Set the datum attribute in all nodes for the entire track series based on the given
+            selection.  The datum value is the disparity between track width and measured track
+            width. """
+
+        if not self._lock():
+            return
+
+        tracks = self._trackwayManager.getSelectedTracks()
+        if not tracks:
+            self._unlock()
+            return
+
+        # get the trackSetNode for this scene
+        trackSetNode = TrackNodeUtils.getTrackSetNode()
+        if not trackSetNode:
+            print('handleSetDatum: no track set node found!')
+            self._unlock()
+            return None
+
+        for track in tracks:
+            # in this example, compute the algebraic difference in width with that measured
+            v = track.width - track.widthMeasured
+            TrackNodeUtils.setDatum(TrackNodeUtils.getTrackNode(track.uid), v)
+
+        self._trackwayManager.closeSession(commit=True)
+        self._unlock()
+
+#___________________________________________________________________________________________________ handleSetLinks
+    def handleSetLinks(self):
+        """ Sets the prev and next links in the selected track nodes. """
+
+        if not self._lock():
+            return
+
+        tracks = self._trackwayManager.getSelectedTracks()
+        if not tracks:
+            self._unlock()
+            return
+
+        for track in tracks:
+            thisNode = TrackNodeUtils.getTrackNode(track.uid)
+
+            nextTrack = track.next
+            nextNode  = TrackNodeUtils.getTrackNode(nextTrack) if nextTrack else None
+
+            prevTrack = self._trackwayManager.getPreviousTrack(track)
+            prevNode = TrackNodeUtils.getTrackNode(prevTrack.uid) if prevTrack else None
+
+            print('prev track = %s' %prevTrack)
+            TrackNodeUtils.setNodeLinks(thisNode, prevNode, nextNode)
+
+        self._trackwayManager.closeSession(commit=True)
+        self._unlock()
+
+
 #___________________________________________________________________________________________________ handleSetToMeasuredDimensions
     def handleSetToMeasuredDimensions(self):
         """ The selected track is assigned the length and width as measured in the field. """
@@ -1862,16 +1933,23 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         self.currentDrawing.createGroup('g')
-        self.currentDrawing.circle((0, 0), 10, scene=False, groupId='g')
+        # self.currentDrawing.circle((0, 0), 10, scene=False, groupId='g')
+        # add a little tail that will point in the direction of rotation.  It will later be scaled
+        # and rotated
+        self.currentDrawing.line((0, 0), (0, -10), scene=False, groupId='g', stroke='black')
 
         for track in tracks:
             x = track.x
             z = track.z
 
             self.currentDrawing.use('g', (x, z),
-                scale=track.width, scaleY=track.length,
+                scale=track.width,
+                scaleY=track.length,
                 rotation=track.rotation,
-                scene=True, fill='none', stroke='blue', stroke_width=1)
+                scene=True,
+                fill='none',
+                stroke='blue',
+                stroke_width=4)
 
             # compute the averge uncertainty in cm (also stored in fractional meters)
             # The track dimensions stored in the database are in fractional meters, so multiply by
@@ -1882,8 +1960,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                 u,
                 scene=True,
                 fill='red',
-                stroke='red',
-                stroke_width=1)
+                stroke='red')
 
         self._unlock()
 
@@ -1975,6 +2052,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             fill='none',
             stroke='green',
             stroke_width=1)
+        self.currentDrawing.grid()
         self.currentDrawing.save()
         self.currentDrawing = None
 

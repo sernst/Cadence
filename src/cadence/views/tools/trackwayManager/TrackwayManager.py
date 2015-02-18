@@ -714,9 +714,6 @@ class TrackwayManager(object):
         # then set that layer either visible or invisible according to the kwarg
         cmds.setAttr('%s.visibility' % layer, visible)
 
-        # then set that layer either visible or invisible according to the kwarg
-        cmds.setAttr('%s.visibility' % layer, visible)
-
 
 #___________________________________________________________________________________________________ closeSession
     def closeSession(self, commit =True):

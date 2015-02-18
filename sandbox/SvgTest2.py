@@ -29,7 +29,6 @@ drawing = CadenceDrawing('test_2.svg', siteMap)
 # --------------------------------------------------------------------------------------------------
 # THIS DEMONSTRATES MAPPING BETWEEN A SITE MAP AND THE SCENE, PLUS SIMPLE SHAPES
 
-
 xFed   = siteMap.xFederal
 yFed   = siteMap.yFederal
 fMap   = (xFed, yFed)
@@ -51,7 +50,6 @@ drawing.rect((xFed + 40, yFed), 20, 40, scene=False)
 
 # and another smaller one at (10, 20) in map coordinates
 drawing.rect((10, 20), 4, 8, scene=False)
-
 
 # place the federal coordinates as a text string 20 cm above the marker
 text = "(%s, %s)" % (drawing.siteMap.federalEast, drawing.siteMap.federalNorth)
@@ -103,17 +101,16 @@ drawing.grid()
 
 
 #==================================================================================================
-# #  CREATE A GROUP CONTAINING A RECT, SHOWING HOW TO USE (INSTANCE) IT ROTATED AND TRANSLATED
-#
-# drawing.createGroup('g1')
-# drawing.rect((0, 0), 10, 40, scene=False, groupId='g1') # add this rect to the group
-#
-# drawing.use('g1', (400, 100), rotation=10)
-# drawing.use('g1', (400, 200), rotation=20)
-# drawing.use('g1', (400, 300), rotation=30)
-# drawing.use('g1', (400, 400), rotation=40)
-# drawing.use('g1', (400, 500), rotation=50)
+#  CREATE A GROUP CONTAINING A RECT, SHOWING HOW TO USE (INSTANCE) IT ROTATED AND TRANSLATED
 
+drawing.createGroup('g1')
+drawing.rect((0, 0), 10, 40, scene=False, groupId='g1') # add this rect to the group
+
+drawing.use('g1', (400, 100), rotation=10)
+drawing.use('g1', (400, 200), rotation=20)
+drawing.use('g1', (400, 300), rotation=30)
+drawing.use('g1', (400, 400), rotation=40)
+drawing.use('g1', (400, 500), rotation=50)
 
 #==================================================================================================
 # #  CREATE A GROUP CONTAINING A CIRCLE, SHOWING HOW TO USE (INSTANCE) IT SCALED
@@ -141,48 +138,51 @@ drawing.grid()
 
 #==================================================================================================
 # LOAD ALL TRACKS FOR THIS SITE AND DRAW THEM AS DISKS
-
-tracks = siteMap.getAllTracks(session)
-
-print '%s tracks returned' % len(tracks)
-
-drawing.createGroup('g')
-drawing.circle((0, 0), 10, scene=False, groupId='g') # add this circle to the group
-
-track = tracks[0]
-
-print ('track scale %s and %s' % (track.width, track.length))
-
-drawing.use('g', (0, 0),
-            scale=track.width, scaleY=track.length, rotation=track.rotation,
-            scene=True, fill='none', stroke='blue', stroke_width=1)
-
-
-# # place the federal coordinates as a text string 20 cm above the marker
-text = "(%s, %s)" % (drawing.siteMap.federalEast, drawing.siteMap.federalNorth)
-drawing.text(text, (0, 20), scene=True, stroke='green')
 #
-# # place a 2 cm green unfilled circle atop the federal coordinate marker
-# drawing.circle((0, 0), 2, scene=True, fill='none', stroke='green', stroke_width=1)
+# tracks = siteMap.getAllTracks(session)
 #
-# drawing.circle((2011, 454), 2, scene=False, fill='none', stroke='red', stroke_width=2)
-
-
-for track in tracks:
-    x = track.x
-    z = track.z
-
-    drawing.use('g', (x, z),
-                scale=track.width, scaleY=track.length,
-                rotation=track.rotation,
-                scene=True, fill='none', stroke='blue', stroke_width=1)
-
-    # compute the averge uncertainty in cm (also stored in fractional meters)
-    # The track dimensions stored in the database are in fractional meters, so multiply by
-    # 100 to convert to cm.
-    u = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
-
-    drawing.circle((x, z), u, scene=True, fill='red', stroke='red', stroke_width=1)
+# print '%s tracks returned' % len(tracks)
+#
+# drawing.createGroup('g')
+# drawing.circle((0, 0), 10, scene=False, groupId='g') # add this circle to the group
+#
+# track = tracks[0]
+#
+# print ('track scale %s and %s' % (track.width, track.length))
+#
+# drawing.use('g', (0, 0),
+#             scale=track.width, scaleY=track.length, rotation=track.rotation,
+#             scene=True, fill='none', stroke='blue', stroke_width=1)
+#
+#
+# # # place the federal coordinates as a text string 20 cm above the marker
+# text = "(%s, %s)" % (drawing.siteMap.federalEast, drawing.siteMap.federalNorth)
+# drawing.text(text, (0, 20), scene=True, stroke='green')
+# #
+# # # place a 2 cm green unfilled circle atop the federal coordinate marker
+# # drawing.circle((0, 0), 2, scene=True, fill='none', stroke='green', stroke_width=1)
+# #
+# # drawing.circle((2011, 454), 2, scene=False, fill='none', stroke='red', stroke_width=2)
+#
+# # place a 4 cm green unfilled circle atop the federal coordinate marker
+# drawing.circle((0, 0), 4, scene=True, fill='none', stroke='green', stroke_width=1)
+#
+# for track in tracks:
+#     x = track.x
+#     z = track.z
+#
+#     drawing.use('g', (x, z),
+#                 scale=track.width, scaleY=track.length,
+#                 rotation=track.rotation,
+#                 scene=True, fill='none', stroke='blue', stroke_width=4)
+#
+#     # compute the averge uncertainty in cm (also stored in fractional meters)
+#     # The track dimensions stored in the database are in fractional meters, so multiply by
+#     # 100 to convert to cm.
+#     u = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
+#
+#     drawing.circle((x, z), u, scene=True, fill='red', stroke='red', stroke_width=1)
+#     drawing.line((x, z), (x + 20, z + 20), scene=True, stroke= 'blue')
 
 #==================================================================================================
 # done

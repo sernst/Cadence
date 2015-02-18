@@ -11,9 +11,7 @@ from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 #___________________________________________________________________________________________________ CreateTrackNode
 class CreateTrackNode(NimbleScriptBase):
     """ A remotely run script to creates a Maya node to represent a specific track. The
-        procedure to create the transforms and geometry is createTrackNode in TrackSceneUtils.
-        Only one additional Maya attribute is given the transform node, that being a uid.
-        The geometry is  """
+        procedure to create the transforms and geometry is createTrackNode in TrackSceneUtils. """
 
 #===================================================================================================
 #                                                                                     P U B L I C

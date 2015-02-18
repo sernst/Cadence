@@ -7,6 +7,9 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import svgwrite
 from svgwrite import mm
 
+from reportlab.graphics import renderPDF
+from svglib.svglib import svg2rlg
+
 from pyaid.OsUtils import OsUtils
 
 #___________________________________________________________________________________________________ CadenceDrawing
@@ -81,7 +84,8 @@ class CadenceDrawing(object):
             argument to establish the correspondence between the Maya scene and the site siteMap
             coordinates. """
 
-        self.siteMap = siteMap
+        self.fileName = fileName
+        self.siteMap  = siteMap
 
         # Generally units can be specified in millimeters.  In a few cases, however, (e.g.,
         # PolyLine) the coordinates must be unqualified integers (as px).  The site maps, however
@@ -170,8 +174,8 @@ class CadenceDrawing(object):
 
         # convert from scene coordinates to map coordinates as necessary
         if scene:
-            p1 = self.projectToMap(p1, scene)
-            p2 = self.projectToMap(p2, scene)
+            p1 = self.projectToMap(p1)
+            p2 = self.projectToMap(p2)
 
         # convert from (scaled) mm to px
         p1 = (self.pxPerMm*p1[0], self.pxPerMm*p1[1])
@@ -237,7 +241,7 @@ class CadenceDrawing(object):
 
         # convert from scene coordinates to map coordinates as necessary
         if scene:
-            insert = self.projectToMap(insert, scene)
+            insert = self.projectToMap(insert)
             width  = self.scaleToMap(width)
             height = self.scaleToMap(height)
 
@@ -344,9 +348,9 @@ class CadenceDrawing(object):
 #___________________________________________________________________________________________________ mark
     def mark(self, size, scene =True, groupId =None, **extra):
         """ Adds an axis-aligned '+' mark of given size at the origin. If scene=True, the size is
-            transformed to map coordinates, else presumed to already be in map coordinates. If
-            groupId=True, the mark is added to the specified group, rather
-            than to the drawing. This fragment is intended for use as a group (see grid). """
+            transformed to map coordinates, else it is presumed to already be in map coordinates. If
+            groupId=True, the mark is added to the specified group, rather than to the drawing.
+            This fragment is intended for use as a group (see grid). """
 
         r = size
 
@@ -355,8 +359,8 @@ class CadenceDrawing(object):
 
 #___________________________________________________________________________________________________ grid
     def grid(self, size =2, diagonals =True, dx =200, dy =200, **extra):
-        """ This is a group-based version of grid.  It creates a rectangular grid of marks, as in
-            grid. The grid marks on a site map are separated by 10 m in the real world, or 200 units
+        """ This is a group-based version of grid.  It creates a rectangular grid of marks.
+            The grid marks on a site map are separated by 10 m in the real world, or 200 units
             in the map in their 'scaled mm' convention. Unfortunately, the group construct in
             svgwrite requires px values, and will not allow the mm suffix. """
 
@@ -372,18 +376,30 @@ class CadenceDrawing(object):
             x = x0 + i*dy
             for j in range(yn):
                 y = y0 + j*dy
-                self.use('mark', [self.pxPerMm*x, self.pxPerMm*y], rotation=45)
+                self.use('mark', [self.pxPerMm*x, self.pxPerMm*y], rotation=45, scene=False)
 
 #___________________________________________________________________________________________________ save
-    def save(self):
-        """ Writes the current _drawing to the file specified at initialization. """
+    def save(self, toPDF=True):
+        """ Writes the current _drawing in SVG format to the file specified at initialization. If
+            one wishes to have create a PDF file (same file name as used for the .SVG, but with
+            suffix .PDF), then call with toPDF True). """
+
         self._drawing.save()
+
+        if toPDF:
+            fileName = self.fileName
+
+            drawing = svg2rlg(fileName)
+
+            if fileName.endswith('.svg'):
+                fileName = fileName.replace('.svg', '.pdf', 1)
+            renderPDF.drawToFile(drawing, fileName)
 
 #___________________________________________________________________________________________________ createGroup
     def createGroup(self, id, **extra):
         """ Creates an SVG group, so that subsequent SVG fragments can be added to the group.  When
             the group is subsequently used (by the use function) an instance is created, and placed
-            at a particular location in the drawing, with a particualr scale and rotation. This
+            at a particular location in the drawing, with a particular scale and rotation. This
             method only creates tghe group; to then add fragments, the group's id is passed to draw
             functions so that those fragments are added to the group rather than to the drawing
             directly. Groups are intended to be placed readily across a drawing, hence the pivot
@@ -399,7 +415,7 @@ class CadenceDrawing(object):
 
 #___________________________________________________________________________________________________ use
     def use(self, id, center,
-            scene =None, rotation =None, rotationCenter =None, scale =None, scaleY =None, **extra):
+            scene =True, rotation =None, rotationCenter =None, scale =None, scaleY =None, **extra):
         """ Groups are given an id when created.  This id is used to create instances that are
             added to the Cadence drawing (and hence the SVG file) by this function.  The group is
             placed in the drawing using map coordinates.  Rotation defaults to about the origin. A
@@ -437,4 +453,3 @@ class CadenceDrawing(object):
             instance.scale(scale, sy=scaleY)
 
         self._drawing.add(instance)
-

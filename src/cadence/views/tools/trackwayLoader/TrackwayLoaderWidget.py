@@ -3,9 +3,9 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.string.StringUtils import StringUtils
-
 import sqlalchemy as sqla
 from PySide import QtGui
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
@@ -14,9 +14,10 @@ from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
 from cadence.data.TrackLinkageRemoteThread import TrackLinkageRemoteThread
 from cadence.enums.TrackPropEnum import TrackPropEnum
-from cadence.mayan.trackway.plugin import CreateTrackNodes
+from cadence.mayan.trackway import CreateTrackNodes
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.util.threading.RunPythonModuleThread import RunPythonModuleThread
+
 
 #___________________________________________________________________________________________________ TrackwayLoaderWidget
 class TrackwayLoaderWidget(PyGlassWidget):

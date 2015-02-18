@@ -42,6 +42,7 @@ class Tracks_TrackStore(TracksDefault):
     def getMatchingTrack(self, session):
         """ Returns the Tracks_Track instance that corresponds to this Tracks_TrackStore instance
             if such an instance exists. """
+
         from cadence.models.tracks.Tracks_Track import Tracks_Track
         model  = Tracks_Track.MASTER
         result = session.query(model).filter(model.uid == self.uid).all()

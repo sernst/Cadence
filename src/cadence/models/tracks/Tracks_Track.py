@@ -32,7 +32,7 @@ class Tracks_Track(TracksDefault):
 #___________________________________________________________________________________________________ GS: cache
     @property
     def cache(self):
-        """ Caching object used during analysis to store transient data related to this track """
+        """ Caching object used during analysis to store transient data related to this track. """
         out = self.fetchTransient('cache')
         if not out:
             out = ConfigsDict()
