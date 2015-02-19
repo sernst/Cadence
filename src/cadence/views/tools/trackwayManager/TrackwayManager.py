@@ -22,6 +22,8 @@ from cadence.util.maya.MayaUtils import MayaUtils
 from cadence.mayan.trackway import GetSelectedUidList
 from cadence.mayan.trackway import GetUidList
 from cadence.mayan.trackway import GetTrackNodeData
+from cadence.mayan.trackway import SetNodeDatum
+from cadence.mayan.trackway import SetNodeLinks
 
 #___________________________________________________________________________________________________ TrackwayManager
 class TrackwayManager(object):
@@ -33,7 +35,7 @@ class TrackwayManager(object):
 
 #===================================================================================================
 #                                                                                       C L A S S
-    RESOURCE_FOLDER_PREFIX = ['tools']
+# RESOURCE_FOLDER_PREFIX = ['tools']
 
     LAYER_SUFFIX = '_Trackway_Layer'
     PATH_LAYER   = 'Track_Path_Layer'
@@ -45,7 +47,7 @@ class TrackwayManager(object):
         self._session = None
 
 #===================================================================================================
-#                                                                                        P U B L I C
+#                                                                                     P U B L I C
 #
 #___________________________________________________________________________________________________ getUidList
     def getUidList(self):
@@ -432,10 +434,6 @@ class TrackwayManager(object):
         trackwayNames = list(set(trackwayNames))
         trackwayNames.sort()
 
-        print('in getTrackwayNames:  ')
-        for t in trackwayNames:
-            print(t)
-
         return trackwayNames if len(trackwayNames) > 0 else None
 
 #___________________________________________________________________________________________________ getTrackwayProps
@@ -459,7 +457,6 @@ class TrackwayManager(object):
             if layer.endswith(self.LAYER_SUFFIX):
                nodes.extend(cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True))
         cmds.select(nodes)
-        print("in selectAllTracks: %s nodes selected" %len(nodes))
 
 #___________________________________________________________________________________________________ selectTrack
     def selectTrack(self, track):
@@ -510,6 +507,82 @@ class TrackwayManager(object):
 
         if tracks:
             self.selectTracks(tracks)
+
+
+#===================================================================================================
+#                                                                   N O D E   O P E R A T I O N S
+
+#___________________________________________________________________________________________________ setNodeDatum
+    def setNodeDatum(self, tracks):
+        """ For each track, compute some value that will be associated with the 'datum' attribute
+            of its corresponding node. A list of (node, value) pairs will be passed, where the
+            node is the actual Maya node name (string).  """
+
+        nodeValuePairs = list()
+
+        if not tracks:
+            return
+
+        for track in tracks:
+            node  = self.getTrackNode(track)
+            value = track.width - track.widthMeasured
+            nodeValuePairs.append((node, value))
+
+        # now send them off to be linked up by the remote module
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(
+            SetNodeDatum,
+            nodeValuePairs=nodeValuePairs,
+            runInMaya=True)
+
+        # Check to see if the remote command execution was successful
+        if not result.success:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                'Failed in setNodeDatum',
+                'Unable to add datum values to specified track nodes',
+                'Error')
+            return None
+
+#___________________________________________________________________________________________________ setNodeLinks
+    def setNodeLinks(self, tracks):
+        """ For each track in the specified list of tracks, its previous and next tracks are
+            determined, then the track nodes for these three tracks are bundled in a tuple
+            (thisNode, prevNode, nextNode) and appended to a list of such tuples. That
+            list is then sent to Maya to be remotely executed by the SetNodeLinks module. """
+
+        # start a list of tuples, each specifying a node and its prev and next nodes
+        nodeLinks = list()
+
+        if not tracks:
+            return
+
+        for track in tracks:
+            thisNode = self.getTrackNode(track)
+
+            prevTrack = self.getPreviousTrack(track)
+            prevNode  = self.getTrackNode(prevTrack) if prevTrack else None
+
+            nextTrack = self.getNextTrack(track)
+            nextNode  = self.getTrackNode(nextTrack) if nextTrack else None
+
+            nodeLinks.append((thisNode, prevNode, nextNode))
+
+        # now send them off to be linked up by the remote module
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(
+            SetNodeLinks,
+            nodeLinks=nodeLinks,
+            runInMaya=True)
+
+        # Check to see if the remote command execution was successful
+        if not result.success:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                'Failed in setNodeLinks',
+                'Unable to add prev and next links to specified track nodes',
+                'Error')
+            return None
 
 #===================================================================================================
 #                                                                 C U R V E S   A N D   P A T H S
@@ -601,7 +674,7 @@ class TrackwayManager(object):
         cmds.viewFit(fitFactor=self.FIT_FACTOR, animate=True)
 
 #===================================================================================================
-#                                                      D I S P L A Y   L A Y E R  U T I L I T I E S
+#                                                    D I S P L A Y   L A Y E R   U T I L I T I E S
 
 #___________________________________________________________________________________________________ initializeLayers
     def initializeLayers(self):
@@ -744,5 +817,3 @@ class TrackwayManager(object):
 
         self._session = Tracks_Track.MASTER.createSession()
         return self._session
-
-

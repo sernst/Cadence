@@ -1234,7 +1234,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.handleSetDatum()
 
         elif op == self.SET_LINKS:
-            self.handleSetLinks()
+            self.handleSetNodeLinks()
 
 #___________________________________________________________________________________________________ handleOperation1Btn
     def handleOperation1Btn(self):
@@ -1672,7 +1672,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.selectTracks(tracks)
 
         # The path of track series is visualized as a piecewise-linear curve added to the PATH_LAYER
-        self._trackwayManager.addPath(tracks)
+        # self._trackwayManager.addPath(tracks)
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
@@ -1735,23 +1735,14 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._unlock()
             return
 
-        # get the trackSetNode for this scene
-        trackSetNode = TrackNodeUtils.getTrackSetNode()
-        if not trackSetNode:
-            print('handleSetDatum: no track set node found!')
-            self._unlock()
-            return None
-
-        for track in tracks:
-            # in this example, compute the algebraic difference in width with that measured
-            v = track.width - track.widthMeasured
-            TrackNodeUtils.setDatum(TrackNodeUtils.getTrackNode(track.uid), v)
+        # set the datum attribute in the track nodes for these tracks
+        self._trackwayManager.setNodeDatum(tracks)
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSetLinks
-    def handleSetLinks(self):
+#___________________________________________________________________________________________________ handleSetNodeLinks
+    def handleSetNodeLinks(self):
         """ Sets the prev and next links in the selected track nodes. """
 
         if not self._lock():
@@ -1762,17 +1753,8 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._unlock()
             return
 
-        for track in tracks:
-            thisNode = TrackNodeUtils.getTrackNode(track.uid)
-
-            nextTrack = track.next
-            nextNode  = TrackNodeUtils.getTrackNode(nextTrack) if nextTrack else None
-
-            prevTrack = self._trackwayManager.getPreviousTrack(track)
-            prevNode = TrackNodeUtils.getTrackNode(prevTrack.uid) if prevTrack else None
-
-            print('prev track = %s' %prevTrack)
-            TrackNodeUtils.setNodeLinks(thisNode, prevNode, nextNode)
+        # set the prev and next attributes in the track nodes for these tracks
+        self._trackwayManager.setNodeLinks(tracks)
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()

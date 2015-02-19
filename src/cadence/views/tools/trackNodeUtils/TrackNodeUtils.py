@@ -44,9 +44,9 @@ class TrackNodeUtils(object):
                 return node
         return None
 
-#___________________________________________________________________________________________________ setDatum
+#___________________________________________________________________________________________________ setNodeDatum
     @classmethod
-    def setDatum(cls, node, value):
+    def setNodeDatum(cls, node, value):
         """ Sets the numeric datum value, creating the attribute if not already defined. """
 
         if not cmds.attributeQuery('datum', node=node, exists=True):
@@ -54,9 +54,9 @@ class TrackNodeUtils(object):
 
         cmds.setAttr(node + '.datum', value)
 
-#___________________________________________________________________________________________________ setDatum
+#___________________________________________________________________________________________________ getNodeDatum
     @classmethod
-    def getDatum(cls, node):
+    def getNodeDatum(cls, node):
         """ Returns the numeric datum value, else None. """
 
         if not cmds.attributeQuery('datum', node=node, exists=True):
