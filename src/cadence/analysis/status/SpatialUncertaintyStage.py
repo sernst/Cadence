@@ -33,6 +33,7 @@ class SpatialUncertaintyStage(AnalysisStage):
         self._largeUncCsv = None
         self._tracks      = []
 
+
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
