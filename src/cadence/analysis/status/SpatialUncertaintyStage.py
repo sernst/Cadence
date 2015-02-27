@@ -100,11 +100,11 @@ class SpatialUncertaintyStage(AnalysisStage):
                 sitemap = t.trackSeries.trackway.sitemap
                 fileName = sitemap + "_largeUncertainty"
                 path = self.getPath(fileName)
-                self.currentDrawing = CadenceDrawing(path, sitemap)
+                drawing = CadenceDrawing(path, sitemap)
 
                 # and place a grid and the federal coordinates in the drawing file
-                self.currentDrawing.grid()
-                self.currentDrawing.federalCoordinates()
+                drawing.grid()
+                drawing.federalCoordinates()
 
             # now examine the positional uncertainties for this track
             x = t.xValue
@@ -112,7 +112,7 @@ class SpatialUncertaintyStage(AnalysisStage):
             if max(x.uncertainty, z.uncertainty) <= 2.0*average.uncertainty:
 
                 # then just indicate that this track has low uncertainty
-                drawing._drawLowUncertaintyMarker(drawing, t, x, z)
+                self._drawLowUncertaintyMarker(drawing, t)
                 continue
 
             # since the uncertainty is high, first write that track in the spreadsheet
@@ -124,7 +124,7 @@ class SpatialUncertaintyStage(AnalysisStage):
                 z=z.label)
 
             # then draw this track in the Cadence drawing indicating it has high uncertainty
-            drawing._drawHighUncertaintyMarker(drawing, t)
+            self._drawHighUncertaintyMarker(drawing, t)
 
         # and close off with a final save of the drawing file
         if drawing:
