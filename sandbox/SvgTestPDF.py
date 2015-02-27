@@ -32,7 +32,8 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 model   = Tracks_SiteMap.MASTER
 session = model.createSession()
 siteMap = session.query(model).filter(model.index == 13).first()
-drawing = CadenceDrawing('test1.svg', siteMap)
+fileName = 'test_new.svg'
+drawing = CadenceDrawing(fileName, siteMap)
 
 xFed   = siteMap.xFederal
 yFed   = siteMap.yFederal
@@ -110,11 +111,11 @@ inkscape -f sourceFile.svg -e destinationFile.png
 
 """
 
-sourceFile = 'test.svg'
-destinationFile = 'test.pdf'
+sourceFile = fileName
+destinationFile = 'testDELETEME.pdf'
 
 cmd = [
-    '/Applications/Inkscape.app/Content/Resources/bin/inkscape',
+    '/Applications/Inkscape.app/Contents/Resources/bin/inkscape',
     '-f',
     None,
     '-A',

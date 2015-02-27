@@ -14,7 +14,6 @@ from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
 from cadence.svg.CadenceDrawing import CadenceDrawing
 from cadence.views.tools.trackwayManager.TrackwayManager import TrackwayManager
-from cadence.views.tools.trackNodeUtils.TrackNodeUtils import TrackNodeUtils
 
 #___________________________________________________________________________________________________ TrackwayManagerWidget
 class TrackwayManagerWidget(PyGlassWidget):
@@ -2042,8 +2041,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ handleSvgNameLE
     def handleSvgNameLE(self):
-        """ A file name is specified, which is later used in responding to the button press 'Open'
-            to create an SVG file. """
+        """ Simply a file name is specified in the ui, which is later used in responding to the
+            button press 'Open' in order to create an SVG file. """
 
         if not self._lock():
             return

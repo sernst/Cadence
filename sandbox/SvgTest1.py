@@ -30,7 +30,7 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 model   = Tracks_SiteMap.MASTER
 session = model.createSession()
 siteMap = session.query(model).filter(model.index == 13).first()
-drawing = CadenceDrawing('test1.svg', siteMap)
+drawing = CadenceDrawing('testSVG+PDF.svg', siteMap)
 
 xFed   = siteMap.xFederal
 yFed   = siteMap.yFederal
@@ -118,6 +118,6 @@ drawing.use('g2', (800, 200), scene=True, scale=1, scaleY=5, rotation=50)
 drawing.grid()
 #==================================================================================================
 
-drawing.save()
+drawing.save(toPDF=True)
 session.close()
 print 'Test Complete'
