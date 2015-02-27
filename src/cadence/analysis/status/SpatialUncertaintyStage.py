@@ -99,8 +99,8 @@ class SpatialUncertaintyStage(AnalysisStage):
 
                 # then start a new drawing for this new site map
                 sitemap = t.trackSeries.trackway.sitemap
-                fileName = sitemap + "_largeUncertainty"
-                path = self.getPath(fileName)
+                fileName = sitemap.name + "_largeUncertainty.svg"
+                path = self.getPath(fileName, isFile=True)
                 drawing = CadenceDrawing(path, sitemap)
 
                 # and place a grid and the federal coordinates in the drawing file
