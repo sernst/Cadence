@@ -39,7 +39,7 @@ class TrackwayManager(object):
 
     LAYER_SUFFIX = '_Trackway_Layer'
     PATH_LAYER   = 'Track_Path_Layer'
-    FIT_FACTOR   = 0.2
+    FIT_FACTOR   = 0.4
     CADENCE_CAM  = 'CadenceCam'
 
 #___________________________________________________________________________________________________ __init__
@@ -79,6 +79,8 @@ class TrackwayManager(object):
         tracks  = []
         for uid in uidList:
             tracks.append(self.getTrackByUid(uid))
+
+        print('length of tracks from getAllTracksInMaya = %s' % len(tracks))
 
         self.closeSession()
         return tracks if len(tracks) > 0 else None
@@ -162,14 +164,6 @@ class TrackwayManager(object):
 
         return entries if len(entries) > 0 else None
 
-#___________________________________________________________________________________________________ getMarkedTracks
-    def getMarkedTracks(self, marked =True):
-        """ Returns a list of all tracks with the MARKED flag set. """
-
-        uidList = self.getUidList()
-        tracks = self.getFlaggedTracks(uidList, SourceFlagsEnum.MARKED, marked)
-
-        return tracks
 #___________________________________________________________________________________________________ getLastTrack
     def getLastTrack(self):
         """ Returns the track model corresponding to the last track in a series. """
@@ -199,6 +193,15 @@ class TrackwayManager(object):
             t = n
             n = self.getNextTrack(n)
         return t
+
+#___________________________________________________________________________________________________ getMarkedTracks
+    def getMarkedTracks(self, marked =True):
+        """ Returns a list of all tracks with the MARKED flag set. """
+
+        uidList = self.getUidList()
+        tracks = self.getFlaggedTracks(uidList, SourceFlagsEnum.MARKED, marked)
+
+        return tracks
 
 #___________________________________________________________________________________________________ getNextTrack
     def getNextTrack(self, track):
@@ -268,7 +271,7 @@ class TrackwayManager(object):
         model = Tracks_Track.MASTER
         return model.getByUid(uid, self._getSession())
 
-#___________________________________________________________________________________________________ getTracksByUid
+#___________________________________________________________________________________________________ getTracksByProperties
     def getTracksByProperties(self, **kwargs):
         """ This gets the track model instances with specified properties. """
 

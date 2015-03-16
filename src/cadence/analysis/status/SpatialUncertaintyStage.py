@@ -33,7 +33,6 @@ class SpatialUncertaintyStage(AnalysisStage):
         self._largeUncCsv = None
         self._tracks      = []
 
-
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
@@ -90,33 +89,54 @@ class SpatialUncertaintyStage(AnalysisStage):
         # If track uncertainty is 2x average, add that track to the spreadsheet and map overlay
         for t in self._tracks:
 
-            # if the tracksite has changed from the previous track, save previous map
+            # if the tracksite has changed, save previous map and make a new one
             if sitemap != t.trackSeries.trackway.sitemap:
 
-                # save the last site map drawing, if there was one
+                print('new sitemap = %s' % sitemap)
+
+                # save the last site map drawing (if there was one)
                 if drawing:
                     drawing.save()
 
                 # then start a new drawing for this new site map
                 sitemap = t.trackSeries.trackway.sitemap
-                fileName = sitemap.name + "_largeUncertainty.svg"
+                fileName = sitemap.name + "_" + sitemap.level + '_uncertainty.svg'
                 path = self.getPath(fileName, isFile=True)
                 drawing = CadenceDrawing(path, sitemap)
+
+                # create a group to be instanced for the spreadsheet values
+                drawing.createGroup('rect1')
+                # create a rectangle of 100x100 cm that is to be scaled by fractional meters
+                drawing.rect((0, 0), 100, 100, scene=True, groupId='rect1')
+
+                # create anogther group to be instanced for the mapped values.
+                drawing.createGroup('rect2')
+                # create a rectangle of 100x100 cm that is to be scaled by fractional meters
+                drawing.rect((0, 0), 100, 100, scene=True, groupId='rect2')
 
                 # and place a grid and the federal coordinates in the drawing file
                 drawing.grid()
                 drawing.federalCoordinates()
 
+
             # now examine the positional uncertainties for this track
             x = t.xValue
             z = t.zValue
             if max(x.uncertainty, z.uncertainty) <= 2.0*average.uncertainty:
-
                 # then just indicate that this track has low uncertainty
                 self._drawLowUncertaintyMarker(drawing, t)
+                # label this track with green
+                drawing.text(
+                    t.name,
+                    (t.x - 20, t.z),
+                    scene=True,
+                    stroke='green',
+                    stroke_width='0.25',
+                    font_size='8px',
+                    font_family='Arial')
                 continue
 
-            # since the uncertainty is high, first write that track in the spreadsheet
+            # else, since the uncertainty is high, first write that track in the spreadsheet
             largeUncertaintyCount += 1
             self._largeUncCsv.createRow(
                 uid=t.uid,
@@ -124,8 +144,58 @@ class SpatialUncertaintyStage(AnalysisStage):
                 x=x.label,
                 z=z.label)
 
-            # then draw this track in the Cadence drawing indicating it has high uncertainty
+            # if either the measured width or length is 0, mark with a yellow disk with red outline
+            if t.widthMeasured == 0 or t.lengthMeasured == 0:
+                drawing.circle(
+                    (t.x, t.z),
+                    100*(t.widthUncertainty + t.lengthUncertainty)/2.0,
+                    scene=True,
+                    fill='yellow',
+                    stroke='red')
+                drawing.text(
+                    t.name,
+                    (t.x - 20, t.z),
+                    scene=True,
+                    stroke='black',
+                    stroke_width='0.25',
+                    font_size='6px',
+                    font_family='Arial')
+                continue
+
             self._drawHighUncertaintyMarker(drawing, t)
+
+            # label this track with red
+            drawing.text(
+                t.name,
+                (t.x - 20, t.z),
+                scene=True,
+                stroke='red',
+                stroke_width='0.25',
+                font_size='6px',
+                font_family='Arial')
+#
+#             # draw this track indicating it has high uncertainty
+#             drawing.use(
+#                     'rect1',
+#                     (t.x, t.z),
+#                     scene=True,
+#                     rotation=t.rotation,
+#                     opacity='0.5',
+#                     scale=t.widthMeasured,
+#                     scaleY=t.lengthMeasured,
+#                     fill='red',
+#                     stroke='red')
+#
+#             # draw the map dimensions with an outline gray rectangle
+#             drawing.use(
+#                     'rect2',
+#                     (t.x, t.z),
+#                     scene=True,
+#                     rotation=t.rotation,
+#                     scale=t.width,
+#                     scaleY=t.length,
+#                     fill='none',
+#                     stroke='gray')
 
         # and close off with a final save of the drawing file
         if drawing:
@@ -141,7 +211,8 @@ class SpatialUncertaintyStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _drawLowUncertaintyMarker
     def _drawLowUncertaintyMarker(self, drawing, track):
-        """ Indicate a low-uncertainty track at the specified location. """
+        """ Indicate a low-uncertainty track at the specified location.  The radius is the average
+            of width and length uncertainty. """
 
         r = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
         drawing.circle(
@@ -153,12 +224,12 @@ class SpatialUncertaintyStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _drawHighUncertaintyMarker
     def _drawHighUncertaintyMarker(self, drawing, track):
-        """ Indicate a low-uncertainty track at the specified location. """
+        """ Indicate a low-uncertainty track at the specified location.  Radius is average
+            uncertainty """
 
-        r = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
         drawing.circle(
             (track.x, track.z),
-            r,
+            100*(track.widthUncertainty + track.lengthUncertainty)/2.0,
             scene=True,
             fill='red',
             stroke='red')

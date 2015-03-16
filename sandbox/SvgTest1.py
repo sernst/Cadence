@@ -29,8 +29,8 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 
 model   = Tracks_SiteMap.MASTER
 session = model.createSession()
-siteMap = session.query(model).filter(model.index == 13).first()
-drawing = CadenceDrawing('testSVG+PDF.svg', siteMap)
+siteMap = session.query(model).filter(model.index == 17).first()
+drawing = CadenceDrawing('CRO_510_index_17_test.svg', siteMap)
 
 xFed   = siteMap.xFederal
 yFed   = siteMap.yFederal
@@ -49,74 +49,46 @@ print 'and back again, to siteMap, p = (%s, %s)' % pScene
 print 'scaling to scene, siteMap.xFederal maps to %s' % drawing.scaleToScene(xFed)
 print 'and this maps back to %s' % drawing.scaleToMap(drawing.scaleToScene(xFed))
 
-#===================================================================================================
-
-# place a circle of radius 5 at (100.0, 100.0) in scene coordinates
-# drawing.circle((100, 100), 5, scene=True, stroke='red', fill='green')
-
-# label it with text at (100, 10)
-drawing.text("circle of radius 5 at (200, 10)", (100, 10), scene=True, stroke='blue')
-
-# now place another circle and rect in map (not scene) coordinates below the federal marker
-drawing.rect((xScene, yScene - 100), 4, 10, scene=False, fill='red')
-
-# and another at (100, 200), also in map coordinates
-drawing.rect((100, 200), 10, 4, scene=False)
-
-# # and test out polyLine
-# xc = 50
-# yc = 50
-#
-# points = (
-#     (xc - 50, yc -50),
-#     (xc + 50, yc - 50),
-#     (xc + 50, yc + 50),
-#     (xc - 50, yc + 50),
-#     (xc - 50, yc - 50))
-#
-# drawing.polyLine(points)
-
 #==================================================================================================
-#  CREATE A GROUP CONTAINING A RECT, SHOWING HOW TO USE (INSTANCE) IT ROTATED AND TRANSLATED
+#  CREATE A GROUP CONTAINING A CIRCLE, SHOWING HOW TO 'USE' (INSTANCE) IT SCALED
 
-drawing.createGroup('r1')
-drawing.rect((0, 0), 10, 30, scene=False, groupId='r1') # add this rect to the group
+drawing.createGroup('rect')
+drawing.rect((0, 0),
+             100,
+             100,
+             scene=False,
+             groupId='rect')
 
-drawing.use('r1', (400, 100), rotation=10, fill='blue')
-drawing.use('r1', (400, 200), rotation=20, fill='blue')
-drawing.use('r1', (400, 300), rotation=30, fill='blue')
-drawing.use('r1', (400, 400), rotation=40, fill='blue')
-drawing.use('r1', (400, 500), rotation=50, fill='blue')
+drawing.createGroup('rect2')
+drawing.rect((0, 0),
+             100,
+             100,
+             scene=False,
+             groupId='rect2')
 
-#==================================================================================================
-#  CREATE A GROUP CONTAINING A CIRCLE, SHOWING HOW TO USE (INSTANCE) IT SCALED
 
-drawing.createGroup('g1')
-drawing.circle((0, 0), 10,
+drawing.createGroup('circ')
+drawing.circle((0, 0),
+               50,
                scene=False,
-               groupId='g1',
+               groupId='circ',
                fill='none',
                stroke='blue',
-               stroke_width=2) # add this circle to the group
+               stroke_width=2)
 
-drawing.use('g1', (100, 100), fill='yellow', scale=1, scaleY=1)
-drawing.use('g1', (100, 200), fill='yellow', scale=1, scaleY=1.1)
-drawing.use('g1', (100, 300), fill='yellow', scale=1, scaleY=1.5)
-drawing.use('g1', (100, 400), fill='yellow', scale=1, scaleY=2)
-drawing.use('g1', (100, 500), fill='yellow', scale=1, scaleY=.5)
+drawing.use('rect', (0, 0), scene=True, fill='yellow', scale=1, scaleY=1)
+drawing.use('rect2', (0, 0), scene=True, fill='yellow', scale=1, scaleY=1)
+drawing.use('circ', (0, 0), scene=True, rotation=0, scale=2, scaleY=2, fill='none', stroke='blue')
 
-# remember that scene coordinates increase in x to the left, and z upward.
+drawing.use('rect',  (1000, -100), scene=True, fill='yellow', scale=1, scaleY=1)
+drawing.use('rect2', (1000, -1000), scene=True, fill='yellow', scale=1, scaleY=1)
+drawing.use('circ',  (1000, -1000), scene=True, rotation=0, scale=1, scaleY=1, fill='none', stroke='blue')
 
-drawing.createGroup('g2')
-drawing.circle((0, 0), 10, scene=False, groupId='g2',fill='yellow', stroke='red')
-
-drawing.use('g2', (0,   200), scene=True, scale=1, scaleY=1, rotation=10)
-drawing.use('g2', (200, 200), scene=True, scale=1, scaleY=2, rotation=20)
-drawing.use('g2', (400, 200), scene=True, scale=1, scaleY=3, rotation=30)
-drawing.use('g2', (600, 200), scene=True, scale=1, scaleY=4, rotation=40)
-drawing.use('g2', (800, 200), scene=True, scale=1, scaleY=5, rotation=50)
-drawing.grid()
 #==================================================================================================
+
+drawing.grid(size=10, stroke='red')
+drawing.circle((0,0), 5, fill='none', stroke='red')
+drawing.federalCoordinates()
 
 drawing.save(toPDF=True)
 session.close()

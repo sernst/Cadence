@@ -48,6 +48,8 @@ class TrackwayManagerWidget(PyGlassWidget):
     SET_TO_MEASURED      = 'Set to MEASURED Dimensions'
     SET_DATUM            = 'Set Datum'
     SET_LINKS            = 'Set Links'
+    SET_ALL_INCOMPLETE   = 'Set All Tracks Incomplete'
+    SET_COMPLETE         = 'Set Complete & Get Next'
 
     SET_UNCERTAINTY_LOW      = 'Set Uncertainties LOW'          # for exceptional tracks
     SET_UNCERTAINTY_MODERATE = 'Set Uncertainties MODERATE'     # a reasonable default
@@ -148,7 +150,9 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.SET_UNCERTAINTY_MODERATE,
             self.SET_UNCERTAINTY_HIGH,
             self.LINK_SELECTED,
-            self.UNLINK_SELECTED)
+            self.UNLINK_SELECTED,
+            self.SET_ALL_INCOMPLETE,
+            self.SET_COMPLETE )
 
 
         # set up a bank of three combo boxes of operations for convenience access for common tasks
@@ -1235,6 +1239,12 @@ class TrackwayManagerWidget(PyGlassWidget):
         elif op == self.SET_LINKS:
             self.handleSetNodeLinks()
 
+        elif op == self.SET_ALL_INCOMPLETE:
+            self.handleSetAllIncompleted()
+
+        elif op == self.SET_COMPLETE:
+            self.handleSetTrackCompleted()
+
 #___________________________________________________________________________________________________ handleOperation1Btn
     def handleOperation1Btn(self):
         """ Passes the selected operation to be performed. """
@@ -1479,6 +1489,10 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.trackNameLE.text(),
             **self.getTrackwayPropertiesFromUI())
         if not tracks:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                'None',
+                'No track found with that name.')
             self._unlock()
             return
 
@@ -1609,7 +1623,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             PyGlassBasicDialogManager.openOk(
                 self,
                'None',
-               'All tracks in this series are complete')
+               'All tracks are complete')
             self._unlock()
             return
 
@@ -1719,7 +1733,86 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
+#___________________________________________________________________________________________________ handleSetAllIncompleted
+    def handleSetAllIncompleted(self):
+        """ This sets all tracks to be incomplete, so that they can be examined individually using
+            selectNextIncomplete. """
 
+        if not self._lock():
+            return
+
+        # make sure this is not an accident
+        result = PyGlassBasicDialogManager.openYesNo(
+                self,
+                u'CONFIRMATION REQUIRED',
+                u'Are you sure you want to set ALL tracks to INCOMPLETED?',
+                False)
+        if not result:
+            self._uiLock()
+            return
+
+        uids = self._trackwayManager.getUidList()
+
+        if not uids:
+            self._uiLock()
+            return
+
+        for uid in uids:
+            track = self._trackwayManager.getTrackByUid(uid)
+            track.completed = False
+
+        # now select the track corresponding to the first UID in the list of UIDs
+        self._trackwayManager.selectTrack(self._trackwayManager.getTrackByUid(uids[0]))
+
+        self._trackwayManager.closeSession(commit=True)
+        self._unlock()
+
+#___________________________________________________________________________________________________ handleSetTrackCompleted
+    def handleSetTrackCompleted(self):
+        """ The currently selected track is set as completed and the next incomplete track is
+            selected, focussed upon, and ready to edit. """
+
+        if not self._lock():
+            return
+
+        # just return if no track is currently selected
+        selectedTracks = self._trackwayManager.getSelectedTracks()
+        if selectedTracks is None:
+            self._unlock()
+            return
+
+        # otherwise update this track from the Maya node and set this track as completed
+        track = selectedTracks[0]
+        track.updateFromNode()
+        track.completed = True
+        track.updateNode()
+
+        self.refreshTrackUI(track.toDict())
+        self.refreshTrackCountsUI()
+
+        # and then get the next incomplete track
+        incompleteTracks = self._trackwayManager.getCompletedTracks(False)
+
+        # return if we are finally finished
+        if not incompleteTracks:
+            PyGlassBasicDialogManager.openOk(
+                self,
+               'None',
+               'All tracks are complete')
+            self._unlock()
+            return
+
+        # not finished, so get the next incomplete track and select it
+        track = incompleteTracks[0]
+        track.updateNode()
+        self._trackwayManager.selectTrack(track)
+
+        # update the UIs accordingly
+        self.refreshTrackwayUI(track.toDict())
+        self.refreshTrackUI(track.toDict())
+        self._trackwayManager.setCameraFocus()
+
+        self._unlock()
 #___________________________________________________________________________________________________ handleSetDatum
     def handleSetDatum(self):
         """ Set the datum attribute in all nodes for the entire track series based on the given

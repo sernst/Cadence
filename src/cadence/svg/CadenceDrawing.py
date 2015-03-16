@@ -160,22 +160,6 @@ class CadenceDrawing(object):
         # and keep track of the id so it can be used to refer to the group
         self.groups[id] = group
 
-#___________________________________________________________________________________________________ federalCoordinates
-    def federalCoordinates(self, deltaX =0, deltaZ =20, diskRadius =2):
-        """ Place the coordinates a text string at an offset from the fiducial marker. """
-
-        text = "(%s, %s)" % (self.siteMap.federalEast, self.siteMap.federalNorth)
-        self.text(text, (deltaX, deltaZ), scene=True)
-
-        # place an unfilled green circle of specified radius atop the federal coordinate marker
-        self.circle(
-            (0, 0),
-            diskRadius,
-            scene=True,
-            fill='none',
-            stroke='green',
-            stroke_width=1)
-
 #___________________________________________________________________________________________________ ellipse
     def ellipse(self, center, radii, scene =True, groupId =None, **extra):
         """ Adds an ellipse object to the SVG file, based on a center point and two radii.  All
@@ -203,6 +187,22 @@ class CadenceDrawing(object):
                 return
         else:
             self._drawing.add(obj)
+
+#___________________________________________________________________________________________________ federalCoordinates
+    def federalCoordinates(self, deltaX =0, deltaZ =20, diskRadius =2):
+        """ Place the coordinates a text string at an offset from the fiducial marker. """
+
+        text = "(%s, %s)" % (self.siteMap.federalEast, self.siteMap.federalNorth)
+        self.text(text, (deltaX, deltaZ), scene=True, font_size="8")
+
+        # place an unfilled green circle of specified radius atop the federal coordinate marker
+        self.circle(
+            (0, 0),
+            diskRadius,
+            scene=True,
+            fill='none',
+            stroke='green',
+            stroke_width=1)
 
 #___________________________________________________________________________________________________ grid
     def grid(self, size =2, diagonals =True, dx =200, dy =200, **extra):
@@ -243,7 +243,7 @@ class CadenceDrawing(object):
         # create the object
         obj = self._drawing.line(p1, p2, **extra)
 
-        # and add it to either a specific group or to the default _drawing
+        # and add it to either a specific group or to _drawing (the default)
         if groupId:
             group = self.groups[groupId]
             if group:
@@ -342,13 +342,16 @@ class CadenceDrawing(object):
 
         xCenter = center[0]
         yCenter = center[1]
-        insert  = (xCenter - width/2, yCenter - height/2)
 
         # convert from scene coordinates to map coordinates as necessary
         if scene:
-            insert = self.projectToMap(insert)
-            width  = self.scaleToMap(width)
-            height = self.scaleToMap(height)
+            xCenter = self.scaleToMap(xCenter)
+            yCenter = self.scaleToMap(yCenter)
+            width   = self.scaleToMap(width)
+            height  = self.scaleToMap(height)
+
+        # now compute the insert point, i.e., the upper left corner
+        insert  = (xCenter - width/2, yCenter - height/2)
 
         # convert from (scaled) mm to px
         insert = (self.pxPerMm*insert[0], self.pxPerMm*insert[1])
@@ -376,14 +379,12 @@ class CadenceDrawing(object):
 
         self._drawing.save()
 
-        #  xit if no PDF version required
+        #  we're done if no PDF version is also required
         if not toPDF:
             return
 
         # strip any extension off of the file name
         basicName = self.fileName.split('.')[0]
-
-        print('basicName=[%s]'%basicName)
 
         # load up the command
         cmd = [

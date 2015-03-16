@@ -35,6 +35,7 @@ class TrackSceneUtils(object):
             Width and length uncertainty is represented by rectangular bars at the ends of the
             rulers.  In Maya one can directly adjust track position (translateX and translateZ) and
             orientation (rotationY); other attributes are adjusted only through the UI. """
+
         if not trackSetNode:
             trackSetNode = TrackSceneUtils.getTrackSetNode()
 
@@ -407,6 +408,7 @@ class TrackSceneUtils(object):
     @classmethod
     def getUid(cls, node, trackSetNode =None):
         """ This returns the UID (or None if the nodeName is not a track nodeName). """
+
         if not trackSetNode:
             trackSetNode = cls.getTrackSetNode()
 
