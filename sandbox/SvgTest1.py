@@ -30,7 +30,7 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 model   = Tracks_SiteMap.MASTER
 session = model.createSession()
 siteMap = session.query(model).filter(model.index == 17).first()
-drawing = CadenceDrawing('CRO_510_index_17_test.svg', siteMap)
+drawing = CadenceDrawing('CRO_510_index_17_test_rot.svg', siteMap)
 
 xFed   = siteMap.xFederal
 yFed   = siteMap.yFederal
@@ -53,15 +53,15 @@ print 'and this maps back to %s' % drawing.scaleToMap(drawing.scaleToScene(xFed)
 #  CREATE A GROUP CONTAINING A CIRCLE, SHOWING HOW TO 'USE' (INSTANCE) IT SCALED
 
 drawing.createGroup('rect')
-drawing.rect((0, 0),
+drawing.rect((50, 0),
              100,
-             100,
+             4,
              scene=False,
              groupId='rect')
 
 drawing.createGroup('rect2')
 drawing.rect((0, 0),
-             100,
+             -200,
              100,
              scene=False,
              groupId='rect2')
@@ -77,12 +77,13 @@ drawing.circle((0, 0),
                stroke_width=2)
 
 drawing.use('rect', (0, 0), scene=True, fill='yellow', scale=1, scaleY=1)
-drawing.use('rect2', (0, 0), scene=True, fill='yellow', scale=1, scaleY=1)
+drawing.use('rect', (0, 0), scene=True, fill='red', scale=1, scaleY=1, rotation=45)
+#drawing.use('rect2', (0, 0), scene=True, fill='red', scale=1, scaleY=1)
 drawing.use('circ', (0, 0), scene=True, rotation=0, scale=2, scaleY=2, fill='none', stroke='blue')
 
-drawing.use('rect',  (1000, -100), scene=True, fill='yellow', scale=1, scaleY=1)
-drawing.use('rect2', (1000, -1000), scene=True, fill='yellow', scale=1, scaleY=1)
-drawing.use('circ',  (1000, -1000), scene=True, rotation=0, scale=1, scaleY=1, fill='none', stroke='blue')
+#drawing.use('rect',  (1000, -100), scene=True, fill='yellow', scale=1, scaleY=1, rotation=0.0)
+#drawing.use('rect2', (1000, -1000), scene=True, fill='yellow', scale=1, scaleY=1)
+#drawing.use('circ',  (1000, -1000), scene=True, rotation=0, scale=1, scaleY=1, fill='none', stroke='blue')
 
 #==================================================================================================
 

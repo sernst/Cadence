@@ -92,14 +92,14 @@ class SpatialUncertaintyStage(AnalysisStage):
             # if the tracksite has changed, save previous map and make a new one
             if sitemap != t.trackSeries.trackway.sitemap:
 
-                print('new sitemap = %s' % sitemap)
-
                 # save the last site map drawing (if there was one)
                 if drawing:
                     drawing.save()
 
                 # then start a new drawing for this new site map
                 sitemap = t.trackSeries.trackway.sitemap
+                print('new sitemap = %s' % sitemap)
+
                 fileName = sitemap.name + "_" + sitemap.level + '_uncertainty.svg'
                 path = self.getPath(fileName, isFile=True)
                 drawing = CadenceDrawing(path, sitemap)
@@ -109,7 +109,7 @@ class SpatialUncertaintyStage(AnalysisStage):
                 # create a rectangle of 100x100 cm that is to be scaled by fractional meters
                 drawing.rect((0, 0), 100, 100, scene=True, groupId='rect1')
 
-                # create anogther group to be instanced for the mapped values.
+                # create another group to be instanced for the mapped values.
                 drawing.createGroup('rect2')
                 # create a rectangle of 100x100 cm that is to be scaled by fractional meters
                 drawing.rect((0, 0), 100, 100, scene=True, groupId='rect2')
@@ -117,7 +117,6 @@ class SpatialUncertaintyStage(AnalysisStage):
                 # and place a grid and the federal coordinates in the drawing file
                 drawing.grid()
                 drawing.federalCoordinates()
-
 
             # now examine the positional uncertainties for this track
             x = t.xValue

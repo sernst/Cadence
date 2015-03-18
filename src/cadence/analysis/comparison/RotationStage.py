@@ -14,6 +14,7 @@ from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.util.math2D.Vector2D import Vector2D
 
+from cadence.svg.CadenceDrawing import CadenceDrawing
 
 
 #*************************************************************************************************** RotationStage
@@ -59,13 +60,37 @@ class RotationStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackSeries(self, series, trackway, sitemap):
-        # At least two tracks are required to make the
+        # At least two tracks are required to make the comparison
         if len(series.tracks) < 2:
             return
 
-        for track in series.tracks:
-            rm = math.pi/180.0*track.rotationMeasured
+        drawing = None
+        sitemap = None
 
+        for track in series.tracks:
+
+            # if the tracksite for this track is different than that of the last track ...
+            if sitemap != track.trackSeries.trackway.sitemap:
+
+                # save the last site map drawing (if there was one)
+                if drawing:
+                    drawing.save()
+
+                # then start a new drawing for this new site map
+                print('old and new sitemaps are (%s, %s)' %
+                      (sitemap, track.trackSeries.trackway.sitemap))
+                sitemap = track.trackSeries.trackway.sitemap
+                fileName = sitemap.name + "_" + sitemap.level + '_rotation.svg'
+                path = self.getPath(fileName, isFile=True)
+                drawing = CadenceDrawing(path, sitemap)
+
+                # create a group to be instanced for the map annotations
+                drawing.createGroup('pointer')
+                drawing.line((0, 0), (0, -10), scene=False, groupId='pointer', stroke='black')
+
+
+            # now, get on with comparing the rotation from map and from spreadsheet
+            rm = math.pi/180.0*track.rotationMeasured
             pt = None
             nt = None
 
@@ -117,7 +142,6 @@ class RotationStage(AnalysisStage):
             measuredDeg = NumericUtils.toValueUncertainty(rmDeg, measuredUncDeg)
 
             enteredUncDeg = track.rotationUncertainty
-            enteredUnc = math.pi/180.0*enteredUncDeg
             enteredDeg = NumericUtils.toValueUncertainty(track.rotation, track.rotationUncertainty)
 
             diffDeg = NumericUtils.toValueUncertainty(
@@ -140,6 +164,28 @@ class RotationStage(AnalysisStage):
                 axisPairing='PREV' if pt else 'NEXT')
             self._csv.createRow(**data)
 
+            # draw this track indicating the map-derived estimate of rotation
+            drawing.use(
+                'pointer',
+                (track.x, track.z),
+                scene=True,
+                rotation=track.rotation,
+                stroke_width=4,
+                stroke='blue')
+
+            # add the measured estimate of rotation, scaling by deviation
+            drawing.use(
+                'pointer',
+                (track.x, track.z),
+                scene=True,
+                rotation=measuredDeg.value,
+                stroke_width=4,
+                stroke='red')
+
+        # and close off with a final save of the drawing file
+        if drawing:
+            drawing.save()
+
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
         """_postAnalyze doc..."""
@@ -158,6 +204,8 @@ class RotationStage(AnalysisStage):
 
         self.mergePdfs(self._paths)
         self._paths = []
+
+
 
 #___________________________________________________________________________________________________ _makePlot
     def _makePlot(self, label, data, isLog =False, histRange =None, color ='r', binCount = 72):
