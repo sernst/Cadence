@@ -86,7 +86,7 @@ class RotationStage(AnalysisStage):
 
                 # create a group to be instanced for the map annotations
                 drawing.createGroup('pointer')
-                drawing.line((0, 0), (0, -10), scene=False, groupId='pointer', stroke='black')
+                drawing.line((0, 0), (0, -10), scene=False, groupId='pointer')
 
 
             # now, get on with comparing the rotation from map and from spreadsheet
@@ -170,7 +170,7 @@ class RotationStage(AnalysisStage):
                 (track.x, track.z),
                 scene=True,
                 rotation=track.rotation,
-                stroke_width=4,
+                stroke_width=2,
                 stroke='blue')
 
             # add the measured estimate of rotation, scaling by deviation
@@ -179,7 +179,7 @@ class RotationStage(AnalysisStage):
                 (track.x, track.z),
                 scene=True,
                 rotation=measuredDeg.value,
-                stroke_width=4,
+                stroke_width=2,
                 stroke='red')
 
         # and close off with a final save of the drawing file
