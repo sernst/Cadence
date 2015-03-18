@@ -170,7 +170,7 @@ class RotationStage(AnalysisStage):
                 (track.x, track.z),
                 scene=True,
                 rotation=track.rotation,
-                stroke_width=2,
+                stroke_width=4,
                 stroke='blue')
 
             # add the measured estimate of rotation, scaling by deviation
@@ -179,7 +179,7 @@ class RotationStage(AnalysisStage):
                 (track.x, track.z),
                 scene=True,
                 rotation=measuredDeg.value,
-                stroke_width=2,
+                stroke_width=4,
                 stroke='red')
 
         # and close off with a final save of the drawing file
