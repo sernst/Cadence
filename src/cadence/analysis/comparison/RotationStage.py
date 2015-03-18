@@ -35,6 +35,7 @@ class RotationStage(AnalysisStage):
         self._paths = []
         self._diffs = []
         self._csv   = None
+        self._currentDrawing = None
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -43,6 +44,7 @@ class RotationStage(AnalysisStage):
     def _preAnalyze(self):
         """_preAnalyze doc..."""
         self._diffs = []
+        self._currentDrawing = None
 
         csv   = CsvWriter()
         csv.path = self.getPath('Rotation-Report.csv', isFile=True)
@@ -58,6 +60,16 @@ class RotationStage(AnalysisStage):
             ('axisPairing', 'Axis Pairing'))
         self._csv = csv
 
+#___________________________________________________________________________________________________ _analyzeSitemap
+    def _analyzeSitemap(self, sitemap):
+
+        fileName = sitemap.name + "_" + sitemap.level + '_rotation.svg'
+        path = self.getPath(fileName, isFile=True)
+        self._currentDrawing = CadenceDrawing(path, sitemap)
+
+        super(RotationStage, self)._analyzeSitemap(sitemap)
+        self._currentDrawing = None
+
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackSeries(self, series, trackway, sitemap):
         # At least two tracks are required to make the comparison
@@ -65,12 +77,11 @@ class RotationStage(AnalysisStage):
             return
 
         drawing = None
-        sitemap = None
 
         for track in series.tracks:
 
             # if the tracksite for this track is different than that of the last track ...
-            if sitemap != track.trackSeries.trackway.sitemap:
+            if not sitemap or sitemap != track.trackSeries.trackway.sitemap:
 
                 # save the last site map drawing (if there was one)
                 if drawing:

@@ -22,6 +22,7 @@ try:
     import matplotlib.pyplot as plt
 except Exception:
     plt = None
+    print('WARNING: Matplotlib failed to import.')
 
 #*************************************************************************************************** AnalyzerBase
 class AnalyzerBase(object):

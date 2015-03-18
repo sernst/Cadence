@@ -24,6 +24,24 @@ class Histogram(SinglePlotBase):
         self.data       = kwargs.get('data', [])
         self.isLog      = kwargs.get('isLog', False)
 
+
+#===================================================================================================
+#                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ shaveDataToXLimits
+    def shaveDataToXLimits(self):
+        """shaveData doc..."""
+
+        if not self.xLimits or not len(self.xLimits) == 2:
+            return self.data
+
+        out  = []
+        for item in self.data:
+            if self.xLimits[0] <= item <= self.xLimits[1]:
+                out.append(item)
+        self.data = out
+        return out
+
 #===================================================================================================
 #                                                                               P R O T E C T E D
 

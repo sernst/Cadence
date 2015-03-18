@@ -29,10 +29,10 @@ class GaitGeneratorWidget(PyGlassWidget):
 
         w = self
         w.gadLengthLabel.setText(StringUtils.toUnicode(w.gadLengthSlider.value()))
-        QObject.connect(w.gadLengthSlider, SIGNAL("valueChanged(int)"), w.gadLengthLabel.setNum)
+        w.gadLengthSlider.valueChanged.connect(w.gadLengthLabel.setNum)
 
         w.gaitPhaseLabel.setText(StringUtils.toUnicode(w.gaitPhaseSlider.value()))
-        QObject.connect(w.gaitPhaseSlider, SIGNAL("valueChanged(int)"), w.gaitPhaseLabel.setNum)
+        w.gaitPhaseSlider.valueChanged.connect(w.gaitPhaseLabel.setNum)
 
         w.stepLengthLabel.setText(StringUtils.toUnicode(w.stepLengthSlider.value()))
         QObject.connect(w.stepLengthSlider, SIGNAL("valueChanged(int)"), w.stepLengthLabel.setNum)
