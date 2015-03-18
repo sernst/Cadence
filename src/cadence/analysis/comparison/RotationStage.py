@@ -63,12 +63,19 @@ class RotationStage(AnalysisStage):
 #___________________________________________________________________________________________________ _analyzeSitemap
     def _analyzeSitemap(self, sitemap):
 
+        # start a drawing for the SVG and PDF files
         fileName = sitemap.name + "_" + sitemap.level + '_rotation.svg'
         path = self.getPath(fileName, isFile=True)
         self._currentDrawing = CadenceDrawing(path, sitemap)
 
+        # create a group to be instanced for the map annotations
+        self._currentDrawing.createGroup('pointer')
+        self._currentDrawing.line((0, 0), (0, -10), scene=False, groupId='pointer')
+
         super(RotationStage, self)._analyzeSitemap(sitemap)
-        self._currentDrawing = None
+
+        if self._currentDrawing:
+            self._currentDrawing.save()
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackSeries(self, series, trackway, sitemap):
@@ -76,31 +83,7 @@ class RotationStage(AnalysisStage):
         if len(series.tracks) < 2:
             return
 
-        drawing = None
-
         for track in series.tracks:
-
-            # if the tracksite for this track is different than that of the last track ...
-            if not sitemap or sitemap != track.trackSeries.trackway.sitemap:
-
-                # save the last site map drawing (if there was one)
-                if drawing:
-                    drawing.save()
-
-                # then start a new drawing for this new site map
-                print('old and new sitemaps are (%s, %s)' %
-                      (sitemap, track.trackSeries.trackway.sitemap))
-                sitemap = track.trackSeries.trackway.sitemap
-                fileName = sitemap.name + "_" + sitemap.level + '_rotation.svg'
-                path = self.getPath(fileName, isFile=True)
-                drawing = CadenceDrawing(path, sitemap)
-
-                # create a group to be instanced for the map annotations
-                drawing.createGroup('pointer')
-                drawing.line((0, 0), (0, -10), scene=False, groupId='pointer')
-
-
-            # now, get on with comparing the rotation from map and from spreadsheet
             rm = math.pi/180.0*track.rotationMeasured
             pt = None
             nt = None
@@ -176,7 +159,7 @@ class RotationStage(AnalysisStage):
             self._csv.createRow(**data)
 
             # draw this track indicating the map-derived estimate of rotation
-            drawing.use(
+            self._currentDrawing.use(
                 'pointer',
                 (track.x, track.z),
                 scene=True,
@@ -185,17 +168,13 @@ class RotationStage(AnalysisStage):
                 stroke='blue')
 
             # add the measured estimate of rotation, scaling by deviation
-            drawing.use(
+            self._currentDrawing.use(
                 'pointer',
                 (track.x, track.z),
                 scene=True,
                 rotation=measuredDeg.value,
                 stroke_width=4,
                 stroke='red')
-
-        # and close off with a final save of the drawing file
-        if drawing:
-            drawing.save()
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
