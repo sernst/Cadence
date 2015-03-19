@@ -9,6 +9,9 @@ import math
 from pyaid.ArgsUtils import ArgsUtils
 
 #___________________________________________________________________________________________________ Vector2D
+from pyaid.number.Angle import Angle
+
+
 class Vector2D(object):
     """A class for..."""
 
@@ -78,12 +81,11 @@ class Vector2D(object):
         return self.x*vec.x + self.y*vec.y
 
 #___________________________________________________________________________________________________ angleBetween
-    def angleBetween(self, vec2D, asDegrees =False):
-        """angleBetween doc..."""
-        angle = math.acos(self.dot(vec2D)/(self.magnitude*vec2D.magnitude))
-        if asDegrees:
-            return 180/math.pi*angle
-        return angle
+    def angleBetween(self, vec2D):
+        """ Determines the angle between this vector and the specified argument including the
+            sign (direction). """
+
+        return Angle(radians=math.atan2(vec2D.y, vec2D.x) - math.atan2(self.y, self.x))
 
 #___________________________________________________________________________________________________ updateValues
     def updateValues(self, *args, **kwargs):

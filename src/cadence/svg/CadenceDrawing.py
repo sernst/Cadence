@@ -398,7 +398,8 @@ class CadenceDrawing(object):
 
         # and execute it
         response = SystemUtils.executeCommand(cmd)
-        print('response[error]=%s'%response['error'])
+        if response['error']:
+            print('response[error]=%s'%response['error'])
 
 #___________________________________________________________________________________________________ scaleToMap
     def scaleToMap(self, v):

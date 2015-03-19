@@ -5,6 +5,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import math
+from pyaid.dict.DictUtils import DictUtils
+from pyaid.number.Angle import Angle
 
 from pyaid.number.NumericUtils import NumericUtils
 
@@ -34,6 +36,7 @@ class RotationStage(AnalysisStage):
 
         self._paths = []
         self._diffs = []
+        self._data  = []
         self._csv   = None
         self._currentDrawing = None
 
@@ -44,9 +47,10 @@ class RotationStage(AnalysisStage):
     def _preAnalyze(self):
         """_preAnalyze doc..."""
         self._diffs = []
+        self._data  = []
         self._currentDrawing = None
 
-        csv   = CsvWriter()
+        csv = CsvWriter()
         csv.path = self.getPath('Rotation-Report.csv', isFile=True)
         csv.addFields(
             ('uid', 'UID'),
@@ -84,7 +88,8 @@ class RotationStage(AnalysisStage):
             return
 
         for track in series.tracks:
-            rm = math.pi/180.0*track.rotationMeasured
+            fieldAngle = Angle(degrees=track.rotationMeasured)
+            dataAngle  = Angle(degrees=track.rotation)
             pt = None
             nt = None
 
@@ -93,6 +98,7 @@ class RotationStage(AnalysisStage):
             else:
                 nt = series.tracks[series.tracks.index(track) + 1]
 
+            # Z and X are swapped here for a 2D projection into a Right-Handed Coordinate system
             if nt:
                 strideLine = Vector2D(nt.z - track.z, nt.x - track.x)
             else:
@@ -119,28 +125,38 @@ class RotationStage(AnalysisStage):
                         pair.uid) ])
                 continue
 
-            absoluteAxis = Vector2D(0, 1)
+            absoluteAxis = Vector2D(1, 0)
             absoluteAxis.normalize()
 
-            rAxis = strideLine.angleBetween(absoluteAxis)
+            axisAngle = absoluteAxis.angleBetween(strideLine)
             if track.left:
-                rm = rAxis + rm
+                fieldAngle.radians += axisAngle.radians
             else:
-                rm = rAxis - rm
+                fieldAngle.radians = axisAngle.radians - fieldAngle.radians
 
-            rmDeg = 180.0/math.pi*rm
+            # Adjust field angle into range [-180, 180]
+            fieldAngle.constrainToRevolution()
+            if fieldAngle.degrees > 180.0:
+                fieldAngle.degrees -= 360.0
 
-            measuredUnc = 5.0/180.0*math.pi
-            measuredUnc += 0.03/math.sqrt(1 - math.pow(strideLine.x, 2))
-            measuredUncDeg = 180.0/math.pi*measuredUnc
-            measuredDeg = NumericUtils.toValueUncertainty(rmDeg, measuredUncDeg)
+            fieldAngleUnc = Angle(degrees=5.0)
+            fieldAngleUnc.radians += 0.03/math.sqrt(1 - math.pow(strideLine.x, 2))
+            fieldDeg = NumericUtils.toValueUncertainty(fieldAngle.degrees, fieldAngleUnc.degrees)
 
-            enteredUncDeg = track.rotationUncertainty
-            enteredDeg = NumericUtils.toValueUncertainty(track.rotation, track.rotationUncertainty)
+            # Adjust data angle into range [-180, 180]
+            dataAngle.constrainToRevolution()
+            if dataAngle.degrees > 180.0:
+                dataAngle.degrees -= 360.0
+
+            dataAngleUnc = Angle(degrees=track.rotationUncertainty)
+            dataDeg = NumericUtils.toValueUncertainty(dataAngle.degrees, dataAngleUnc.degrees)
+
+            angle1 = Angle(degrees=dataDeg.value)
+            angle2 = Angle(degrees=fieldDeg.value)
 
             diffDeg = NumericUtils.toValueUncertainty(
-                abs(enteredDeg.value - measuredDeg.value),
-                enteredUncDeg + measuredUncDeg)
+                angle1.differenceBetween(angle2).degrees,
+                dataAngleUnc.degrees + fieldAngleUnc.degrees)
 
             self._diffs.append(diffDeg.value)
 
@@ -149,21 +165,33 @@ class RotationStage(AnalysisStage):
             data = dict(
                 uid=track.uid,
                 fingerprint=track.fingerprint,
-                entered=enteredDeg.label,
-                measured=measuredDeg.label,
+                entered=dataDeg.label,
+                measured=fieldDeg.label,
                 delta=NumericUtils.roundToOrder(diffDeg.value, -2),
                 deviation=NumericUtils.roundToSigFigs(deviation, 3),
                 relative=NumericUtils.roundToOrder(track.rotationMeasured, -2),
-                axis=NumericUtils.roundToOrder(180.0/math.pi*rAxis, -2),
+                axis=NumericUtils.roundToOrder(axisAngle.degrees, -2),
                 axisPairing='PREV' if pt else 'NEXT')
             self._csv.createRow(**data)
+
+            data['track'] = track
+            self._data.append(data)
+
+            # draw the stride line pointer for reference
+            self._currentDrawing.use(
+                'pointer',
+                (track.x, track.z),
+                scene=True,
+                rotation=axisAngle.degrees,
+                stroke_width=4,
+                stroke='green')
 
             # draw this track indicating the map-derived estimate of rotation
             self._currentDrawing.use(
                 'pointer',
                 (track.x, track.z),
                 scene=True,
-                rotation=track.rotation,
+                rotation=dataDeg.value,
                 stroke_width=4,
                 stroke='blue')
 
@@ -172,7 +200,7 @@ class RotationStage(AnalysisStage):
                 'pointer',
                 (track.x, track.z),
                 scene=True,
-                rotation=measuredDeg.value,
+                rotation=fieldDeg.value,
                 stroke_width=4,
                 stroke='red')
 
@@ -181,21 +209,22 @@ class RotationStage(AnalysisStage):
         """_postAnalyze doc..."""
         self._csv.save()
 
-        self._paths.append(self._makePlot(
-            label='Rotation Differences',
-            data=self._diffs,
-            histRange=[0, 360]))
+        meanDiff = NumericUtils.getMeanAndDeviation(self._diffs)
+        self.logger.write('Rotation %s' % meanDiff.label)
 
         self._paths.append(self._makePlot(
             label='Rotation Differences',
             data=self._diffs,
-            histRange=[0, 360],
+            histRange=[-180, 180]))
+
+        self._paths.append(self._makePlot(
+            label='Rotation Differences',
+            data=self._diffs,
+            histRange=[-180, 180],
             isLog=True))
 
         self.mergePdfs(self._paths)
         self._paths = []
-
-
 
 #___________________________________________________________________________________________________ _makePlot
     def _makePlot(self, label, data, isLog =False, histRange =None, color ='r', binCount = 72):

@@ -13,7 +13,7 @@ session = Tracks_Track.MASTER.createSession()
 verbose = False
 
 for label,model in models.iteritems():
-    query = session.query(model).filter(sqla.or_(model.next == '', model.next is None))
+    query = session.query(model).filter(model.uid == 'track1l2i0-gy-uPnJwMsNWUQQ')
     items = query.all()
     print('\n\n\n%s' % (60*'-'))
     print('MODEL:', label)
