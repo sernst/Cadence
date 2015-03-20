@@ -126,6 +126,9 @@ class AnalysisStage(object):
         """ Executes the analysis process for this stage, which consists largely of calling the
             analysis hook methods in their specified order. """
 
+        # resets the cache
+        self.cache.unload()
+
         self._startTime = TimeUtils.getNowDatetime()
         self._writeHeader()
         self._preAnalyze()

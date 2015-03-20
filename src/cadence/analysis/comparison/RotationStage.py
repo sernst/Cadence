@@ -14,6 +14,7 @@ from pyaid.string.StringUtils import StringUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
+from cadence.analysis.shared.plotting.Histogram import Histogram
 from cadence.util.math2D.Vector2D import Vector2D
 
 from cadence.svg.CadenceDrawing import CadenceDrawing
@@ -41,11 +42,20 @@ class RotationStage(AnalysisStage):
         self._currentDrawing = None
 
 #===================================================================================================
+#                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: deviations
+    @property
+    def deviations(self):
+        return self.cache.get('deviations')
+
+#===================================================================================================
 #                                                                               P R O T E C T E D
 
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
         """_preAnalyze doc..."""
+        self.cache.set('deviations', {})
         self._diffs = []
         self._data  = []
         self._currentDrawing = None
@@ -140,7 +150,7 @@ class RotationStage(AnalysisStage):
                 fieldAngle.degrees -= 360.0
 
             fieldAngleUnc = Angle(degrees=5.0)
-            fieldAngleUnc.radians += 0.03/math.sqrt(1 - math.pow(strideLine.x, 2))
+            fieldAngleUnc.radians += 0.03/math.sqrt(1.0 - math.pow(strideLine.x, 2))
             fieldDeg = NumericUtils.toValueUncertainty(fieldAngle.degrees, fieldAngleUnc.degrees)
 
             # Adjust data angle into range [-180, 180]
@@ -156,11 +166,14 @@ class RotationStage(AnalysisStage):
 
             diffDeg = NumericUtils.toValueUncertainty(
                 angle1.differenceBetween(angle2).degrees,
-                dataAngleUnc.degrees + fieldAngleUnc.degrees)
+                min(90.0, math.sqrt(
+                    math.pow(dataAngleUnc.degrees, 2) +
+                    math.pow(fieldAngleUnc.degrees, 2))) )
 
             self._diffs.append(diffDeg.value)
 
             deviation = diffDeg.value/diffDeg.uncertainty
+            self.deviations[track.uid] = diffDeg
 
             data = dict(
                 uid=track.uid,
@@ -222,6 +235,33 @@ class RotationStage(AnalysisStage):
             data=self._diffs,
             histRange=[-180, 180],
             isLog=True))
+
+        circs     = []
+        circsUnc  = []
+        diffs     = []
+        diffsUnc  = []
+        entries   = self.owner.getStage('lengthWidth').entries
+        for entry in entries:
+            track = entry['track']
+            if track.uid not in self.deviations:
+                # Skips tracks with no deviation value (solo tracks)
+                continue
+
+            diffDeg = self.deviations[track.uid]
+            diffs.append(abs(diffDeg.value))
+            diffsUnc.append(diffDeg.uncertainty)
+
+            aspect = entry['aspect']
+            circs.append(abs(aspect.value - 1.0))
+            circsUnc.append(aspect.uncertainty)
+
+        pl = self.plot
+        self.owner.createFigure('circular')
+        pl.errorbar(x=circs, y=diffs, xerr=circsUnc, yerr=diffsUnc, fmt='.')
+        pl.xlabel('Aspect Circularity')
+        pl.ylabel('Rotation Deviation')
+        pl.title('Rotation Deviation and Aspect Circularity')
+        self._paths.append(self.owner.saveFigure('circular'))
 
         self.mergePdfs(self._paths)
         self._paths = []

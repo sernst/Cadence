@@ -4,14 +4,16 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import math
+
 import numpy as np
+
 from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
-
-
+from cadence.analysis.shared.plotting.Histogram import Histogram
 
 #*************************************************************************************************** LengthWidthStage
 class LengthWidthStage(AnalysisStage):
@@ -87,6 +89,13 @@ class LengthWidthStage(AnalysisStage):
             data['lDev'] = d/lm
             data['lDelta'] = abs(d)/track.lengthUncertainty
 
+        aspect = w/l
+        wErr   = track.widthUncertainty/w
+        lErr   = track.lengthUncertainty/l
+        aspectUnc = abs(aspect)*math.sqrt(wErr*wErr + lErr*lErr)
+        value = NumericUtils.toValueUncertainty(aspect, aspectUnc)
+        data['aspect'] = value
+
         self.entries.append(data)
 
 #___________________________________________________________________________________________________ _postAnalyze
@@ -99,6 +108,8 @@ class LengthWidthStage(AnalysisStage):
 
         self.logger.write('='*80 + '\nFRACTIONAL UNCERTAINTY ERROR')
         self._process('Uncertainty Error', 'wDelta', 'wDelta', absoluteOnly=True)
+
+        self._processAspectRatios()
 
         self.mergePdfs(self._paths)
 
@@ -213,3 +224,41 @@ class LengthWidthStage(AnalysisStage):
         path = self.getTempPath('%s.pdf' % StringUtils.getRandomString(16), isFile=True)
         self.owner.saveFigure(attrs[0], path)
         return path
+
+#___________________________________________________________________________________________________ _processAspectRatios
+    def _processAspectRatios(self):
+        """_processAspectRatios doc..."""
+        aspects    = []
+        pesAspects = []
+        manAspects = []
+
+        for entry in self.entries:
+            value = entry['aspect'].value
+            aspects.append(value)
+            if entry['track'].pes:
+                pesAspects.append(value)
+            else:
+                manAspects.append(value)
+
+        self.logger.write('='*80 + '\nASPECT RATIO')
+        self.logger.write('Total: %s' % NumericUtils.getMeanAndDeviation(aspects).label)
+        self.logger.write('Pes: %s' % NumericUtils.getMeanAndDeviation(pesAspects).label)
+        self.logger.write('Manus: %s' % NumericUtils.getMeanAndDeviation(manAspects).label)
+
+        h = Histogram(data=aspects, color='green')
+        h.title = 'Aspect Ratios'
+        h.yLabel = 'Count'
+        h.xLabel = 'Aspect Ratio (width/length)'
+        self._paths.append(h.save(self.getTempFilePath(extension='pdf')))
+
+        h = Histogram(data=pesAspects, color='green')
+        h.title = 'Aspect Ratios (Pes)'
+        h.yLabel = 'Count'
+        h.xLabel = 'Aspect Ratio (width/length)'
+        self._paths.append(h.save(self.getTempFilePath(extension='pdf')))
+
+        h = Histogram(data=manAspects, color='green')
+        h.title = 'Aspect Ratios (Manus)'
+        h.yLabel = 'Count'
+        h.xLabel = 'Aspect Ratio (width/length)'
+        self._paths.append(h.save(self.getTempFilePath(extension='pdf')))
