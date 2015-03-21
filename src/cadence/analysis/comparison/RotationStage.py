@@ -5,20 +5,15 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import math
-from pyaid.dict.DictUtils import DictUtils
+
 from pyaid.number.Angle import Angle
-
 from pyaid.number.NumericUtils import NumericUtils
-
 from pyaid.string.StringUtils import StringUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
+from cadence.analysis.StrideLine import StrideLine
 from cadence.analysis.shared.CsvWriter import CsvWriter
-from cadence.analysis.shared.plotting.Histogram import Histogram
-from cadence.util.math2D.Vector2D import Vector2D
-
 from cadence.svg.CadenceDrawing import CadenceDrawing
-
 
 #*************************************************************************************************** RotationStage
 class RotationStage(AnalysisStage):
@@ -100,27 +95,15 @@ class RotationStage(AnalysisStage):
         for track in series.tracks:
             fieldAngle = Angle(degrees=track.rotationMeasured)
             dataAngle  = Angle(degrees=track.rotation)
-            pt = None
-            nt = None
+            strideLine = StrideLine(track=track, series=series)
 
-            if track == series.tracks[-1]:
-                pt = series.tracks[-2]
-            else:
-                nt = series.tracks[series.tracks.index(track) + 1]
-
-            # Z and X are swapped here for a 2D projection into a Right-Handed Coordinate system
-            if nt:
-                strideLine = Vector2D(nt.z - track.z, nt.x - track.x)
-            else:
-                strideLine = Vector2D(track.z - pt.z, track.x - pt.x)
-
-            pair = nt if nt else pt
-            if track.hidden or pair.hidden:
+            if track.hidden or strideLine.pairTrack.hidden:
                 continue
 
             try:
-                strideLine.normalize()
+                strideLine.vector.normalize()
             except ZeroDivisionError:
+                pair = strideLine.pairTrack
                 self.logger.write([
                     '[ERROR]: Stride line was a zero length vector',
                     'TRACK: %s (%s, %s) [%s]' % (
@@ -135,10 +118,7 @@ class RotationStage(AnalysisStage):
                         pair.uid) ])
                 continue
 
-            absoluteAxis = Vector2D(1, 0)
-            absoluteAxis.normalize()
-
-            axisAngle = absoluteAxis.angleBetween(strideLine)
+            axisAngle = strideLine.angle
             if track.left:
                 fieldAngle.radians += axisAngle.radians
             else:
@@ -150,7 +130,7 @@ class RotationStage(AnalysisStage):
                 fieldAngle.degrees -= 360.0
 
             fieldAngleUnc = Angle(degrees=5.0)
-            fieldAngleUnc.radians += 0.03/math.sqrt(1.0 - math.pow(strideLine.x, 2))
+            fieldAngleUnc.radians += 0.03/math.sqrt(1.0 - math.pow(strideLine.vector.x, 2))
             fieldDeg = NumericUtils.toValueUncertainty(fieldAngle.degrees, fieldAngleUnc.degrees)
 
             # Adjust data angle into range [-180, 180]
@@ -184,7 +164,7 @@ class RotationStage(AnalysisStage):
                 deviation=NumericUtils.roundToSigFigs(deviation, 3),
                 relative=NumericUtils.roundToOrder(track.rotationMeasured, -2),
                 axis=NumericUtils.roundToOrder(axisAngle.degrees, -2),
-                axisPairing='PREV' if pt else 'NEXT')
+                axisPairing='NEXT' if strideLine.isNext else 'PREV')
             self._csv.createRow(**data)
 
             data['track'] = track
