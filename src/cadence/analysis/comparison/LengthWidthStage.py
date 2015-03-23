@@ -72,6 +72,7 @@ class LengthWidthStage(AnalysisStage):
         """ Initialize the entries to empty and sets to zero the counters of those tracks with no
             width measurement, and those with no length measurement. """
 
+        self.cache.set('deviations', {})
         self.cache.set('entries', [])
         self.cache.set('noWidth', 0)
         self.cache.set('noLength', 0)
