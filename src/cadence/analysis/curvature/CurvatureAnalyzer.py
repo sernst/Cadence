@@ -5,6 +5,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+from cadence.analysis.curvature import DirectionStage
+from cadence.analysis.curvature.DirectionStage import DirectionStage
 from cadence.analysis.curvature.TrackwayCurveStatsStage import TrackwayCurveStatsStage
 
 PyGlassEnvironment.initializeFromInternalPath(__file__)
@@ -27,6 +29,7 @@ class CurvatureAnalyzer(AnalyzerBase):
         # self.addStage(SeriesCurvatureStage('seriesCurves', self))
         # self.addStage(PathGeneratorStage('pathGenerator', self))
         self.addStage(TrackwayCurveStatsStage('curveStats', self))
+        self.addStage(DirectionStage('direction', self))
 
 ####################################################################################################
 ####################################################################################################

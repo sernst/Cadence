@@ -38,6 +38,11 @@ class LengthWidthStage(AnalysisStage):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+#___________________________________________________________________________________________________ GS: deviations
+    @property
+    def deviations(self):
+        return self.cache.get('deviations')
+
 #___________________________________________________________________________________________________ GS: widths
     @property
     def entries(self):
@@ -349,11 +354,12 @@ class LengthWidthStage(AnalysisStage):
                 count += 1
                 track = entry['track']
 
-                csv.createRow(
-                    uid=track.uid,
-                    fingerprint=track.fingerprint,
+                data = dict(
                     wSigma=widthDevSigma,
                     lSigma=lengthDevSigma)
+                self.deviations[track.uid] = data
+
+                csv.createRow(uid=track.uid, fingerprint=track.fingerprint, **data)
 
         if not csv.save():
             self.logger.write('[ERROR]: Failed to save CSV file to %s' % csv.path)

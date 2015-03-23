@@ -35,7 +35,7 @@ class StrideLine(object):
 #___________________________________________________________________________________________________ GS: angle
     @property
     def angle(self):
-        return Vector2D(1, 0).angleBetween(self.vector)
+        return Vector2D(1.0, 0.0).angleBetween(self.vector)
 
 #___________________________________________________________________________________________________ GS: isNext
     @property

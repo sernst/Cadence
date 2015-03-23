@@ -5,6 +5,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+from cadence.analysis.comparison.DrawLengthWidthStage import DrawLengthWidthStage
+
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
 from cadence.analysis.comparison.RotationStage import RotationStage
@@ -23,6 +25,7 @@ class ComparisonAnalyzer(AnalyzerBase):
         """Creates a new instance of ComparisonAnalyzer."""
         super(ComparisonAnalyzer, self).__init__(**kwargs)
         self.addStage(LengthWidthStage('lengthWidth', self))
+        self.addStage(DrawLengthWidthStage('drawLengthWidth', self))
         self.addStage(RotationStage('rotation', self))
 
 ####################################################################################################
