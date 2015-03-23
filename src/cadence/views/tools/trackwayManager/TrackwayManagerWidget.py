@@ -2006,37 +2006,144 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._unlock()
             return
 
-        self.currentDrawing.createGroup('g')
-        # self.currentDrawing.circle((0, 0), 10, scene=False, groupId='g')
-        # add a little tail that will point in the direction of rotation.  It will later be scaled
-        # and rotated
-        self.currentDrawing.line((0, 0), (0, -10), scene=False, groupId='g', stroke='black')
+        # create a pointer indicating the rotation angle, to be translated, scaled, and rotated
+        self.currentDrawing.createGroup('pointer')
+        self.currentDrawing.line((0, 0), (0, -20), scene=False, groupId='pointer')
 
         for track in tracks:
-            x = track.x
-            z = track.z
-
-            self.currentDrawing.use('g', (x, z),
-                scale=track.width,
-                scaleY=track.length,
-                rotation=track.rotation,
-                scene=True,
-                fill='none',
-                stroke='blue',
-                stroke_width=4)
+            self.drawTrack(track, self.currentDrawing, 'pointer')
 
             # compute the averge uncertainty in cm (also stored in fractional meters)
             # The track dimensions stored in the database are in fractional meters, so multiply by
             # 100 to convert to cm.
-            u = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
-            self.currentDrawing.circle(
-                (x, z),
-                u,
-                scene=True,
-                fill='red',
-                stroke='red')
+            # u = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
+            # self.currentDrawing.circle(
+            #     (track.x, track.z),
+            #     u,
+            #     scene=True,
+            #     fill='red',
+            #     stroke='red')
 
         self._unlock()
+
+#___________________________________________________________________________________________________ drawTrack
+    def drawTrack(self, track, drawing, group, thickness =1.0, tolerance =0.1):
+        """ The dimensions of a given track is drawn, and added to a given drawing, using the given
+            CadenceDrawing group (a line oriented with the SVG positive Y direction. """
+
+        # indicate the length (per track.length)
+        drawing.use(group,
+                    (track.x, track.z),
+                    scale=2.0,
+                    scaleY=track.lengthRatio*track.length,
+                    rotation=track.rotation,
+                    scene=True,
+                    fill='none',
+                    stroke='blue',
+                    stroke_width=2.0,
+                    stroke_opacity= 1.0,
+                    fill_opacity=1.0)
+        drawing.use(group,
+                    (track.x, track.z),
+                    scale=2.0,
+                    scaleY=(1.0 - track.lengthRatio)*track.length,
+                    rotation=track.rotation + 180.0,
+                    scene=True,
+                    fill='none',
+                    stroke='blue',
+                    stroke_width=2.0,
+                    stroke_opacity=1.0,
+                    fill_opacity=1.0)
+
+        # and the same for the width (per track.width)
+        drawing.use(group,
+                    (track.x, track.z),
+                    scale=2.0,
+                    scaleY=track.width/2.0,
+                    rotation=track.rotation + 90.0,
+                    scene=True,
+                    fill='none',
+                    stroke='blue',
+                    stroke_width=2.0,
+                    stroke_opacity=1.0,
+                    fill_opacity=1.0)
+        drawing.use(group,
+                    (track.x, track.z),
+                    scale=2.0,
+                    scaleY=track.width/2.0,
+                    rotation=track.rotation - 90.0,
+                    scene=True,
+                    fill='none',
+                    stroke='blue',
+                    stroke_width=2.0,
+                    stroke_opacity=1.0,
+                    fill_opacity=1.0)
+
+        # now render the measured dimensions, if provided, starting with lengthMeasured
+        if track.lengthMeasured != 0:
+            if abs(track.length - track.lengthMeasured)/track.lengthMeasured > tolerance:
+                strokeWidth = 8
+                opacity     = 0.5
+                color       = 'red'
+            else:
+                strokeWidth = 8
+                opacity     = 0.25
+                color       = 'green'
+            drawing.use(group,
+                        (track.x, track.z),
+                        scale=thickness,
+                        scaleY=track.lengthRatio*track.lengthMeasured,
+                        rotation=track.rotation,
+                        scene=True,
+                        fill='none',
+                        stroke=color,
+                        stroke_width=strokeWidth,
+                        stroke_opacity=opacity,
+                        fill_opacity=opacity)
+            drawing.use('pointer',
+                        (track.x, track.z),
+                        scale=thickness,
+                        scaleY=(1.0 - track.lengthRatio)*track.lengthMeasured,
+                        rotation=track.rotation + 180.0,
+                        scene=True,
+                        fill='none',
+                        stroke=color,
+                        stroke_width=strokeWidth,
+                        stroke_opacity=opacity,
+                        fill_opacity=opacity)
+
+        # and likewise for widthMeasured
+        if track.widthMeasured != 0:
+            if abs(track.width - track.widthMeasured)/track.widthMeasured > tolerance:
+                strokeWidth = 8
+                opacity     = 0.5
+                color       = 'red'
+            else:
+                strokeWidth = 8
+                opacity     = 0.25
+                color       = 'green'
+            drawing.use('pointer',
+                        (track.x, track.z),
+                        scale=2.0*thickness,
+                        scaleY=track.widthMeasured/2.0,
+                        rotation=track.rotation + 90.0,
+                        scene=True,
+                        fill='none',
+                        stroke=color,
+                        stroke_width=strokeWidth,
+                        stroke_opacity=opacity,
+                        fill_opacity=opacity)
+            drawing.use('pointer',
+                        (track.x, track.z),
+                        scale=2.0*thickness,
+                        scaleY=track.widthMeasured/2.0,
+                        rotation=track.rotation - 90.0,
+                        scene=True,
+                        fill='none',
+                        stroke=color,
+                        stroke_width=strokeWidth,
+                        stroke_opacity=opacity,
+                        fill_opacity=opacity)
 
 #___________________________________________________________________________________________________ handleSvgOpenBtn
     def handleSvgOpenBtn(self):

@@ -7,13 +7,19 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import math
 
 from pyaid.number.Angle import Angle
+
+from pyaid.number.Angle import Angle
 from pyaid.number.NumericUtils import NumericUtils
+
 from pyaid.string.StringUtils import StringUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.StrideLine import StrideLine
 from cadence.analysis.shared.CsvWriter import CsvWriter
+from cadence.util.math2D.Vector2D import Vector2D
+
 from cadence.svg.CadenceDrawing import CadenceDrawing
+
 
 #*************************************************************************************************** RotationStage
 class RotationStage(AnalysisStage):
@@ -81,6 +87,10 @@ class RotationStage(AnalysisStage):
         self._currentDrawing.createGroup('pointer')
         self._currentDrawing.line((0, 0), (0, -10), scene=False, groupId='pointer')
 
+        # and place a grid and the federal coordinates in the drawing file
+        self._currentDrawing.grid()
+        self._currentDrawing.federalCoordinates()
+
         super(RotationStage, self)._analyzeSitemap(sitemap)
 
         if self._currentDrawing:
@@ -144,6 +154,7 @@ class RotationStage(AnalysisStage):
             angle1 = Angle(degrees=dataDeg.value)
             angle2 = Angle(degrees=fieldDeg.value)
 
+            # the fill color for the disks to be added to the map are based on diffDeg
             diffDeg = NumericUtils.toValueUncertainty(
                 angle1.differenceBetween(angle2).degrees,
                 min(90.0, math.sqrt(
@@ -170,32 +181,45 @@ class RotationStage(AnalysisStage):
             data['track'] = track
             self._data.append(data)
 
-            # draw the stride line pointer for reference
+            # draw the stride line pointer for reference in green
             self._currentDrawing.use(
                 'pointer',
                 (track.x, track.z),
                 scene=True,
                 rotation=axisAngle.degrees,
-                stroke_width=4,
+                stroke_width=1,
+                scale=0.5,
                 stroke='green')
 
-            # draw this track indicating the map-derived estimate of rotation
+            # indicate in blue the map-derived estimate of track rotation
             self._currentDrawing.use(
                 'pointer',
                 (track.x, track.z),
                 scene=True,
                 rotation=dataDeg.value,
-                stroke_width=4,
+                stroke_width=1,
                 stroke='blue')
 
-            # add the measured estimate of rotation, scaling by deviation
+            # add the measured (spreadsheet) estimate of rotation
             self._currentDrawing.use(
                 'pointer',
                 (track.x, track.z),
                 scene=True,
                 rotation=fieldDeg.value,
-                stroke_width=4,
+                stroke_width=1,
                 stroke='red')
+
+            # place a translucent disk of radius proportional to the diference in degrees
+            radius = 100.0*diffDeg.value/180.0
+            self._currentDrawing.circle(
+                (track.x, track.z),
+                radius,
+                scene=True,
+                fill='red',
+                stroke_width=0.5,
+                stroke='red',
+                fill_opacity='0.5')
+
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):

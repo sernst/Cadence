@@ -83,6 +83,12 @@ class CadenceDrawing(object):
             argument to establish the correspondence between the Maya scene and the site siteMap
             coordinates. """
 
+        self.siteMapReady = False if siteMap.scale == 0.0 else True
+
+        if not self.siteMapReady:
+            print("CadenceDrawing: %s %s not completed " % (siteMap.name, siteMap.level))
+            return
+
         self.fileName = fileName
         self.siteMap  = siteMap
 
@@ -110,6 +116,7 @@ class CadenceDrawing(object):
 
         self.groups = dict()
 
+
 #===================================================================================================
 #                                                                                     P U B L I C
 
@@ -118,6 +125,9 @@ class CadenceDrawing(object):
     def circle(self, center, radius, scene =True, groupId =None, **extra):
         """ Adds a circle object to the SVG file. All coordinates are explicitly labled with 'mm'
             and passed to svgwrite. """
+
+        if not self.siteMapReady:
+            return
 
         # convert from scene coordinates to map coordinates as necessary
         if scene:
@@ -152,6 +162,9 @@ class CadenceDrawing(object):
             directly. Groups are intended to be placed readily across a drawing, hence the pivot
             for the group should normally be centered on the user space (map) origin."""
 
+        if not self.siteMapReady:
+            return
+
         group = self._drawing.g(id=id, **extra)
 
         # add it to defs so that it is not directly rendered
@@ -164,6 +177,9 @@ class CadenceDrawing(object):
     def ellipse(self, center, radii, scene =True, groupId =None, **extra):
         """ Adds an ellipse object to the SVG file, based on a center point and two radii.  All
             coordinates are explicitly labled with 'mm' and passed to svgwrite. """
+
+        if not self.siteMapReady:
+            return
 
         # convert from scene coordinates to map coordinates as necessary
         if scene:
@@ -192,6 +208,9 @@ class CadenceDrawing(object):
     def federalCoordinates(self, deltaX =0, deltaZ =20, diskRadius =2):
         """ Place the coordinates a text string at an offset from the fiducial marker. """
 
+        if not self.siteMapReady:
+            return
+
         text = "(%s, %s)" % (self.siteMap.federalEast, self.siteMap.federalNorth)
         self.text(text, (deltaX, deltaZ), scene=True, font_size="8")
 
@@ -210,6 +229,9 @@ class CadenceDrawing(object):
             The grid marks on a site map are separated by 10 m in the real world, or 200 units
             in the map in their 'scaled mm' convention. Unfortunately, the group construct in
             svgwrite requires px values, and will not allow the mm suffix. """
+
+        if not self.siteMapReady:
+            return
 
         x0 = self.siteMap.xFederal%dx
         y0 = self.siteMap.yFederal%dy
@@ -230,6 +252,9 @@ class CadenceDrawing(object):
         """ Adds a line object to the svg file based on two scene points. It first converts from
             scene to siteMap coordinates if necessary, then concatenates the units suffix 'mm' to
             all coordinate values. """
+
+        if not self.siteMapReady:
+            return
 
         # convert from scene coordinates to map coordinates as necessary
         if scene:
@@ -261,6 +286,9 @@ class CadenceDrawing(object):
             groupId=True, the mark is added to the specified group, rather than to the drawing.
             This fragment is intended for use as a group (see grid). """
 
+        if not self.siteMapReady:
+            return
+
         r = size
 
         self.line([-r, 0], [r, 0], scene=scene, groupId=groupId, **extra)
@@ -277,6 +305,9 @@ class CadenceDrawing(object):
     def polyLine(self, points, scene =True, groupId =None, **extra):
         """ Adds a polyline object to the SVG file, based on a list of scene points. If canvas is
             specified, this permits adding this object to a """
+
+        if not self.siteMapReady:
+            return
 
         # map from scene coordinates to map coordinates as necessary
         if scene:
@@ -312,6 +343,9 @@ class CadenceDrawing(object):
             In the scene, x is positive to the left, and z is positive upwards.  In the siteMap, x
             is positive to the right and y is positive downwards. """
 
+        if not self.siteMapReady:
+            return
+
         xMap   = p[0]
         yMap   = p[1]
         xScene = -self.scaleToScene(xMap - self.siteMap.xFederal)
@@ -326,6 +360,9 @@ class CadenceDrawing(object):
             is positive to the left, and zScene is positive upwards; xMap is positive to the right
             and yMap is positive downwards. """
 
+        if not self.siteMapReady:
+            return
+
         xScene = p[0]
         yScene = p[1]
         xMap   = self.siteMap.xFederal - self.scaleToMap(xScene)
@@ -339,6 +376,9 @@ class CadenceDrawing(object):
             scene is True, the arguments are converted to
             'scaled mm', otherwise they are presumed to be in mm.  All coordinates are explicitly
             labled with 'mm' and passed to svgwrite. """
+
+        if not self.siteMapReady:
+            return
 
         xCenter = center[0]
         yCenter = center[1]
@@ -377,6 +417,9 @@ class CadenceDrawing(object):
             one wishes to have create a PDF file (same file name as used for the .SVG, but with
             suffix .PDF), then call with toPDF True). """
 
+        if not self.siteMapReady:
+            return
+
         self._drawing.save()
 
         #  we're done if no PDF version is also required
@@ -406,6 +449,9 @@ class CadenceDrawing(object):
         """ Converts from scene coordinates (in cm) to siteMap coordinates ('scaled mm'). The
             siteMap is usually drawn in 50:1 scale. """
 
+        if not self.siteMapReady:
+            return
+
         return v/(0.1*self.siteMap.scale)
 
 #___________________________________________________________________________________________________ scaleToScene
@@ -416,11 +462,17 @@ class CadenceDrawing(object):
             value from the 'scaled mm' of the map into centimeter units of the 3D scene. For
             example, a value of 20 units corresponds to 100 cm in the scene, which is returned. """
 
+        if not self.siteMapReady:
+            return
+
         return 0.1*self.siteMap.scale*value
 
 #___________________________________________________________________________________________________ text
     def text(self, textString, insert, scene =True, groupId =None, **extra):
         """ Adds a text of a given fill at the given insertion point. """
+
+        if not self.siteMapReady:
+            return
 
         # convert from scene coordinates to map coordinates as necessary
         if scene:
@@ -456,6 +508,9 @@ class CadenceDrawing(object):
             scene coordinates depending upon the kwarg scene).  For example, for a group 'g' to
             be placed at some point (xScene, yScene) and rotated 45 degrees, and with 2x scale:
                 use('g', (xScene, yScene), scene=True, rotation=45, scale = 2) """
+
+        if not self.siteMapReady:
+            return
 
         if scene:
             center = self.projectToMap(center)
