@@ -100,7 +100,7 @@ class StrideLengthStage(AnalysisStage):
                 measured=measured,
                     # Fractional error between calculated and measured distance
                 fractional=fractional,
-                    # Sigma deviations between
+                    # Sigma trackDeviations between
                 deviation=deviation)
 
             self.entries.append(entry)

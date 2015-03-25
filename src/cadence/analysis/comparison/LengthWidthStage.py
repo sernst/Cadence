@@ -15,7 +15,6 @@ from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.analysis.shared.plotting.Histogram import Histogram
 
-from cadence.svg.CadenceDrawing import CadenceDrawing
 
 #*************************************************************************************************** LengthWidthStage
 class LengthWidthStage(AnalysisStage):
@@ -33,15 +32,14 @@ class LengthWidthStage(AnalysisStage):
             **kwargs)
         self._paths = []
 
-        self._currentDrawing = None
 
 #===================================================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: deviations
+#___________________________________________________________________________________________________ GS: trackDeviations
     @property
-    def deviations(self):
-        return self.cache.get('deviations')
+    def trackDeviations(self):
+        return self.cache.get('trackDeviations')
 
 #___________________________________________________________________________________________________ GS: widths
     @property
@@ -72,40 +70,17 @@ class LengthWidthStage(AnalysisStage):
         """ Initialize the entries to empty and sets to zero the counters of those tracks with no
             width measurement, and those with no length measurement. """
 
-        self.cache.set('deviations', {})
+        self.cache.set('trackDeviations', {})
         self.cache.set('entries', [])
         self.cache.set('noWidth', 0)
         self.cache.set('noLength', 0)
-
-#___________________________________________________________________________________________________  _analyzeSitemap
-    def _analyzeSitemap(self, sitemap):
-        """ Start a drawing for the SVG and PDF files for this site. """
-
-        fileName = sitemap.name + "_" + sitemap.level + '_lengthWidth.svg'
-        path = self.getPath(fileName, isFile=True)
-        self._currentDrawing = CadenceDrawing(path, sitemap)
-
-        # create a pointer for map annotation
-        self._currentDrawing.createGroup('pointer')
-        self._currentDrawing.line((0, 0), (0, -20), scene=False, groupId='pointer')
-
-        # and place a grid and the federal coordinates in the drawing file
-        self._currentDrawing.grid()
-        self._currentDrawing.federalCoordinates()
-
-        # do what needs to be done
-        super(LengthWidthStage, self)._analyzeSitemap(sitemap)
-
-        # then when back, save the drawing
-        if self._currentDrawing:
-            self._currentDrawing.save()
 
 #___________________________________________________________________________________________________ _analyzeTrack
     def _analyzeTrack(self, track, series, trackway, sitemap):
         """ Performs analysis on each track. A dictionary is created to be added to the entries
             list.  That dictionary contains track, wDev (the fractional difference in width between
             that estimated from the map and that measured in the field), ldev (the corresponding
-            fractional difference in length, and if either of those field measurements are missing,
+            fractional difference in length), and if either of those field measurements are missing,
             the corresponding counter is incremented. """
 
         data = dict(track=track)
@@ -138,128 +113,6 @@ class LengthWidthStage(AnalysisStage):
         data['aspect'] = value
 
         self.entries.append(data)
-
-        # visualize track width and length compared to measured values for these dimensions
-        self.drawTrack(track, self._currentDrawing, 'pointer')
-
-#___________________________________________________________________________________________________ drawTrack
-    def drawTrack(self, track, drawing, group, thickness =1.0, tolerance =0.20):
-        """ The dimensions of a given track is drawn, and added to a given drawing, using the given
-            CadenceDrawing group (a line oriented with the SVG positive Y direction. """
-
-        # indicate the length (per track.length)
-        drawing.use(group,
-                    (track.x, track.z),
-                    scale=2.0,
-                    scaleY=track.lengthRatio*track.length,
-                    rotation=track.rotation,
-                    scene=True,
-                    fill='none',
-                    stroke='blue',
-                    stroke_width=2.0,
-                    stroke_opacity= 1.0,
-                    fill_opacity=1.0)
-        drawing.use(group,
-                    (track.x, track.z),
-                    scale=2.0,
-                    scaleY=(1.0 - track.lengthRatio)*track.length,
-                    rotation=track.rotation + 180.0,
-                    scene=True,
-                    fill='none',
-                    stroke='blue',
-                    stroke_width=2.0,
-                    stroke_opacity=1.0,
-                    fill_opacity=1.0)
-
-        # and the same for the width (per track.width)
-        drawing.use(group,
-                    (track.x, track.z),
-                    scale=2.0,
-                    scaleY=track.width/2.0,
-                    rotation=track.rotation + 90.0,
-                    scene=True,
-                    fill='none',
-                    stroke='blue',
-                    stroke_width=2.0,
-                    stroke_opacity=1.0,
-                    fill_opacity=1.0)
-        drawing.use(group,
-                    (track.x, track.z),
-                    scale=2.0,
-                    scaleY=track.width/2.0,
-                    rotation=track.rotation - 90.0,
-                    scene=True,
-                    fill='none',
-                    stroke='blue',
-                    stroke_width=2.0,
-                    stroke_opacity=1.0,
-                    fill_opacity=1.0)
-
-        # now render the measured dimensions, if provided, starting with lengthMeasured
-        if track.lengthMeasured != 0:
-            if abs(track.length - track.lengthMeasured)/track.lengthMeasured > tolerance:
-                strokeWidth = 8
-                opacity     = 0.5
-                color       = 'red'
-            else:
-                strokeWidth = 8
-                opacity     = 0.25
-                color       = 'green'
-            drawing.use(group,
-                        (track.x, track.z),
-                        scale=thickness,
-                        scaleY=track.lengthRatio*track.lengthMeasured,
-                        rotation=track.rotation,
-                        scene=True,
-                        fill='none',
-                        stroke=color,
-                        stroke_width=strokeWidth,
-                        stroke_opacity=opacity,
-                        fill_opacity=opacity)
-            drawing.use('pointer',
-                        (track.x, track.z),
-                        scale=thickness,
-                        scaleY=(1.0 - track.lengthRatio)*track.lengthMeasured,
-                        rotation=track.rotation + 180.0,
-                        scene=True,
-                        fill='none',
-                        stroke=color,
-                        stroke_width=strokeWidth,
-                        stroke_opacity=opacity,
-                        fill_opacity=opacity)
-
-        # and likewise for widthMeasured
-        if track.widthMeasured != 0:
-            if abs(track.width - track.widthMeasured)/track.widthMeasured > tolerance:
-                strokeWidth = 8
-                opacity     = 0.5
-                color       = 'red'
-            else:
-                strokeWidth = 8
-                opacity     = 0.25
-                color       = 'green'
-            drawing.use('pointer',
-                        (track.x, track.z),
-                        scale=2.0*thickness,
-                        scaleY=track.widthMeasured/2.0,
-                        rotation=track.rotation + 90.0,
-                        scene=True,
-                        fill='none',
-                        stroke=color,
-                        stroke_width=strokeWidth,
-                        stroke_opacity=opacity,
-                        fill_opacity=opacity)
-            drawing.use('pointer',
-                        (track.x, track.z),
-                        scale=2.0*thickness,
-                        scaleY=track.widthMeasured/2.0,
-                        rotation=track.rotation - 90.0,
-                        scene=True,
-                        fill='none',
-                        stroke=color,
-                        stroke_width=strokeWidth,
-                        stroke_opacity=opacity,
-                        fill_opacity=opacity)
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
@@ -317,14 +170,17 @@ class LengthWidthStage(AnalysisStage):
         for data in plotList:
             if not absoluteOnly:
                 d = data[1]
-                self._paths.append(self._makePlot(label, d, data, histRange=(-1.0, 1.0)))
-                self._paths.append(self._makePlot(label, d, data, isLog=True, histRange=(-1.0, 1.0)))
+                self._paths.append(
+                    self._makePlot(label, d, data, histRange=(-1.0, 1.0)))
+                self._paths.append(
+                    self._makePlot(label, d, data, isLog=True, histRange=(-1.0, 1.0)))
 
             # noinspection PyUnresolvedReferences
             d = np.absolute(np.array(data[1]))
-            self._paths.append(self._makePlot('Absolute ' + label, d, data, histRange=(0.0, 1.0)))
-            self._paths.append(self._makePlot(
-                'Absolute ' + label, d, data, isLog=True, histRange=(0.0, 1.0)))
+            self._paths.append(
+                self._makePlot('Absolute ' + label, d, data, histRange=(0.0, 1.0)))
+            self._paths.append(
+                self._makePlot('Absolute ' + label, d, data, isLog=True, histRange=(0.0, 1.0)))
 
         self.owner.createFigure('twoD')
         pl.hist2d(w2D, l2D, bins=20, range=([-1, 1], [-1, 1]))
@@ -354,11 +210,10 @@ class LengthWidthStage(AnalysisStage):
             if widthDevSigma > 2.0 or lengthDevSigma > 2.0:
                 count += 1
                 track = entry['track']
-
                 data = dict(
                     wSigma=widthDevSigma,
                     lSigma=lengthDevSigma)
-                self.deviations[track.uid] = data
+                self.trackDeviations[track.uid] = data
 
                 csv.createRow(uid=track.uid, fingerprint=track.fingerprint, **data)
 

@@ -7,8 +7,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import math
 
 from pyaid.number.Angle import Angle
-
-from pyaid.number.Angle import Angle
 from pyaid.number.NumericUtils import NumericUtils
 
 from pyaid.string.StringUtils import StringUtils
@@ -16,7 +14,6 @@ from pyaid.string.StringUtils import StringUtils
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.StrideLine import StrideLine
 from cadence.analysis.shared.CsvWriter import CsvWriter
-from cadence.util.math2D.Vector2D import Vector2D
 
 from cadence.svg.CadenceDrawing import CadenceDrawing
 
@@ -45,10 +42,10 @@ class RotationStage(AnalysisStage):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: deviations
+#___________________________________________________________________________________________________ GS: trackDeviations
     @property
     def deviations(self):
-        return self.cache.get('deviations')
+        return self.cache.get('trackDeviations')
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -56,7 +53,7 @@ class RotationStage(AnalysisStage):
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
         """_preAnalyze doc..."""
-        self.cache.set('deviations', {})
+        self.cache.set('trackDeviations', {})
         self._diffs = []
         self._data  = []
         self._currentDrawing = None

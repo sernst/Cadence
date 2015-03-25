@@ -412,7 +412,7 @@ class CadenceDrawing(object):
             self._drawing.add(obj)
 
 #___________________________________________________________________________________________________ save
-    def save(self, toPDF=True):
+    def save(self, toPDF=False):
         """ Writes the current _drawing in SVG format to the file specified at initialization. If
             one wishes to have create a PDF file (same file name as used for the .SVG, but with
             suffix .PDF), then call with toPDF True). """
