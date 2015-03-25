@@ -1,5 +1,5 @@
 # LengthWidthStage.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -121,10 +121,10 @@ class LengthWidthStage(AnalysisStage):
         self._paths = []
 
         self.logger.write('='*80 + '\nFRACTIONAL ERROR (Measured vs Entered)')
-        self._process('Error', 'wDev', 'lDev')
+        self._process('Error', 'wDev', 'lDev', self.trackDeviations)
 
         self.logger.write('='*80 + '\nFRACTIONAL UNCERTAINTY ERROR')
-        self._process('Uncertainty Error', 'wDelta', 'wDelta', absoluteOnly=True)
+        self._process('Uncertainty Error', 'wDelta', 'wDelta', None, absoluteOnly=True)
 
         self._processAspectRatios()
 
@@ -138,7 +138,7 @@ class LengthWidthStage(AnalysisStage):
             '%s tracks with no measured length' % self.cache.get('noLengths') ]
 
 #___________________________________________________________________________________________________ _process
-    def _process(self, label, widthKey, lengthKey, absoluteOnly =False):
+    def _process(self, label, widthKey, lengthKey, trackDeviations, absoluteOnly =False):
         """_process doc..."""
         pl  = self.plot
         ws  = []
@@ -213,7 +213,9 @@ class LengthWidthStage(AnalysisStage):
                 data = dict(
                     wSigma=widthDevSigma,
                     lSigma=lengthDevSigma)
-                self.trackDeviations[track.uid] = data
+
+                if trackDeviations is not None:
+                    trackDeviations[track.uid] = data
 
                 csv.createRow(uid=track.uid, fingerprint=track.fingerprint, **data)
 
