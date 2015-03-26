@@ -124,7 +124,7 @@ class LengthWidthStage(AnalysisStage):
         self._process('Error', 'wDev', 'lDev', self.trackDeviations)
 
         self.logger.write('='*80 + '\nFRACTIONAL UNCERTAINTY ERROR')
-        self._process('Uncertainty Error', 'wDelta', 'wDelta', None, absoluteOnly=True)
+        self._process('Uncertainty Error', 'wDelta', 'lDelta', None, absoluteOnly=True)
 
         self._processAspectRatios()
 
