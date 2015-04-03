@@ -118,6 +118,11 @@ class PositionValue2D(object):
         """toList doc..."""
         return self.x, self.y, self.xUnc, self.yUnc
 
+#___________________________________________________________________________________________________ toMayaTuple
+    def toMayaTuple(self):
+        """toMayaTuple doc..."""
+        return 100.0*self.y, 100.0*self.x
+
 #===================================================================================================
 #                                                                               I N T R I N S I C
 

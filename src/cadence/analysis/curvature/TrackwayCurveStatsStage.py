@@ -16,6 +16,9 @@ from cadence.analysis.shared.plotting.Histogram import Histogram
 from cadence.models.analysis.Analysis_Trackway import Analysis_Trackway
 
 #*************************************************************************************************** TrackwayCurveStatsStage
+from cadence.svg.CadenceDrawing import CadenceDrawing
+
+
 class TrackwayCurveStatsStage(AnalysisStage):
     """A class for..."""
 
@@ -30,6 +33,7 @@ class TrackwayCurveStatsStage(AnalysisStage):
             label='Trackway Curve Stats',
             **kwargs)
 
+        self._drawing = None
         self._paths = []
 
 #===================================================================================================
@@ -50,7 +54,16 @@ class TrackwayCurveStatsStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
+        self._drawing = None
         self._paths = []
+
+#___________________________________________________________________________________________________ _analyzeSitemap
+    def _analyzeSitemap(self, sitemap):
+        """_analyzeSitemap doc..."""
+        self._drawing = CadenceDrawing(self.getPath(sitemap.name + '.svg'), sitemap)
+        super(TrackwayCurveStatsStage, self)._analyzeSitemap(sitemap)
+        self._drawing.save()
+        self._drawing = None
 
 #___________________________________________________________________________________________________ _analyzeTrackway
     def _analyzeTrackway(self, trackway, sitemap):
@@ -165,6 +178,11 @@ class TrackwayCurveStatsStage(AnalysisStage):
             trackToTrack = LineSegment2D(segmentLine.start.clone(), position)
             debugItem    = {'TRACK':segmentTrack.fingerprint if segmentTrack else 'NONE'}
             debugData.append(debugItem)
+
+            print('[DRAW LINE]:', trackToTrack.start.toMayaTuple(), trackToTrack.end.toMayaTuple())
+            self._drawing.line(
+                trackToTrack.start.toMayaTuple(),
+                trackToTrack.end.toMayaTuple(), stroke='blue', stroke_width=2)
 
             # Make sure the track resides in a generally forward direction relative to
             # the direction of the segment. The prevents tracks from matching from behind.
