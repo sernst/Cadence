@@ -61,7 +61,13 @@ class TrackwayCurveStatsStage(AnalysisStage):
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
         self._drawing = CadenceDrawing(self.getPath(sitemap.name + '.svg'), sitemap)
+
+        # and place a grid and the federal coordinates in the drawing file
+        self._drawing.grid()
+        self._drawing.federalCoordinates()
+
         super(TrackwayCurveStatsStage, self)._analyzeSitemap(sitemap)
+
         self._drawing.save()
         self._drawing = None
 
@@ -172,6 +178,8 @@ class TrackwayCurveStatsStage(AnalysisStage):
         pointOnLine  = segmentMatch['line'].closestPointOnLine(position)
         matchLine    = None
 
+        self._drawing.circle(track.positionValue.toMayaTuple(), 5, fill='red')
+
         for segment in segments[1:]:
             segmentTrack = segment['track']
             segmentLine  = segment['line']
@@ -179,7 +187,6 @@ class TrackwayCurveStatsStage(AnalysisStage):
             debugItem    = {'TRACK':segmentTrack.fingerprint if segmentTrack else 'NONE'}
             debugData.append(debugItem)
 
-            print('[DRAW LINE]:', trackToTrack.start.toMayaTuple(), trackToTrack.end.toMayaTuple())
             self._drawing.line(
                 trackToTrack.start.toMayaTuple(),
                 trackToTrack.end.toMayaTuple(), stroke='blue', stroke_width=2)
