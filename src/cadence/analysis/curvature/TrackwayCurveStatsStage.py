@@ -1,5 +1,5 @@
 # TrackwayCurveStatsStage.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -13,6 +13,7 @@ from pyaid.number.NumericUtils import NumericUtils
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
 from cadence.analysis.shared.plotting.Histogram import Histogram
+from cadence.models.analysis.Analysis_Trackway import Analysis_Trackway
 
 #*************************************************************************************************** TrackwayCurveStatsStage
 class TrackwayCurveStatsStage(AnalysisStage):
@@ -29,25 +30,37 @@ class TrackwayCurveStatsStage(AnalysisStage):
             label='Trackway Curve Stats',
             **kwargs)
 
-        self._trackwaySparseness = dict()
         self._paths = []
+
+#===================================================================================================
+#                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: trackwaySparseness
+    @property
+    def trackwaySparseness(self):
+        return self.cache.getOrAssign('trackwaySparseness', {})
+
+#___________________________________________________________________________________________________ GS: orderData
+    @property
+    def orderData(self):
+        return self.cache.getOrAssign('orderData', {})
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
-        self._trackwaySparseness = dict()
         self._paths = []
 
 #___________________________________________________________________________________________________ _analyzeTrackway
     def _analyzeTrackway(self, trackway, sitemap):
         pesSpacings     = []
         manusSpacings   = []
-        denseCount      = 0
+        denseSeries     = None
         denseSpacing    = None
+        trackwaySeries  = self.owner.getTrackwaySeries(trackway)
 
-        for key, series in self.owner.getTrackwaySeries(trackway).items():
+        for key, series in trackwaySeries.items():
             # Iterate through each series in the trackway
 
             spacing = self._calculateAverageSpacing(series)
@@ -60,13 +73,132 @@ class TrackwayCurveStatsStage(AnalysisStage):
                 manusSpacings.append(spacing)
 
             # The highest track count series should be stored for reference
-            if series.count > denseCount:
+            if not denseSeries:
+                denseSeries  = series
+                denseSpacing = spacing
+                continue
+
+            # Determine if the existing denseSeries should be overwritten, which will be true if
+            # the new series has preferential properties.
+            overwrite = denseSeries.count == series.count and (
+                (not denseSeries.pes and series.pes) or # Pes overwrites manus
+                (denseSeries.pes and series.pes and series.left) ) # Left pes overwrites right pes
+
+            if overwrite or denseSeries.count < series.count:
+                denseSeries  = series
                 denseSpacing = spacing
 
         pesSpacings     = self._calculateSparseness(pesSpacings, denseSpacing)
         manusSpacings   = self._calculateSparseness(manusSpacings, denseSpacing)
 
-        self._trackwaySparseness[trackway.uid] = {'manus':manusSpacings, 'pes':pesSpacings}
+        self.trackwaySparseness[trackway.uid] = dict(
+            manus=manusSpacings,
+            pes=pesSpacings,
+            dense=denseSeries)
+
+        if not denseSeries:
+            return
+
+        orderData = dict(
+            trackway=trackway,
+            denseSeries=denseSeries,
+            segments=[])
+        self.orderData[trackway.uid] = orderData
+
+        segments = orderData['segments']
+        tracks   = denseSeries.tracks
+
+        for i in ListUtils.range(len(tracks) - 1):
+            # Create a segment For each track in the reference series
+            line = LineSegment2D(start=tracks[i].positionValue, end=tracks[i + 1].positionValue)
+            segments.append({'track':tracks[i], 'line':line, 'pairs':[]})
+
+        # Add segments to the beginning and end to handle overflow conditions where the paired
+        # track series extend beyond the bounds of the reference series
+        segments.insert(0, {
+            'track':None, 'pairs':[],
+            'line':segments[0]['line'].createPreviousLineSegment(100.0) })
+
+        segments.append({
+            'track':tracks[-1], 'pairs':[],
+            'line':segments[-1]['line'].createNextLineSegment(100.0) })
+
+        super(TrackwayCurveStatsStage, self)._analyzeTrackway(trackway, sitemap)
+
+        for segment in segments:
+            # Sort the paired segments by distance from the segment start position to order them
+            # properly from first to last
+            if segment['pairs']:
+                ListUtils.sortDictionaryList(segment['pairs'], 'distance', inPlace=True)
+
+        #-------------------------------------------------------------------------------------------
+        # DEBUG PRINT OUT
+        print('\nTRACKWAY[%s]:' % trackway.name)
+        for segment in segments:
+            print('  TRACK: %s' % (segment['track'].fingerprint if segment['track'] else 'NONE'))
+            for item in segment['pairs']:
+                print('    * %s (%s)' % (item['track'].fingerprint, item['distance'].label))
+                for debugItem in item['debug']:
+                    print('      - %s' % DictUtils.prettyPrint(debugItem))
+
+#___________________________________________________________________________________________________ _analyzeTrackSeries
+    def _analyzeTrackSeries(self, series, trackway, sitemap):
+        orderData = self.orderData[trackway.uid]
+        if orderData['denseSeries'] == series:
+            return
+
+        super(TrackwayCurveStatsStage, self)._analyzeTrackSeries(series, trackway, sitemap)
+
+#___________________________________________________________________________________________________ _analyzeTrack
+    def _analyzeTrack(self, track, series, trackway, sitemap):
+        orderData    = self.orderData[trackway.uid]
+        segments     = orderData['segments']
+        debugData    = []
+        position     = track.positionValue
+        segmentMatch = segments[0]
+        pointOnLine  = segmentMatch['line'].closestPointOnLine(position)
+        matchLine    = None
+
+        for segment in segments[1:]:
+            segmentTrack = segment['track']
+            segmentLine  = segment['line']
+            trackToTrack = LineSegment2D(segmentLine.start.clone(), position)
+            debugItem    = {'TRACK':segmentTrack.fingerprint if segmentTrack else 'NONE'}
+            debugData.append(debugItem)
+
+            # Make sure the track resides in a generally forward direction relative to
+            # the direction of the segment. The prevents tracks from matching from behind.
+            angle = trackToTrack.angleBetween(segmentLine)
+            if abs(angle.degrees) > 100.0:
+                debugItem['CAUSE'] = 'Track-to-track angle [%s]' % angle.prettyPrint
+                continue
+
+            testPoint = segmentLine.closestPointOnLine(position)
+            testLine  = LineSegment2D(testPoint, position.clone())
+
+            # Make sure the test line intersects the segment line at 90 degrees, or the
+            # value is invalid.
+            angle = testLine.angleBetween(segmentLine)
+            if not NumericUtils.equivalent(angle.degrees, 90.0, 2.0):
+                debugItem['CAUSE'] = 'Projection angle [%s]' % angle.prettyPrint
+                continue
+
+            # Skip if the test line length is greater than the existing test line
+            if matchLine and testLine.length.value > matchLine.length.value:
+                debugItem['CAUSE'] = 'Greater distance [%s > %s]' % (
+                    matchLine.length.label, testLine.length.label)
+                continue
+
+            segmentMatch = segment
+            pointOnLine  = testPoint.clone()
+            matchLine    = LineSegment2D(pointOnLine.clone(), position.clone())
+
+        distance = LineSegment2D(segmentMatch['line'].start, pointOnLine).length
+        segmentMatch['pairs'].append({
+            'track':track,
+            'point':pointOnLine,
+            'distance':distance,
+            'debug':debugData })
 
 #___________________________________________________________________________________________________ _calculateSparseness
     @classmethod
@@ -164,6 +296,26 @@ class TrackwayCurveStatsStage(AnalysisStage):
 
         self.mergePdfs(self._paths, 'Trackway-Curve-Stats.pdf')
 
+        #-------------------------------------------------------------------------------------------
+        return # DEBUG RETURN TO PREVENT POPULATING DATABASE UNTIL ORDERING WORKS
+        #-------------------------------------------------------------------------------------------
+
+        # Add the reference series to the session object for storage in the Analysis_Trackway
+        # table. This data persists because it is used later to rebuild track curves in other
+        # analyzers.
+        model = Analysis_Trackway.MASTER
+        session = model.createSession()
+
+        for uid, data in DictUtils.iter(self.trackwaySparseness):
+            result = session.query(model).filter(model.uid == uid).first()
+            if not result:
+                result = model(uid=uid)
+                session.add(result)
+            result.referenceSeries = data['dense'].firstTrackUid
+
+        session.commit()
+        session.close()
+
 #___________________________________________________________________________________________________ _processSparsenessResults
     def _processSparsenessResults(self, key):
         """_processSparsenessResults doc..."""
@@ -178,7 +330,7 @@ class TrackwayCurveStatsStage(AnalysisStage):
         mids        = dict(x=[], y=[], error=[], color='#33CC33')
         highs       = dict(x=[], y=[], error=[], color='#CC3333')
 
-        for uid, entry in DictUtils.iter(self._trackwaySparseness):
+        for uid, entry in DictUtils.iter(self.trackwaySparseness):
             # For each test list in track ratings process the data and filter it into the correct
             # segments for plotting.
 

@@ -1,10 +1,12 @@
 # LineSegment2D.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import math
+from pyaid.list.ListUtils import ListUtils
+from pyaid.number.Angle import Angle
 
 from pyaid.number.NumericUtils import NumericUtils
 
@@ -29,13 +31,40 @@ class LineSegment2D(object):
 #___________________________________________________________________________________________________ GS: length
     @property
     def length(self):
-        try:
-            return self.start.distanceTo(self.end)
-        except Exception:
-            raise
+        """ The length of the line segment. """
+        return self.start.distanceTo(self.end)
+
+#___________________________________________________________________________________________________ GS: angle
+    @property
+    def angle(self):
+        vector = self.end.clone()
+        vector.subtract(self.start)
+        return Angle(radians=math.atan2(vector.y, vector.x))
 
 #===================================================================================================
 #                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ rotate
+    def rotate(self, angle, origin =None):
+        """rotate doc..."""
+        self.start.rotate(angle, origin=origin)
+        self.end.rotate(angle, origin=origin)
+
+#___________________________________________________________________________________________________ angleBetween
+    def angleBetween(self, line):
+        """ Returns an Angle instance that represents the angle between this line segment and the
+            one specified in the arguments. """
+        return self.angle.differenceBetween(line.angle)
+
+#___________________________________________________________________________________________________ clone
+    def clone(self):
+        """ Returns a new LineSegment2D that is a clone of this instance. The start and end
+            points are cloned as well making a completely separate copy with no reference
+            dependencies on this instance. """
+
+        return LineSegment2D(
+            start=self.start.clone(),
+            end=self.end.clone())
 
 #___________________________________________________________________________________________________ distanceToPoint
     def distanceToPoint(self, point):
@@ -52,7 +81,14 @@ class LineSegment2D(object):
         deltaX = e.x - s.x
         deltaY = e.y - s.y
 
-        distance = abs(deltaY*point.x - deltaX*point.y - s.x*e.y + e.x*s.y)/length.raw
+        if deltaX == 0.0:
+            # Vertical Line
+            distance = abs(s.x - point.x)
+        elif deltaY == 0.0:
+            # Horizontal line
+            distance = abs(s.y - point.y)
+        else:
+            distance = abs(deltaY*point.x - deltaX*point.y - s.x*e.y + e.x*s.y)/length.raw
 
         B       = deltaY*point.x - deltaX*point.y - s.x*e.y + e.x*s.y
         AbsB    = abs(B)
@@ -69,6 +105,84 @@ class LineSegment2D(object):
         error     = pointXErr + pointYErr + startXErr + startYErr + endXErr + endYErr
 
         return NumericUtils.toValueUncertainty(distance, error)
+
+#___________________________________________________________________________________________________ closestPointOnLine
+    def closestPointOnLine(self, point):
+        """ Finds the closest point on a line to the specified point using the formulae
+            discussed in the "another formula" section of:
+            http://en.m.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Another_formula """
+
+        length = self.length
+        if not length:
+            raise ValueError('Cannot calculate point. Invalid line segment.')
+
+        s = self.start
+        e = self.end
+        deltaX = e.x - s.x
+        deltaY = e.y - s.y
+
+        if NumericUtils.equivalent(deltaX, 0.0) or NumericUtils.equivalent(deltaX/deltaY, 0.0, 1e-8):
+            # Vertical line
+            bounds = ListUtils.sortObjectList([s, e], 'y')
+            if bounds[1].y < point.y:
+                return bounds[1].clone()
+            elif point.y < bounds[0].y:
+                return bounds[0].clone()
+            return PositionValue2D(s.x, point.y, xUnc=s.xUnc, yUnc=point.yUnc)
+
+        if NumericUtils.equivalent(deltaY, 0.0) or NumericUtils.equivalent(deltaY/deltaX, 0.0, 1e-8):
+            # Horizontal line
+            bounds = ListUtils.sortObjectList([s, e], 'x')
+            if bounds[1].x < point.x:
+                return bounds[1].clone()
+            elif point.x < bounds[0].x:
+                return bounds[0].clone()
+            return PositionValue2D(point.x, s.y, xUnc=point.xUnc, yUnc=s.yUnc)
+
+        slope    = deltaY/deltaX
+        slopeUnc = abs(1.0/deltaX)*(s.yUnc + e.yUnc) + abs(slope/deltaX)*(s.xUnc + e.xUnc)
+
+        if abs(slope) > 1.0 and abs(slopeUnc/slope) > 0.5:
+            a = Angle(degrees=90.0)
+            line = self.clone()
+            line.rotate(a)
+            p = point.clone()
+            p.rotate(a)
+            result = line.closestPointOnLine(p)
+            a.degrees = -90.0
+            result.rotate(a)
+            return result
+
+        intercept    = s.y - slope*s.x
+        interceptUnc = s.yUnc + abs(s.x)*slopeUnc + abs(slope)*s.xUnc
+
+        denom   = slope*slope + 1.0
+        numer   = point.x + slope*(point.y - intercept)
+
+        x       = numer/denom
+        dxdpx   = 1.0/denom
+        dxdpy   = slope/denom
+        dxdb    = slope/denom
+        dxdm    = ((point.y - intercept)*denom - 2.0*slope*numer)/(denom*denom)
+        xUnc    = abs(dxdpx)*point.xUnc + abs(dxdpy)*point.yUnc \
+                + abs(dxdb)*interceptUnc + abs(dxdm)*slopeUnc
+        xValue  = NumericUtils.toValueUncertainty(x, xUnc)
+
+        numer   *= slope
+
+        y       = numer/denom + intercept
+        dydpx   = slope/denom
+        dydpy   = slope*slope/denom
+        dydb    = 1.0 - slope*slope/denom
+        dndm    = 2.0*slope*(point.y - intercept) + point.x
+        dydm    = (dndm*denom - 2.0*slope*numer)/(denom*denom)
+        yUnc    = abs(dydpx)*point.xUnc + abs(dydpy)*point.yUnc \
+                + abs(dydb)*interceptUnc + abs(dydm)*slopeUnc
+        yValue  = NumericUtils.toValueUncertainty(y, yUnc)
+
+        return PositionValue2D(
+            x=xValue.value, xUnc=xValue.uncertainty,
+            y=yValue.value, yUnc=yValue.uncertainty)
 
 #___________________________________________________________________________________________________ extendLine
     def postExtendLine(self, lengthAdjust, replace =True):
@@ -87,6 +201,32 @@ class LineSegment2D(object):
             self.start = self.start.clone()
         self.start.x = newX
         self.start.y = newY
+
+#___________________________________________________________________________________________________ createNextLineSegment
+    def createNextLineSegment(self, length =None):
+        """ Creates a line segment using this line segment as a guide that starts where this segment
+            ends and has the same slope and orientation. The new line segment will be of the
+            specified length, or if no length is specified the same length as this line segment. """
+
+        if length is None:
+            length = self.length
+        target = self.clone()
+        target.postExtendLine(lengthAdjust=length)
+        target.start = self.end.clone()
+        return target
+
+#___________________________________________________________________________________________________ createPreviousLineSegment
+    def createPreviousLineSegment(self, length =None):
+        """ Creates a line segment using this line segment as a guide that ends where this segment
+            begins and has the same slope and orientation. The new line segment will be of the
+            specified length, or if no length is specified the same length as this line segment. """
+
+        if length is None:
+            length = self.length
+        target = self.clone()
+        target.preExtendLine(lengthAdjust=length)
+        target.end = self.start.clone()
+        return target
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

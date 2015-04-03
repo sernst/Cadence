@@ -20,9 +20,6 @@ class PathGeneratorStage(AnalysisStage):
             key, owner,
             label='Path Generation',
             **kwargs)
-        self._paths  = []
-        self._points = []
-        self._minStrideLength = 1.0e8
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

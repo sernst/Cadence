@@ -6,6 +6,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import os
 
+import sqlalchemy as sqla
+
 from pyaid.config.ConfigsDict import ConfigsDict
 from pyaid.config.SettingsConfig import SettingsConfig
 from pyaid.debug.Logger import Logger
@@ -83,6 +85,14 @@ class AnalyzerBase(object):
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: sitemapFilters
+    @property
+    def sitemapFilters(self):
+        """ A list of sitemap filtering strings, which match the beginning of the sitemap name,
+            e.g. ["BEB", "TCH"]. This value is loaded from the analysis.json file with the
+            'SITEMAP_FILTERS' key. """
+        return self._settings.get('SITEMAP_FILTERS', [])
 
 #___________________________________________________________________________________________________ GS: plotFigures
     @property
@@ -332,10 +342,22 @@ class AnalyzerBase(object):
             analysis. These sitemaps are cached for the remainder of the analysis process for
             data persistence and performance reasons. """
 
-        if not self._sitemaps:
-            model   = Tracks_SiteMap.MASTER
-            session = self.getTracksSession()
-            self._sitemaps = session.query(model).all()
+        if self._sitemaps:
+            return self._sitemaps
+
+        model   = Tracks_SiteMap.MASTER
+        session = self.getTracksSession()
+        query   = session.query(model)
+
+        # If filters exist for sitemaps then create a collection of OR clauses to only load
+        # sitemaps that match the filter list.
+        orFilters = []
+        for sf in self.sitemapFilters:
+            orFilters.append(model.name.like('%s%%' % sf.upper()))
+        if orFilters:
+            query = query.filter(sqla.or_(*orFilters))
+
+        self._sitemaps = query.all()
 
         return self._sitemaps
 
