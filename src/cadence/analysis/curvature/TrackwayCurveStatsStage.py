@@ -14,11 +14,9 @@ from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
 from cadence.analysis.shared.plotting.Histogram import Histogram
 from cadence.models.analysis.Analysis_Trackway import Analysis_Trackway
-
-#*************************************************************************************************** TrackwayCurveStatsStage
 from cadence.svg.CadenceDrawing import CadenceDrawing
 
-
+#*************************************************************************************************** TrackwayCurveStatsStage
 class TrackwayCurveStatsStage(AnalysisStage):
     """A class for..."""
 
@@ -131,6 +129,9 @@ class TrackwayCurveStatsStage(AnalysisStage):
             # Create a segment For each track in the reference series
             line = LineSegment2D(start=tracks[i].positionValue, end=tracks[i + 1].positionValue)
             segments.append({'track':tracks[i], 'line':line, 'pairs':[]})
+            self._drawing.circle(
+                tracks[i].positionValue.toMayaTuple(), 5,
+                stroke='none', fill='green', fill_opacity='0.5')
 
         # Add segments to the beginning and end to handle overflow conditions where the paired
         # track series extend beyond the bounds of the reference series
@@ -158,7 +159,23 @@ class TrackwayCurveStatsStage(AnalysisStage):
             for item in segment['pairs']:
                 print('    * %s (%s)' % (item['track'].fingerprint, item['distance'].label))
                 for debugItem in item['debug']:
-                    print('      - %s' % DictUtils.prettyPrint(debugItem))
+                    print('      - %s' % DictUtils.prettyPrint(debugItem['print']))
+
+                    data = debugItem['data']
+
+                    if 'testPoint' in data:
+                        self._drawing.circle(data['testPoint'].toMayaTuple(), 5)
+
+                    line = data.get('trackToTrack', data.get('testLine'))
+                    if line:
+                        self._drawing.line(
+                            line.start.toMayaTuple(), line.end.toMayaTuple(),
+                            stroke='red', stroke_width=1, stroke_opacity='0.33')
+                    elif 'matchLine' in data:
+                        line = data['matchLine']
+                        self._drawing.line(
+                            line.start.toMayaTuple(), line.end.toMayaTuple(),
+                            stroke='blue', stroke_width=1, stroke_opacity='0.5')
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackSeries(self, series, trackway, sitemap):
@@ -172,30 +189,29 @@ class TrackwayCurveStatsStage(AnalysisStage):
     def _analyzeTrack(self, track, series, trackway, sitemap):
         orderData    = self.orderData[trackway.uid]
         segments     = orderData['segments']
-        debugData    = []
+        debug        = []
         position     = track.positionValue
         segmentMatch = segments[0]
         pointOnLine  = segmentMatch['line'].closestPointOnLine(position)
         matchLine    = None
 
-        self._drawing.circle(track.positionValue.toMayaTuple(), 5, fill='red')
+        self._drawing.circle(
+            track.positionValue.toMayaTuple(), 5, stroke='none', fill='red', fill_opacity='0.5')
 
         for segment in segments[1:]:
             segmentTrack = segment['track']
             segmentLine  = segment['line']
             trackToTrack = LineSegment2D(segmentLine.start.clone(), position)
             debugItem    = {'TRACK':segmentTrack.fingerprint if segmentTrack else 'NONE'}
-            debugData.append(debugItem)
-
-            self._drawing.line(
-                trackToTrack.start.toMayaTuple(),
-                trackToTrack.end.toMayaTuple(), stroke='blue', stroke_width=2)
+            debugData    = {}
+            debug.append({'print':debugItem, 'data':debugData})
 
             # Make sure the track resides in a generally forward direction relative to
             # the direction of the segment. The prevents tracks from matching from behind.
             angle = trackToTrack.angleBetween(segmentLine)
             if abs(angle.degrees) > 100.0:
                 debugItem['CAUSE'] = 'Track-to-track angle [%s]' % angle.prettyPrint
+                debugData['trackToTrack'] = trackToTrack
                 continue
 
             testPoint = segmentLine.closestPointOnLine(position)
@@ -206,24 +222,29 @@ class TrackwayCurveStatsStage(AnalysisStage):
             angle = testLine.angleBetween(segmentLine)
             if not NumericUtils.equivalent(angle.degrees, 90.0, 2.0):
                 debugItem['CAUSE'] = 'Projection angle [%s]' % angle.prettyPrint
+                debugData['testLine'] = testLine
+                debugData['testPoint'] = testPoint
                 continue
 
             # Skip if the test line length is greater than the existing test line
             if matchLine and testLine.length.value > matchLine.length.value:
                 debugItem['CAUSE'] = 'Greater distance [%s > %s]' % (
                     matchLine.length.label, testLine.length.label)
+                debugData['testLine'] = testLine
+                debugData['testPoint'] = testPoint
                 continue
 
             segmentMatch = segment
             pointOnLine  = testPoint.clone()
             matchLine    = LineSegment2D(pointOnLine.clone(), position.clone())
+            debugData['matchLine'] = matchLine
 
         distance = LineSegment2D(segmentMatch['line'].start, pointOnLine).length
         segmentMatch['pairs'].append({
             'track':track,
             'point':pointOnLine,
             'distance':distance,
-            'debug':debugData })
+            'debug':debug })
 
 #___________________________________________________________________________________________________ _calculateSparseness
     @classmethod
@@ -258,7 +279,7 @@ class TrackwayCurveStatsStage(AnalysisStage):
             :param: series | TrackSeries
                 The series on which to determine the average spacing.
 
-            :return: VALUE_UNCERTAINTY
+            :return: ValueUncertainty
                 A value uncertainty instance that represents the average spacing of the series,
                 or None if it's the calculation is aborted. """
 

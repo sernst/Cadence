@@ -46,6 +46,12 @@ class PositionValue2D(object):
         """clone doc..."""
         return PositionValue2D(x=self.x, y=self.y, xUnc=self.xUnc, yUnc=self.yUnc)
 
+#___________________________________________________________________________________________________ invert
+    def invert(self):
+        """ Switches the sign of the x and y values so that x = -x and y = -y. """
+        self.x = -self.x
+        self.y = -self.y
+
 #___________________________________________________________________________________________________ add
     def add(self, point):
         """add doc..."""

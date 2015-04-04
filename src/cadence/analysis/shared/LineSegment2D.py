@@ -28,6 +28,11 @@ class LineSegment2D(object):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+#___________________________________________________________________________________________________ GS: isValid
+    @property
+    def isValid(self):
+        return bool(abs(self.end.x - self.start.x) + abs(self.end.y - self.start.y))
+
 #___________________________________________________________________________________________________ GS: length
     @property
     def length(self):
@@ -41,8 +46,77 @@ class LineSegment2D(object):
         vector.subtract(self.start)
         return Angle(radians=math.atan2(vector.y, vector.x))
 
+#___________________________________________________________________________________________________ GS: slope
+    @property
+    def slope(self):
+        """ Returns the slope of the line as a ValueUncertainty named tuple. """
+        s       = self.start
+        e       = self.end
+        deltaX  = e.x - s.x
+        deltaY  = e.y - s.y
+
+        try:
+            slope   = deltaY/deltaX
+            unc     = abs(1.0/deltaX)*(s.yUnc + e.yUnc) + abs(slope/deltaX)*(s.xUnc + e.xUnc)
+            return NumericUtils.toValueUncertainty(slope, unc)
+        except Exception:
+            return None
+
+#___________________________________________________________________________________________________ GS: midpoint
+    @property
+    def midpoint(self):
+        """ Returns the midpoint of the line as a PositionValue2D instance. """
+        x = 0.5*(self.start.x + self.end.x)
+        y = 0.5*(self.start.y + self.end.y)
+
+        xUnc = 0.5*(self.start.xUnc + self.end.xUnc)
+        yUnc = 0.5*(self.start.yUnc + self.end.yUnc)
+
+        return PositionValue2D(x=x, y=y, xUnc=xUnc, yUnc=yUnc)
+
 #===================================================================================================
 #                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ addOffset
+    def addOffset(self, point):
+        """addOffset doc..."""
+        self.start.x += point.x
+        self.start.y += point.y
+        self.end.x   += point.x
+        self.end.y   += point.y
+
+#___________________________________________________________________________________________________ getParametricPosition
+    def getParametricPosition(self, value, clamp =True):
+        """getParametricPosition doc..."""
+        if clamp:
+            value = max(0.0, min(value, 1.0))
+
+        x    = self.start.x + value*(self.end.x - self.start.x)
+        xUnc = abs(1.0 - value)*self.start.xUnc + abs(value)*self.end.xUnc
+
+        y    = self.start.y + value*(self.end.y - self.start.y)
+        yUnc = abs(1.0 - value)*self.start.yUnc + abs(value)*self.end.yUnc
+
+        return PositionValue2D(x=x, y=y, xUnc=xUnc, yUnc=yUnc)
+
+#___________________________________________________________________________________________________ adjustPointAlongLine
+    def adjustPointAlongLine(self, point, delta, inPlace =False):
+        """adjustPointAlongLine doc..."""
+
+        assert isinstance(point, PositionValue2D), 'Argument point not a PositionValue2D instance'
+
+        if not inPlace:
+            point = point.clone()
+
+        remove = self.start.clone()
+        remove.invert()
+        l = self.clone()
+        l.addOffset(remove)
+
+        position = l.getParametricPosition(delta/self.length.raw, clamp=False)
+        point.add(position)
+
+        return point
 
 #___________________________________________________________________________________________________ rotate
     def rotate(self, angle, origin =None):
