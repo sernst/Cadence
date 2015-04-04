@@ -69,17 +69,18 @@ class test_LineSegment2D(unittest.TestCase):
     def test_closestPointOnLine(self):
         """ doc... """
         count = 5000
+        bound = 10000.0
 
         for i in range(count):
             start = PositionValue2D(
-                x=random.uniform(-10000.0, 10000.0),
-                y=random.uniform(-10000.0, 10000.0),
+                x=random.uniform(-bound, bound),
+                y=random.uniform(-bound, bound),
                 xUnc=0.1,
                 yUnc=0.1)
 
             end = PositionValue2D(
-                x=random.uniform(-10000.0, 10000.0) + start.x,
-                y=random.uniform(-10000.0, 10000.0) + start.y,
+                x=random.uniform(-bound, bound) + start.x,
+                y=random.uniform(-bound, bound) + start.y,
                 xUnc=0.1,
                 yUnc=0.1)
 
@@ -88,7 +89,7 @@ class test_LineSegment2D(unittest.TestCase):
                 continue
 
             target = line.getParametricPosition(random.uniform(0.0, 1.0))
-            offset = random.uniform(1.0, 1000.0)
+            offset = random.uniform(1.0, bound)
             point  = line.adjustPointAlongLine(target, offset, inPlace=False)
 
             debug  = {
