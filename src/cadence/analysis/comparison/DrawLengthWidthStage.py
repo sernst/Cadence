@@ -48,7 +48,10 @@ class DrawLengthWidthStage(AnalysisStage):
         fileName = sitemap.name + "_" + sitemap.level + '_lengthWidth.svg'
         path     = self.getPath(fileName, isFile=True)
 
+        print('_analyzeSiteMap for DrawLengthWidthStage with fileName = %s' % fileName)
+
         self._currentDrawing = CadenceDrawing(path, sitemap)
+        print('in _analyzeSitemap, fileName = %s and currentDrawing = %s' % (fileName, self._currentDrawing))
 
         # create a pointer for map annotation
         self._currentDrawing.createGroup('bar')
@@ -84,7 +87,6 @@ class DrawLengthWidthStage(AnalysisStage):
 
         # render the lengthMeasured (if non-zero) if it has significant deviation
         if track.lengthMeasured != 0.0:
-            color = 'green'
             if track.uid in self.trackDeviations:
                 data = self.trackDeviations[track.uid]
                 if data['lSigma'] > 2.0:
@@ -96,6 +98,10 @@ class DrawLengthWidthStage(AnalysisStage):
             else:
                 strokeWidth = 1.0
                 color       = 'green'
+
+            if not self._currentDrawing:
+                print('Ha! in length trap, track = %s' % track)
+                return
 
             self._currentDrawing.use(
                 'bar',
@@ -130,6 +136,10 @@ class DrawLengthWidthStage(AnalysisStage):
                 strokeWidth = 1.0
                 color       = 'green'
 
+            if not self._currentDrawing:
+                print('Ha! current drawing width trap')
+                return
+
             self._currentDrawing.use(
                 'bar',
                 (track.x, track.z),
@@ -148,6 +158,10 @@ class DrawLengthWidthStage(AnalysisStage):
                 scene=True,
                 stroke=color,
                 stroke_width=strokeWidth)
+
+        if not self._currentDrawing:
+           print('Ha! in draw track, track = %s' % track)
+           return
 
         # now overlay onto the above measured-dimension bars the corresponding indicators for length
         self._currentDrawing.use(

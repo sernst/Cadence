@@ -27,8 +27,10 @@ class TrackwayManagerWidget(PyGlassWidget):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    NO_OP                  = ''
     FETCH_TRACK_BY_NAME    = 'Fetch Track by NAME  << CAUTION'
     FETCH_TRACK_BY_INDEX   = 'Fetch Track by INDEX << CAUTION'
+    FETCH_NEXT_INCOMPLETE  = 'Fetch Next INCOMPLETE << CAUTION'
     SELECT_NEXT_INCOMPLETE = 'Select Next INCOMPLETE'
     SELECT_TRACK_BY_NAME   = 'Select Track by NAME'
     SELECT_TRACK_BY_INDEX  = 'Select Track by INDEX'
@@ -116,12 +118,14 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.selectPerspectiveBtn.clicked.connect(self.handleSelectPerspectiveBtn)
 
         trackSelectionMethods = (
+            self.NO_OP,
             self.SELECT_TRACK_BY_NAME,
             self.SELECT_TRACK_BY_INDEX,
             self.SELECT_TRACK_BY_UID,
 
             self.FETCH_TRACK_BY_NAME,
             self.FETCH_TRACK_BY_INDEX,
+            self.FETCH_NEXT_INCOMPLETE,
 
             self.SELECT_NEXT_INCOMPLETE,
             self.SELECT_SERIES_BEFORE,
@@ -136,10 +140,11 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.select1Btn.clicked.connect(self.handleSelect1Btn)
 
         self.selectionMethod2Cmbx.addItems(trackSelectionMethods)
-        self.selectionMethod2Cmbx.setCurrentIndex(7)
+        self.selectionMethod2Cmbx.setCurrentIndex(0)
         self.select2Btn.clicked.connect(self.handleSelect2Btn)
 
         trackOperationMethods = (
+            self.NO_OP,
             self.SET_DATUM,
             self.SET_LINKS,
             self.EXTRAPOLATE_NEXT,
@@ -161,11 +166,11 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.operation1Btn.clicked.connect(self.handleOperation1Btn)
 
         self.operation2Cmbx.addItems(trackOperationMethods)
-        self.operation2Cmbx.setCurrentIndex(1)
+        self.operation2Cmbx.setCurrentIndex(0)
         self.operation2Btn.clicked.connect(self.handleOperation2Btn)
 
         self.operation3Cmbx.addItems(trackOperationMethods)
-        self.operation3Cmbx.setCurrentIndex(3)
+        self.operation3Cmbx.setCurrentIndex(0)
         self.operation3Btn.clicked.connect(self.handleOperation3Btn)
 
         # in the Trackway tab:
@@ -745,19 +750,15 @@ class TrackwayManagerWidget(PyGlassWidget):
             track.rotationUncertainty = self.ROTATION_UNCERTAINTY_MODERATE
 
         # set this track's position to that of the CadenceCam
-
         track.x, track.z = self._trackwayManager.getCadenceCamLocation()
-
         track.updateNode()
 
         # and select it
-        self._trackwayManager.selectTrack(track)
+        self._trackwayManager.selectTrack(track, setFocus=False)
 
         # and refresh the UI
         self.refreshTrackUI(track.toDict())
         self.refreshTrackwayUI(track.toDict())
-
-
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
@@ -806,12 +807,45 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.refreshTrackUI(props)
 
         # and select it
-        self._trackwayManager.selectTrack(track)
+        self._trackwayManager.selectTrack(track, setFocus=False)
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-# __________________________________________________________________________________________________ handleFirstTrackBtn
+#___________________________________________________________________________________________________ handleFetchNextIncomplete
+    def handleFetchNextIncomplete(self):
+        """ The next incomplete track is translated to place that track directly under the
+            CadenceCam. """
+
+        if not self._lock():
+            return
+
+        incompleteTracks = self._trackwayManager.getCompletedTracks(False)
+
+        if not incompleteTracks:
+            PyGlassBasicDialogManager.openOk(
+                self,
+               'None',
+               'All tracks are complete')
+            self._unlock()
+            return
+
+        track = incompleteTracks[0]
+        # set this track's position to that of the CadenceCam
+        track.x, track.z = self._trackwayManager.getCadenceCamLocation()
+
+        track.updateNode()
+        props = track.toDict()
+
+        # and refresh the UI
+        self.refreshTrackwayUI(props)
+        self.refreshTrackUI(props)
+
+        # and select it
+        self._trackwayManager.selectTrack(track, setFocus=False)
+        self._unlock()
+
+#___________________________________________________________________________________________________ handleFirstTrackBtn
     def handleFirstTrackBtn(self):
         """ Get the first track, select the corresponding node, and focus the camera on it. """
 

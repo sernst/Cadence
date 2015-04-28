@@ -462,13 +462,14 @@ class TrackwayManager(object):
         cmds.select(nodes)
 
 #___________________________________________________________________________________________________ selectTrack
-    def selectTrack(self, track):
+    def selectTrack(self, track, setFocus =True):
         """ Select the node corresponding to this track model instance, then focus the camera
             upon this node. """
 
         if track:
             cmds.select(self.getTrackNode(track))
-            self.setCameraFocus()
+            if setFocus:
+                self.setCameraFocus()
         else:
             cmds.select(clear=True)
 
