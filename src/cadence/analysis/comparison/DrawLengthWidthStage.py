@@ -18,6 +18,7 @@ class DrawLengthWidthStage(AnalysisStage):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of LengthWidthStage."""
+
         super(DrawLengthWidthStage, self).__init__(
             key, owner,
             label='Length & Width Map Drawing ',
@@ -33,6 +34,7 @@ class DrawLengthWidthStage(AnalysisStage):
     @property
     def trackDeviations(self):
         """ This returns a dictionary of deviation data: track uid, wSigma, and lSigma. """
+
         return self.owner.getStage('lengthWidth').trackDeviations
 
 #===================================================================================================
@@ -42,18 +44,13 @@ class DrawLengthWidthStage(AnalysisStage):
     def _analyzeSitemap(self, sitemap):
         """ This sets up the Cadence drawing for this current sitemap. """
 
-        super(DrawLengthWidthStage, self)._analyzeSitemap(sitemap)
-
-        # get ready for a new drawing
+         # get ready for a new drawing
         fileName = sitemap.name + "_" + sitemap.level + '_lengthWidth.svg'
         path     = self.getPath(fileName, isFile=True)
 
-        print('_analyzeSiteMap for DrawLengthWidthStage with fileName = %s' % fileName)
-
         self._currentDrawing = CadenceDrawing(path, sitemap)
-        print('in _analyzeSitemap, fileName = %s and currentDrawing = %s' % (fileName, self._currentDrawing))
 
-        # create a pointer for map annotation
+        # create a bar-shaped pointer for map annotation
         self._currentDrawing.createGroup('bar')
         self._currentDrawing.line((0, 0), (0, -20), scene=False, groupId='bar')
 
@@ -72,7 +69,7 @@ class DrawLengthWidthStage(AnalysisStage):
     def _analyzeTrack(self, track, series, trackway, sitemap):
 
 #        if track.uid not in self.trackDeviations:
- #           return
+#           return
 
         # visualize track width and length compared to measured values for these dimensions
         self.drawTrack(track)
@@ -85,7 +82,7 @@ class DrawLengthWidthStage(AnalysisStage):
         """ The dimensions of a given track is drawn, and added to a given drawing, using the given
             CadenceDrawing group (a line oriented with the SVG positive Y direction. """
 
-        # render the lengthMeasured (if non-zero) if it has significant deviation
+        # if the lengthMeasured is non-zero, render it either red or green, depending on deviation
         if track.lengthMeasured != 0.0:
             if track.uid in self.trackDeviations:
                 data = self.trackDeviations[track.uid]
@@ -100,7 +97,6 @@ class DrawLengthWidthStage(AnalysisStage):
                 color       = 'green'
 
             if not self._currentDrawing:
-                print('Ha! in length trap, track = %s' % track)
                 return
 
             self._currentDrawing.use(
@@ -137,7 +133,6 @@ class DrawLengthWidthStage(AnalysisStage):
                 color       = 'green'
 
             if not self._currentDrawing:
-                print('Ha! current drawing width trap')
                 return
 
             self._currentDrawing.use(
@@ -163,7 +158,7 @@ class DrawLengthWidthStage(AnalysisStage):
            print('Ha! in draw track, track = %s' % track)
            return
 
-        # now overlay onto the above measured-dimension bars the corresponding indicators for length
+        # now overlay onto the above measured-dimension bars the corresponding length indicators
         self._currentDrawing.use(
             'bar',
             (track.x, track.z),

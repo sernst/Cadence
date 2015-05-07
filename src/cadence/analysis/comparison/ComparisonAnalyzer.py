@@ -22,7 +22,7 @@ class ComparisonAnalyzer(AnalyzerBase):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):
-        """Creates a new instance of ComparisonAnalyzer."""
+        """Creates a new instance of ComparisonAnalyzer. Stages are added as needed. """
         super(ComparisonAnalyzer, self).__init__(**kwargs)
         self.addStage(LengthWidthStage('lengthWidth', self))
         self.addStage(DrawLengthWidthStage('drawLengthWidth', self))

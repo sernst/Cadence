@@ -32,7 +32,6 @@ class LengthWidthStage(AnalysisStage):
             **kwargs)
         self._paths = []
 
-
 #===================================================================================================
 #                                                                                   G E T / S E T
 
@@ -75,6 +74,14 @@ class LengthWidthStage(AnalysisStage):
         self.cache.set('noWidth', 0)
         self.cache.set('noLength', 0)
 
+#___________________________________________________________________________________________________ _analyzeSitemap
+    def _analyzeSitemap(self, sitemap):
+
+        print('in LengthWidthStage, siteMap = %s' % (sitemap.name + "_" + sitemap.level))
+
+        # do what needs to be done
+        super(LengthWidthStage, self)._analyzeSitemap(sitemap)
+
 #___________________________________________________________________________________________________ _analyzeTrack
     def _analyzeTrack(self, track, series, trackway, sitemap):
         """ Performs analysis on each track. A dictionary is created to be added to the entries
@@ -105,11 +112,11 @@ class LengthWidthStage(AnalysisStage):
             data['lDev'] = d/lm
             data['lDelta'] = abs(d)/track.lengthUncertainty
 
-        aspect = w/l
-        wErr   = track.widthUncertainty/w
-        lErr   = track.lengthUncertainty/l
-        aspectUnc = abs(aspect)*math.sqrt(wErr*wErr + lErr*lErr)
-        value = NumericUtils.toValueUncertainty(aspect, aspectUnc)
+        aspect         = w/l
+        wErr           = track.widthUncertainty/w
+        lErr           = track.lengthUncertainty/l
+        aspectUnc      = abs(aspect)*math.sqrt(wErr*wErr + lErr*lErr)
+        value          = NumericUtils.toValueUncertainty(aspect, aspectUnc)
         data['aspect'] = value
 
         self.entries.append(data)
@@ -160,7 +167,6 @@ class LengthWidthStage(AnalysisStage):
         plotList = [
             ('widths', ws, 'Width', 'b'),
             ('lengths', ls, 'Length', 'r')]
-
 
         wRes = NumericUtils.getMeanAndDeviation(ws)
         self.logger.write('Width %ss' % wRes.label)

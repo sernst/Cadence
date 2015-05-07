@@ -58,7 +58,6 @@ class AnalyzerBase(object):
                 a logger. """
 
         self._tracksSession = kwargs.get('tracksSession')
-
         self._cache         = ConfigsDict(kwargs.get('cacheData'))
         self._logger        = kwargs.get('logger')
         self._tempPath      = kwargs.get('tempPath')
@@ -92,6 +91,7 @@ class AnalyzerBase(object):
         """ A list of sitemap filtering strings, which match the beginning of the sitemap name,
             e.g. ["BEB", "TCH"]. This value is loaded from the analysis.json file with the
             'SITEMAP_FILTERS' key. """
+
         return self._settings.get('SITEMAP_FILTERS', [])
 
 #___________________________________________________________________________________________________ GS: plotFigures
@@ -111,6 +111,7 @@ class AnalyzerBase(object):
     def plot(self):
         """ A convenience reference to Matplotlib's PyPlot module. Included here so Analyzers do
             not have to handle failed Matplotlib loading internally. """
+
         return plt
 
 #___________________________________________________________________________________________________ GS: logger
@@ -131,6 +132,7 @@ class AnalyzerBase(object):
         """ The root folder path where all analyses are stored. This is a top-level directory that
             should not be accessed directly unless absolutely necessary. In most cases you should
             use the outputPath property instead. """
+
         return self._settings.fetch('OUTPUT_PATH', self._defaultRootPath)
 
 #___________________________________________________________________________________________________ GS: outputRootPath
@@ -139,6 +141,7 @@ class AnalyzerBase(object):
         """ The root folder where analysis output files for this particular Analyzer should be
             stored. This path represents a folder within the analysisRootPath property specific
             to this analyzer. """
+
         return FileUtils.makeFolderPath(self.analysisRootPath, self.__class__.__name__)
 
 #___________________________________________________________________________________________________ GS: tempPath
@@ -147,6 +150,7 @@ class AnalyzerBase(object):
         """ The root folder path where all temporary files created during analysis should be stored.
             This path is created on demand and always removed at the end of the analysis process,
             even if the process is aborted by an error in an analysis stage. """
+
         if not self._tempPath:
             return FileUtils.makeFolderPath(self._defaultRootPath, 'temp')
         return self._tempPath
@@ -161,6 +165,7 @@ class AnalyzerBase(object):
     def getStage(self, key):
         """ Returns the analysis stage associated with the specified key or None if no such stage
             exists. """
+
         for stage in self._stages:
             if stage.key == key:
                 return stage
@@ -170,6 +175,7 @@ class AnalyzerBase(object):
     def addStage(self, stage):
         """ Appends the specified stage to this instances stage list if it is not already in the
             list at another location. """
+
         if stage in self.stages:
             return
         stage.owner = self
@@ -179,6 +185,7 @@ class AnalyzerBase(object):
     def getPath(self, *args, **kwargs):
         """ Convenience method for creating paths relative to the output root path for this
             Analyzer. """
+
         return FileUtils.createPath(self.outputRootPath, *args, **kwargs)
 
 #___________________________________________________________________________________________________ getTempFilePath
@@ -216,6 +223,7 @@ class AnalyzerBase(object):
     def getTempPath(self, *args, **kwargs):
         """ Creates a path relative to this instance's root temporary path. Uses the
             FileUtils.createPath() format for args and kwargs. """
+
         return FileUtils.createPath(self.tempPath, *args, **kwargs)
 
 #___________________________________________________________________________________________________ run
@@ -320,6 +328,7 @@ class AnalyzerBase(object):
         """ Returns a managed session to the tracks database. Used for shared session access across
             analysis stages, which is used to increase performance by eliminating the overhead in
             loading large segments of the database multiple times. """
+
         if self._tracksSession is None:
             self._tracksSession = Tracks_SiteMap.createSession()
         return self._tracksSession
@@ -328,6 +337,7 @@ class AnalyzerBase(object):
     def closeTracksSession(self, commit =False):
         """ Closes the shared track database session. By default no commit is made because the
             analyzers should not be writing to the tracks database. """
+
         if not self._tracksSession:
             return
 
@@ -394,6 +404,7 @@ class AnalyzerBase(object):
         """ A pre-analysis hook method that is called just prior to executing the first
             AnalysisStage and can be overridden to customize the analyzer prior to that phase
             of the run() method. """
+
         pass
 
 #___________________________________________________________________________________________________ _postAnalyze
@@ -401,6 +412,7 @@ class AnalyzerBase(object):
         """ A post-analysis hook method that is called just after the final AnalysisStage finishes
             execution. This method can be overridden to customize the post analysis behavior before
             the cleanup process. """
+
         pass
 
 #___________________________________________________________________________________________________ _cleanup
@@ -410,6 +422,7 @@ class AnalyzerBase(object):
             data during its lifetime. Also, this method will be called even if an AnalysisStage
             aborts due to an exception, so this method should be hardened against exceptions
             caused by incomplete run execution. """
+
         pass
 
 #===================================================================================================

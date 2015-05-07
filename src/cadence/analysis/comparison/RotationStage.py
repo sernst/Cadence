@@ -37,6 +37,7 @@ class RotationStage(AnalysisStage):
         self._diffs = []
         self._data  = []
         self._csv   = None
+
         self._currentDrawing = None
 
 #===================================================================================================
@@ -95,6 +96,7 @@ class RotationStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackSeries(self, series, trackway, sitemap):
+
         # At least two tracks are required to make the comparison
         if len(series.tracks) < 2:
             return
@@ -237,11 +239,12 @@ class RotationStage(AnalysisStage):
             histRange=[-180, 180],
             isLog=True))
 
-        circs     = []
-        circsUnc  = []
-        diffs     = []
-        diffsUnc  = []
-        entries   = self.owner.getStage('lengthWidth').entries
+        circs    = []
+        circsUnc = []
+        diffs    = []
+        diffsUnc = []
+        entries  = self.owner.getStage('lengthWidth').entries
+
         for entry in entries:
             track = entry['track']
             if track.uid not in self.deviations:

@@ -35,13 +35,13 @@ class AnalysisStage(object):
         self._label = label if label else self.__class__.__name__
         self._startTime = None
 
-        self._analyzeCallback       = kwargs.get('analyze')
-        self._preStageCallback      = kwargs.get('pre')
-        self._postStageCallback     = kwargs.get('post')
-        self._sitemapCallback       = kwargs.get('sitemap')
-        self._seriesCallback        = kwargs.get('series')
-        self._trackwayCallback      = kwargs.get('trackway')
-        self._trackCallback         = kwargs.get('track')
+        self._analyzeCallback   = kwargs.get('analyze')
+        self._preStageCallback  = kwargs.get('pre')
+        self._postStageCallback = kwargs.get('post')
+        self._sitemapCallback   = kwargs.get('sitemap')
+        self._seriesCallback    = kwargs.get('series')
+        self._trackwayCallback  = kwargs.get('trackway')
+        self._trackCallback     = kwargs.get('track')
 
 #===================================================================================================
 #                                                                                   G E T / S E T
