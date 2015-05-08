@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import sys
 import math
+from pyaid.number.Angle import Angle
 
 from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
@@ -20,10 +21,10 @@ class PositionValue2D(object):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, x = 0.0, y = 0.0, xUnc = 0.0, yUnc = 0.0):
         """Creates a new instance of PositionValue."""
-        self.x    = x
-        self.y    = y
-        self.xUnc = xUnc
-        self.yUnc = yUnc
+        self.x    = float(x)
+        self.y    = float(y)
+        self.xUnc = float(xUnc)
+        self.yUnc = float(yUnc)
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -37,6 +38,16 @@ class PositionValue2D(object):
     @property
     def yValue(self):
         return NumericUtils.toValueUncertainty(self.y, self.yUnc)
+
+#___________________________________________________________________________________________________ GS: length
+    @property
+    def length(self):
+        return self.distanceTo(PositionValue2D())
+
+#___________________________________________________________________________________________________ GS: nonzero
+    @property
+    def nonzero(self):
+        return self.xValue.value != 0.0 or self.yValue.value != 0.0
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -128,6 +139,71 @@ class PositionValue2D(object):
     def toMayaTuple(self):
         """toMayaTuple doc..."""
         return 100.0*self.y, 100.0*self.x
+
+#___________________________________________________________________________________________________ echo
+    def echo(self, asciiLabel =False):
+        """echo doc..."""
+        return '(%s, %s)' % (
+            NumericUtils.toValueUncertainty(self.x, self.xUnc, asciiLabel=asciiLabel).rawLabel,
+            NumericUtils.toValueUncertainty(self.x, self.xUnc, asciiLabel=asciiLabel).rawLabel)
+
+#___________________________________________________________________________________________________ normalize
+    def normalize(self):
+        """normalize doc..."""
+        length = self.length
+        if length == 0.0:
+            return False
+
+        self.x /= length
+        self.y /= length
+        self.xUnc /= length
+        self.yUnc /= length
+
+        return True
+
+#___________________________________________________________________________________________________ angleBetween
+    def angleBetween(self, position):
+        """angleBetween doc..."""
+
+        myLength = self.length
+        posLength = position.length
+        denom = myLength.raw*posLength.raw
+        denomUnc = math.sqrt(
+            myLength.rawUncertainty*myLength.rawUncertainty +
+            posLength.rawUncertainty*posLength.rawUncertainty)
+
+        if denom == 0.0:
+            return Angle(radians=0.0, uncertainty=0.5*math.pi)
+
+        nom = self.x*position.x + self.y*position.y
+        nomUnc = (abs(position.x)*self.xUnc +
+            abs(self.x)*position.xUnc +
+            abs(position.y)*self.yUnc +
+            abs(self.y)*position.yUnc)/denom
+
+        b = nom/denom
+        bUnc = abs(1.0/denom)*nomUnc + \
+            abs(nom/math.pow(denom, 2))*denomUnc
+
+        if NumericUtils.equivalent(b, 1.0):
+            return Angle()
+
+        try:
+            a = math.acos(b)
+        except Exception:
+            print('[ERROR]: Unable to calculate angle between', b)
+            return Angle()
+
+        if NumericUtils.equivalent(a, math.pi):
+            return Angle(radians=a, uncertainty=180.0)
+
+        try:
+            aUnc = abs(1.0/math.sqrt(1.0 - b*b))*bUnc
+        except Exception:
+            print('[ERROR]: Unable to calculate angle between uncertainty', b, a)
+            return Angle()
+
+        return Angle(radians=a, uncertainty=aUnc)
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

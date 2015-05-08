@@ -12,7 +12,7 @@ smModel   = Tracks_SiteMap.MASTER
 twModel   = Tracks_Trackway.MASTER
 session   = twModel.createSession()
 
-siteMap   = session.query(smModel).filter(smModel.name == 'CRO').filter(smModel.level == '500').first()
+siteMap   = session.query(smModel).filter(smModel.name == 'BEB').filter(smModel.level == '515').first()
 trackways = session.query(twModel).filter(twModel.siteMapIndex == siteMap.index).all()
 
 for trackway in trackways:
@@ -25,5 +25,6 @@ for trackway in trackways:
             continue
         print('\n  %s\n  SERIES[%s]:' % (58*'-', label))
         for track in series.tracks:
-            print('    * Track: %s [%s] -> [%s]' % (track.fingerprint, track.uid, track.next))
+            print('    * Track: %s [%s] -> [%s] (%s, %s)' % (
+                track.fingerprint, track.uid, track.next, track.x, track.z))
 

@@ -22,6 +22,15 @@ class test_PositionValue2D(unittest.TestCase):
     def setUp(self):
         pass
 
+#___________________________________________________________________________________________________ test_angleBetween
+    def test_angleBetween(self):
+        """test_angleBetween doc..."""
+        p1 = PositionValue2D(2.0, 0.0, 0.1, 0.1)
+        p2 = PositionValue2D(0.0, 2.0, 0.1, 0.1)
+
+        a = p1.angleBetween(p2)
+        self.assertAlmostEquals(a.degrees, 90.0, 'Invalid angle between')
+
 #___________________________________________________________________________________________________ test_rotate
     def test_rotate(self):
         HALF_SQRT_2 = 0.5*math.sqrt(2.0)

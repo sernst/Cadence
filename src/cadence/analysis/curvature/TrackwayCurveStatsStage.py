@@ -58,7 +58,9 @@ class TrackwayCurveStatsStage(AnalysisStage):
 #___________________________________________________________________________________________________ _analyzeSitemap
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
-        self._drawing = CadenceDrawing(self.getPath(sitemap.name + '.svg'), sitemap)
+
+        self._drawing = CadenceDrawing(
+            self.getPath('%s-%s.svg' % (sitemap.name, sitemap.level)), sitemap)
 
         # and place a grid and the federal coordinates in the drawing file
         self._drawing.grid()
@@ -128,29 +130,64 @@ class TrackwayCurveStatsStage(AnalysisStage):
         for i in ListUtils.range(len(tracks) - 1):
             # Create a segment For each track in the reference series
             line = LineSegment2D(start=tracks[i].positionValue, end=tracks[i + 1].positionValue)
+            if not line.isValid:
+                self.logger.write([
+                    '[ERROR]: Invalid dense series line segment',
+                    'START: %s at %s | %s' % (
+                        tracks[i].fingerprint,
+                        tracks[i].positionValue.echo(True),
+                        tracks[i].uid),
+                    'END: %s at %s | %s' % (
+                        tracks[i + 1].fingerprint,
+                        tracks[i + 1].positionValue.echo(True),
+                        tracks[i + 1].uid) ])
+                continue
+
             segments.append({'track':tracks[i], 'line':line, 'pairs':[]})
-            self._drawing.circle(
-                tracks[i].positionValue.toMayaTuple(), 5,
-                stroke='none', fill='green', fill_opacity='0.5')
 
         # Add segments to the beginning and end to handle overflow conditions where the paired
         # track series extend beyond the bounds of the reference series
-        segments.insert(0, {
-            'track':None, 'pairs':[],
-            'line':segments[0]['line'].createPreviousLineSegment(100.0) })
+        srcLine = segments[0]['line']
+        segLine = srcLine.createPreviousLineSegment(10.0)
+        segments.insert(0, { 'track':None, 'pairs':[], 'line':segLine })
 
-        segments.append({
-            'track':tracks[-1], 'pairs':[],
-            'line':segments[-1]['line'].createNextLineSegment(100.0) })
+        srcLine = segments[-1]['line']
+        segLine = srcLine.createNextLineSegment(10.0)
+        segments.append({'track':tracks[-1], 'pairs':[], 'line':segLine })
 
         super(TrackwayCurveStatsStage, self)._analyzeTrackway(trackway, sitemap)
 
         for segment in segments:
+            self._drawSegment(segment, index=segments.index(segment))
+
             # Sort the paired segments by distance from the segment start position to order them
             # properly from first to last
             if segment['pairs']:
                 ListUtils.sortDictionaryList(segment['pairs'], 'distance', inPlace=True)
 
+        # self._debugTrackway(trackway, segments)
+
+#___________________________________________________________________________________________________ _drawSegment
+    def _drawSegment(self, segment, index):
+        segLine = segment['line']
+        lineStyles = [
+            dict(stroke='#00AA00', stroke_width=1, stroke_opacity='0.25'),
+            dict(stroke='#003300', stroke_width=1, stroke_opacity='0.25') ]
+
+        self._drawing.line(
+            segLine.start.toMayaTuple(),
+            segLine.end.toMayaTuple(),
+            **lineStyles[1 if index & 1 else 0])
+
+        self._drawing.circle(
+            segLine.start.toMayaTuple(), 5,
+            stroke='none', fill='#003300', fill_opacity='0.1')
+        self._drawing.circle(
+            segLine.end.toMayaTuple(), 5,
+            stroke='none', fill='#003300', fill_opacity='0.1')
+
+#___________________________________________________________________________________________________ _debugTrackway
+    def _debugTrackway(self, trackway, segments):
         #-------------------------------------------------------------------------------------------
         # DEBUG PRINT OUT
         print('\nTRACKWAY[%s]:' % trackway.name)
@@ -159,23 +196,30 @@ class TrackwayCurveStatsStage(AnalysisStage):
             for item in segment['pairs']:
                 print('    * %s (%s)' % (item['track'].fingerprint, item['distance'].label))
                 for debugItem in item['debug']:
-                    print('      - %s' % DictUtils.prettyPrint(debugItem['print']))
+                    print('      - %s' % self._debugDrawTrackResults(debugItem))
 
-                    data = debugItem['data']
+#___________________________________________________________________________________________________ _debugDrawTrackResults
+    def _debugDrawTrackResults(self, debugItem, verbose =False):
+        if not verbose:
+            return DictUtils.prettyPrint(debugItem['print'])
 
-                    if 'testPoint' in data:
-                        self._drawing.circle(data['testPoint'].toMayaTuple(), 5)
+        data = debugItem['data']
+        if False and 'testPoint' in data:
+            self._drawing.circle(data['testPoint'].toMayaTuple(), 5,
+            stroke='none', fill='black', fill_opacity='0.25')
 
-                    line = data.get('trackToTrack', data.get('testLine'))
-                    if line:
-                        self._drawing.line(
-                            line.start.toMayaTuple(), line.end.toMayaTuple(),
-                            stroke='red', stroke_width=1, stroke_opacity='0.33')
-                    elif 'matchLine' in data:
-                        line = data['matchLine']
-                        self._drawing.line(
-                            line.start.toMayaTuple(), line.end.toMayaTuple(),
-                            stroke='blue', stroke_width=1, stroke_opacity='0.5')
+        line = data.get('trackToTrack', data.get('testLine'))
+        if line:
+            self._drawing.line(
+                line.start.toMayaTuple(), line.end.toMayaTuple(),
+                stroke='red', stroke_width=1, stroke_opacity='0.33')
+        elif 'matchLine' in data:
+            line = data['matchLine']
+            self._drawing.line(
+                line.start.toMayaTuple(), line.end.toMayaTuple(),
+                stroke='blue', stroke_width=1, stroke_opacity='0.5')
+
+        return DictUtils.prettyPrint(debugItem['print'])
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackSeries(self, series, trackway, sitemap):
@@ -191,35 +235,40 @@ class TrackwayCurveStatsStage(AnalysisStage):
         segments     = orderData['segments']
         debug        = []
         position     = track.positionValue
-        segmentMatch = segments[0]
-        pointOnLine  = segmentMatch['line'].closestPointOnLine(position)
+        segmentMatch = None
+        pointOnLine  = None
         matchLine    = None
 
         self._drawing.circle(
-            track.positionValue.toMayaTuple(), 5, stroke='none', fill='red', fill_opacity='0.5')
+            track.positionValue.toMayaTuple(), 5,
+            stroke='none', fill='blue', fill_opacity='0.5')
 
-        for segment in segments[1:]:
+        for segment in segments:
             segmentTrack = segment['track']
             segmentLine  = segment['line']
-            trackToTrack = LineSegment2D(segmentLine.start.clone(), position)
             debugItem    = {'TRACK':segmentTrack.fingerprint if segmentTrack else 'NONE'}
             debugData    = {}
             debug.append({'print':debugItem, 'data':debugData})
 
             # Make sure the track resides in a generally forward direction relative to
             # the direction of the segment. The prevents tracks from matching from behind.
-            angle = trackToTrack.angleBetween(segmentLine)
+            angle = segmentLine.angleBetweenPoint(position)
             if abs(angle.degrees) > 100.0:
-                debugItem['CAUSE'] = 'Track-to-track angle [%s]' % angle.prettyPrint
-                debugData['trackToTrack'] = trackToTrack
+                debugItem['CAUSE'] = 'Segment position angle [%s]' % angle.prettyPrint
                 continue
 
-            testPoint = segmentLine.closestPointOnLine(position)
-            testLine  = LineSegment2D(testPoint, position.clone())
+            # Calculate the closest point on the line segment. If the point and line are not
+            # properly coincident, the testPoint will be None and the attempt should be aborted.
+            testPoint = segmentLine.closestPointOnLine(position, contained=True)
+            if not testPoint:
+                debugItem['CAUSE'] = 'Not aligned to segment'
+                continue
+
+            testLine = LineSegment2D(testPoint, position.clone())
 
             # Make sure the test line intersects the segment line at 90 degrees, or the
             # value is invalid.
-            angle = testLine.angleBetween(segmentLine)
+            angle = testLine.angleBetweenPoint(segmentLine.end)
             if not NumericUtils.equivalent(angle.degrees, 90.0, 2.0):
                 debugItem['CAUSE'] = 'Projection angle [%s]' % angle.prettyPrint
                 debugData['testLine'] = testLine
@@ -236,8 +285,34 @@ class TrackwayCurveStatsStage(AnalysisStage):
 
             segmentMatch = segment
             pointOnLine  = testPoint.clone()
+            pointOnLine.xUnc = position.xUnc
+            pointOnLine.yUnc = position.yUnc
             matchLine    = LineSegment2D(pointOnLine.clone(), position.clone())
             debugData['matchLine'] = matchLine
+
+        # If no segments match it means that the track resides at a kink in the dense series
+        # curve and should be matched to a specific track instead of a segment
+        if not segmentMatch:
+            distanceTo = 1e10
+            for segment in segments:
+                line = segment['line']
+                p = line.start.clone()
+                d = p.distanceTo(position)
+                if d.raw < distanceTo:
+                    distanceTo = d.raw
+                    segmentMatch = segment
+
+            pointOnLine = segmentMatch['line'].start.clone()
+            pointOnLine.xUnc = position.xUnc
+            pointOnLine.yUnc = position.yUnc
+            matchLine = LineSegment2D(pointOnLine.clone(), position.clone())
+
+        self._drawing.line(
+            matchLine.start.toMayaTuple(), matchLine.end.toMayaTuple(),
+            stroke='black', stroke_width=1, stroke_opacity='1.0')
+        self._drawing.circle(
+            pointOnLine.toMayaTuple(), 5,
+            stroke='none', fill='black', fill_opacity='1.0')
 
         distance = LineSegment2D(segmentMatch['line'].start, pointOnLine).length
         segmentMatch['pairs'].append({

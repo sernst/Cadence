@@ -363,6 +363,7 @@ class AnalyzerBase(object):
         # sitemaps that match the filter list.
         orFilters = []
         for sf in self.sitemapFilters:
+            sf = sf.split('.')[0]
             orFilters.append(model.name.like('%s%%' % sf.upper()))
         if orFilters:
             query = query.filter(sqla.or_(*orFilters))

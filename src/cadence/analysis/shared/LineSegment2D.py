@@ -128,7 +128,18 @@ class LineSegment2D(object):
     def angleBetween(self, line):
         """ Returns an Angle instance that represents the angle between this line segment and the
             one specified in the arguments. """
+
         return self.angle.differenceBetween(line.angle)
+
+#___________________________________________________________________________________________________ angleBetweenPoint
+    def angleBetweenPoint(self, position):
+        """angleBetweenPoint doc..."""
+        a = self.end.clone()
+        a.subtract(self.start)
+        b = position.clone()
+        b.subtract(self.start)
+
+        return b.angleBetween(a)
 
 #___________________________________________________________________________________________________ clone
     def clone(self):
@@ -181,7 +192,7 @@ class LineSegment2D(object):
         return NumericUtils.toValueUncertainty(distance, error)
 
 #___________________________________________________________________________________________________ closestPointOnLine
-    def closestPointOnLine(self, point):
+    def closestPointOnLine(self, point, contained =True):
         """ Finds the closest point on a line to the specified point using the formulae
             discussed in the "another formula" section of:
             http://en.m.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Another_formula """
@@ -194,37 +205,28 @@ class LineSegment2D(object):
         e = self.end
         deltaX = e.x - s.x
         deltaY = e.y - s.y
+        rotate = False
+        slope = 0.0
+        slopeUnc = 0.0
 
-        if NumericUtils.equivalent(deltaX, 0.0) or NumericUtils.equivalent(deltaX/deltaY, 0.0, 1e-8):
-            # Vertical line
-            bounds = ListUtils.sortObjectList([s, e], 'y')
-            if bounds[1].y < point.y:
-                return bounds[1].clone()
-            elif point.y < bounds[0].y:
-                return bounds[0].clone()
-            return PositionValue2D(s.x, point.y, xUnc=s.xUnc, yUnc=point.yUnc)
+        try:
+            slope = deltaY/deltaX
+            slopeUnc = abs(1.0/deltaX)*(s.yUnc + e.yUnc) + abs(slope/deltaX)*(s.xUnc + e.xUnc)
+        except Exception:
+            rotate = True
 
-        if NumericUtils.equivalent(deltaY, 0.0) or NumericUtils.equivalent(deltaY/deltaX, 0.0, 1e-8):
-            # Horizontal line
-            bounds = ListUtils.sortObjectList([s, e], 'x')
-            if bounds[1].x < point.x:
-                return bounds[1].clone()
-            elif point.x < bounds[0].x:
-                return bounds[0].clone()
-            return PositionValue2D(point.x, s.y, xUnc=point.xUnc, yUnc=s.yUnc)
-
-        slope    = deltaY/deltaX
-        slopeUnc = abs(1.0/deltaX)*(s.yUnc + e.yUnc) + abs(slope/deltaX)*(s.xUnc + e.xUnc)
-
-        if abs(slope) > 1.0 and abs(slopeUnc/slope) > 0.5:
-            a = Angle(degrees=90.0)
+        if rotate or (abs(slope) > 1.0 and abs(slopeUnc/slope) > 0.5):
+            a = Angle(degrees=20.0)
             line = self.clone()
-            line.rotate(a)
+            line.rotate(a, self.start)
             p = point.clone()
-            p.rotate(a)
-            result = line.closestPointOnLine(p)
-            a.degrees = -90.0
-            result.rotate(a)
+            p.rotate(a, self.start)
+            result = line.closestPointOnLine(p, contained=contained)
+            if result is None:
+                return result
+
+            a.degrees = -20.0
+            result.rotate(a, self.start)
             return result
 
         intercept    = s.y - slope*s.x
@@ -240,7 +242,6 @@ class LineSegment2D(object):
         dxdm    = ((point.y - intercept)*denom - 2.0*slope*numer)/(denom*denom)
         xUnc    = abs(dxdpx)*point.xUnc + abs(dxdpy)*point.yUnc \
                 + abs(dxdb)*interceptUnc + abs(dxdm)*slopeUnc
-        xValue  = NumericUtils.toValueUncertainty(x, xUnc)
 
         numer   *= slope
 
@@ -252,11 +253,20 @@ class LineSegment2D(object):
         dydm    = (dndm*denom - 2.0*slope*numer)/(denom*denom)
         yUnc    = abs(dydpx)*point.xUnc + abs(dydpy)*point.yUnc \
                 + abs(dydb)*interceptUnc + abs(dydm)*slopeUnc
-        yValue  = NumericUtils.toValueUncertainty(y, yUnc)
 
-        return PositionValue2D(
-            x=xValue.value, xUnc=xValue.uncertainty,
-            y=yValue.value, yUnc=yValue.uncertainty)
+        if contained:
+            # Check to see if point is between start and end values
+            xRange = sorted([self.start.x, self.end.x])
+            yRange = sorted([self.start.y, self.end.y])
+            eps = 1e-8
+            xMin = x - eps
+            xMax = x + eps
+            yMin = y - eps
+            yMax = y + eps
+            if xRange[1] < xMin or xMax < xRange[0] or yRange[1] < yMin or yMax < yRange[0]:
+                return None
+
+        return PositionValue2D(x=x, xUnc=xUnc, y=y, yUnc=yUnc)
 
 #___________________________________________________________________________________________________ extendLine
     def postExtendLine(self, lengthAdjust, replace =True):

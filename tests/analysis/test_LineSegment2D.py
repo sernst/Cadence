@@ -66,6 +66,20 @@ class test_LineSegment2D(unittest.TestCase):
                 msg='Invalid y value %s' % result.y)
 
 #___________________________________________________________________________________________________ test_closestPointOnLine
+    def test_closestPointOnLine_contained(self):
+        start = PositionValue2D(10.0, 10.0, 0.1, 0.1)
+        end = PositionValue2D(20.0, 10.0, 0.1, 0.1)
+        line = LineSegment2D(start, end)
+        target = PositionValue2D(30.0, 30.0, 0.1, 0.1)
+
+        result = line.closestPointOnLine(target, contained=True)
+        self.assertIsNone(result)
+
+        result = line.closestPointOnLine(target, contained=False)
+        self.assertAlmostEqual(result.x, 30.0)
+        self.assertAlmostEqual(result.y, 10.0)
+
+#___________________________________________________________________________________________________ test_closestPointOnLine
     def test_closestPointOnLine(self):
         """ doc... """
         count = 5000
