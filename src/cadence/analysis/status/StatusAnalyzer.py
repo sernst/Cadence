@@ -1,10 +1,11 @@
 # StatusAnalyzer.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from cadence.analysis.AnalyzerBase import AnalyzerBase
+from cadence.analysis.status.OriginCheckStage import OriginCheckStage
 from cadence.analysis.status.SpatialUncertaintyStage import SpatialUncertaintyStage
 from cadence.analysis.status.TrackwayLoadStage import TrackwayLoadStage
 
@@ -22,6 +23,7 @@ class StatusAnalyzer(AnalyzerBase):
         """Creates a new instance of StatusAnalyzer."""
         super(StatusAnalyzer, self).__init__(**kwargs)
         self.addStage(TrackwayLoadStage('load', self))
+        self.addStage(OriginCheckStage('origin', self))
         self.addStage(SpatialUncertaintyStage('spatialUncertainty', self))
 
 ####################################################################################################

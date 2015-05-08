@@ -5,7 +5,6 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import numpy as np
-
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.list.ListUtils import ListUtils
 from pyaid.number.NumericUtils import NumericUtils
@@ -22,6 +21,8 @@ class TrackwayCurveStatsStage(AnalysisStage):
 
 #===================================================================================================
 #                                                                                       C L A S S
+
+    CURVE_MAP_FOLDER_NAME = 'Curvature-Maps'
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
@@ -55,14 +56,19 @@ class TrackwayCurveStatsStage(AnalysisStage):
         self._drawing = None
         self._paths = []
 
+        self.initializeFolder(self.CURVE_MAP_FOLDER_NAME)
+
 #___________________________________________________________________________________________________ _analyzeSitemap
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
 
         self._drawing = CadenceDrawing(
-            self.getPath('%s-%s.svg' % (sitemap.name, sitemap.level)), sitemap)
+            self.getPath(
+                self.CURVE_MAP_FOLDER_NAME,
+                '%s-%s-CURVATURE.svg' % (sitemap.name, sitemap.level),
+                isFile=True),
+            sitemap)
 
-        # and place a grid and the federal coordinates in the drawing file
         self._drawing.grid()
         self._drawing.federalCoordinates()
 
@@ -158,7 +164,7 @@ class TrackwayCurveStatsStage(AnalysisStage):
         super(TrackwayCurveStatsStage, self)._analyzeTrackway(trackway, sitemap)
 
         for segment in segments:
-            self._drawSegment(segment, index=segments.index(segment))
+            self._drawSegment(segment, segments)
 
             # Sort the paired segments by distance from the segment start position to order them
             # properly from first to last
@@ -168,28 +174,31 @@ class TrackwayCurveStatsStage(AnalysisStage):
         # self._debugTrackway(trackway, segments)
 
 #___________________________________________________________________________________________________ _drawSegment
-    def _drawSegment(self, segment, index):
+    def _drawSegment(self, segment, segments):
         segLine = segment['line']
+        edgeLineStyle = dict(stroke="#006666", stroke_width=1, stroke_opacity='0.25')
         lineStyles = [
-            dict(stroke='#00AA00', stroke_width=1, stroke_opacity='0.25'),
-            dict(stroke='#003300', stroke_width=1, stroke_opacity='0.25') ]
+            dict(stroke='#00CC00', stroke_width=1, stroke_opacity='0.25'),
+            dict(stroke='#002200', stroke_width=1, stroke_opacity='0.25') ]
 
-        self._drawing.line(
-            segLine.start.toMayaTuple(),
-            segLine.end.toMayaTuple(),
-            **lineStyles[1 if index & 1 else 0])
+        index = segments.index(segment)
+
+        if segment == segments[0] or segment == segments[-1]:
+            styles = edgeLineStyle
+        else:
+            styles = lineStyles[1 if index & 1 else 0]
+
+        self._drawing.line(segLine.start.toMayaTuple(), segLine.end.toMayaTuple(), **styles)
 
         self._drawing.circle(
             segLine.start.toMayaTuple(), 5,
-            stroke='none', fill='#003300', fill_opacity='0.1')
+            stroke='none', fill='#002200', fill_opacity='0.1')
         self._drawing.circle(
             segLine.end.toMayaTuple(), 5,
-            stroke='none', fill='#003300', fill_opacity='0.1')
+            stroke='none', fill='#002200', fill_opacity='0.1')
 
 #___________________________________________________________________________________________________ _debugTrackway
     def _debugTrackway(self, trackway, segments):
-        #-------------------------------------------------------------------------------------------
-        # DEBUG PRINT OUT
         print('\nTRACKWAY[%s]:' % trackway.name)
         for segment in segments:
             print('  TRACK: %s' % (segment['track'].fingerprint if segment['track'] else 'NONE'))
@@ -418,7 +427,9 @@ class TrackwayCurveStatsStage(AnalysisStage):
         self.mergePdfs(self._paths, 'Trackway-Curve-Stats.pdf')
 
         #-------------------------------------------------------------------------------------------
-        return # DEBUG RETURN TO PREVENT POPULATING DATABASE UNTIL ORDERING WORKS
+        # DEBUG RETURN TO PREVENT POPULATING DATABASE UNTIL ORDERING WORKS
+        if True:
+            return
         #-------------------------------------------------------------------------------------------
 
         # Add the reference series to the session object for storage in the Analysis_Trackway
@@ -455,14 +466,9 @@ class TrackwayCurveStatsStage(AnalysisStage):
             # For each test list in track ratings process the data and filter it into the correct
             # segments for plotting.
 
-            if not key:
-                data = entry['pes'] + entry['manus']
-            else:
-                data = entry[key]
-
+            data = (entry['pes'] + entry['manus']) if not key else entry[key]
             data = ListUtils.sortObjectList(data, 'value')
-
-            index  += 1
+            index += 1
 
             if len(data) < 2:
                 continue

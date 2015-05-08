@@ -24,8 +24,6 @@ trackways = sitemap.getTrackways()
 print('TRACKWAY COUNT: %s' % len(trackways))
 
 for trackway in trackways:
-    #if trackway.name != 'BEB-515-2009-1-S-21':
-    #    continue
     print('TRACKWAY[%s]: %s' % (trackway.index, trackway.name))
 
     for key, series in DictUtils.iter(trackway.getTrackSeries()):

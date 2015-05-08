@@ -4,9 +4,12 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import os
+
 from PyPDF2.merger import PdfFileMerger
 from PyPDF2.pdf import PdfFileReader
 from pyaid.config.ConfigsDict import ConfigsDict
+from pyaid.system.SystemUtils import SystemUtils
 from pyaid.time.TimeUtils import TimeUtils
 
 
@@ -85,6 +88,16 @@ class AnalysisStage(object):
 
 #===================================================================================================
 #                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ initializeFolder
+    def initializeFolder(self, *args):
+        """ Initializes a folder within the root analysis path by removing any existing contents
+            and then creating a new folder if it does not already exist. """
+        path = self.getPath(*args, isDir=True)
+        if os.path.exists(path):
+            SystemUtils.remove(path)
+        os.makedirs(path)
+        return path
 
 #___________________________________________________________________________________________________ getPath
     def getPath(self, *args, **kwargs):
