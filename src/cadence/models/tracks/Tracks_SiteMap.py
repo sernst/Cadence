@@ -1,5 +1,5 @@
 # Tracks_SiteMap.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst and Kent A. Stevens
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -8,14 +8,15 @@ from pyaid.config.ConfigsDict import ConfigsDict
 from pyaid.radix.Base36 import Base36
 import sqlalchemy as sqla
 
-from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
+from cadence.models.tracks.TracksDefault import TracksDefault
+
 
 
 # AS NEEDED: from cadence.models.tracks.Tracks_Track import Tracks_Track
 # AS NEEDED: from cadence.models.tracks.Tracks_Trackway import Tracks_Trackway
 
 #___________________________________________________________________________________________________ Tracks_SiteMap
-class Tracks_SiteMap(FlagsTracksDefault):
+class Tracks_SiteMap(TracksDefault):
     """ A database model class containing coordinate information for trackway excavation site maps.
         The following public methods assist in mapping from scene coordinates to siteMap coordinates,
         and vice versa, and  Federal coordinates:
@@ -149,6 +150,24 @@ class Tracks_SiteMap(FlagsTracksDefault):
     @classmethod
     def getLevelFromFilename(cls, filename):
         return filename.partition('_')[-1].rpartition(' ')[0]
+
+#===================================================================================================
+#                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _getAnalysisPair
+    def _getAnalysisPair(self, session, createIfMissing):
+        """_getAnalysisPair doc..."""
+
+        from cadence.models.analysis.Analysis_Sitemap import Analysis_Sitemap
+        model = Analysis_Sitemap.MASTER
+
+        result = session.query(model).filter(model.index == self.index).first()
+        if createIfMissing and not result:
+            result = model()
+            result.index = self.index
+            session.add(result)
+
+        return result
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

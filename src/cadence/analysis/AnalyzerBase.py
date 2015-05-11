@@ -1,13 +1,13 @@
 # AnalyzerBase.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os
 
+from pyglass.alembic.AlembicUtils import AlembicUtils
 import sqlalchemy as sqla
-
 from pyaid.config.ConfigsDict import ConfigsDict
 from pyaid.config.SettingsConfig import SettingsConfig
 from pyaid.debug.Logger import Logger
@@ -16,9 +16,21 @@ from pyaid.string.StringUtils import StringUtils
 from pyaid.system.SystemUtils import SystemUtils
 from pyaid.time.TimeUtils import TimeUtils
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
+import cadence.models.tracks as tracks
+headRevision = AlembicUtils.getHeadDatabaseRevision(databaseUrl=tracks.DATABASE_URL)
+myRevision = AlembicUtils.getCurrentDatabaseRevision(databaseUrl=tracks.DATABASE_URL)
+tracksStamp = '[TRACKS]: %s [HEAD %s]' % (myRevision, headRevision)
+
+import cadence.models.analysis as analysis
+headRevision = AlembicUtils.getHeadDatabaseRevision(databaseUrl=analysis.DATABASE_URL)
+myRevision = AlembicUtils.getCurrentDatabaseRevision(databaseUrl=analysis.DATABASE_URL)
+analysisStamp = '[ANALYSIS]: %s [HEAD %s]' % (myRevision, headRevision)
+
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
+from cadence.models.analysis.Analysis_Sitemap import Analysis_Sitemap
 
 try:
     import matplotlib.pyplot as plt
@@ -39,11 +51,6 @@ class AnalyzerBase(object):
     def __init__(self, **kwargs):
         """ Creates a new instance of AnalyzerBase.
 
-            [tracksSession] ~ Session
-                An SqlAlchemy session object into the Cadence tracks database. If no session was
-                specified the analyzer will manage sessions internally (opening and closing them
-                as needed).
-
             [cacheData] ~ Object | CacheData
                 A caching object on which to store data during analysis at the analyzer level,
                 instead of the stage level.
@@ -57,16 +64,17 @@ class AnalyzerBase(object):
                 folder where the log file should be written. This value is ignored if you specify
                 a logger. """
 
-        self._tracksSession = kwargs.get('tracksSession')
-        self._cache         = ConfigsDict(kwargs.get('cacheData'))
-        self._logger        = kwargs.get('logger')
-        self._tempPath      = kwargs.get('tempPath')
-        self._stages        = []
-        self._sitemaps      = []
-        self._trackways     = dict()
-        self._trackSeries   = dict()
-        self._plotFigures   = dict()
-        self._currentStage  = None
+        self._tracksSession     = None
+        self._analysisSession   = None
+        self._cache             = ConfigsDict(kwargs.get('cacheData'))
+        self._logger            = kwargs.get('logger')
+        self._tempPath          = kwargs.get('tempPath')
+        self._stages            = []
+        self._sitemaps          = []
+        self._trackways         = dict()
+        self._trackSeries       = dict()
+        self._plotFigures       = dict()
+        self._currentStage      = None
 
         if not self._logger:
             self._logger = Logger(
@@ -232,8 +240,12 @@ class AnalyzerBase(object):
             cleaning up and exiting. """
 
         print('[OUTPUT PATH]: %s' % self.analysisRootPath)
+        print(analysisStamp)
+        print(tracksStamp)
 
         myRootPath = self.getPath(isDir=True)
+        if os.path.exists(myRootPath):
+            FileUtils.emptyFolder(myRootPath)
         if not os.path.exists(myRootPath):
             os.makedirs(myRootPath)
 
@@ -253,10 +265,18 @@ class AnalyzerBase(object):
                 stage.analyze()
             self._currentStage = None
             self._postAnalyze()
+            session = self.getAnalysisSession()
+            session.commit()
+            session.close()
         except Exception as err:
+            session = self.getAnalysisSession()
+            session.close()
             self.logger.writeError([
                 '[ERROR]: Failed to execute analysis',
                 'STAGE: %s' % self._currentStage], err)
+
+        session = self.getTracksSession()
+        session.close()
 
         self._cleanup()
         SystemUtils.remove(tempPath)
@@ -323,6 +343,16 @@ class AnalyzerBase(object):
             self.closeFigure(key)
         return path
 
+#___________________________________________________________________________________________________ getAnalysisSession
+    def getAnalysisSession(self):
+        """ Returns a managed session to the analysis database. Used for shared session access
+            across analysis stages, which is used to increase performance by eliminating the
+            overhead in loading large segments of the database multiple times. """
+
+        if self._analysisSession is None:
+            self._analysisSession = Analysis_Sitemap.MASTER.createSession()
+        return self._analysisSession
+
 #___________________________________________________________________________________________________ getTracksSession
     def getTracksSession(self):
         """ Returns a managed session to the tracks database. Used for shared session access across
@@ -330,7 +360,7 @@ class AnalyzerBase(object):
             loading large segments of the database multiple times. """
 
         if self._tracksSession is None:
-            self._tracksSession = Tracks_SiteMap.createSession()
+            self._tracksSession = Tracks_SiteMap.MASTER.createSession()
         return self._tracksSession
 
 #___________________________________________________________________________________________________ closeTracksSession
@@ -369,7 +399,6 @@ class AnalyzerBase(object):
             query = query.filter(sqla.or_(*orFilters))
 
         self._sitemaps = query.all()
-
         return self._sitemaps
 
 #___________________________________________________________________________________________________ getTrackways
@@ -409,6 +438,7 @@ class AnalyzerBase(object):
         pass
 
 #___________________________________________________________________________________________________ _postAnalyze
+    # noinspection PyMethodMayBeStatic
     def _postAnalyze(self):
         """ A post-analysis hook method that is called just after the final AnalysisStage finishes
             execution. This method can be overridden to customize the post analysis behavior before
@@ -417,6 +447,7 @@ class AnalyzerBase(object):
         pass
 
 #___________________________________________________________________________________________________ _cleanup
+    # noinspection PyMethodMayBeStatic
     def _cleanup(self):
         """ A hook method called in the final stages of the run() method after all analysis is
             complete, and should be overridden if this Analyzer creates any non-standard transient

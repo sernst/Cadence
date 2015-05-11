@@ -1,5 +1,5 @@
 # Tracks_Track.py
-# (C)2013-2014
+# (C)2013-2015
 # Scott Ernst and Kent A. Stevens
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -8,23 +8,25 @@ import nimble
 from pyaid.config.ConfigsDict import ConfigsDict
 
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
-
 from cadence.mayan.trackway import GetTrackNodeData
 from cadence.mayan.trackway import UpdateTrackNode
 from cadence.mayan.trackway import CreateTrackNode
-from cadence.models.tracks.TracksDefault import TracksDefault
+from cadence.models.tracks.TracksTrackDefault import TracksTrackDefault
+
+
 # AS NEEDED: from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
+# AS NEEDED: from cadence.models.analysis.Analysis_Track import Analysis_Track
 
 #___________________________________________________________________________________________________ Tracks_Track
 # noinspection PyAttributeOutsideInit
-class Tracks_Track(TracksDefault):
+class Tracks_Track(TracksTrackDefault):
     """ Database model representation of a track with all the attributes and information for a
         specific track as well connectivity information for the track within its series. """
 
 #===================================================================================================
 #                                                                                       C L A S S
 
-    __tablename__  = u'tracks'
+    __tablename__  = 'tracks'
 
 #===================================================================================================
 #                                                                                   G E T / S E T
@@ -186,3 +188,21 @@ class Tracks_Track(TracksDefault):
         model  = Tracks_TrackStore.MASTER
         result = session.query(model).filter(model.uid == self.uid).all()
         return result[0] if result else None
+
+#===================================================================================================
+#                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _getAnalysisPair
+    def _getAnalysisPair(self, session, createIfMissing):
+        """_getAnalysisPair doc..."""
+
+        from cadence.models.analysis.Analysis_Track import Analysis_Track
+        model = Analysis_Track.MASTER
+
+        result = session.query(model).filter(model.uid == self.uid).first()
+        if createIfMissing and not result:
+            result = model()
+            result.uid = self.uid
+            session.add(result)
+
+        return result

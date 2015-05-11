@@ -1,5 +1,5 @@
 # CurvatureAnalyzer.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -7,12 +7,9 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
-from cadence.analysis.curvature import DirectionStage
-from cadence.analysis.curvature.DirectionStage import DirectionStage
-from cadence.analysis.curvature.TrackwayCurveStatsStage import TrackwayCurveStatsStage
+from cadence.analysis.curvature.CurveProjectionStage import CurveProjectionStage
+from cadence.analysis.curvature.CurveSparsenessStage import CurveSparsenessStage
 
-from cadence.analysis.curvature.PathGeneratorStage import PathGeneratorStage
-from cadence.analysis.curvature.SeriesCurvatureStage import SeriesCurvatureStage
 from cadence.analysis.AnalyzerBase import AnalyzerBase
 
 #___________________________________________________________________________________________________ CurvatureAnalyzer
@@ -26,10 +23,9 @@ class CurvatureAnalyzer(AnalyzerBase):
     def __init__(self, **kwargs):
         """Creates a new instance of CurvatureAnalyzer."""
         super(CurvatureAnalyzer, self).__init__(**kwargs)
-        # self.addStage(SeriesCurvatureStage('seriesCurves', self))
-        self.addStage(TrackwayCurveStatsStage('curveStats', self))
+        self.addStage(CurveSparsenessStage('sparseness', self))
+        self.addStage(CurveProjectionStage('project', self))
         # self.addStage(DirectionStage('direction', self))
-        # self.addStage(PathGeneratorStage('pathGenerator', self))
 
 ####################################################################################################
 ####################################################################################################

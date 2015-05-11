@@ -113,6 +113,12 @@ class CadenceMainWindow(PyGlassWindow):
         headRevision = AlembicUtils.getHeadDatabaseRevision(databaseUrl=tracks.DATABASE_URL)
         myRevision = AlembicUtils.getCurrentDatabaseRevision(databaseUrl=tracks.DATABASE_URL)
         print('[TRACKS]: %s [HEAD %s]' % (myRevision, headRevision))
+
+        import cadence.models.analysis as analysis
+        headRevision = AlembicUtils.getHeadDatabaseRevision(databaseUrl=analysis.DATABASE_URL)
+        myRevision = AlembicUtils.getCurrentDatabaseRevision(databaseUrl=analysis.DATABASE_URL)
+        print('[ANALYSIS]: %s [HEAD %s]' % (myRevision, headRevision))
+
         super(CadenceMainWindow, self)._initializeImpl()
 
 #___________________________________________________________________________________________________ _firstShowImpl

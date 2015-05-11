@@ -1,4 +1,4 @@
-# Analysis_Trackway.py
+# Analysis_Sitemap.py
 # (C)2015
 # Scott Ernst
 
@@ -8,15 +8,16 @@ import sqlalchemy as sqla
 
 from cadence.models.analysis.AnalysisDefault import AnalysisDefault
 
-#___________________________________________________________________________________________________ Analysis_Trackway
-class Analysis_Trackway(AnalysisDefault):
+#___________________________________________________________________________________________________ Analysis_Sitemap
+class Analysis_Sitemap(AnalysisDefault):
     """ Doc... """
 
 #===================================================================================================
 #                                                                                       C L A S S
 
-    __tablename__ = 'trackways'
+    __tablename__ = 'sitemap'
 
     _index = sqla.Column(sqla.Integer,     default=0)
-    _curveSeries  = sqla.Column(sqla.Unicode, default='')
+
+
 

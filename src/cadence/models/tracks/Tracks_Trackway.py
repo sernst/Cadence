@@ -1,5 +1,5 @@
 # Tracks_Trackway.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst and Kent A. Stevens
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -12,13 +12,13 @@ from pyaid.radix.Base36 import Base36
 from pyaid.string.StringUtils import StringUtils
 import sqlalchemy as sqla
 
-from cadence.models.tracks.FlagsTracksDefault import FlagsTracksDefault
+from cadence.models.tracks.TracksDefault import TracksDefault
 
 # AS NEEDED: from cadence.analysis.TrackSeries import TrackSeries
 # AS NEEDED: from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ Tracks_Trackway
-class Tracks_Trackway(FlagsTracksDefault):
+class Tracks_Trackway(TracksDefault):
 
 #===================================================================================================
 #                                                                                       C L A S S
@@ -213,6 +213,24 @@ class Tracks_Trackway(FlagsTracksDefault):
         if newSession:
             session.commit()
             session.close()
+
+#===================================================================================================
+#                                                                               P R O T E C T E D
+
+#___________________________________________________________________________________________________ _getAnalysisPair
+    def _getAnalysisPair(self, session, createIfMissing):
+        """_getAnalysisPair doc..."""
+
+        from cadence.models.analysis.Analysis_Trackway import Analysis_Trackway
+        model = Analysis_Trackway.MASTER
+
+        result = session.query(model).filter(model.index == self.index).first()
+        if createIfMissing and not result:
+            result = model()
+            result.index = self.index
+            session.add(result)
+
+        return result
 
 #===================================================================================================
 #                                                                               I N T R I N S I C

@@ -1,15 +1,18 @@
 # Tracks_TrackStore.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
 from pyaid.dict.DictUtils import DictUtils
 
-from cadence.models.tracks.TracksDefault import TracksDefault
+from cadence.models.tracks.TracksTrackDefault import TracksTrackDefault
+
+
 # AS NEEDED: from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ Tracks_TrackStore
-class Tracks_TrackStore(TracksDefault):
+class Tracks_TrackStore(TracksTrackDefault):
     """ Database model representation of a track with all the attributes and information for a
         specific track as well as a connectivity information for the track within its series. """
 

@@ -86,6 +86,16 @@ class AnalysisStage(object):
             not have to handle failed Matplotlib loading internally. """
         return plt
 
+#___________________________________________________________________________________________________ GS: tracksSession
+    @property
+    def tracksSession(self):
+        return self.owner.getTracksSession()
+
+#___________________________________________________________________________________________________ GS: analysisSession
+    @property
+    def analysisSession(self):
+        return self.owner.getAnalysisSession()
+
 #===================================================================================================
 #                                                                                     P U B L I C
 
