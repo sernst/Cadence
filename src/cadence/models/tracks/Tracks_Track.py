@@ -200,9 +200,11 @@ class Tracks_Track(TracksTrackDefault):
         model = Analysis_Track.MASTER
 
         result = session.query(model).filter(model.uid == self.uid).first()
+
         if createIfMissing and not result:
             result = model()
             result.uid = self.uid
             session.add(result)
+            session.flush()
 
         return result

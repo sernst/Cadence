@@ -162,10 +162,12 @@ class Tracks_SiteMap(TracksDefault):
         model = Analysis_Sitemap.MASTER
 
         result = session.query(model).filter(model.index == self.index).first()
+
         if createIfMissing and not result:
             result = model()
             result.index = self.index
             session.add(result)
+            session.flush()
 
         return result
 

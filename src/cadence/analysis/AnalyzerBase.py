@@ -258,6 +258,7 @@ class AnalyzerBase(object):
             self.logger.loggingPath = myRootPath
 
         try:
+            session = self.getAnalysisSession()
             self._preAnalyze()
             for stage in self._stages:
                 print('#--- RUNNING STAGE "%s" ---#' % stage.key)
@@ -265,7 +266,7 @@ class AnalyzerBase(object):
                 stage.analyze()
             self._currentStage = None
             self._postAnalyze()
-            session = self.getAnalysisSession()
+
             session.commit()
             session.close()
         except Exception as err:

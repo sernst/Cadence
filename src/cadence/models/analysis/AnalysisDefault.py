@@ -1,5 +1,5 @@
 # AnalysisDefault.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -22,12 +22,8 @@ class AnalysisDefault(PyGlassModelsDefault):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    POSITION_VALUE = namedtuple('POSITION_VALUE', ['x', 'z', 'xUnc', 'zUnc'])
-
     __abstract__  = True
 
-    _sitemapIndex        = sqla.Column(sqla.Integer,     default=0)
-    _trackwayIndex       = sqla.Column(sqla.Integer,     default=0)
     _flags               = sqla.Column(sqla.Integer,     default=0)
     _displayFlags        = sqla.Column(sqla.Integer,     default=0)
 

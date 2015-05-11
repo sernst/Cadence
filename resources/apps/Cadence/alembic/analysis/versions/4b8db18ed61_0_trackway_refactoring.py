@@ -18,12 +18,7 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    try:
-        # This incorrectly named table might or might not exist depending on when the database
-        # was first created
-        op.drop_table('trackway')
-    except Exception:
-        pass
+    pass
 
 def downgrade():
     pass

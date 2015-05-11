@@ -40,7 +40,7 @@ class TracksDefault(PyGlassModelsDefault):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ getAnalysisPair
-    def getAnalysisPair(self, analysisSession, createIfMissing =False):
+    def getAnalysisPair(self, analysisSession, createIfMissing =True):
         """getAnalysisPair doc..."""
 
         target = self.fetchTransient(self._ANALYSIS_PAIR_KEY)

@@ -19,4 +19,4 @@ class Analysis_Trackway(AnalysisDefault):
 
     _index = sqla.Column(sqla.Integer,     default=0)
     _curveSeries  = sqla.Column(sqla.Unicode, default='')
-
+    _curveLength  = sqla.Column(sqla.Float, default=0.0)
