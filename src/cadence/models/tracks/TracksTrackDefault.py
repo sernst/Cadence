@@ -9,6 +9,7 @@ import math
 
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
+from pyaid.number.Angle import Angle
 from pyaid.number.NumericUtils import NumericUtils
 import sqlalchemy as sqla
 from pyaid.radix.Base64 import Base64
@@ -125,6 +126,13 @@ class TracksTrackDefault(TracksDefault):
             + rUnc*abs(wUnc*math.cos(r) - lUnc*math.sin(r))
 
         return NumericUtils.toValueUncertainty(0.01*float(self.z), zUnc)
+
+#___________________________________________________________________________________________________ GS: rotationAngle
+    @property
+    def rotationAngle(self):
+        """ Returns a Angle instance containing the rotation value and uncertainty information
+            for the track based off the Cadence data values (not the measured ones). """
+        return Angle(degrees=self.rotation, uncertaintyDegrees=self.rotationUncertainty)
 
 #___________________________________________________________________________________________________ GS: isComplete
     @property

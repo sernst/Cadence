@@ -261,7 +261,6 @@ class AnalyzerBase(object):
             session = self.getAnalysisSession()
             self._preAnalyze()
             for stage in self._stages:
-                print('#--- RUNNING STAGE "%s" ---#' % stage.key)
                 self._currentStage = stage
                 stage.analyze()
             self._currentStage = None

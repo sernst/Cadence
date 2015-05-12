@@ -185,11 +185,11 @@ class AnalysisStage(object):
             during the analysis process to denote in the log file that the following output was
             created by this stage. """
 
-        self.logger.write('\n' + 80*'*')
-        self.logger.write('\n'.join([
-            '[STARTED]: %s ANALYSIS STAGE' % self._label.upper(),
-            'Run on %s' % TimeUtils.toZuluFormat(self._startTime).replace('T', ' at ')]
-            + self._getHeaderArgs()))
+        self.logger.write([
+            '\n' + 80*'*',
+            '[STARTED]: %s STAGE' % self._label.upper(),
+            '  * Run on %s' % TimeUtils.toZuluFormat(self._startTime).replace('T', ' at ')
+        ] + self._getHeaderArgs(), indent=False)
 
 #___________________________________________________________________________________________________ _getHeaderArgs
     # noinspection PyMethodMayBeStatic
@@ -303,10 +303,11 @@ class AnalysisStage(object):
             endDateTime=TimeUtils.getNowDatetime(),
             toUnit=TimeUtils.MILLISECONDS)
 
-        self.logger.write('\n' + 80*'*')
-        self.logger.write('\n'.join([
+        self.logger.write([
+            '\n' + 80*'_',
             '[COMPLETE]: %s ANALYSIS STAGE' % self._label.upper(),
-            'Elapsed Time: %s' % TimeUtils.toPrettyElapsedTime(elapsed)] + self._getFooterArgs()))
+            '  * Elapsed Time: %s' % TimeUtils.toPrettyElapsedTime(elapsed)
+        ] + self._getFooterArgs(), indent=False)
 
 #___________________________________________________________________________________________________ _getFooterArgs
     # noinspection PyMethodMayBeStatic

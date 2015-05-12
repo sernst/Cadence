@@ -24,7 +24,7 @@ class CurvatureAnalyzer(AnalyzerBase):
         """Creates a new instance of CurvatureAnalyzer."""
         super(CurvatureAnalyzer, self).__init__(**kwargs)
         self.addStage(CurveSparsenessStage('sparseness', self))
-        self.addStage(CurveProjectionStage('project', self))
+        self.addStage(CurveProjectionStage('projection', self))
         # self.addStage(DirectionStage('direction', self))
 
 ####################################################################################################

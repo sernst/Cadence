@@ -1,4 +1,4 @@
-# SpatialUncertaintyStage.py
+# RotationalUncertaintyStage.py
 # (C)2014-2015
 # Scott Ernst
 
@@ -11,21 +11,21 @@ from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.analysis.shared.plotting.Histogram import Histogram
 from cadence.svg.CadenceDrawing import CadenceDrawing
 
-#*************************************************************************************************** SpatialUncertaintyStage
-class SpatialUncertaintyStage(AnalysisStage):
+#*************************************************************************************************** RotationalUncertaintyStage
+class RotationalUncertaintyStage(AnalysisStage):
     """A class for..."""
 
 #===================================================================================================
 #                                                                                       C L A S S
 
-    DRAWING_FOLDER_NAME = 'Spatial-Unc-Maps'
+    DRAWING_FOLDER_NAME = 'Rotational-Unc-Maps'
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
-        """Creates a new instance of SpatialUncertaintyStage."""
-        super(SpatialUncertaintyStage, self).__init__(
+        """Creates a new instance of RotationalUncertaintyStage."""
+        super(RotationalUncertaintyStage, self).__init__(
             key, owner,
-            label='Spatial Uncertainty',
+            label='Rotational Uncertainty',
             **kwargs)
 
         self._uncs        = []
@@ -43,22 +43,19 @@ class SpatialUncertaintyStage(AnalysisStage):
         self.initializeFolder(self.DRAWING_FOLDER_NAME)
 
         csv = CsvWriter()
-        csv.path = self.getPath('Large-Spatial-Uncertainties.csv')
+        csv.path = self.getPath('Large-Rotational-Uncertainties.csv')
         csv.autoIndexFieldName = 'Index'
         csv.addFields(
             ('uid', 'UID'),
             ('fingerprint', 'Fingerprint'),
-            ('x', 'X'),
-            ('z', 'Z') )
+            ('rotation', 'Rotation') )
         self._largeUncCsv = csv
 
-#___________________________________________________________________________________________________ _anal
+#___________________________________________________________________________________________________ _analyzeTrack
     def _analyzeTrack(self, track, series, trackway, sitemap):
         self._tracks.append(track)
-        x = track.xValue
-        self._uncs.append(x.uncertainty)
-        z = track.zValue
-        self._uncs.append(z.uncertainty)
+        r = track.rotationAngle
+        self._uncs.append(r.valueDegrees.uncertainty)
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
@@ -67,8 +64,8 @@ class SpatialUncertaintyStage(AnalysisStage):
             binCount=40,
             xLimits=(0, max(*self._uncs)),
             color='r',
-            title='Distribution of Spatial (X, Z) Uncertainties',
-            xLabel='Uncertainty Value (m)',
+            title='Distribution of Rotational Uncertainties',
+            xLabel='Uncertainty Value (degrees)',
             yLabel='Frequency')
         p1 = h.save(self.getTempFilePath(extension='pdf'))
 
@@ -76,10 +73,10 @@ class SpatialUncertaintyStage(AnalysisStage):
         h.title += ' (log)'
         p2 = h.save(self.getTempFilePath(extension='pdf'))
 
-        self.mergePdfs([p1, p2], self.getPath('Spatial-Uncertainty-Distribution.pdf'))
+        self.mergePdfs([p1, p2], self.getPath('Rotational-Uncertainty-Distribution.pdf'))
 
         average = NumericUtils.getMeanAndDeviation(self._uncs)
-        self.logger.write('Average spatial uncertainty: %s' % average.label)
+        self.logger.write('Average rotational uncertainty: %s' % average.label)
 
         #-------------------------------------------------------------------------------------------
         # FIND LARGE UNCERTAINTY TRACKS
@@ -100,7 +97,7 @@ class SpatialUncertaintyStage(AnalysisStage):
                 # then start a new drawing for this new site map
                 sitemap = t.trackSeries.trackway.sitemap
 
-                fileName = sitemap.name + "_" + sitemap.level + '_uncertainty.svg'
+                fileName = '%s-%s-ROTATION_UNC.svg' % (sitemap.name, sitemap.level)
                 path = self.getPath(self.DRAWING_FOLDER_NAME, fileName, isFile=True)
                 drawing = CadenceDrawing(path, sitemap)
 
@@ -119,12 +116,13 @@ class SpatialUncertaintyStage(AnalysisStage):
                 drawing.federalCoordinates()
 
             # now examine the positional uncertainties for this track
-            x = t.xValue
-            z = t.zValue
-            if max(x.uncertainty, z.uncertainty) <= 2.0*average.uncertainty:
+            rotation = t.rotationAngle.valueDegrees
+            if rotation.uncertainty <= 2.0*average.uncertainty:
+
                 # then just indicate that this track has low uncertainty
                 self._drawLowUncertaintyMarker(drawing, t)
-                # label this track with green
+
+                # label this track green
                 drawing.text(
                     t.name,
                     (t.x - 20, t.z),
@@ -140,17 +138,17 @@ class SpatialUncertaintyStage(AnalysisStage):
             self._largeUncCsv.createRow(
                 uid=t.uid,
                 fingerprint=t.fingerprint,
-                x=x.label,
-                z=z.label)
+                r=rotation.label)
 
             # if either the measured width or length is 0, mark with a yellow disk with red outline
-            if t.widthMeasured == 0 or t.lengthMeasured == 0:
+            if t.rotationMeasured == 0:
                 drawing.circle(
                     (t.x, t.z),
                     100*(t.widthUncertainty + t.lengthUncertainty)/2.0,
                     scene=True,
                     fill='yellow',
                     stroke='red')
+
                 drawing.text(
                     t.name,
                     (t.x - 20, t.z),
@@ -172,36 +170,12 @@ class SpatialUncertaintyStage(AnalysisStage):
                 stroke_width='0.25',
                 font_size='6px',
                 font_family='Arial')
-#
-#             # draw this track indicating it has high uncertainty
-#             drawing.use(
-#                     'rect1',
-#                     (t.x, t.z),
-#                     scene=True,
-#                     rotation=t.rotation,
-#                     opacity='0.5',
-#                     scale=t.widthMeasured,
-#                     scaleY=t.lengthMeasured,
-#                     fill='red',
-#                     stroke='red')
-#
-#             # draw the map dimensions with an outline gray rectangle
-#             drawing.use(
-#                     'rect2',
-#                     (t.x, t.z),
-#                     scene=True,
-#                     rotation=t.rotation,
-#                     scale=t.width,
-#                     scaleY=t.length,
-#                     fill='none',
-#                     stroke='gray')
 
         # and close off with a final save of the drawing file
         if drawing:
             drawing.save()
 
-
-        self.logger.write('%s Tracks with large spatial uncertainties found (%s%%)' % (
+        self.logger.write('%s Tracks with large rotational uncertainties found (%s%%)' % (
             largeUncertaintyCount, NumericUtils.roundToOrder(
                 100.0*float(largeUncertaintyCount)/float(len(self._tracks)), -1) ))
 
@@ -214,10 +188,10 @@ class SpatialUncertaintyStage(AnalysisStage):
         """ Indicate a low-uncertainty track at the specified location.  The radius is the average
             of width and length uncertainty. """
 
-        r = 100*(track.widthUncertainty + track.lengthUncertainty)/2.0
+        rot = track.rotationAngle.valueDegrees
         drawing.circle(
             (track.x, track.z),
-            r,
+            100.0*rot.uncertainty/180.0,
             scene=True,
             fill='green',
             stroke='green')
@@ -228,9 +202,11 @@ class SpatialUncertaintyStage(AnalysisStage):
         """ Indicate a low-uncertainty track at the specified location.  Radius is average
             uncertainty """
 
+        rot = track.rotationAngle.valueDegrees
         drawing.circle(
             (track.x, track.z),
-            100*(track.widthUncertainty + track.lengthUncertainty)/2.0,
+            100.0*rot.uncertainty/180.0,
             scene=True,
             fill='red',
             stroke='red')
+

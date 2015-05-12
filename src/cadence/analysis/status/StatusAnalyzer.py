@@ -6,10 +6,9 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from cadence.analysis.AnalyzerBase import AnalyzerBase
 from cadence.analysis.status.OriginCheckStage import OriginCheckStage
+from cadence.analysis.status.RotationalUncertaintyStage import RotationalUncertaintyStage
 from cadence.analysis.status.SpatialUncertaintyStage import SpatialUncertaintyStage
 from cadence.analysis.status.TrackwayLoadStage import TrackwayLoadStage
-
-
 
 #*************************************************************************************************** StatusAnalyzer
 class StatusAnalyzer(AnalyzerBase):
@@ -24,7 +23,8 @@ class StatusAnalyzer(AnalyzerBase):
         super(StatusAnalyzer, self).__init__(**kwargs)
         self.addStage(TrackwayLoadStage('load', self))
         self.addStage(OriginCheckStage('origin', self))
-        self.addStage(SpatialUncertaintyStage('spatialUncertainty', self))
+        self.addStage(SpatialUncertaintyStage('spatial-unc', self))
+        self.addStage(RotationalUncertaintyStage('rotation-unc', self))
 
 ####################################################################################################
 ####################################################################################################
