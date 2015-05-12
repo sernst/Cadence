@@ -10,6 +10,7 @@ from pyaid.number.NumericUtils import NumericUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
+from cadence.analysis.shared.plotting.Histogram import Histogram
 from cadence.svg.CadenceDrawing import CadenceDrawing
 
 #*************************************************************************************************** CurveProjectionStage
@@ -27,7 +28,7 @@ class CurveProjectionStage(AnalysisStage):
         """Creates a new instance of CurveProjectionStage."""
         super(CurveProjectionStage, self).__init__(
             key, owner,
-            label='Curve Projection Stage',
+            label='Curve Projection',
             **kwargs)
 
         self._drawing = None
@@ -232,7 +233,8 @@ class CurveProjectionStage(AnalysisStage):
             pointOnLine.yUnc = position.yUnc
             data['point'] = pointOnLine
 
-        data['line'] = LineSegment2D(data['point'].clone(), position.clone())
+        line = LineSegment2D(data['point'].clone(), position.clone())
+        data['line'] = line
         return data
 
 #___________________________________________________________________________________________________ _testSegment
@@ -291,7 +293,37 @@ class CurveProjectionStage(AnalysisStage):
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
         """_postAnalyze doc..."""
-        # self.mergePdfs(self._paths, 'Trackway-Curve-Stats.pdf')
+
+        values = []
+
+        for name, trackwayData in DictUtils.iter(self.data):
+            segments = trackwayData['segments']
+            for i in ListUtils.rangeOn(segments):
+                segment = segments[i]
+                segmentLine = segment['line']
+
+                # If this is an extrapolated segment, use the length from the neighboring segment
+                # instead of the artificial length of this segment.
+                if segment == segments[0]:
+                    segmentLine = segments[i + 1]['line']
+                elif segment == segments[-1]:
+                    segmentLine = segments[i - 1]['line']
+
+                for pairData in segment['pairs']:
+                    projectionLine = pairData['line']
+                    values.append(100.0*projectionLine.length.raw/segmentLine.length.raw)
+
+        path        = self.getTempFilePath(extension='pdf')
+        h           = Histogram(data=values)
+        h.binCount  = 50
+        h.xLabel    = 'Projection/Stride Ratio (%)'
+        h.title     = 'Relative Stride to Projection Length Ratios'
+
+        h.shaveDataToXLimits()
+        h.save(path=path)
+        self._paths.append(path)
+
+        self.mergePdfs(self._paths, 'Curve-Projection.pdf')
 
 #___________________________________________________________________________________________________ _drawSegment
     def _drawSegment(self, segment, segments):

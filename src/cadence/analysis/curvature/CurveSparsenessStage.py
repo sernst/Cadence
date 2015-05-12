@@ -26,7 +26,7 @@ class CurveSparsenessStage(AnalysisStage):
         """Creates a new instance of CurveSparsenessStage."""
         super(CurveSparsenessStage, self).__init__(
             key, owner,
-            label='Trackway Sparseness Stage',
+            label='Trackway Sparseness',
             **kwargs)
 
         self._paths = []
