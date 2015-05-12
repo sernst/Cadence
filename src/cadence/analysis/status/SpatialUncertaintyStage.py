@@ -1,5 +1,5 @@
 # SpatialUncertaintyStage.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -9,10 +9,7 @@ from pyaid.number.NumericUtils import NumericUtils
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.analysis.shared.plotting.Histogram import Histogram
-
 from cadence.svg.CadenceDrawing import CadenceDrawing
-
-
 
 #*************************************************************************************************** SpatialUncertaintyStage
 class SpatialUncertaintyStage(AnalysisStage):
@@ -20,6 +17,8 @@ class SpatialUncertaintyStage(AnalysisStage):
 
 #===================================================================================================
 #                                                                                       C L A S S
+
+    DRAWING_FOLDER_NAME = 'Uncertainty-Maps'
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
@@ -40,6 +39,8 @@ class SpatialUncertaintyStage(AnalysisStage):
     def _preAnalyze(self):
         self._uncs = []
         self._tracks = []
+
+        self.initializeFolder(self.DRAWING_FOLDER_NAME)
 
         csv = CsvWriter()
         csv.path = self.getPath('Large-Spatial-Uncertainties.csv')
@@ -101,7 +102,7 @@ class SpatialUncertaintyStage(AnalysisStage):
                 print('new sitemap = %s' % sitemap)
 
                 fileName = sitemap.name + "_" + sitemap.level + '_uncertainty.svg'
-                path = self.getPath(fileName, isFile=True)
+                path = self.getPath(self.DRAWING_FOLDER_NAME, fileName, isFile=True)
                 drawing = CadenceDrawing(path, sitemap)
 
                 # create a group to be instanced for the spreadsheet values
