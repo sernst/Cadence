@@ -110,11 +110,68 @@ class CurveProjectionStage(AnalysisStage):
             # Sort the paired segments by distance from the segment start position to order them
             # properly from first to last
             if segment['pairs']:
-                ListUtils.sortDictionaryList(segment['pairs'], 'distance', inPlace=True)
+                ListUtils.sortDictionaryList(segment['pairs'], 'offset', inPlace=True)
+
+                for p in segment['pairs']:
+                    self._resolveSpatialCoincidences(segments, segment, p)
+
                 length = max(length, segment['pairs'][-1]['offset'])
 
         trackwayData['length'] = length
         analysisTrackway.curveLength = length
+
+#___________________________________________________________________________________________________ _resolveSpatialCoincidences
+    @classmethod
+    def _resolveSpatialCoincidences(cls, segments, segment, pair):
+        """ Correct for cases where projected prints reside at the same spatial location on the
+            curve series by adjusting one of the tracks projection position slightly. """
+
+        if pair['track'].uid in ['track1l2hn-5-3y4rlvV8nApY', 'track1l2ho-9-9dJv3jnsULPv']:
+            print('FOUND YOU')
+
+        try:
+            nextSegment = segments[segments.index(segment) + 1]
+            nextOffset = nextSegment['offset']
+        except Exception:
+            nextOffset = 1.0e8
+
+        delta = 0.001
+        pOff = pair['offset']
+        at = pair['track'].analysisPair
+
+        # Adjust a pair print if it resides at the same position as its curve series track
+        if NumericUtils.equivalent(pOff, segment['offset']):
+
+            while nextOffset <= (pOff + delta):
+                delta *= 0.1
+
+            pair['offset'] += delta
+            pair['distance'].update(pair['distance'].raw + delta)
+            at.curvePosition += delta
+            at.segmentPosition += delta
+
+        try:
+            # Retrieve the next pair track in the segment if one exists
+            nextPair = segment['pairs'][segment['pairs'].index(pair) + 1]
+        except Exception:
+            return
+
+        pOff = pair['offset']
+        nextOff = nextPair['offset']
+
+        # Adjust pair tracks that reside at the same spatial position
+        if nextOff <= pOff or NumericUtils.equivalent(pOff, nextOff):
+
+            while nextOffset <= (pOff + delta):
+                delta *= 0.1
+
+            newPos = pOff + delta
+            newLocalPos = at.segmentPosition + delta
+            nextPair['offset'] = newPos
+            nextPair['distance'].update(newLocalPos)
+            nat = nextPair['track'].analysisPair
+            nat.curvePosition = newPos
+            nat.segmentPosition = newLocalPos
 
 #___________________________________________________________________________________________________ _generateTrackwaySegments
     def _generateTrackwaySegments(self, curveSeries, trackway, analysisTrackway):
@@ -144,6 +201,12 @@ class CurveProjectionStage(AnalysisStage):
                         tracks[i + 1].uid) ])
                 continue
 
+            # Populate analysis track data for curve series tracks
+            analysisTrack = tracks[i].getAnalysisPair(self.analysisSession, createIfMissing=True)
+            analysisTrack.curveSegment = len(segments)
+            analysisTrack.segmentPosition = 0.0
+            analysisTrack.curvePosition = offset
+
             segments.append(dict(index=i, track=tracks[i], line=line, pairs=[], offset=offset))
             offset += line.length.raw
 
@@ -158,11 +221,17 @@ class CurveProjectionStage(AnalysisStage):
             line=segLine,
             offset=-self.EXTENSION_LENGTH))
 
+        track = tracks[-1]
+        analysisTrack = track.getAnalysisPair(self.analysisSession, createIfMissing=True)
+        analysisTrack.curveSegment = len(tracks) - 1
+        analysisTrack.segmentPosition = 0.0
+        analysisTrack.curvePosition = offset
+
         srcLine = segments[-1]['line']
         segLine = srcLine.createNextLineSegment(self.EXTENSION_LENGTH)
         segments.append(dict(
-            index=len(tracks) - 1,
-            track=tracks[-1],
+            index=analysisTrack.curveSegment,
+            track=track,
             pairs=[],
             line=segLine,
             offset=offset))
@@ -197,7 +266,7 @@ class CurveProjectionStage(AnalysisStage):
 
         self._drawing.line(
             result['line'].start.toMayaTuple(), result['line'].end.toMayaTuple(),
-            stroke='black', stroke_width=1, stroke_opacity='1.0')
+            stroke='blue', stroke_width=1, stroke_opacity='0.5')
 
         self._drawing.circle(
             result['line'].end.toMayaTuple(), 5,
@@ -205,7 +274,7 @@ class CurveProjectionStage(AnalysisStage):
 
         self._drawing.circle(
             result['line'].start.toMayaTuple(), 5,
-            stroke='none', fill='black', fill_opacity='1.0')
+            stroke='none', fill='black', fill_opacity='0.25')
 
 #___________________________________________________________________________________________________ _findSegmentMatch
     @classmethod
@@ -231,6 +300,7 @@ class CurveProjectionStage(AnalysisStage):
             pointOnLine = data['segment']['line'].start.clone()
             pointOnLine.xUnc = position.xUnc
             pointOnLine.yUnc = position.yUnc
+            data['segment']['line'].adjustPointAlongLine(pointOnLine, 0.01, inPlace=True)
             data['point'] = pointOnLine
 
         line = LineSegment2D(data['point'].clone(), position.clone())

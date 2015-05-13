@@ -13,8 +13,6 @@ from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
 
-
-
 #*************************************************************************************************** StrideLengthStage
 class StrideLengthStage(AnalysisStage):
     """ The primary analysis stage for validating the stride lengths between the digitally entered
@@ -43,6 +41,7 @@ class StrideLengthStage(AnalysisStage):
         """_preDeviations doc..."""
         self.noData = 0
         self.entries = []
+        self._paths = []
 
         csv = CsvWriter()
         csv.path = self.getPath('Stride-Length-Deviations.csv', isFile=True)

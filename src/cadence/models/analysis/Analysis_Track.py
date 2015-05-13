@@ -21,5 +21,6 @@ class Analysis_Track(AnalysisDefault):
     _curveSegment       = sqla.Column(sqla.Integer, default=-2)
     _segmentPosition    = sqla.Column(sqla.Float, default=0.0)
     _curvePosition      = sqla.Column(sqla.Float, default=0.0)
+    _nextCurveTrack     = sqla.Column(sqla.Unicode, default='')
 
 

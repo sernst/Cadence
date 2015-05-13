@@ -7,10 +7,10 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
+from cadence.analysis.AnalyzerBase import AnalyzerBase
+from cadence.analysis.curvature.CurveProjectionLinkStage import CurveProjectionLinkStage
 from cadence.analysis.curvature.CurveProjectionStage import CurveProjectionStage
 from cadence.analysis.curvature.CurveSparsenessStage import CurveSparsenessStage
-
-from cadence.analysis.AnalyzerBase import AnalyzerBase
 
 #___________________________________________________________________________________________________ CurvatureAnalyzer
 class CurvatureAnalyzer(AnalyzerBase):
@@ -25,6 +25,7 @@ class CurvatureAnalyzer(AnalyzerBase):
         super(CurvatureAnalyzer, self).__init__(**kwargs)
         self.addStage(CurveSparsenessStage('sparseness', self))
         self.addStage(CurveProjectionStage('projection', self))
+        self.addStage(CurveProjectionLinkStage('projection-linking', self))
         # self.addStage(DirectionStage('direction', self))
 
 ####################################################################################################

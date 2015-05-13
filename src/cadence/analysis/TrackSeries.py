@@ -16,10 +16,12 @@ class TrackSeries(object):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, trackway, firstTrackUid):
+    def __init__(self, trackway, firstTrackUid, **kwargs):
         """Creates a new instance of TrackSeries."""
         self.analysisHierarchy = []
 
+        self._left          = kwargs.get('left')
+        self._pes           = kwargs.get('pes')
         self._trackway      = trackway
         self._firstTrackUid = firstTrackUid
         self._tracks        = []
@@ -71,7 +73,7 @@ class TrackSeries(object):
         try:
             return self.tracks[0].left
         except Exception:
-            return True
+            return bool(self._left)
 
 #___________________________________________________________________________________________________ GS: pes
     @property
@@ -79,7 +81,7 @@ class TrackSeries(object):
         try:
             return self.tracks[0].pes
         except Exception:
-            return True
+            return bool(self._pes)
 
 #___________________________________________________________________________________________________ GS: count
     @property
@@ -131,6 +133,13 @@ class TrackSeries(object):
     @incompleteTracks.setter
     def incompleteTracks(self, value):
         self._incomplete = value
+
+#___________________________________________________________________________________________________ GS: key
+    @property
+    def key(self):
+        return '%s%s' % (
+            'left' if self.left else 'right',
+            'Pes' if self.pes else 'Manus')
 
 #===================================================================================================
 #                                                                                     P U B L I C

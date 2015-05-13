@@ -1,10 +1,12 @@
 # PaceLengthStage.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import numpy as np
+from pyaid.dict.DictUtils import DictUtils
+from pyaid.list.ListUtils import ListUtils
 from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
 
@@ -12,8 +14,7 @@ from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
 from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
-
-
+from cadence.svg.CadenceDrawing import CadenceDrawing
 
 #*************************************************************************************************** PaceLengthStage
 class PaceLengthStage(AnalysisStage):
@@ -23,6 +24,8 @@ class PaceLengthStage(AnalysisStage):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    MAPS_FOLDER_NAME = 'Pace-Lengths'
+
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of PaceLengthStage."""
@@ -30,11 +33,16 @@ class PaceLengthStage(AnalysisStage):
             key, owner,
             label='Pace Length',
             **kwargs)
-        self._paths  = []
-        self._csv    = None
+
         self.noData  = 0
         self.count   = 0
+        self.ignored = 0
         self.entries = []
+
+        self._paths     = []
+        self._csv       = None
+        self._errorCsv  = None
+        self._drawing   = None
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -44,6 +52,9 @@ class PaceLengthStage(AnalysisStage):
         """_preDeviations doc..."""
         self.noData = 0
         self.entries = []
+        self._paths = []
+
+        self.initializeFolder(self.MAPS_FOLDER_NAME)
 
         csv = CsvWriter()
         csv.path = self.getPath('Pace-Length-Deviations.csv', isFile=True)
@@ -59,99 +70,108 @@ class PaceLengthStage(AnalysisStage):
             ('pairedUid', 'Track Pair UID') )
         self._csv = csv
 
+        csv = CsvWriter()
+        csv.path = self.getPath('Pace-Match-Errors.csv', isFile=True)
+        csv.autoIndexFieldName = 'Index'
+        csv.addFields(
+            ('uid', 'UID'),
+            ('fingerprint', 'Fingerprint'),
+            ('measured', 'Measured (m)') )
+        self._errorCsv = csv
+
+#___________________________________________________________________________________________________ _analyzeSitemap
+    def _analyzeSitemap(self, sitemap):
+        """_analyzeSitemap doc..."""
+
+        self._drawing = CadenceDrawing(
+            self.getPath(
+                self.MAPS_FOLDER_NAME,
+                '%s-%s-PACE.svg' % (sitemap.name, sitemap.level),
+                isFile=True),
+            sitemap)
+
+        self._drawing.grid()
+        self._drawing.federalCoordinates()
+
+        super(PaceLengthStage, self)._analyzeSitemap(sitemap)
+
+        self._drawing.save()
+        self._drawing = None
+
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackway(self, trackway, sitemap):
         data = self.owner.getTrackwaySeries(trackway)
+
+        for key, series in DictUtils.iter(data):
+            self._drawSeries(self._drawing, series)
+
         l = data['leftManus']
         r = data['rightManus']
-
         if l.count and l.isReady and r.count and r.isReady:
             self._analyzeSeriesPair(l, r)
             self._analyzeSeriesPair(r, l)
 
         l = data['leftPes']
         r = data['rightPes']
-
         if l.count and l.isReady and r.count and r.isReady:
             self._analyzeSeriesPair(l, r)
             self._analyzeSeriesPair(r, l)
 
 #___________________________________________________________________________________________________ _analyzeSeriesPair
-    def _analyzeSeriesPair(self, series, pair):
+    def _analyzeSeriesPair(self, series, pairSeries):
         """_analyzeSeriesPair doc..."""
 
-        for index in range(series.count):
-            track   = series.tracks[index]
-            data    = track.snapshotData
-            pace    = data.get(SnapshotDataEnum.PACE)
-            if pace is None:
+        for index in ListUtils.range(series.count):
+            track       = series.tracks[index]
+            data        = track.snapshotData
+            measured    = data.get(SnapshotDataEnum.PACE)
+            if measured is None:
                 self.noData += 1
                 continue
 
-            pace = float(pace)
-            position = track.positionValue
+            measured = NumericUtils.toValueUncertainty(measured, 0.06)
 
-            if track != series.tracks[-1]:
-                nextTrack = series.tracks[index + 1]
-                if track.next != nextTrack.uid:
-                    self.logger.write('[ERROR]: Invalid track ordering (%s -> %s)' % (
-                        track.uid, nextTrack.uid))
-                nextPosition = nextTrack.positionValue
-            elif index == 0:
-                continue
-            else:
-                # Extrapolate using the position of the previous print to get a nextPosition
-                # value for use in finding the pace track pair
-                lastTrack = series.tracks[index - 1]
-                line = LineSegment2D(start=lastTrack.positionValue, end=position)
-                try:
-                    line.postExtendLine(line.length.raw)
-                except Exception:
-                    self.logger.write([
-                        '[ERROR]: Invalid separation between tracks',
-                        'TRACK: %s' % track,
-                        'LAST TRACK: %s' % lastTrack])
-                    continue
-
-                nextPosition = line.end.clone()
-
-            pairTrack = None
-            distance = 1.0e8
-
-            if track.fingerprint.startswith('BEB-515-2009-1-S-21-L-M'):
-                print(track.fingerprint)
-
-            for pt in pair.tracks:
-                try:
-                    pos = pt.positionValue
-                    d = nextPosition.distanceTo(pos).raw + position.distanceTo(pos).raw
-                except Exception:
-                    continue
-
-                if d < distance:
-                    pairTrack = pt
-                    distance = d
-
-            if not pairTrack:
+            pairTrack = self._getPairedTrack(track, series, pairSeries)
+            if pairTrack is None:
+                self.ignored += 1
                 self.logger.write([
-                    '[ERROR]: No pair track found for pace calculation',
-                    'TRACK: %s' % track,
-                    'NEXT TRACK: %s' % nextTrack])
+                    '[ERROR]: Unable to determine pairSeries track',
+                    'TRACK: %s [%s]' % (track.fingerprint, track.uid),
+                    'PACE[field]: %s' % measured.label ])
+
+                self._errorCsv.addRow({
+                    'uid':track.uid,
+                    'fingerprint':track.fingerprint,
+                    'measured':measured.label })
+                self._drawing.circle(
+                    track.positionValue.toMayaTuple(), 10,
+                    stroke='none', fill='red', fill_opacity=0.5)
                 continue
 
-            try:
-                entered = position.distanceTo(pairTrack.positionValue)
-            except Exception:
+            position = track.positionValue
+            pairPosition = pairTrack.positionValue
+            paceLine = LineSegment2D(position, pairPosition)
+
+            if not paceLine.isValid:
+                self.ignored += 1
                 self.logger.write([
                     '[WARNING]: Invalid track separation of 0.0. Ignoring track',
                     'TRACK: %s [%s]' % (track.fingerprint, track.uid),
-                    'NEXT: %s [%s]' % (nextTrack.fingerprint, track.uid)])
+                    'PAIR: %s [%s]' % (pairTrack.fingerprint, pairTrack.uid)])
+
+                self._errorCsv.addRow({
+                    'uid':track.uid,
+                    'fingerprint':track.fingerprint,
+                    'measured':measured.label })
+                self._drawing.circle(
+                    track.positionValue.toMayaTuple(), 10,
+                    stroke='none', fill='red', fill_opacity=0.5)
                 continue
 
-            measured   = NumericUtils.toValueUncertainty(pace, 0.06)
-            delta      = entered.value - measured.value
-            deviation  = delta/(measured.uncertainty + entered.uncertainty)
-            fractional = delta/measured.value
+            entered    = paceLine.length
+            delta      = entered.raw - measured.raw
+            deviation  = delta/(measured.rawUncertainty + entered.rawUncertainty)
+            fractional = delta/measured.raw
             self.count += 1
 
             entry = dict(
@@ -169,7 +189,83 @@ class PaceLengthStage(AnalysisStage):
                 pairTrack=pairTrack)
 
             self.entries.append(entry)
-            track.cache.set('paceData', entry)
+            self._drawPaceLine(self._drawing, paceLine, series.pes)
+
+#___________________________________________________________________________________________________ _drawSeries
+    @classmethod
+    def _drawSeries(cls, drawing, series):
+        """_drawSeries doc..."""
+
+        if series.count == 0:
+            return
+
+        if series.pes:
+            color = '#0033FF'
+        else:
+            color = '#00CC00'
+
+        for track in series.tracks[:-1]:
+            nextTrack = series.tracks[series.tracks.index(track) + 1]
+
+            drawing.line(
+                track.positionValue.toMayaTuple(),
+                nextTrack.positionValue.toMayaTuple(),
+                stroke=color, stroke_width=1, stroke_opacity='0.1')
+
+            hasPace = bool(track.snapshotData.get(SnapshotDataEnum.PACE) is not None)
+            drawing.circle(
+                track.positionValue.toMayaTuple(), 5,
+                stroke='none', fill=color, fill_opacity='0.75' if hasPace else '0.1')
+
+        track = series.tracks[-1]
+        hasPace = bool(track.snapshotData.get(SnapshotDataEnum.PACE) is not None)
+        drawing.circle(
+            track.positionValue.toMayaTuple(), 5,
+            stroke='none', fill=color, fill_opacity='0.75' if hasPace else '0.1')
+
+#___________________________________________________________________________________________________ _drawPaceLine
+    @classmethod
+    def _drawPaceLine(cls, drawing, line, isPes):
+        """_drawPaceLine doc..."""
+
+        drawing.line(
+            line.start.toMayaTuple(), line.end.toMayaTuple(),
+            stroke='black' if isPes else '#666666', stroke_width=1, stroke_opacity='1.0')
+
+        drawing.circle(
+            line.end.toMayaTuple(), 3, stroke='none', fill='black', fill_opacity='0.25')
+
+        drawing.circle(
+            line.start.toMayaTuple(), 3, stroke='none', fill='black', fill_opacity='0.25')
+
+#___________________________________________________________________________________________________ _getPairedTrack
+    def _getPairedTrack(self, track, trackSeries, pairSeries):
+        """_getPairedTrack doc..."""
+
+        analysisTrack = track.getAnalysisPair(self.analysisSession)
+
+        index = trackSeries.tracks.index(track)
+        nextTrack = trackSeries.tracks[index + 1] if index < (trackSeries.count - 1) else None
+        nextAnalysisTrack = nextTrack.getAnalysisPair(self.analysisSession) if nextTrack else None
+
+        for pt in pairSeries.tracks:
+            # Iterate through all the tracks in the pair series and find the one that comes
+            # immediately after the target track, and before the next track in the target series if
+            # such a track exists
+
+            apt = pt.getAnalysisPair(self.analysisSession)
+            if apt.curvePosition < analysisTrack.curvePosition:
+                # If the pair track appears before the target track, skip to the next track
+                continue
+
+            if nextAnalysisTrack and apt.curvePosition > nextAnalysisTrack.curvePosition:
+                # If the pair track is past the next track position there is no pair track for this
+                # pace segment
+                return None
+
+            return pt
+
+        return None
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
@@ -242,6 +338,9 @@ class PaceLengthStage(AnalysisStage):
 
         if not self._csv.save():
             self.logger.write('[ERROR]: Failed to save CSV file %s' % self._csv.path)
+
+        if not self._errorCsv.save():
+            self.logger.write('[ERROR]: Failed to save CSV file %s' % self._errorCsv.path)
 
         percentage = NumericUtils.roundToOrder(100.0*float(highDeviationCount)/float(len(self.entries)), -2)
         self.logger.write('%s significant %s (%s%%)' % (highDeviationCount, label.lower(), percentage))

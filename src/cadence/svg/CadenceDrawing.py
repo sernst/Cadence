@@ -3,7 +3,7 @@
 # Kent A. Stevens
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-
+from pyaid.file.FileUtils import FileUtils
 
 import svgwrite
 from svgwrite import mm
@@ -419,6 +419,9 @@ class CadenceDrawing(object):
 
         if not self.siteMapReady:
             return
+
+        # Make sure the directory where the file will be saved exists before saving
+        FileUtils.getDirectoryOf(self._drawing.filename, createIfMissing=True)
 
         self._drawing.save()
 

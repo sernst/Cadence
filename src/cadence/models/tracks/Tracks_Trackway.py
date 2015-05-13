@@ -97,16 +97,22 @@ class Tracks_Trackway(TracksDefault):
 
 #___________________________________________________________________________________________________ getTrackSeries
     def getTrackSeries(self):
+        """ Creates an ordered dictionary containing the track series for each series in the
+            trackway, even if one of the series has no tracks. The keys of the dictionary match
+            the key value of the track series instance, i.e. TrackSeries.key. """
+
         from cadence.analysis.TrackSeries import TrackSeries
 
-        series = OrderedDict()
-        series['leftPes']    = TrackSeries(self, firstTrackUid=self.firstLeftPes)
-        series['rightPes']   = TrackSeries(self, firstTrackUid=self.firstRightPes)
-        series['leftManus']  = TrackSeries(self, firstTrackUid=self.firstLeftManus)
-        series['rightManus'] = TrackSeries(self, firstTrackUid=self.firstRightManus)
+        items = [
+            TrackSeries(self, firstTrackUid=self.firstLeftPes, left=True, pes=True),
+            TrackSeries(self, firstTrackUid=self.firstRightPes, pes=True, ),
+            TrackSeries(self, firstTrackUid=self.firstLeftManus, left=True),
+            TrackSeries(self, firstTrackUid=self.firstRightManus) ]
 
-        for key, s in series.items():
-            s.load()
+        series = OrderedDict()
+        for item in items:
+            item.load()
+            series[item.key] = item
 
         return series
 
