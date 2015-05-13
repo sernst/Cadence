@@ -21,4 +21,4 @@ def upgrade():
     op.add_column('tracks', sqla.Column('nextCurveTrack', sqla.Unicode, default=''))
 
 def downgrade():
-    op.add_column('tracks', 'nextCurveTrack')
+    op.drop_column('tracks', 'nextCurveTrack')

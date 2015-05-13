@@ -9,6 +9,10 @@ from cadence.models.analysis.Analysis_Sitemap import Analysis_Sitemap
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 from cadence.models.tracks.Tracks_Trackway import Tracks_Trackway
 
+SITEMAP_NAME = 'BSY'
+SITEMAP_LEVEL = '1040'
+TRACKWAY_NAME = 'BSY-1040-2008-20-S-19'
+
 smModel   = Tracks_SiteMap.MASTER
 twModel   = Tracks_Trackway.MASTER
 session   = twModel.createSession()
@@ -16,12 +20,22 @@ session   = twModel.createSession()
 asmModel = Analysis_Sitemap.MASTER
 aSession = asmModel.createSession()
 
-siteMaps = session.query(smModel).filter(smModel.name == 'CRO').filter(smModel.level == '500').all()
+#___________________________________________________________________________________________________
+# SITEMAP QUERY
+query = session.query(smModel)
+if SITEMAP_NAME:
+    query = query.filter(smModel.name == SITEMAP_NAME)
+if SITEMAP_LEVEL:
+    query = query.filter(smModel.level == SITEMAP_LEVEL)
+siteMaps = query.all()
 
+#___________________________________________________________________________________________________
+# TRACK ITERATOR
 for siteMap in siteMaps:
-    trackways = session.query(twModel) \
-        .filter(twModel.siteMapIndex == siteMap.index).all()
-        # .filter(twModel.name == 'BEB-515-2009-1-S-6').all()
+    query = session.query(twModel).filter(twModel.siteMapIndex == siteMap.index)
+    if TRACKWAY_NAME:
+        query = query.filter(twModel.name == TRACKWAY_NAME)
+    trackways = query.all()
 
     for trackway in trackways:
         print('\n\n\n%s\nTRACKWAY[%s]:' % (60*'=', trackway.name))
@@ -45,6 +59,8 @@ for siteMap in siteMaps:
                     NumericUtils.roundToSigFigs(aTrack.segmentPosition, 4),
                     NumericUtils.roundToSigFigs(aTrack.curvePosition, 4)))
 
+#___________________________________________________________________________________________________
+# CLEANUP
 session.close()
 aSession.close()
 

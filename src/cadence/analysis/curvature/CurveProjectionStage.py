@@ -126,9 +126,6 @@ class CurveProjectionStage(AnalysisStage):
         """ Correct for cases where projected prints reside at the same spatial location on the
             curve series by adjusting one of the tracks projection position slightly. """
 
-        if pair['track'].uid in ['track1l2hn-5-3y4rlvV8nApY', 'track1l2ho-9-9dJv3jnsULPv']:
-            print('FOUND YOU')
-
         try:
             nextSegment = segments[segments.index(segment) + 1]
             nextOffset = nextSegment['offset']

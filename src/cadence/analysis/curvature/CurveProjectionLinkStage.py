@@ -86,6 +86,7 @@ class CurveProjectionLinkStage(AnalysisStage):
         track = self._getNextTrack(None, trackway)
         line = None
 
+        curveIndex = 0
         while track is not None:
             nextTrack = self._getNextTrack(track, trackway)
             at = track.analysisPair
@@ -95,9 +96,14 @@ class CurveProjectionLinkStage(AnalysisStage):
                 break
 
             at.nextCurveTrack = nextTrack.uid
+            at.curveIndex = curveIndex
+            curveIndex += 1
 
             line = LineSegment2D(track.positionValue, nextTrack.positionValue)
-            self._drawLine(self._drawing, line, opacity=0.25, endCap=False)
+            self._drawLine(
+                self._drawing, line,
+                color='black' if curveIndex & 1 else 'blue',
+                opacity=0.25, endCap=False)
 
             track = nextTrack
 

@@ -19,6 +19,7 @@ class Analysis_Track(AnalysisDefault):
 
     _uid                = sqla.Column(sqla.Unicode, default='')
     _curveSegment       = sqla.Column(sqla.Integer, default=-2)
+    _curveIndex         = sqla.Column(sqla.Integer, default=-1)
     _segmentPosition    = sqla.Column(sqla.Float, default=0.0)
     _curvePosition      = sqla.Column(sqla.Float, default=0.0)
     _nextCurveTrack     = sqla.Column(sqla.Unicode, default='')
