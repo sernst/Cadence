@@ -41,7 +41,7 @@ class AnalyzeAll(object):
         print(80*'-' + '\nANALYSIS COMPLETE:')
         for a in self.analyzers:
             print('  [%s]: %s (%s)' % (
-                'SUCCESS' if a.success else 'FAILED',
+                'SUCCESS' if a[-1].success else 'FAILED',
                 TimeUtils.toPrettyElapsedTime(a[0]),
                 a[-1].__class__.__name__))
 
