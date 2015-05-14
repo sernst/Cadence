@@ -9,9 +9,9 @@ from cadence.models.analysis.Analysis_Sitemap import Analysis_Sitemap
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 from cadence.models.tracks.Tracks_Trackway import Tracks_Trackway
 
-SITEMAP_NAME = 'BSY'
-SITEMAP_LEVEL = '1040'
-TRACKWAY_NAME = 'BSY-1040-2008-20-S-19'
+SITEMAP_NAME = 'TCH'
+SITEMAP_LEVEL = '1000'
+TRACKWAY_NAME = '' #'BSY-1040-2008-20-S-19'
 
 smModel   = Tracks_SiteMap.MASTER
 twModel   = Tracks_Trackway.MASTER

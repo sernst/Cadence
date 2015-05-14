@@ -4,13 +4,13 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from pyaid.dict.DictUtils import DictUtils
 from pyaid.list.ListUtils import ListUtils
 from pyaid.number.NumericUtils import NumericUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
 from cadence.svg.CadenceDrawing import CadenceDrawing
+
 
 #*************************************************************************************************** CurveProjectionLinkStage
 class CurveProjectionLinkStage(AnalysisStage):

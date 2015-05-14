@@ -78,7 +78,7 @@ class CadenceDrawing(object):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, fileName, siteMap, labelTracks =True, labelColor ='blue'):
+    def __init__(self, fileName, siteMap, labelTracks =True, labelColor ='black'):
         """ Creates a new instance of CadenceDrawing.  Calls to the public functions line(), rect(),
             and others result in objects being added to the SVG canvas, with the file written by the
             save() method to specified fileName.  The second argument, the siteMap is provided as an
@@ -264,27 +264,35 @@ class CadenceDrawing(object):
                 self.use('mark', [self.pxPerMm*x, self.pxPerMm*y], rotation=45, scene=False)
 
 #___________________________________________________________________________________________________ labelTracks
-    def labelTracks(self, color ='blue', opacity =0.5, strokeWidth =0.05):
+    def labelTracks(self, color ='black', opacity =0.25, strokeWidth =0.5, session =None):
         """ Finds all tracks for the current tracksite, then marks their centers and adds a text
             label for each track. """
 
         from cadence.models.tracks.Tracks_Track import Tracks_Track
 
         model   = Tracks_Track.MASTER
-        session = model.createSession()
-        query   = session.query(model)
+        s       = session if session else model.createSession()
+        query   = s.query(model)
         query   = query.filter(model.site == self.siteName)
         result  = query.filter(model.level == self.siteLevel).all()
 
         # for each track in this tracksite-level, mark its center and label it (e.g., 'S18 LP3')
         for track in result:
 
+            # Use the position value to draw values rounded to uncertainty
+            pos = track.positionValue.toMayaTuple()
+
             self.circle(
-                (track.x, track.z),
-                2,
+                pos, 2,
                 scene=True,
                 fill=color,
                 fill_opacity=opacity,
+                stroke='none')
+
+            self.circle(
+                pos, 100.0*min(track.width, track.length),
+                scene=True,
+                fill='none',
                 stroke_width=strokeWidth,
                 stroke=color,
                 stroke_opacity=opacity)
@@ -292,18 +300,16 @@ class CadenceDrawing(object):
             trackway = "%s%s" % (track.trackwayType, track.trackwayNumber)
             label = "%s-%s" % (trackway, track.name)
             self.text(
-                label,
-                (track.x - 4, track.z - 2.5),
+                label, (pos[0] - 4, pos[1] - 2.5),
                 scene=True,
                 font_size='4',
                 fill=color,
-                stroke_width=strokeWidth,
-                stroke=color,
-                stroke_opacity=opacity)
+                fill_opacity=opacity,
+                stroke='none')
 
         # all done
-        session.commit()
-        session.close()
+        if not session:
+            s.close()
 
 #___________________________________________________________________________________________________ line
     def line(self, p1, p2, scene =True, groupId =None, **extra):
