@@ -5,7 +5,6 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import numpy as np
-from pyaid.dict.DictUtils import DictUtils
 from pyaid.list.ListUtils import ListUtils
 from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
@@ -15,6 +14,7 @@ from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
 from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
 from cadence.svg.CadenceDrawing import CadenceDrawing
+
 
 #*************************************************************************************************** PaceLengthStage
 class PaceLengthStage(AnalysisStage):
@@ -105,17 +105,46 @@ class PaceLengthStage(AnalysisStage):
         for series in bundle.asList():
             self._drawSeries(self._drawing, series)
 
-        l = bundle.leftManus
-        r = bundle.rightManus
-        if l.count and l.isReady and r.count and r.isReady:
-            self._analyzeSeriesPair(l, r)
-            self._analyzeSeriesPair(r, l)
+        tests = [
+            (bundle.leftPes, bundle.rightPes),
+            (bundle.leftManus, bundle.rightManus) ]
 
-        l = bundle.leftPes
-        r = bundle.rightPes
-        if l.count and l.isReady and r.count and r.isReady:
-            self._analyzeSeriesPair(l, r)
-            self._analyzeSeriesPair(r, l)
+        for entry in tests:
+            # Test both manus and pes pace pairings
+
+            l = entry[0]
+            r = entry[1]
+            if l.count and l.isReady and r.count and r.isReady:
+                self._analyzeSeriesPair(l, r)
+                self._analyzeSeriesPair(r, l)
+                continue
+
+            for t in l.tracks + r.tracks:
+                # Check all tracks in skipped series for pace measurements and log any tracks
+                # with such measurements as errors
+                if t.snapshotData.get(SnapshotDataEnum.PACE) is not None:
+                    self._logUnresolvableTrack(t, 'Pace field measurement exists invalid series')
+
+#___________________________________________________________________________________________________ _logUnresolvableTrack
+    def _logUnresolvableTrack(self, track, message):
+        """_logUnresolvableTrack doc..."""
+        measured = NumericUtils.toValueUncertainty(
+            track.snapshotData.get(SnapshotDataEnum.PACE), 0.06)
+
+        self.ignored += 1
+        self.logger.write([
+            '[ERROR]: %s' % message,
+            'TRACK: %s [%s]' % (track.fingerprint, track.uid),
+            'PACE[field]: %s' % measured.label ])
+
+        self._errorCsv.addRow({
+            'uid':track.uid,
+            'fingerprint':track.fingerprint,
+            'measured':measured.label })
+
+        self._drawing.circle(
+            track.positionValue.toMayaTuple(), 10,
+            stroke='none', fill='red', fill_opacity=0.5)
 
 #___________________________________________________________________________________________________ _analyzeSeriesPair
     def _analyzeSeriesPair(self, series, pairSeries):
@@ -133,19 +162,7 @@ class PaceLengthStage(AnalysisStage):
 
             pairTrack = self._getPairedTrack(track, series, pairSeries)
             if pairTrack is None:
-                self.ignored += 1
-                self.logger.write([
-                    '[ERROR]: Unable to determine pairSeries track',
-                    'TRACK: %s [%s]' % (track.fingerprint, track.uid),
-                    'PACE[field]: %s' % measured.label ])
-
-                self._errorCsv.addRow({
-                    'uid':track.uid,
-                    'fingerprint':track.fingerprint,
-                    'measured':measured.label })
-                self._drawing.circle(
-                    track.positionValue.toMayaTuple(), 10,
-                    stroke='none', fill='red', fill_opacity=0.5)
+                self._logUnresolvableTrack(track, 'Unable to determine pairSeries track')
                 continue
 
             position = track.positionValue
@@ -153,19 +170,7 @@ class PaceLengthStage(AnalysisStage):
             paceLine = LineSegment2D(position, pairPosition)
 
             if not paceLine.isValid:
-                self.ignored += 1
-                self.logger.write([
-                    '[WARNING]: Invalid track separation of 0.0. Ignoring track',
-                    'TRACK: %s [%s]' % (track.fingerprint, track.uid),
-                    'PAIR: %s [%s]' % (pairTrack.fingerprint, pairTrack.uid)])
-
-                self._errorCsv.addRow({
-                    'uid':track.uid,
-                    'fingerprint':track.fingerprint,
-                    'measured':measured.label })
-                self._drawing.circle(
-                    track.positionValue.toMayaTuple(), 10,
-                    stroke='none', fill='red', fill_opacity=0.5)
+                self._logUnresolvableTrack(track, 'Invalid track separation of 0.0. Ignoring track')
                 continue
 
             entered    = paceLine.length
@@ -190,6 +195,7 @@ class PaceLengthStage(AnalysisStage):
 
             self.entries.append(entry)
             self._drawPaceLine(self._drawing, paceLine, series.pes)
+            track.cache.set('paceData', entry)
 
 #___________________________________________________________________________________________________ _drawSeries
     @classmethod

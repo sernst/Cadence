@@ -1,8 +1,9 @@
 # CadenceDrawing.py
-# (C)2014
+# (C)2014-2015
 # Kent A. Stevens
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+from pyaid.debug.Logger import Logger
 from pyaid.file.FileUtils import FileUtils
 
 import svgwrite
@@ -84,26 +85,27 @@ class CadenceDrawing(object):
             labelColor ='black',
             session =None,
             showUncertainty =True,
-            showCenters =True):
+            showCenters =True, **kwargs):
         """ Creates a new instance of CadenceDrawing.  Calls to the public functions line(), rect(),
             and others result in objects being added to the SVG canvas, with the file written by the
             save() method to specified fileName.  The second argument, the siteMap is provided as an
             argument to establish the correspondence between the Maya scene and the site siteMap
             coordinates. """
 
-        self.siteMapReady = False if siteMap.scale == 0.0 else True
+        self._logger = kwargs.get('logger')
+        if not self._logger:
+            self._logger = Logger(self, printOut=True)
 
+        self.siteMapReady = siteMap.isReady
         if not self.siteMapReady:
-            print("CadenceDrawing: %s %s not completed " % (siteMap.name, siteMap.level))
+            self._logger.write('[ERROR|CadenceDrawing]: Sitemap "%s-%s" not ready' % (
+                siteMap.name, siteMap.level))
             return
 
         self.fileName  = fileName
         self.siteMap   = siteMap
         self.siteName  = siteMap.name
         self.siteLevel = siteMap.level
-
-        print("starting drawing, tracksite name = %s and level = %s" % (self.siteName, self.siteLevel))
-
 
         # Generally units can be specified in millimeters.  In a few cases, however, (e.g.,
         # PolyLine) the coordinates must be unqualified integers (as px).  The site maps, however

@@ -211,7 +211,8 @@ class AnalysisStage(object):
 
         if not self._analyzeCallback or self._analyzeCallback(self):
             for sitemap in self.owner.getSitemaps():
-                self._analyzeSitemap(sitemap)
+                if sitemap.isReady:
+                    self._analyzeSitemap(sitemap)
 
 #___________________________________________________________________________________________________ _analyzeSitemap
     def _analyzeSitemap(self, sitemap):
