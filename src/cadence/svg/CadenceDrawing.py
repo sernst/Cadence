@@ -78,7 +78,14 @@ class CadenceDrawing(object):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, fileName, siteMap, labelTracks =True, labelColor ='black'):
+    def __init__(
+            self,
+            fileName,
+            siteMap,
+            labelTracks =True,
+            labelColor ='black',
+            session =None,
+            showUncertainty =False):
         """ Creates a new instance of CadenceDrawing.  Calls to the public functions line(), rect(),
             and others result in objects being added to the SVG canvas, with the file written by the
             save() method to specified fileName.  The second argument, the siteMap is provided as an
@@ -124,7 +131,7 @@ class CadenceDrawing(object):
         self.groups = dict()
 
         if labelTracks:
-            self.labelTracks(color=labelColor)
+            self.labelTracks(color=labelColor, session=session, showUncertainty=showUncertainty)
 
 
 #===================================================================================================
@@ -264,7 +271,13 @@ class CadenceDrawing(object):
                 self.use('mark', [self.pxPerMm*x, self.pxPerMm*y], rotation=45, scene=False)
 
 #___________________________________________________________________________________________________ labelTracks
-    def labelTracks(self, color ='black', opacity =0.25, strokeWidth =0.5, session =None):
+    def labelTracks(
+            self,
+            color ='black',
+            opacity =0.25,
+            strokeWidth =0.5,
+            session =None,
+            showUncertainty =False):
         """ Finds all tracks for the current tracksite, then marks their centers and adds a text
             label for each track. """
 
@@ -289,13 +302,14 @@ class CadenceDrawing(object):
                 fill_opacity=opacity,
                 stroke='none')
 
-            self.circle(
-                pos, 100.0*min(track.width, track.length),
-                scene=True,
-                fill='none',
-                stroke_width=strokeWidth,
-                stroke=color,
-                stroke_opacity=opacity)
+            if showUncertainty:
+                self.circle(
+                    pos, 100.0*min(track.width, track.length),
+                    scene=True,
+                    fill='none',
+                    stroke_width=strokeWidth,
+                    stroke=color,
+                    stroke_opacity=opacity)
 
             trackway = "%s%s" % (track.trackwayType, track.trackwayNumber)
             label = "%s-%s" % (trackway, track.name)
