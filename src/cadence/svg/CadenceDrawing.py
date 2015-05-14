@@ -5,8 +5,6 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 from pyaid.file.FileUtils import FileUtils
 
-import sqlalchemy as sqla
-
 import svgwrite
 from svgwrite import mm
 
@@ -85,7 +83,8 @@ class CadenceDrawing(object):
             labelTracks =True,
             labelColor ='black',
             session =None,
-            showUncertainty =False):
+            showUncertainty =True,
+            showCenters =True):
         """ Creates a new instance of CadenceDrawing.  Calls to the public functions line(), rect(),
             and others result in objects being added to the SVG canvas, with the file written by the
             save() method to specified fileName.  The second argument, the siteMap is provided as an
@@ -131,7 +130,11 @@ class CadenceDrawing(object):
         self.groups = dict()
 
         if labelTracks:
-            self.labelTracks(color=labelColor, session=session, showUncertainty=showUncertainty)
+            self.labelTracks(
+                color=labelColor,
+                session=session,
+                showUncertainty=showUncertainty,
+                showCenters=showCenters)
 
 
 #===================================================================================================
@@ -277,7 +280,8 @@ class CadenceDrawing(object):
             opacity =0.25,
             strokeWidth =0.5,
             session =None,
-            showUncertainty =False):
+            showUncertainty =True,
+            showCenters =True):
         """ Finds all tracks for the current tracksite, then marks their centers and adds a text
             label for each track. """
 
@@ -295,12 +299,16 @@ class CadenceDrawing(object):
             # Use the position value to draw values rounded to uncertainty
             pos = track.positionValue.toMayaTuple()
 
-            self.circle(
-                pos, 2,
-                scene=True,
-                fill=color,
-                fill_opacity=opacity,
-                stroke='none')
+            if (pos[0] == 0 and pos[1] == 0):
+                continue
+
+            if showCenters:
+                self.circle(
+                    pos, 2,
+                    scene=True,
+                    fill=color,
+                    fill_opacity=opacity,
+                    stroke='none')
 
             if showUncertainty:
                 self.circle(
