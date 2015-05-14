@@ -181,13 +181,18 @@ class TracksTrackDefault(TracksDefault):
 #___________________________________________________________________________________________________ GS: trackwayFingerprint
     @property
     def trackwayFingerprint(self):
-        return '-'.join([
+        out = '-'.join([
             getattr(self, TrackPropEnum.SITE.name, ''),
             getattr(self, TrackPropEnum.LEVEL.name, ''),
             getattr(self, TrackPropEnum.YEAR.name, ''),
             getattr(self, TrackPropEnum.SECTOR.name, ''),
             getattr(self, TrackPropEnum.TRACKWAY_TYPE.name, ''),
             getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0') ])
+
+        if out == 'TCH-1000-2014-12-S-13BIS':
+            # Fix a naming ambiguity from the catalog
+            out = 'TCH-1000-2006-12-S-13'
+        return out
 
 #___________________________________________________________________________________________________ GS: snapshotData
     @property

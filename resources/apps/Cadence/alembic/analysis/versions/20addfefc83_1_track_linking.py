@@ -18,7 +18,13 @@ import sqlalchemy as sqla
 
 
 def upgrade():
-    op.add_column('tracks', sqla.Column('nextCurveTrack', sqla.Unicode, default=''))
+    try:
+        op.add_column('tracks', sqla.Column('nextCurveTrack', sqla.Unicode, default=u''))
+    except Exception:
+        pass
 
 def downgrade():
-    op.drop_column('tracks', 'nextCurveTrack')
+    try:
+        op.drop_column('tracks', 'nextCurveTrack')
+    except Exception:
+        pass

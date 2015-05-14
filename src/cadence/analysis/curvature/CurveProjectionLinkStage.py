@@ -79,6 +79,15 @@ class CurveProjectionLinkStage(AnalysisStage):
                 curveSeries = value
                 break
 
+        if curveSeries is None:
+            self.logger.write([
+                '[ERROR]: No curve series found',
+                'TRACKWAY: %s' % trackway.name,
+                'FIRST_CURVE_TRACK: %s' % analysisTrackway.curveSeries,
+                'BUNDLE STATUS: %s' % seriesBundle.echoStatus(),
+                'BUNDLE START UIDS: %s' % seriesBundle.echoStartUids()])
+            return
+
         # Draw the curve series
         self._drawCurveSeries(self._drawing, curveSeries)
 

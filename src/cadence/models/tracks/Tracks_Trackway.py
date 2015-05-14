@@ -163,10 +163,6 @@ class Tracks_Trackway(TracksDefault):
 
             name = prev.trackwayFingerprint
 
-            if name == 'TCH-1000-2014-12-S-13BIS':
-                # Fix a naming ambiguity from the catalog
-                name = 'TCH-1000-2006-12-S-13'
-
             if name not in trackways:
                 tw       = Tracks_Trackway()
                 tw.index = index

@@ -70,6 +70,18 @@ class TrackSeriesBundle(object):
             zFill(self.leftManus.count, 3) if self.leftManus.isReady else '---',
             zFill(self.rightManus.count, 3) if self.rightManus.isReady else '---')
 
+#___________________________________________________________________________________________________ echoStartUids
+    def echoStartUids(self):
+        """echoStarts doc..."""
+        if not self._leftPes:
+            return '(NOT-LOADED)'
+
+        return 'P:("%s" | "%s") M:("%s" | "%s")'  % (
+            self._leftPes.firstTrackUid if self._leftPes.firstTrackUid else '---',
+            self._rightPes.firstTrackUid if self._rightPes.firstTrackUid else '---',
+            self._leftManus.firstTrackUid if self._leftManus.firstTrackUid else '---',
+            self._rightManus.firstTrackUid if self._rightManus.firstTrackUid else '---')
+
 #___________________________________________________________________________________________________ asList
     def asList(self):
         return [self._leftPes, self._rightPes, self._leftManus, self._rightManus]

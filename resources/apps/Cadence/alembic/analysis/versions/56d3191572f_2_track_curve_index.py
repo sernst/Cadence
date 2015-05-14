@@ -18,8 +18,14 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('tracks', sa.Column('curveIndex', sa.Integer, default=-1))
+    try:
+        op.add_column('tracks', sa.Column('curveIndex', sa.Integer, default=-1))
+    except Exception:
+        pass
 
 
 def downgrade():
-    op.drop_column('tracks', 'curveIndex')
+    try:
+        op.drop_column('tracks', 'curveIndex')
+    except Exception:
+        pass
