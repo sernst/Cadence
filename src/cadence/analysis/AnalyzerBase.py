@@ -72,9 +72,12 @@ class AnalyzerBase(object):
         self._stages            = []
         self._sitemaps          = []
         self._trackways         = dict()
-        self._trackSeries       = dict()
+        self._seriesBundles       = dict()
         self._plotFigures       = dict()
         self._currentStage      = None
+        self._success           = False
+        self._errorMessage      = None
+        self._startTime         = None
 
         if not self._logger:
             self._logger = Logger(
@@ -92,6 +95,26 @@ class AnalyzerBase(object):
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: elapsedTime
+    @property
+    def elapsedTime(self):
+        if not self._startTime:
+            return 0
+        return TimeUtils.getElapsedTime(
+            startDateTime=self._startTime,
+            endDateTime=TimeUtils.getNowDatetime(),
+            toUnit=TimeUtils.MILLISECONDS)
+
+#___________________________________________________________________________________________________ GS: success
+    @property
+    def success(self):
+        return self._success
+
+#___________________________________________________________________________________________________ GS: errorMessage
+    @property
+    def errorMessage(self):
+        return self._errorMessage
 
 #___________________________________________________________________________________________________ GS: sitemapFilters
     @property
@@ -243,6 +266,8 @@ class AnalyzerBase(object):
         print(analysisStamp)
         print(tracksStamp)
 
+        self._startTime = TimeUtils.getNowDatetime()
+
         myRootPath = self.getPath(isDir=True)
         if os.path.exists(myRootPath):
             FileUtils.emptyFolder(myRootPath)
@@ -268,18 +293,27 @@ class AnalyzerBase(object):
 
             session.commit()
             session.close()
+            self._success = True
         except Exception as err:
             session = self.getAnalysisSession()
             session.close()
-            self.logger.writeError([
+            msg = [
                 '[ERROR]: Failed to execute analysis',
-                'STAGE: %s' % self._currentStage], err)
+                'STAGE: %s' % self._currentStage]
+            self._errorMessage = Logger.createErrorMessage(msg, err)
+            self.logger.writeError(msg, err)
 
         session = self.getTracksSession()
         session.close()
 
         self._cleanup()
         SystemUtils.remove(tempPath)
+
+        self.logger.write('\n\n[%s]: %s (%s)' % (
+            'SUCCESS' if self._success else 'FAILED',
+            self.__class__.__name__,
+            TimeUtils.toPrettyElapsedTime(self.elapsedTime)
+        ), indent=False)
 
 #___________________________________________________________________________________________________ createFigure
     def createFigure(self, key, subplotX =1, subPlotY =1, **kwargs):
@@ -413,17 +447,17 @@ class AnalyzerBase(object):
         self._trackways[sitemap.uid] = trackways
         return trackways
 
-#___________________________________________________________________________________________________ getTrackwaySeries
-    def getTrackwaySeries(self, trackway):
+#___________________________________________________________________________________________________ getSeriesBundle
+    def getSeriesBundle(self, trackway):
         """ Retrieves a list of TrackSeries instances for the specified trackway. These series are
             cached for data persistence and performance reasons. """
 
-        if trackway.uid in self._trackSeries:
-            return self._trackSeries[trackway.uid]
+        if trackway.uid in self._seriesBundles:
+            return self._seriesBundles[trackway.uid]
 
-        series = trackway.getTrackSeries()
-        self._trackSeries[trackway.uid] = series
-        return series
+        bundle = trackway.getTrackSeries()
+        self._seriesBundles[trackway.uid] = bundle
+        return bundle
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

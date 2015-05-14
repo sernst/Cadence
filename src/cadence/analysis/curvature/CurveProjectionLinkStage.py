@@ -65,15 +65,16 @@ class CurveProjectionLinkStage(AnalysisStage):
 #___________________________________________________________________________________________________ _analyzeTrackway
     def _analyzeTrackway(self, trackway, sitemap):
 
+        seriesBundle = self.owner.getSeriesBundle(trackway)
+
         analysisTrackway = trackway.getAnalysisPair(self.analysisSession)
         if not analysisTrackway or not analysisTrackway.curveSeries:
             # Ignore trackways that are too short to have a curve series
+            self.logger.write('SKIPPED[%s]: %s' % (trackway.name, seriesBundle.echoStatus()))
             return
 
-        trackwaySeries = self.owner.getTrackwaySeries(trackway)
-
         curveSeries = None
-        for key, value in DictUtils.iter(trackwaySeries):
+        for value in seriesBundle.asList():
             if value.firstTrackUid == analysisTrackway.curveSeries:
                 curveSeries = value
                 break
@@ -113,7 +114,7 @@ class CurveProjectionLinkStage(AnalysisStage):
             specified track. If the track argument is None the first track in the trackway will
             be returned. """
 
-        trackwaySeries = self.owner.getTrackwaySeries(trackway)
+        bundle = self.owner.getSeriesBundle(trackway)
         trackPosition = -1.0e8
         targetPosition = 1.0e8
         nextTrack = None
@@ -122,7 +123,7 @@ class CurveProjectionLinkStage(AnalysisStage):
             analysisTrack = track.getAnalysisPair(self.analysisSession)
             trackPosition = analysisTrack.curvePosition
 
-        for key, value in DictUtils.iter(trackwaySeries):
+        for value in bundle.asList():
             for t in value.tracks:
                 if track and t == track:
                     continue

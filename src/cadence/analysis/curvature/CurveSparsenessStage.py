@@ -52,9 +52,9 @@ class CurveSparsenessStage(AnalysisStage):
         manusSpacings   = []
         denseSeries     = None
         denseSpacing    = None
-        trackwaySeries  = self.owner.getTrackwaySeries(trackway)
+        bundle  = self.owner.getSeriesBundle(trackway)
 
-        for key, series in trackwaySeries.items():
+        for series in bundle.asList():
             # Iterate through each series in the trackway
 
             spacing = self._calculateAverageSpacing(series)

@@ -186,7 +186,7 @@ class TrackwayLoadStage(AnalysisStage):
             twIncomplete    = 0
             isReady         = True
 
-            for key, s in self.owner.getTrackwaySeries(tw).items():
+            for s in self.owner.getSeriesBundle(tw).asList():
                 isReady         = isReady and s.isReady
                 twCount        += s.count
                 twIncomplete   += len(s.incompleteTracks)

@@ -4,8 +4,6 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from collections import OrderedDict
-
 from pyaid.config.ConfigsDict import ConfigsDict
 from pyaid.debug.Logger import Logger
 from pyaid.radix.Base36 import Base36
@@ -101,20 +99,11 @@ class Tracks_Trackway(TracksDefault):
             trackway, even if one of the series has no tracks. The keys of the dictionary match
             the key value of the track series instance, i.e. TrackSeries.key. """
 
-        from cadence.analysis.TrackSeries import TrackSeries
+        from cadence.analysis.TrackSeriesBundle import TrackSeriesBundle
 
-        items = [
-            TrackSeries(self, firstTrackUid=self.firstLeftPes, left=True, pes=True),
-            TrackSeries(self, firstTrackUid=self.firstRightPes, pes=True, ),
-            TrackSeries(self, firstTrackUid=self.firstLeftManus, left=True),
-            TrackSeries(self, firstTrackUid=self.firstRightManus) ]
-
-        series = OrderedDict()
-        for item in items:
-            item.load()
-            series[item.key] = item
-
-        return series
+        bundle = TrackSeriesBundle(self)
+        bundle.load()
+        return bundle
 
 #___________________________________________________________________________________________________ getSitemap
     def getSitemap(self):

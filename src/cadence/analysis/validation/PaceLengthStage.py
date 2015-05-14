@@ -100,19 +100,19 @@ class PaceLengthStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackway(self, trackway, sitemap):
-        data = self.owner.getTrackwaySeries(trackway)
+        bundle = self.owner.getSeriesBundle(trackway)
 
-        for key, series in DictUtils.iter(data):
+        for series in bundle.asList():
             self._drawSeries(self._drawing, series)
 
-        l = data['leftManus']
-        r = data['rightManus']
+        l = bundle.leftManus
+        r = bundle.rightManus
         if l.count and l.isReady and r.count and r.isReady:
             self._analyzeSeriesPair(l, r)
             self._analyzeSeriesPair(r, l)
 
-        l = data['leftPes']
-        r = data['rightPes']
+        l = bundle.leftPes
+        r = bundle.rightPes
         if l.count and l.isReady and r.count and r.isReady:
             self._analyzeSeriesPair(l, r)
             self._analyzeSeriesPair(r, l)

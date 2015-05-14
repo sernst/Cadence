@@ -241,7 +241,7 @@ class AnalysisStage(object):
         if self._trackwayCallback and not self._trackwayCallback(self, trackway, sitemap):
             return
 
-        for key, series in self.owner.getTrackwaySeries(trackway).items():
+        for series in self.owner.getSeriesBundle(trackway).asList():
             if series.isReady:
                 self._analyzeTrackSeries(series, trackway, sitemap)
 

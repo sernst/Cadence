@@ -81,8 +81,8 @@ class CurveProjectionStage(AnalysisStage):
 
         # Fetch the curve series from the analysisTrackway.curveSeries value
         curveSeries = None
-        series = self.owner.getTrackwaySeries(trackway)
-        for key, value in DictUtils.iter(series):
+        bundle = self.owner.getSeriesBundle(trackway)
+        for value in bundle.asList():
             if value.firstTrackUid == analysisTrackway.curveSeries:
                 curveSeries = value
                 break

@@ -74,14 +74,6 @@ class LengthWidthStage(AnalysisStage):
         self.cache.set('noWidth', 0)
         self.cache.set('noLength', 0)
 
-#___________________________________________________________________________________________________ _analyzeSitemap
-    def _analyzeSitemap(self, sitemap):
-
-        print('in LengthWidthStage, siteMap = %s' % (sitemap.name + "_" + sitemap.level))
-
-        # do what needs to be done
-        super(LengthWidthStage, self)._analyzeSitemap(sitemap)
-
 #___________________________________________________________________________________________________ _analyzeTrack
     def _analyzeTrack(self, track, series, trackway, sitemap):
         """ Performs analysis on each track. A dictionary is created to be added to the entries
