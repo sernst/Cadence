@@ -138,15 +138,16 @@ class Tracks_Trackway(TracksDefault):
             newSession = True
             session = model.createSession()
 
-        result = session.query(trackModel).filter(trackModel.next == '').all()
+        # Get all tracks that have no next (end of a track series)
+        endTracks = session.query(trackModel).filter(trackModel.next == '').all()
 
         index     = 0
         trackways = dict()
+        tested    = []
 
-        # Iterate over every track in the database
-        tested = []
-        for track in result:
+        for track in endTracks:
             if track in tested or track.hidden:
+                # Skip tracks that have already been tested or are hidden
                 continue
 
             prev = track
@@ -160,23 +161,29 @@ class Tracks_Trackway(TracksDefault):
             if not prev:
                 continue
 
-            if prev.trackwayFingerprint not in trackways:
+            name = prev.trackwayFingerprint
+
+            if name == 'TCH-1000-2014-12-S-13BIS':
+                # Fix a naming ambiguity from the catalog
+                name = 'TCH-1000-2006-12-S-13'
+
+            if name not in trackways:
                 tw       = Tracks_Trackway()
                 tw.index = index
-                tw.name  = prev.trackwayFingerprint
+                tw.name  = name
 
-                siteMap = session.query(sitemapModel).filter(
+                sitemap = session.query(sitemapModel).filter(
                     sitemapModel.name == prev.site).filter(
                     sitemapModel.level == prev.level).first()
-                if not siteMap:
+                if not sitemap:
                     logger.write('[WARNING]: No site map found for name "%s" and level "%s"' % (
                         prev.site, prev.level))
                 else:
-                    tw.siteMapIndex = siteMap.index
+                    tw.siteMapIndex = sitemap.index
                 index += 1
                 trackways[tw.name] = tw
             else:
-                tw = trackways[prev.trackwayFingerprint]
+                tw = trackways[name]
 
             if prev.left and prev.pes:
                 existing = tw.firstLeftPes
