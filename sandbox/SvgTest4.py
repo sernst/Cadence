@@ -1,4 +1,4 @@
-# SvgTest.py
+# SvgTest4.py
 # (C)2012-2014
 # Kent A. Stevens and Scott Ernst
 # test of CadenceDrawing and Tracks_SiteMap
@@ -29,8 +29,8 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 
 model   = Tracks_SiteMap.MASTER
 session = model.createSession()
-siteMap = session.query(model).filter(model.index == 17).first()
-drawing = CadenceDrawing('CRO_510_index_17_test_rot.svg', siteMap)
+siteMap = session.query(model).filter(model.index == 2).first()
+drawing = CadenceDrawing('test.svg', siteMap)
 
 xFed   = siteMap.xFederal
 yFed   = siteMap.yFederal
@@ -50,34 +50,9 @@ print 'scaling to scene, siteMap.xFederal maps to %s' % drawing.scaleToScene(xFe
 print 'and this maps back to %s' % drawing.scaleToMap(drawing.scaleToScene(xFed))
 
 #==================================================================================================
-#  CREATE A GROUP CONTAINING A CIRCLE, SHOWING HOW TO 'USE' (INSTANCE) IT SCALED
 
-drawing.createGroup('pointer')
-drawing.line((0, 0), (0, -10), scene=False, groupId='pointer')
-
-drawing.createGroup('circ')
-drawing.circle((0, 0),
-               50,
-               scene=False,
-               groupId='circ',
-               fill='none',
-               stroke='blue',
-               stroke_width=2)
-
-drawing.use('rect', (0, 0), scene=True, fill='yellow', scale=1, scaleY=1)
-drawing.use('rect', (0, 0), scene=True, fill='red', scale=1, scaleY=1, rotation=45)
-#drawing.use('rect2', (0, 0), scene=True, fill='red', scale=1, scaleY=1)
-drawing.use('circ', (0, 0), scene=True, rotation=0, scale=2, scaleY=2, fill='none', stroke='blue')
-
-#drawing.use('rect',  (1000, -100), scene=True, fill='yellow', scale=1, scaleY=1, rotation=0.0)
-#drawing.use('rect2', (1000, -1000), scene=True, fill='yellow', scale=1, scaleY=1)
-#drawing.use('circ',  (1000, -1000), scene=True, rotation=0, scale=1, scaleY=1, fill='none', stroke='blue')
-
-#==================================================================================================
-
-drawing.grid(size=10, stroke='red')
-drawing.circle((0,0), 5, fill='none', stroke='red')
 drawing.federalCoordinates()
+drawing.grid(0.5)
 
 drawing.save(toPDF=True)
 session.close()

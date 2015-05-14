@@ -125,6 +125,7 @@ class Tracks_Trackway(TracksDefault):
 
         from cadence.models.tracks.Tracks_Track import Tracks_Track
         from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
+
         sitemapModel = Tracks_SiteMap.MASTER
         trackModel   = Tracks_Track.MASTER
         model        = cls.MASTER

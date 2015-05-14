@@ -5,6 +5,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 from pyaid.file.FileUtils import FileUtils
 
+import sqlalchemy as sqla
+
 import svgwrite
 from svgwrite import mm
 
@@ -76,7 +78,7 @@ class CadenceDrawing(object):
 #                                                                                       C L A S S
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, fileName, siteMap):
+    def __init__(self, fileName, siteMap, labelTracks =True, labelColor ='blue'):
         """ Creates a new instance of CadenceDrawing.  Calls to the public functions line(), rect(),
             and others result in objects being added to the SVG canvas, with the file written by the
             save() method to specified fileName.  The second argument, the siteMap is provided as an
@@ -89,8 +91,13 @@ class CadenceDrawing(object):
             print("CadenceDrawing: %s %s not completed " % (siteMap.name, siteMap.level))
             return
 
-        self.fileName = fileName
-        self.siteMap  = siteMap
+        self.fileName  = fileName
+        self.siteMap   = siteMap
+        self.siteName  = siteMap.name
+        self.siteLevel = siteMap.level
+
+        print("starting drawing, tracksite name = %s and level = %s" % (self.siteName, self.siteLevel))
+
 
         # Generally units can be specified in millimeters.  In a few cases, however, (e.g.,
         # PolyLine) the coordinates must be unqualified integers (as px).  The site maps, however
@@ -115,6 +122,9 @@ class CadenceDrawing(object):
         self._drawing.add(self._drawing.rect((left, top), (width, height), opacity='0'))
 
         self.groups = dict()
+
+        if labelTracks:
+            self.labelTracks(color=labelColor)
 
 
 #===================================================================================================
@@ -205,14 +215,19 @@ class CadenceDrawing(object):
             self._drawing.add(obj)
 
 #___________________________________________________________________________________________________ federalCoordinates
-    def federalCoordinates(self, deltaX =0, deltaZ =20, diskRadius =2):
-        """ Place the coordinates a text string at an offset from the fiducial marker. """
+    def federalCoordinates(self, deltaX =-4, deltaZ =-2.5, diskRadius =2):
+        """ Place the coordinates as a text string at the specified offset from the fiducial
+            marker. """
 
         if not self.siteMapReady:
             return
 
-        text = "(%s, %s)" % (self.siteMap.federalEast, self.siteMap.federalNorth)
-        self.text(text, (deltaX, deltaZ), scene=True, font_size="8")
+        text = "%s-%s (%s, %s)" % (
+            self.siteName,
+            self.siteLevel,
+            self.siteMap.federalEast,
+            self.siteMap.federalNorth)
+        self.text(text, (deltaX, deltaZ), scene=True, stroke_width=0.05, font_size="4")
 
         # place an unfilled green circle of specified radius atop the federal coordinate marker
         self.circle(
@@ -228,7 +243,8 @@ class CadenceDrawing(object):
         """ This is a group-based version of grid.  It creates a rectangular grid of marks.
             The grid marks on a site map are separated by 10 m in the real world, or 200 units
             in the map in their 'scaled mm' convention. Unfortunately, the group construct in
-            svgwrite requires px values, and will not allow the mm suffix. """
+            svgwrite requires px values, and will not allow the mm suffix. The default spacing is
+            1 m by 1 m (i.e., dx=20 and dy=20). """
 
         if not self.siteMapReady:
             return
@@ -246,6 +262,48 @@ class CadenceDrawing(object):
             for j in range(yn):
                 y = y0 + j*dy
                 self.use('mark', [self.pxPerMm*x, self.pxPerMm*y], rotation=45, scene=False)
+
+#___________________________________________________________________________________________________ labelTracks
+    def labelTracks(self, color ='blue', opacity =0.5, strokeWidth =0.05):
+        """ Finds all tracks for the current tracksite, then marks their centers and adds a text
+            label for each track. """
+
+        from cadence.models.tracks.Tracks_Track import Tracks_Track
+
+        model   = Tracks_Track.MASTER
+        session = model.createSession()
+        query   = session.query(model)
+        query   = query.filter(model.site == self.siteName)
+        result  = query.filter(model.level == self.siteLevel).all()
+
+        # for each track in this tracksite-level, mark its center and label it (e.g., 'S18 LP3')
+        for track in result:
+
+            self.circle(
+                (track.x, track.z),
+                2,
+                scene=True,
+                fill=color,
+                fill_opacity=opacity,
+                stroke_width=strokeWidth,
+                stroke=color,
+                stroke_opacity=opacity)
+
+            trackway = "%s%s" % (track.trackwayType, track.trackwayNumber)
+            label = "%s-%s" % (trackway, track.name)
+            self.text(
+                label,
+                (track.x - 4, track.z - 2.5),
+                scene=True,
+                font_size='4',
+                fill=color,
+                stroke_width=strokeWidth,
+                stroke=color,
+                stroke_opacity=opacity)
+
+        # all done
+        session.commit()
+        session.close()
 
 #___________________________________________________________________________________________________ line
     def line(self, p1, p2, scene =True, groupId =None, **extra):
@@ -293,6 +351,8 @@ class CadenceDrawing(object):
 
         self.line([-r, 0], [r, 0], scene=scene, groupId=groupId, **extra)
         self.line([0, -r], [0, r], scene=scene, groupId=groupId, **extra)
+
+
 
 #___________________________________________________________________________________________________ mm
     def mm(self, p):

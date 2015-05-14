@@ -248,7 +248,7 @@ class RotationStage(AnalysisStage):
         for entry in entries:
             track = entry['track']
             if track.uid not in self.deviations:
-                # Skips tracks with no deviation value (solo tracks)
+                # Skip those tracks with no deviation value (solo tracks)
                 continue
 
             diffDeg = self.deviations[track.uid]
