@@ -127,6 +127,7 @@ class CurveProjectionLinkStage(AnalysisStage):
         trackPosition = -1.0e8
         targetPosition = 1.0e8
         nextTrack = None
+        analysisTrack = None
 
         if track:
             analysisTrack = track.getAnalysisPair(self.analysisSession)
@@ -142,11 +143,28 @@ class CurveProjectionLinkStage(AnalysisStage):
                     continue
 
                 if NumericUtils.equivalent(at.curvePosition, targetPosition):
-                    self.logger.write([
+                    log = [
                         '[ERROR]: Found multiple tracks at the same curve location',
-                        'LOCATION: %s' % NumericUtils.roundToSigFigs(at.curvePosition, 4),
-                        'TRACK: %s [%s]' % (track.fingerprint, track.uid),
-                        'NEXT: %s [%s]' % (t.fingerprint, t.uid) ])
+                        'TARGET: %s' % NumericUtils.roundToSigFigs(targetPosition, 5),
+                        'TEST: %s [%s]' % (t.fingerprint, t.uid),
+                        'LOCATION[TEST]: %s (%s)' % (
+                            NumericUtils.roundToSigFigs(at.curvePosition, 5),
+                            NumericUtils.roundToSigFigs(at.segmentPosition, 5) )]
+
+                    if nextTrack:
+                        nat = nextTrack.getAnalysisPair(self.analysisSession)
+                        log.append('COMPARE: %s [%s]' % (nextTrack.fingerprint, nextTrack.uid) )
+                        log.append('LOCATION[COMP]: %s (%s)' % (
+                            NumericUtils.roundToSigFigs(nat.curvePosition, 5),
+                            NumericUtils.roundToSigFigs(nat.segmentPosition, 5) ))
+
+                    if track:
+                        log.append('TRACK: %s [%s]' % (track.fingerprint, track.uid))
+                        log.append('LOCATION[TRACK]: %s (%s)' % (
+                            NumericUtils.roundToSigFigs(analysisTrack.curvePosition, 5),
+                            NumericUtils.roundToSigFigs(analysisTrack.segmentPosition, 5) ))
+
+                    self.logger.write(log)
                     raise ValueError, 'Found multiple tracks at the same curve location'
 
                 if at.curvePosition < targetPosition:

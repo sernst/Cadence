@@ -194,6 +194,16 @@ class TracksTrackDefault(TracksDefault):
             out = 'TCH-1000-2006-12-S-13'
         return out
 
+#___________________________________________________________________________________________________ GS: sitemapLabel
+    @property
+    def sitemapDisplayLabel(self):
+        """ Returns the display label used for annotating tracks on sitemap drawings
+            (CadenceDrawing files) """
+        return '%s%s-%s' % (
+            getattr(self, TrackPropEnum.TRACKWAY_TYPE.name, ''),
+            getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0'),
+            self.name)
+
 #___________________________________________________________________________________________________ GS: snapshotData
     @property
     def snapshotData(self):

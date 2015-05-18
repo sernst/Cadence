@@ -22,10 +22,14 @@ class TrackSeriesBundle(object):
         self._trackway = trackway
 
         tw = trackway
-        self._leftPes = TrackSeries(tw, firstTrackUid=tw.firstLeftPes, left=True, pes=True)
-        self._rightPes = TrackSeries(tw, firstTrackUid=tw.firstRightPes, pes=True, )
-        self._leftManus = TrackSeries(tw, firstTrackUid=tw.firstLeftManus, left=True)
-        self._rightManus = TrackSeries(tw, firstTrackUid=tw.firstRightManus)
+        self._leftPes = TrackSeries(
+            tw, bundle=self, firstTrackUid=tw.firstLeftPes, left=True, pes=True)
+        self._rightPes = TrackSeries(
+            tw, bundle=self, firstTrackUid=tw.firstRightPes, pes=True, )
+        self._leftManus = TrackSeries(
+            tw, bundle=self, firstTrackUid=tw.firstLeftManus, left=True)
+        self._rightManus = TrackSeries(
+            tw, bundle=self, firstTrackUid=tw.firstRightManus)
 
 #===================================================================================================
 #                                                                                   G E T / S E T

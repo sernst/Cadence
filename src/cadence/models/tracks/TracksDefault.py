@@ -3,6 +3,7 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+from pyaid.config.ConfigsDict import ConfigsDict
 
 import sqlalchemy as sqla
 
@@ -35,6 +36,15 @@ class TracksDefault(PyGlassModelsDefault):
     def analysisPair(self):
         return self.fetchTransient(self._ANALYSIS_PAIR_KEY)
 
+#___________________________________________________________________________________________________ GS: cache
+    @property
+    def cache(self):
+        """ Caching object used during analysis to store transient data related to this track. """
+        out = self.fetchTransient('cache')
+        if not out:
+            out = ConfigsDict()
+            self.putTransient('cache', out)
+        return out
 
 #===================================================================================================
 #                                                                                     P U B L I C

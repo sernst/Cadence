@@ -4,6 +4,8 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import functools
+
 import numpy as np
 from pyaid.list.ListUtils import ListUtils
 from pyaid.number.NumericUtils import NumericUtils
@@ -42,7 +44,6 @@ class PaceLengthStage(AnalysisStage):
         self._paths     = []
         self._csv       = None
         self._errorCsv  = None
-        self._drawing   = None
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -83,27 +84,25 @@ class PaceLengthStage(AnalysisStage):
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
 
-        self._drawing = CadenceDrawing(
+        drawing = CadenceDrawing(
             self.getPath(
                 self.MAPS_FOLDER_NAME,
                 '%s-%s-PACE.svg' % (sitemap.name, sitemap.level),
                 isFile=True),
             sitemap)
 
-        self._drawing.grid()
-        self._drawing.federalCoordinates()
+        drawing.grid()
+        drawing.federalCoordinates()
+        sitemap.cache.set('drawing', drawing)
 
         super(PaceLengthStage, self)._analyzeSitemap(sitemap)
-
-        self._drawing.save()
-        self._drawing = None
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackway(self, trackway, sitemap):
         bundle = self.owner.getSeriesBundle(trackway)
 
         for series in bundle.asList():
-            self._drawSeries(self._drawing, series)
+            self._drawSeries(sitemap, series)
 
         tests = [
             (bundle.leftPes, bundle.rightPes),
@@ -115,18 +114,19 @@ class PaceLengthStage(AnalysisStage):
             l = entry[0]
             r = entry[1]
             if l.count and l.isReady and r.count and r.isReady:
-                self._analyzeSeriesPair(l, r)
-                self._analyzeSeriesPair(r, l)
+                self._analyzeSeriesPair(sitemap, l, r)
+                self._analyzeSeriesPair(sitemap, r, l)
                 continue
 
             for t in l.tracks + r.tracks:
                 # Check all tracks in skipped series for pace measurements and log any tracks
                 # with such measurements as errors
                 if t.snapshotData.get(SnapshotDataEnum.PACE) is not None:
-                    self._logUnresolvableTrack(t, 'Pace field measurement exists invalid series')
+                    self._logUnresolvableTrack(
+                        t, sitemap, 'Pace field measurement exists invalid series')
 
 #___________________________________________________________________________________________________ _logUnresolvableTrack
-    def _logUnresolvableTrack(self, track, message):
+    def _logUnresolvableTrack(self, track, sitemap, message):
         """_logUnresolvableTrack doc..."""
         measured = NumericUtils.toValueUncertainty(
             track.snapshotData.get(SnapshotDataEnum.PACE), 0.06)
@@ -142,12 +142,12 @@ class PaceLengthStage(AnalysisStage):
             'fingerprint':track.fingerprint,
             'measured':measured.label })
 
-        self._drawing.circle(
+        sitemap.cache.get('drawing').circle(
             track.positionValue.toMayaTuple(), 10,
             stroke='none', fill='red', fill_opacity=0.5)
 
 #___________________________________________________________________________________________________ _analyzeSeriesPair
-    def _analyzeSeriesPair(self, series, pairSeries):
+    def _analyzeSeriesPair(self, sitemap, series, pairSeries):
         """_analyzeSeriesPair doc..."""
 
         for index in ListUtils.range(series.count):
@@ -162,7 +162,7 @@ class PaceLengthStage(AnalysisStage):
 
             pairTrack = self._getPairedTrack(track, series, pairSeries)
             if pairTrack is None:
-                self._logUnresolvableTrack(track, 'Unable to determine pairSeries track')
+                self._logUnresolvableTrack(track, sitemap, 'Unable to determine pairSeries track')
                 continue
 
             position = track.positionValue
@@ -170,7 +170,8 @@ class PaceLengthStage(AnalysisStage):
             paceLine = LineSegment2D(position, pairPosition)
 
             if not paceLine.isValid:
-                self._logUnresolvableTrack(track, 'Invalid track separation of 0.0. Ignoring track')
+                self._logUnresolvableTrack(
+                    track, sitemap, 'Invalid track separation of 0.0. Ignoring track')
                 continue
 
             entered    = paceLine.length
@@ -191,15 +192,16 @@ class PaceLengthStage(AnalysisStage):
                 fractional=fractional,
                     # Sigma trackDeviations between
                 deviation=deviation,
-                pairTrack=pairTrack)
+                pairTrack=pairTrack,
+                drawFunc=functools.partial(self._drawPaceLine, sitemap, paceLine))
 
             self.entries.append(entry)
-            self._drawPaceLine(self._drawing, paceLine, series.pes)
+            # self._drawPaceLine(sitemap, paceLine, )
             track.cache.set('paceData', entry)
 
 #___________________________________________________________________________________________________ _drawSeries
     @classmethod
-    def _drawSeries(cls, drawing, series):
+    def _drawSeries(cls, sitemap, series):
         """_drawSeries doc..."""
 
         if series.count == 0:
@@ -209,6 +211,8 @@ class PaceLengthStage(AnalysisStage):
             color = '#0033FF'
         else:
             color = '#00CC00'
+
+        drawing = sitemap.cache.get('drawing')
 
         for track in series.tracks[:-1]:
             nextTrack = series.tracks[series.tracks.index(track) + 1]
@@ -231,18 +235,20 @@ class PaceLengthStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _drawPaceLine
     @classmethod
-    def _drawPaceLine(cls, drawing, line, isPes):
+    def _drawPaceLine(cls, sitemap, line, color):
         """_drawPaceLine doc..."""
+
+        drawing = sitemap.cache.get('drawing')
 
         drawing.line(
             line.start.toMayaTuple(), line.end.toMayaTuple(),
-            stroke='black' if isPes else '#666666', stroke_width=1, stroke_opacity='1.0')
+            stroke=color, stroke_width=1, stroke_opacity='1.0')
 
         drawing.circle(
-            line.end.toMayaTuple(), 3, stroke='none', fill='black', fill_opacity='0.25')
+            line.end.toMayaTuple(), 3, stroke='none', fill=color, fill_opacity='0.25')
 
         drawing.circle(
-            line.start.toMayaTuple(), 3, stroke='none', fill='black', fill_opacity='0.25')
+            line.start.toMayaTuple(), 3, stroke='none', fill=color, fill_opacity='0.25')
 
 #___________________________________________________________________________________________________ _getPairedTrack
     def _getPairedTrack(self, track, trackSeries, pairSeries):
@@ -318,7 +324,10 @@ class PaceLengthStage(AnalysisStage):
             entry['meanDeviation'] = sigmaCount
             entry['highMeanDeviation'] = False
 
-            if sigmaCount >= 2.0:
+            if sigmaCount < 2.0:
+                entry['drawFunc']('black' if abs(entry['deviation']) < 2.0 else '#FFAAAA')
+            else:
+                entry['drawFunc']('red')
                 entry['highMeanDeviation'] = True
                 highDeviationCount += 1
                 track = entry['track']
@@ -341,6 +350,14 @@ class PaceLengthStage(AnalysisStage):
                     'delta':delta,
                     'pairedUid':pairedUid,
                     'pairedFingerprint':pairedFingerprint})
+
+        for sitemap in self.owner.getSitemaps():
+            # Remove the drawing from the sitemap cache and save the drawing file
+            try:
+                sitemap.cache.extract('drawing').save()
+            except Exception:
+                self.logger.write('[WARNING]: No sitemap saved for %s-%s' % (
+                    sitemap.name, sitemap.level))
 
         if not self._csv.save():
             self.logger.write('[ERROR]: Failed to save CSV file %s' % self._csv.path)

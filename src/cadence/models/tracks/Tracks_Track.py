@@ -31,16 +31,6 @@ class Tracks_Track(TracksTrackDefault):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: cache
-    @property
-    def cache(self):
-        """ Caching object used during analysis to store transient data related to this track. """
-        out = self.fetchTransient('cache')
-        if not out:
-            out = ConfigsDict()
-            self.putTransient('cache', out)
-        return out
-
 #___________________________________________________________________________________________________ GS: nodeName
     @property
     def nodeName(self):

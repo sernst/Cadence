@@ -20,6 +20,7 @@ class TrackSeries(object):
         """Creates a new instance of TrackSeries."""
         self.analysisHierarchy = []
 
+        self._bundle        = kwargs.get('bundle')
         self._left          = kwargs.get('left')
         self._pes           = kwargs.get('pes')
         self._trackway      = trackway
@@ -31,6 +32,11 @@ class TrackSeries(object):
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: bundle
+    @property
+    def bundle(self):
+        return self._bundle
 
 #___________________________________________________________________________________________________ GS: firstTrackUid
     @property

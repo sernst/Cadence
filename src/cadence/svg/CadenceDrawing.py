@@ -321,10 +321,8 @@ class CadenceDrawing(object):
                     stroke=color,
                     stroke_opacity=opacity)
 
-            trackway = "%s%s" % (track.trackwayType, track.trackwayNumber)
-            label = "%s-%s" % (trackway, track.name)
             self.text(
-                label, (pos[0] - 4, pos[1] - 2.5),
+                track.sitemapDisplayLabel, (pos[0] - 4, pos[1] - 2.5),
                 scene=True,
                 font_size='4',
                 fill=color,

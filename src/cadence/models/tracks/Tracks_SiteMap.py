@@ -81,16 +81,6 @@ class Tracks_SiteMap(TracksDefault):
     def uid(self):
         return Base36.to36(self.index)
 
-#___________________________________________________________________________________________________ GS: cache
-    @property
-    def cache(self):
-        """ Caching object used during analysis to store transient data related to this sitemap """
-        out = self.fetchTransient('cache')
-        if not out:
-            out = ConfigsDict()
-            self.putTransient('cache', out)
-        return out
-
 #===================================================================================================
 #                                                                                     P U B L I C
 

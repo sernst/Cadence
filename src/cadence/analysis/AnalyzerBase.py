@@ -423,16 +423,23 @@ class AnalyzerBase(object):
         session = self.getTracksSession()
         query   = session.query(model)
 
-        # If filters exist for sitemaps then create a collection of OR clauses to only load
-        # sitemaps that match the filter list.
         orFilters = []
         for sf in self.sitemapFilters:
-            sf = sf.split('.')[0]
-            orFilters.append(model.name.like('%s%%' % sf.upper()))
+            # If filters exist for sitemaps then create a collection of OR clauses to only load
+            # sitemaps that match the filter list.
+            sf = sf.split('-')
+            filterArg = model.name.like('%s%%' % sf[0].upper())
+            if len(sf) > 1:
+                filterArg = sqla.and_(filterArg, model.level == sf[1])
+            orFilters.append(filterArg)
+
         if orFilters:
             query = query.filter(sqla.or_(*orFilters))
 
-        self._sitemaps = query.all()
+        self._sitemaps = []
+        for sitemap in query.all():
+            if sitemap.isReady:
+                self._sitemaps.append(sitemap)
         return self._sitemaps
 
 #___________________________________________________________________________________________________ getTrackways

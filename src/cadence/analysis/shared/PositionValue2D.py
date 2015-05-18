@@ -52,6 +52,23 @@ class PositionValue2D(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ update
+    def update(self, x =None, y =None, xUnc =None, yUnc =None):
+        """update doc..."""
+        if x is not None:
+            self.x = x
+        if y is not None:
+            self.y = y
+        if xUnc is not None:
+            self.xUnc = xUnc
+        if yUnc is not None:
+            self.yUnc = yUnc
+
+#___________________________________________________________________________________________________ copyFrom
+    def copyFrom(self, value):
+        """copyFrom doc..."""
+        self.update(x=value.x, y=value.y, xUnc=value.xUnc, yUnc=value.yUnc)
+
 #___________________________________________________________________________________________________ clone
     def clone(self):
         """clone doc..."""
