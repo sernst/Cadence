@@ -21,7 +21,7 @@ class DirectionStage(AnalysisStage):
         """Creates a new instance of DirectionStage."""
         super(DirectionStage, self).__init__(
             key, owner,
-            label='Track Direction',
+            label='Trackway Direction',
             **kwargs)
         self._paths  = []
 
@@ -78,9 +78,6 @@ class DirectionStage(AnalysisStage):
 
         if len(series.tracks) < 2:
             return
-
-        absoluteAxis = Vector2D(1, 0)
-        absoluteAxis.normalize()
 
         angles = self.cache.get('currentTrackway')
         for track in series.tracks:

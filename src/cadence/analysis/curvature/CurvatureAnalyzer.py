@@ -26,7 +26,7 @@ class CurvatureAnalyzer(AnalyzerBase):
         self.addStage(CurveSparsenessStage('sparseness', self))
         self.addStage(CurveProjectionStage('projection', self))
         self.addStage(CurveProjectionLinkStage('projection-linking', self))
-        # self.addStage(DirectionStage('direction', self))
+        #self.addStage(DirectionStage('direction', self))
 
 ####################################################################################################
 ####################################################################################################
