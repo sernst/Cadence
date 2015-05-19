@@ -147,6 +147,11 @@ class PositionValue2D(object):
         self.y = value.value
         self.yUnc = value.uncertainty
 
+#___________________________________________________________________________________________________ toDict
+    def toDict(self):
+        """toDict doc..."""
+        return dict(x=self.x, y=self.y, xUnc=self.xUnc, yUnc=self.yUnc)
+
 #___________________________________________________________________________________________________ toTuple
     def toTuple(self):
         """toList doc..."""

@@ -107,10 +107,11 @@ class CurveProjectionStage(AnalysisStage):
     def _postAnalyze(self):
         """_postAnalyze doc..."""
 
-        values = []
+        ratios = []
 
         for name, curve in DictUtils.iter(self.data):
             segments = curve.segments
+
             for i in ListUtils.rangeOn(segments):
                 segment = segments[i]
                 segmentLine = segment.line
@@ -124,16 +125,14 @@ class CurveProjectionStage(AnalysisStage):
 
                 for pairData in segment.pairs:
                     projectionLine = pairData['line']
-                    values.append(100.0*projectionLine.length.raw/segmentLine.length.raw)
+                    ratios.append(100.0*projectionLine.length.raw/segmentLine.length.raw)
 
-        path        = self.getTempFilePath(extension='pdf')
-        h           = Histogram(data=values)
-        h.binCount  = 50
-        h.xLabel    = 'Projection/Stride Ratio (%)'
-        h.title     = 'Relative Stride to Projection Length Ratios'
-
+        h = Histogram(
+            data=ratios,
+            binCount=50,
+            xLabel='Projection/Stride Ratio (%)',
+            title='Relative Stride to Projection Length Ratios')
         h.shaveDataToXLimits()
-        h.save(path=path)
-        self._paths.append(path)
+        self._paths.append(h.save(path=self.getTempFilePath(extension='pdf')))
 
         self.mergePdfs(self._paths, 'Curve-Projection.pdf')

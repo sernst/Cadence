@@ -3,14 +3,15 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-from pyaid.number.NumericUtils import NumericUtils
 
-from cadence.analysis.AnalysisStage import AnalysisStage
+from cadence.analysis.CurveOrderedAnalysisStage import CurveOrderedAnalysisStage
 from cadence.analysis.StrideLine import StrideLine
-from cadence.util.math2D.Vector2D import Vector2D
+
+from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
 
 #*************************************************************************************************** DirectionStage
-class DirectionStage(AnalysisStage):
+class DirectionStage(CurveOrderedAnalysisStage):
     """A class for..."""
 
 #===================================================================================================
@@ -21,7 +22,7 @@ class DirectionStage(AnalysisStage):
         """Creates a new instance of DirectionStage."""
         super(DirectionStage, self).__init__(
             key, owner,
-            label='Trackway Direction',
+            label='Trackway Angles',
             **kwargs)
         self._paths  = []
 
@@ -40,52 +41,38 @@ class DirectionStage(AnalysisStage):
     def _preAnalyze(self):
         self.cache.set('trackwaysData', {})
 
-#___________________________________________________________________________________________________ _analyzeSitemap
-    def _analyzeSitemap(self, sitemap):
-        entries = []
-        self.cache.set('sitemapData', entries)
-        super(DirectionStage, self)._analyzeSitemap(sitemap)
-
-        if not entries:
-            return
-
-        average = NumericUtils.weightedAverage(*entries)
-        print('>>> SITEMAP[%s]: %s' % (sitemap.name, average.label))
-
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackway(self, trackway, sitemap):
-        self.cache.set('currentTrackway', [])
+        self.trackwaysData[trackway.uid] = []
         super(DirectionStage, self)._analyzeTrackway(trackway, sitemap)
 
-        angles = self.cache.extract('currentTrackway', [])
-        if not angles:
-            return
+        data = [item['point'] for item in self.trackwaysData[trackway.uid]]
 
-        self.trackwaysData[trackway.uid] = {
-            'trackway':trackway,
-            'angles':angles }
+        plot = ScatterPlot(
+            data=data,
+            title='%s Trackway Angles' % trackway.name,
+            yLabel='Angle (Degrees)',
+            xLabel='Trackway Curve Position (m)')
+        plot.shaveDataToXLimits()
+        self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
 
-        direction = NumericUtils.getMeanAndDeviation(angles)
-        if direction.uncertainty == 0:
-            direction = NumericUtils.toValueUncertainty(direction.value, 180.0)
-        self.logger.write('%s: %s' % (trackway.name,  direction.label))
-
-        self.cache.get('sitemapData').append(direction)
-
-#___________________________________________________________________________________________________ _analyzeTrackSeries
-    def _analyzeTrackSeries(self, series, trackway, sitemap):
-        """_analyzeTrackSeries doc..."""
+#___________________________________________________________________________________________________ _analyzeTrack
+    def _analyzeTrack(self, track, series, trackway, sitemap):
 
         if len(series.tracks) < 2:
             return
 
-        angles = self.cache.get('currentTrackway')
-        for track in series.tracks:
-            strideLine = StrideLine(track, series)
-            angles.append(strideLine.angle.degrees)
+        analysisTrack = track.getAnalysisPair(self.analysisSession)
+        strideLine = StrideLine(track, series)
+        self.trackwaysData[trackway.uid].append({
+            'track':track,
+            'point':PositionValue2D(
+                x=analysisTrack.curvePosition,
+                y=strideLine.angle.degrees),
+            'angle':strideLine.angle.degrees})
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
         """_postAnalyze doc..."""
-        pass
+        self.mergePdfs(self._paths, 'Trackway-Angles')
 

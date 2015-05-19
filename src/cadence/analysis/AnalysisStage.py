@@ -38,14 +38,6 @@ class AnalysisStage(object):
         self._label = label if label else self.__class__.__name__
         self._startTime = None
 
-        self._analyzeCallback   = kwargs.get('analyze')
-        self._preStageCallback  = kwargs.get('pre')
-        self._postStageCallback = kwargs.get('post')
-        self._sitemapCallback   = kwargs.get('sitemap')
-        self._seriesCallback    = kwargs.get('series')
-        self._trackwayCallback  = kwargs.get('trackway')
-        self._trackCallback     = kwargs.get('track')
-
 #===================================================================================================
 #                                                                                   G E T / S E T
 
@@ -174,7 +166,9 @@ class AnalysisStage(object):
 
         if not fileName:
             fileName = '%s-Report.pdf' % self.__class__.__name__
-        merger.write(file(self.getPath(fileName), 'wb'))
+        if not fileName.endswith('.pdf'):
+            fileName += '.pdf'
+        merger.write(file(self.getPath(fileName, isFile=True), 'wb'))
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -200,8 +194,7 @@ class AnalysisStage(object):
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
         """ A hook method called just before starting the analysis process. """
-        if self._preStageCallback:
-            self._preStageCallback(self)
+        pass
 
 #___________________________________________________________________________________________________ _analyze
     def _analyze(self):
@@ -209,10 +202,9 @@ class AnalysisStage(object):
             this method will iterate through the sitemaps in the database and call the
             _analyzeSitemap() method on each one. """
 
-        if not self._analyzeCallback or self._analyzeCallback(self):
-            for sitemap in self.owner.getSitemaps():
-                if sitemap.isReady:
-                    self._analyzeSitemap(sitemap)
+        for sitemap in self.owner.getSitemaps():
+            if sitemap.isReady:
+                self._analyzeSitemap(sitemap)
 
 #___________________________________________________________________________________________________ _analyzeSitemap
     def _analyzeSitemap(self, sitemap):
@@ -221,9 +213,6 @@ class AnalysisStage(object):
 
             sitemap :: Tracks_SiteMap
                 The sitemap model instance to analyze. """
-
-        if self._sitemapCallback and not self._sitemapCallback(self, sitemap):
-            return
 
         for tw in self.owner.getTrackways(sitemap):
             self._analyzeTrackway(tw, sitemap)
@@ -238,9 +227,6 @@ class AnalysisStage(object):
 
             sitemap :: Tracks_SiteMap
                 The sitemap in which this trackway resides. """
-
-        if self._trackwayCallback and not self._trackwayCallback(self, trackway, sitemap):
-            return
 
         for series in self.owner.getSeriesBundle(trackway).asList():
             if series.isReady:
@@ -259,9 +245,6 @@ class AnalysisStage(object):
 
             sitemap :: Tracks_Sitemap
                 The sitemap in which the track series resides. """
-
-        if self._seriesCallback and not self._seriesCallback(self, series, trackway, sitemap):
-            return
 
         for t in series.tracks:
             self._analyzeTrack(t, series, trackway, sitemap)
@@ -283,15 +266,12 @@ class AnalysisStage(object):
 
             sitemap :: Tracks_Sitemap
                 The sitemap in which the track resides. """
-
-        if self._trackCallback:
-            self._trackCallback(self, track, series, trackway, sitemap)
+        pass
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
         """ A hook method called when the analysis process completes. """
-        if self._postStageCallback:
-            self._postStageCallback(self)
+        pass
 
 #___________________________________________________________________________________________________ _writeFooter
     def _writeFooter(self):
