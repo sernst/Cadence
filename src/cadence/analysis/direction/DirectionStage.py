@@ -1,13 +1,17 @@
 # DirectionStage.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+from pyaid.dict.DictUtils import DictUtils
+from pyaid.list.ListUtils import ListUtils
 
 from cadence.analysis.CurveOrderedAnalysisStage import CurveOrderedAnalysisStage
 from cadence.analysis.StrideLine import StrideLine
 
 from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from cadence.analysis.shared.plotting.Histogram import Histogram
+from cadence.analysis.shared.plotting.MultiScatterPlot import MultiScatterPlot
 from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
 
 #*************************************************************************************************** DirectionStage
@@ -43,17 +47,33 @@ class DirectionStage(CurveOrderedAnalysisStage):
 
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackway(self, trackway, sitemap):
-        self.trackwaysData[trackway.uid] = []
+        entries = []
+        data = {'entries':entries}
+
+        self.trackwaysData[trackway.uid] = data
         super(DirectionStage, self)._analyzeTrackway(trackway, sitemap)
 
-        data = [item['point'] for item in self.trackwaysData[trackway.uid]]
+        if len(entries) < 2:
+            del self.trackwaysData[trackway.uid]
+            return
 
+        d = [item['deviation'] for item in entries]
+        data['globalDeviation'] = d[-1]
+        data['maxDeviation'] = max(*d)
+
+        color = 'blue'
+        if data['globalDeviation'] >= 1.0:
+            color = 'red'
+        elif data['maxDeviation'] >= 1.0:
+            color ='green'
+
+        d = [item['point'] for item in entries]
         plot = ScatterPlot(
-            data=data,
+            data=d,
+            color=color,
             title='%s Trackway Angles' % trackway.name,
             yLabel='Angle (Degrees)',
             xLabel='Trackway Curve Position (m)')
-        plot.shaveDataToXLimits()
         self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
 
 #___________________________________________________________________________________________________ _analyzeTrack
@@ -64,15 +84,72 @@ class DirectionStage(CurveOrderedAnalysisStage):
 
         analysisTrack = track.getAnalysisPair(self.analysisSession)
         strideLine = StrideLine(track, series)
-        self.trackwaysData[trackway.uid].append({
+        data = self.trackwaysData[trackway.uid]['entries']
+
+        angle = strideLine.line.angle
+        deviation = 0.0
+
+        if len(data) > 0:
+            referenceAngle = data[0]['angle']
+            denom = abs(referenceAngle.uncertainty) + abs(angle.uncertainty)
+            deviation = abs(angle.radians - referenceAngle.radians)/denom
+
+        data.append({
             'track':track,
+            'deviation':deviation,
             'point':PositionValue2D(
                 x=analysisTrack.curvePosition,
-                y=strideLine.angle.degrees),
-            'angle':strideLine.angle.degrees})
+                y=strideLine.angle.degrees,
+                yUnc=angle.uncertaintyDegrees),
+            'angle':angle})
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
         """_postAnalyze doc..."""
+
+        self._processCurveDeviations('maxDeviation', 'Meandering')
+        self._processCurveDeviations('globalDeviation', 'Globally Curved')
+
         self.mergePdfs(self._paths, 'Trackway-Angles')
 
+#___________________________________________________________________________________________________ _processCurveDeviations
+    def _processCurveDeviations(self, key, label):
+        """_processCurveDeviations doc..."""
+
+        d = [data[key] for k, data in DictUtils.iter(self.trackwaysData)]
+        dCurved = []
+        dStraight = []
+        for item in d:
+            if item[-1] < 1.0:
+                dStraight.append(item)
+            else:
+                dCurved.append(min(10.0, item))
+
+        plot = Histogram(
+            data=dCurved,
+            title='%s Trackway Deviations' % label,
+            xLabel='Trackway Index')
+        self._paths.insert(0, plot.save(self.getTempFilePath(extension='pdf')))
+
+        d = [(index, d[index]) for index in ListUtils.rangeOn(d)]
+        dCurved = []
+        dStraight = []
+        for item in d:
+            if item[-1] < 1.0:
+                dStraight.append(item)
+            else:
+                dCurved.append(min(10.0, item))
+
+        self.logger.write('%s Trackways: %s/%s (%s%%)' % (
+            label,
+            len(dCurved),
+            len(dCurved) + len(dStraight),
+            100.0*len(dCurved)/(len(dCurved) + len(dStraight)) ))
+
+        plot = MultiScatterPlot(
+            {'data':dStraight, 'color':'blue'},
+            {'data':dCurved, 'color':'red'},
+            title='%s Trackway Deviations' % label,
+            xLabel='Trackway Index',
+            yLabel='Fractional Deviation')
+        self._paths.insert(1, plot.save(self.getTempFilePath(extension='pdf')))

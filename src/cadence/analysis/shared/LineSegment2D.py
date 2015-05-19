@@ -42,9 +42,15 @@ class LineSegment2D(object):
 #___________________________________________________________________________________________________ GS: angle
     @property
     def angle(self):
-        vector = self.end.clone()
-        vector.subtract(self.start)
-        return Angle(radians=math.atan2(vector.y, vector.x))
+        v = self.end.clone()
+        v.subtract(self.start)
+        vxUnc = math.sqrt(math.pow(self.start.xUnc, 2) + math.pow(self.end.xUnc, 2))
+        vyUnc = math.sqrt(math.pow(self.start.yUnc, 2) + math.pow(self.end.yUnc, 2))
+
+        value = math.atan2(v.y, v.x)
+        lengthSqr = math.pow(v.length.raw, 2)
+        unc = abs(v.y/lengthSqr)*vxUnc + abs(v.x/lengthSqr)*vyUnc
+        return Angle(radians=value, uncertainty=unc)
 
 #___________________________________________________________________________________________________ GS: slope
     @property

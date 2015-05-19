@@ -3,6 +3,7 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+from cadence.analysis.shared.LineSegment2D import LineSegment2D
 
 from cadence.util.math2D.Vector2D import Vector2D
 
@@ -23,14 +24,24 @@ class StrideLine(object):
         self._track = track
         self._pairTrack = pairTrack
 
+        tPos = track.positionValue
+        pPos = pairTrack.positionValue
+
         # Z and X are swapped here for a 2D projection into a Right-Handed Coordinate system
         if self.isNext:
+            self._line = LineSegment2D(tPos, pPos)
             self._vector = Vector2D(pairTrack.z - track.z, pairTrack.x - track.x)
         else:
+            self._line = LineSegment2D(pPos, tPos)
             self._vector = Vector2D(track.z - pairTrack.z, track.x - pairTrack.x)
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: line
+    @property
+    def line(self):
+        return self._line
 
 #___________________________________________________________________________________________________ GS: angle
     @property

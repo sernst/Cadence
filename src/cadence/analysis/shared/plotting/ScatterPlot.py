@@ -32,16 +32,57 @@ class ScatterPlot(SinglePlotBase):
         if not self.xLimits or not len(self.xLimits) == 2:
             return self.data
 
-        out  = []
-        for item in self.data:
-            if self.xLimits[0] <= item <= self.xLimits[1]:
-                out.append(item)
-        self.data = out
-        return out
+        self.data = self._shaveDataToLimits(self.data, *self.xLimits)
+        return self.data
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
+#___________________________________________________________________________________________________ _plot
+    def _plot(self):
+        """_plot doc..."""
+        pl = self.pl
+        self._plotImpl()
+        pl.title(self.title)
+        pl.xlabel(self.xLabel)
+        pl.ylabel(self.yLabel)
+        if self.xLimits:
+            pl.xlim(*self.xLimits)
+        if self.yLimits:
+            pl.ylim(*self.yLimits)
+        pl.grid(True)
+
+#___________________________________________________________________________________________________ _plotImpl
+    def _plotImpl(self):
+        """_plotImpl doc..."""
+        self._plotScatterSeries(self.data, self.format, self.color)
+
+#___________________________________________________________________________________________________ _plotScatterSeries
+    def _plotScatterSeries(self, data, plotFormat, color):
+        """_plotScatterSeries doc..."""
+        x = []
+        y = []
+        xUnc = []
+        yUnc = []
+
+        for value in data:
+            item = self._dataItemToValue(value)
+            x.append(item['x'])
+            y.append(item['y'])
+            xUnc.append(item['xUnc'])
+            yUnc.append(item['yUnc'])
+        self.pl.errorbar(x, y, xerr=xUnc, yerr=yUnc, fmt=plotFormat, color=color)
+
+#___________________________________________________________________________________________________ _shaveDataToLimits
+    @classmethod
+    def _shaveDataToLimits(cls, data, xMin, xMax):
+        """_shaveDataToLimits doc..."""
+        out  = []
+        for value in data:
+            item = cls._dataItemToValue(value)
+            if xMin <= item[0] <= xMax:
+                out.append(value)
+        return out
 
 #___________________________________________________________________________________________________ _dataItemToValue
     @classmethod
@@ -60,31 +101,3 @@ class ScatterPlot(SinglePlotBase):
 
         if isinstance(value, PositionValue2D):
             return value.toDict()
-
-#___________________________________________________________________________________________________ _plot
-    def _plot(self):
-        """_plot doc..."""
-
-        x = []
-        y = []
-        xUnc = []
-        yUnc = []
-
-        for value in self.data:
-            item = self._dataItemToValue(value)
-            x.append(item['x'])
-            y.append(item['y'])
-            xUnc.append(item['xUnc'])
-            yUnc.append(item['yUnc'])
-
-        pl = self.pl
-        pl.errorbar(x, y, xerr=xUnc, yerr=yUnc, fmt=self.format, color=self.color)
-        pl.title(self.title)
-        pl.xlabel(self.xLabel)
-        pl.ylabel(self.yLabel)
-        if self.xLimits:
-            pl.xlim(*self.xLimits)
-        if self.yLimits:
-            pl.ylim(*self.yLimits)
-        pl.grid(True)
-
