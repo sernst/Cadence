@@ -15,13 +15,15 @@ class DrawLengthWidthStage(AnalysisStage):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    DRAWING_FOLDER_NAME = 'Spatial-Comparison-Maps'
+
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of LengthWidthStage."""
 
         super(DrawLengthWidthStage, self).__init__(
             key, owner,
-            label='Length & Width Map Drawing ',
+            label='Length & Width Map Drawing',
             **kwargs)
         self._paths = []
 
@@ -46,7 +48,7 @@ class DrawLengthWidthStage(AnalysisStage):
 
          # get ready for a new drawing
         fileName = sitemap.name + "_" + sitemap.level + '_lengthWidth.svg'
-        path     = self.getPath(fileName, isFile=True)
+        path     = self.getPath(self.DRAWING_FOLDER_NAME, fileName, isFile=True)
 
         self._currentDrawing = CadenceDrawing(path, sitemap)
 
@@ -68,14 +70,8 @@ class DrawLengthWidthStage(AnalysisStage):
 #___________________________________________________________________________________________________ _analyzeTrack
     def _analyzeTrack(self, track, series, trackway, sitemap):
 
-#        if track.uid not in self.trackDeviations:
-#           return
-
         # visualize track width and length compared to measured values for these dimensions
         self.drawTrack(track)
-
-#        data = self.trackDeviations[track.uid]
-#        print('trackdeviations lsigma = %s' % data['lSigma'])
 
 #___________________________________________________________________________________________________ drawTrack
     def drawTrack(self, track):
