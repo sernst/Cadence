@@ -123,14 +123,14 @@ class RotationalUncertaintyStage(AnalysisStage):
                 self._drawLowUncertaintyMarker(drawing, t)
 
                 # label this track green
-                drawing.text(
-                    t.name,
-                    (t.x - 20, t.z),
-                    scene=True,
-                    stroke='green',
-                    stroke_width='0.25',
-                    font_size='8px',
-                    font_family='Arial')
+                # drawing.text(
+                #     t.name,
+                #     (t.x - 20, t.z),
+                #     scene=True,
+                #     stroke='green',
+                #     stroke_width='0.25',
+                #     font_size='8px',
+                #     font_family='Arial')
                 continue
 
             # else, since the uncertainty is high, first write that track in the spreadsheet
@@ -149,27 +149,27 @@ class RotationalUncertaintyStage(AnalysisStage):
                     fill='yellow',
                     stroke='red')
 
-                drawing.text(
-                    t.name,
-                    (t.x - 20, t.z),
-                    scene=True,
-                    stroke='black',
-                    stroke_width='0.25',
-                    font_size='6px',
-                    font_family='Arial')
+                # drawing.text(
+                #     t.name,
+                #     (t.x - 20, t.z),
+                #     scene=True,
+                #     stroke='black',
+                #     stroke_width='0.25',
+                #     font_size='6px',
+                #     font_family='Arial')
                 continue
 
             self._drawHighUncertaintyMarker(drawing, t)
 
             # label this track with red
-            drawing.text(
-                t.name,
-                (t.x - 20, t.z),
-                scene=True,
-                stroke='red',
-                stroke_width='0.25',
-                font_size='6px',
-                font_family='Arial')
+            # drawing.text(
+            #     t.name,
+            #     (t.x - 20, t.z),
+            #     scene=True,
+            #     stroke='red',
+            #     stroke_width='0.25',
+            #     font_size='6px',
+            #     font_family='Arial')
 
         # and close off with a final save of the drawing file
         if drawing:

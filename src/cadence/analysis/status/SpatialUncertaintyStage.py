@@ -37,7 +37,7 @@ class SpatialUncertaintyStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
-        self._uncs = []
+        self._uncs   = []
         self._tracks = []
 
         self.initializeFolder(self.DRAWING_FOLDER_NAME)
@@ -121,6 +121,13 @@ class SpatialUncertaintyStage(AnalysisStage):
             # now examine the positional uncertainties for this track
             x = t.xValue
             z = t.zValue
+
+            if x.uncertainty > 0.15 or z.uncertainty > 0.15:
+                s = '%s%s %s%s: %s %s'% (
+                    t.site, t.level, t.trackwayType, t.trackwayNumber, t.name, t.uid)
+                print('%s:  (%s and %s)' % (s, x.uncertainty, z.uncertainty))
+
+
             if max(x.uncertainty, z.uncertainty) <= 2.0*average.uncertainty:
                 # then just indicate that this track has low uncertainty
                 self._drawLowUncertaintyMarker(drawing, t)

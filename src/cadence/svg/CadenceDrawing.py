@@ -289,11 +289,11 @@ class CadenceDrawing(object):
 
         from cadence.models.tracks.Tracks_Track import Tracks_Track
 
-        model   = Tracks_Track.MASTER
-        s       = session if session else model.createSession()
-        query   = s.query(model)
-        query   = query.filter(model.site == self.siteName)
-        result  = query.filter(model.level == self.siteLevel).all()
+        model  = Tracks_Track.MASTER
+        s      = session if session else model.createSession()
+        query  = s.query(model)
+        query  = query.filter(model.site == self.siteName)
+        result = query.filter(model.level == self.siteLevel).all()
 
         # for each track in this tracksite-level, mark its center and label it (e.g., 'S18 LP3')
         for track in result:
@@ -314,7 +314,8 @@ class CadenceDrawing(object):
 
             if showUncertainty:
                 self.circle(
-                    pos, 100.0*min(track.width, track.length),
+                    pos,
+                    100.0*min(track.width, track.length),
                     scene=True,
                     fill='none',
                     stroke_width=strokeWidth,
@@ -322,7 +323,8 @@ class CadenceDrawing(object):
                     stroke_opacity=opacity)
 
             self.text(
-                track.sitemapDisplayLabel, (pos[0] - 4, pos[1] - 2.5),
+                track.sitemapDisplayLabel,
+                (pos[0] - 4, pos[1] - 2.5),
                 scene=True,
                 font_size='4',
                 fill=color,
@@ -375,12 +377,8 @@ class CadenceDrawing(object):
         if not self.siteMapReady:
             return
 
-        r = size
-
-        self.line([-r, 0], [r, 0], scene=scene, groupId=groupId, **extra)
-        self.line([0, -r], [0, r], scene=scene, groupId=groupId, **extra)
-
-
+        self.line([-size, 0], [size, 0], scene=scene, groupId=groupId, **extra)
+        self.line([0, -size], [0, size], scene=scene, groupId=groupId, **extra)
 
 #___________________________________________________________________________________________________ mm
     def mm(self, p):
