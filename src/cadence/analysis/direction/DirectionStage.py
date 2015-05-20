@@ -10,6 +10,7 @@ from cadence.analysis.CurveOrderedAnalysisStage import CurveOrderedAnalysisStage
 from cadence.analysis.StrideLine import StrideLine
 
 from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from cadence.analysis.shared.plotting.BarPlot import BarPlot
 from cadence.analysis.shared.plotting.Histogram import Histogram
 from cadence.analysis.shared.plotting.MultiScatterPlot import MultiScatterPlot
 from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
@@ -58,13 +59,23 @@ class DirectionStage(CurveOrderedAnalysisStage):
             return
 
         d = [item['deviation'] for item in entries]
-        data['globalDeviation'] = d[-1]
-        data['maxDeviation'] = max(*d)
+
+        significantDeviations = []
+        for deviation in d:
+            if deviation >= 1.0:
+                significantDeviations.append(deviation)
+
+        devs = {
+            'global':d[-1],
+            'max':max(*d),
+            'fraction':len(significantDeviations)/len(d) }
+
+        data['deviations'] = devs
 
         color = 'blue'
-        if data['globalDeviation'] >= 1.0:
+        if devs['global'] >= 1.0:
             color = 'red'
-        elif data['maxDeviation'] >= 1.0:
+        elif devs['max'] >= 1.0:
             color ='green'
 
         d = [item['point'] for item in entries]
@@ -107,8 +118,18 @@ class DirectionStage(CurveOrderedAnalysisStage):
     def _postAnalyze(self):
         """_postAnalyze doc..."""
 
-        self._processCurveDeviations('maxDeviation', 'Meandering')
-        self._processCurveDeviations('globalDeviation', 'Globally Curved')
+        self._processCurveDeviations('max', 'Meandering')
+        self._processCurveDeviations('global', 'Globally Curved')
+
+        d = [100.0*data['deviations']['fraction'] for k, data in DictUtils.iter(self.trackwaysData)]
+        d.sort()
+
+        plot = BarPlot(
+            data=d,
+            title='Significant Deviations from Reference',
+            yLabel='Fraction of Deviations (%)',
+            xLabel='Trackway Index')
+        self._paths.insert(0, plot.save(self.getTempFilePath(extension='pdf')))
 
         self.mergePdfs(self._paths, 'Trackway-Angles')
 
@@ -116,11 +137,11 @@ class DirectionStage(CurveOrderedAnalysisStage):
     def _processCurveDeviations(self, key, label):
         """_processCurveDeviations doc..."""
 
-        d = [data[key] for k, data in DictUtils.iter(self.trackwaysData)]
+        d = [data['deviations'][key] for k, data in DictUtils.iter(self.trackwaysData)]
         dCurved = []
         dStraight = []
         for item in d:
-            if item[-1] < 1.0:
+            if item < 1.0:
                 dStraight.append(item)
             else:
                 dCurved.append(min(10.0, item))
@@ -138,7 +159,7 @@ class DirectionStage(CurveOrderedAnalysisStage):
             if item[-1] < 1.0:
                 dStraight.append(item)
             else:
-                dCurved.append(min(10.0, item))
+                dCurved.append((item[0], min(10.0, item[1])) )
 
         self.logger.write('%s Trackways: %s/%s (%s%%)' % (
             label,
