@@ -165,7 +165,7 @@ class CurveProjectionLinkStage(AnalysisStage):
                             NumericUtils.roundToSigFigs(analysisTrack.segmentPosition, 5) ))
 
                     self.logger.write(log)
-                    raise ValueError, 'Found multiple tracks at the same curve location'
+                    raise ValueError('Found multiple tracks at the same curve location')
 
                 if at.curvePosition < targetPosition:
                     nextTrack = t

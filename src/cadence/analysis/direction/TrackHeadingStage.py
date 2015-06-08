@@ -1,8 +1,11 @@
-# DirectionStage.py
+# TrackHeadingStage.py
 # (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
+from collections import namedtuple
+
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.list.ListUtils import ListUtils
 
@@ -15,19 +18,25 @@ from cadence.analysis.shared.plotting.Histogram import Histogram
 from cadence.analysis.shared.plotting.MultiScatterPlot import MultiScatterPlot
 from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
 
-#*************************************************************************************************** DirectionStage
-class DirectionStage(CurveOrderedAnalysisStage):
+#*************************************************************************************************** TrackHeadingStage
+class TrackHeadingStage(CurveOrderedAnalysisStage):
     """A class for..."""
 
 #===================================================================================================
 #                                                                                       C L A S S
 
+    TRACK_HEADING_DATA_NT = namedtuple('TRACK_HEADING_DATA_NT', [
+        'track', # The Tracks_Track instance for the entry
+        'deviation', # Angular deviation between this track's heading and the first track's heading
+        'point', # Point representation of the data (curvePosition, angle.degrees)
+        'headingAngle' ]) # The heading angle for the track
+
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
-        """Creates a new instance of DirectionStage."""
-        super(DirectionStage, self).__init__(
+        """Creates a new instance of TrackHeadingStage."""
+        super(TrackHeadingStage, self).__init__(
             key, owner,
-            label='Trackway Angles',
+            label='Track Headings',
             **kwargs)
         self._paths  = []
 
@@ -52,13 +61,13 @@ class DirectionStage(CurveOrderedAnalysisStage):
         data = {'entries':entries}
 
         self.trackwaysData[trackway.uid] = data
-        super(DirectionStage, self)._analyzeTrackway(trackway, sitemap)
+        super(TrackHeadingStage, self)._analyzeTrackway(trackway, sitemap)
 
         if len(entries) < 2:
             del self.trackwaysData[trackway.uid]
             return
 
-        d = [item['deviation'] for item in entries]
+        d = [item.deviation for item in entries]
 
         significantDeviations = []
         for deviation in d:
@@ -78,11 +87,11 @@ class DirectionStage(CurveOrderedAnalysisStage):
         elif devs['max'] >= 1.0:
             color ='green'
 
-        d = [item['point'] for item in entries]
+        d = [item.point for item in entries]
         plot = ScatterPlot(
             data=d,
             color=color,
-            title='%s Trackway Angles' % trackway.name,
+            title='%s Track Headings' % trackway.name,
             yLabel='Angle (Degrees)',
             xLabel='Trackway Curve Position (m)')
         self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
@@ -91,6 +100,8 @@ class DirectionStage(CurveOrderedAnalysisStage):
     def _analyzeTrack(self, track, series, trackway, sitemap):
 
         if len(series.tracks) < 2:
+            # Don't analyze trackways that have no direction extent because a stride line is
+            # necessary to compute a heading
             return
 
         analysisTrack = track.getAnalysisPair(self.analysisSession)
@@ -101,18 +112,33 @@ class DirectionStage(CurveOrderedAnalysisStage):
         deviation = 0.0
 
         if len(data) > 0:
-            referenceAngle = data[0]['angle']
+            referenceAngle = data[0].headingAngle
             denom = abs(referenceAngle.uncertainty) + abs(angle.uncertainty)
             deviation = abs(angle.radians - referenceAngle.radians)/denom
 
-        data.append({
-            'track':track,
-            'deviation':deviation,
-            'point':PositionValue2D(
+            # Find the angle representation closest to the previous angle value to prevent
+            # rotations near the polar-angular axis from causing revolution jumps in the tracks
+            lastAngle = data[-1].headingAngle
+            higherAngle = angle.clone()
+            higherAngle.degrees += 360.0
+            lowerAngle = angle.clone()
+            lowerAngle.degrees -= 360.0
+
+            separation = abs(lastAngle.radians - angle.radians)
+            for test in [higherAngle, lowerAngle]:
+                testSeparation = abs(lastAngle.radians - test.radians)
+                if testSeparation < separation:
+                    separation = testSeparation
+                    angle = test
+
+        data.append(self.TRACK_HEADING_DATA_NT(
+            track=track,
+            deviation=deviation,
+            point=PositionValue2D(
                 x=analysisTrack.curvePosition,
                 y=strideLine.angle.degrees,
                 yUnc=angle.uncertaintyDegrees),
-            'angle':angle})
+            headingAngle=angle ))
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
@@ -131,7 +157,7 @@ class DirectionStage(CurveOrderedAnalysisStage):
             xLabel='Trackway Index')
         self._paths.insert(0, plot.save(self.getTempFilePath(extension='pdf')))
 
-        self.mergePdfs(self._paths, 'Trackway-Angles')
+        self.mergePdfs(self._paths, 'Trackway-Headings.pdf')
 
 #___________________________________________________________________________________________________ _processCurveDeviations
     def _processCurveDeviations(self, key, label):

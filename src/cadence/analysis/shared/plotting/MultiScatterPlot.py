@@ -40,10 +40,8 @@ class MultiScatterPlot(ScatterPlot):
     def addPlotSeries(self, data, **kwargs):
         """addPlotSeries doc..."""
 
-        self._plotData.append(dict(
-            color=kwargs.get('color', 'blue'),
-            format=kwargs.get('format', 'o'),
-            data=data))
+        kwargs['data'] = data
+        self._plotData.append(kwargs)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -52,4 +50,4 @@ class MultiScatterPlot(ScatterPlot):
     def _plotImpl(self):
         """_plotImpl doc..."""
         for item in self._plotData:
-            self._plotScatterSeries(item['data'], item['format'], item['color'])
+            self._plotScatterSeries(**item)

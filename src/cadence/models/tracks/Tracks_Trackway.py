@@ -87,7 +87,9 @@ class Tracks_Trackway(TracksDefault):
     def getTrackSeries(self):
         """ Creates an ordered dictionary containing the track series for each series in the
             trackway, even if one of the series has no tracks. The keys of the dictionary match
-            the key value of the track series instance, i.e. TrackSeries.key. """
+            the key value of the track series instance, i.e. TrackSeries.key.
+
+            @return: TrackSeriesBundle """
 
         from cadence.analysis.TrackSeriesBundle import TrackSeriesBundle
 

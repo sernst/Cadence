@@ -21,6 +21,7 @@ class ScatterPlot(SinglePlotBase):
         self.color      = kwargs.get('color', 'b')
         self.format     = kwargs.get('format', 'o')
         self.data       = kwargs.get('data', [])
+        self.size       = kwargs.get('size', 6)
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -55,15 +56,17 @@ class ScatterPlot(SinglePlotBase):
 #___________________________________________________________________________________________________ _plotImpl
     def _plotImpl(self):
         """_plotImpl doc..."""
-        self._plotScatterSeries(self.data, self.format, self.color)
+        self._plotScatterSeries(data=self.data, format=self.format, color=self.color)
 
 #___________________________________________________________________________________________________ _plotScatterSeries
-    def _plotScatterSeries(self, data, plotFormat, color):
+    def _plotScatterSeries(self, data, **kwargs):
         """_plotScatterSeries doc..."""
         x = []
         y = []
         xUnc = []
         yUnc = []
+
+        color = kwargs.get('color', 'black')
 
         for value in data:
             item = self._dataItemToValue(value)
@@ -71,7 +74,12 @@ class ScatterPlot(SinglePlotBase):
             y.append(item['y'])
             xUnc.append(item['xUnc'])
             yUnc.append(item['yUnc'])
-        self.pl.errorbar(x, y, xerr=xUnc, yerr=yUnc, fmt=plotFormat, color=color)
+        self.pl.errorbar(
+            x=x, y=y, xerr=xUnc, yerr=yUnc,
+            fmt=kwargs.get('format', 'o'), markersize=kwargs.get('size', 6), color=color)
+
+        if kwargs.get('line'):
+            self.pl.plot(x, y, '-', color=color)
 
 #___________________________________________________________________________________________________ _shaveDataToLimits
     @classmethod

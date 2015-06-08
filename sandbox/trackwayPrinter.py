@@ -50,9 +50,7 @@ for siteMap in siteMaps:
                 'COMPLETE' if series.isComplete else 'INCOMPLETE'))
 
             for track in series.tracks:
-                print('    * %s%s [%s] -> [%s] (%s, %s)' % (
-                    '' if track.isComplete else '[INCOMPLETE] ',
-                    track.fingerprint, track.uid, track.next, track.x, track.z))
+                print(track.echoForVerification())
                 aTrack = track.getAnalysisPair(aSession)
                 print('        curve[%s]: %s (%s)' % (
                     aTrack.curveSegment,

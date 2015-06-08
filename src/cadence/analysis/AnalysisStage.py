@@ -9,9 +9,10 @@ import os
 from PyPDF2.merger import PdfFileMerger
 from PyPDF2.pdf import PdfFileReader
 from pyaid.config.ConfigsDict import ConfigsDict
+from pyaid.string.StringUtils import StringUtils
 from pyaid.system.SystemUtils import SystemUtils
 from pyaid.time.TimeUtils import TimeUtils
-
+from cadence.analysis.AnalyzerBase import AnalyzerBase
 
 try:
     import matplotlib.pyplot as plt
@@ -28,9 +29,11 @@ class AnalysisStage(object):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, label =None, **kwargs):
-        """Creates a new instance of AnalysisStage."""
+        """Creates a new instance of AnalysisStage.
 
-        # The AnalyzerBase object that owns this stage
+            @type owner: AnalyzerBase """
+
+        # The analyzer that owns this stage
         self.owner = owner
 
         self._key   = key
@@ -162,13 +165,16 @@ class AnalysisStage(object):
 
         merger = PdfFileMerger()
         for p in paths:
-            merger.append(PdfFileReader(file(p, 'rb')))
+            with open(p, 'rb') as f:
+                merger.append(PdfFileReader(f))
 
         if not fileName:
             fileName = '%s-Report.pdf' % self.__class__.__name__
-        if not fileName.endswith('.pdf'):
+        if not StringUtils.toStr2(fileName).endswith('.pdf'):
             fileName += '.pdf'
-        merger.write(file(self.getPath(fileName, isFile=True), 'wb'))
+
+        with open(self.getPath(fileName, isFile=True), 'wb') as f:
+            merger.write(f)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

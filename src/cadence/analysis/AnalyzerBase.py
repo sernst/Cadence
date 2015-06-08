@@ -457,7 +457,9 @@ class AnalyzerBase(object):
 #___________________________________________________________________________________________________ getSeriesBundle
     def getSeriesBundle(self, trackway):
         """ Retrieves a list of TrackSeries instances for the specified trackway. These series are
-            cached for data persistence and performance reasons. """
+            cached for data persistence and performance reasons.
+
+            @return: TrackSeriesBundle """
 
         if trackway.uid in self._seriesBundles:
             return self._seriesBundles[trackway.uid]

@@ -3,13 +3,15 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-from pyaid.config.ConfigsDict import ConfigsDict
 
+import six
 import sqlalchemy as sqla
+
+from pyaid.config.ConfigsDict import ConfigsDict
 
 from pyglass.sqlalchemy.PyGlassModelsDefault import PyGlassModelsDefault
 from pyglass.sqlalchemy.ConcretePyGlassModelsMeta import ConcretePyGlassModelsMeta
-import six
+
 
 #___________________________________________________________________________________________________ TracksDefault
 @six.add_metaclass(ConcretePyGlassModelsMeta)
@@ -49,6 +51,13 @@ class TracksDefault(PyGlassModelsDefault):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ echoForVerification
+    def echoForVerification(self):
+        """echoAnalysis doc..."""
+        return '    * %s%s [%s] -> [%s] (%s, %s)' % (
+            '' if self.isComplete else '[INCOMPLETE] ',
+            self.fingerprint, self.uid, self.next, self.xValue.label, self.zValue.label)
+
 #___________________________________________________________________________________________________ getAnalysisPair
     def getAnalysisPair(self, analysisSession, createIfMissing =True):
         """getAnalysisPair doc..."""
@@ -58,7 +67,7 @@ class TracksDefault(PyGlassModelsDefault):
             return target
 
         if analysisSession is None:
-            raise ValueError, 'Must provide a valid analysis session to retrieve an analysis pair'
+            raise ValueError('Must provide a valid analysis session to retrieve an analysis pair')
 
         result = self._getAnalysisPair(analysisSession, createIfMissing=createIfMissing)
         self.putTransient(self._ANALYSIS_PAIR_KEY, result)

@@ -4,6 +4,8 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import math
+
 from collections import OrderedDict
 from pyaid.string.StringUtils import StringUtils
 
@@ -34,6 +36,15 @@ class TrackSeriesBundle(object):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+#___________________________________________________________________________________________________ GS: count
+    @property
+    def count(self):
+        """ The number of tracks in the trackway """
+        out = 0
+        for series in self.asList():
+            out += series.count
+        return out
+
 #___________________________________________________________________________________________________ GS: trackway
     @property
     def trackway(self):
@@ -63,16 +74,21 @@ class TrackSeriesBundle(object):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ echoStatus
-    def echoStatus(self):
+    def echoStatus(self, asPercent =False):
         if not self._leftPes:
             return '(NOT-LOADED)'
 
+        seriesList = self.asList()
         zFill = StringUtils.zeroFill
-        return 'P:(%s, %s) M:(%s, %s)' % (
-            zFill(self.leftPes.count, 3) if self.leftPes.isReady else '---',
-            zFill(self.rightPes.count, 3) if self.rightPes.isReady else '---',
-            zFill(self.leftManus.count, 3) if self.leftManus.isReady else '---',
-            zFill(self.rightManus.count, 3) if self.rightManus.isReady else '---')
+        out = [float(s.count if s.isReady else 0) for s in seriesList]
+
+        if asPercent:
+            out = [math.ceil(100.0*item/max(out)) for item in out]
+            out = ['%s%%' % int(item) for item in out]
+        else:
+            out = [zFill(item, 3) if item > 0 else '---' for item in out]
+
+        return 'P:(%s, %s) M:(%s, %s)' % tuple(out)
 
 #___________________________________________________________________________________________________ echoStartUids
     def echoStartUids(self):

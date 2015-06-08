@@ -7,6 +7,7 @@ from pyaid.time.TimeUtils import TimeUtils
 
 from cadence.analysis.comparison.ComparisonAnalyzer import ComparisonAnalyzer
 from cadence.analysis.curvature.CurvatureAnalyzer import CurvatureAnalyzer
+from cadence.analysis.direction.DirectionAnalyzer import DirectionAnalyzer
 from cadence.analysis.status.StatusAnalyzer import StatusAnalyzer
 from cadence.analysis.validation.ValidationAnalyzer import ValidationAnalyzer
 
@@ -17,7 +18,12 @@ class AnalyzeAll(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    ANALYZERS = [StatusAnalyzer, ComparisonAnalyzer, CurvatureAnalyzer, ValidationAnalyzer]
+    ANALYZERS = [
+        StatusAnalyzer,
+        ComparisonAnalyzer,
+        CurvatureAnalyzer,
+        ValidationAnalyzer,
+        DirectionAnalyzer]
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self):

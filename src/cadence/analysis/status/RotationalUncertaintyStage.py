@@ -61,7 +61,7 @@ class RotationalUncertaintyStage(AnalysisStage):
     def _postAnalyze(self):
         h = Histogram(
             data=self._uncs,
-            binCount=40,
+            binCount=80,
             xLimits=(0, max(*self._uncs)),
             color='r',
             title='Distribution of Rotational Uncertainties',
