@@ -167,7 +167,7 @@ class PositionValue2D(object):
         """echo doc..."""
         return '(%s, %s)' % (
             NumericUtils.toValueUncertainty(self.x, self.xUnc, asciiLabel=asciiLabel).rawLabel,
-            NumericUtils.toValueUncertainty(self.x, self.xUnc, asciiLabel=asciiLabel).rawLabel)
+            NumericUtils.toValueUncertainty(self.y, self.yUnc, asciiLabel=asciiLabel).rawLabel)
 
 #___________________________________________________________________________________________________ normalize
     def normalize(self):

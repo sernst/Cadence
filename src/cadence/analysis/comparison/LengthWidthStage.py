@@ -93,7 +93,14 @@ class LengthWidthStage(AnalysisStage):
         else:
             d = w - wm
             data['wDev'] = d/wm
-            data['wDelta'] = abs(d)/track.widthUncertainty
+
+            try:
+                data['wDelta'] = abs(d)/track.widthUncertainty
+            except ZeroDivisionError:
+                self.logger.write([
+                    '[ERROR]: Track without width uncertainty'
+                    'TRACK: %s (%s)' % (track.fingerprint, track.uid) ])
+                raise
 
         l  = track.length
         lm = track.lengthMeasured
@@ -102,7 +109,14 @@ class LengthWidthStage(AnalysisStage):
         else:
             d = l - lm
             data['lDev'] = d/lm
-            data['lDelta'] = abs(d)/track.lengthUncertainty
+
+            try:
+                data['lDelta'] = abs(d)/track.lengthUncertainty
+            except ZeroDivisionError:
+                self.logger.write([
+                    '[ERROR]: Track without length uncertainty'
+                    'TRACK: %s (%s)' % (track.fingerprint, track.uid) ])
+                raise
 
         aspect         = w/l
         wErr           = track.widthUncertainty/w

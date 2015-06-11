@@ -96,7 +96,16 @@ class CurveProjectionStage(AnalysisStage):
             return
 
         curve = CurveSeries(stage=self, series=curveSeries)
-        curve.compute()
+
+        try:
+            curve.compute()
+        except ZeroDivisionError as err:
+            self.logger.writeError([
+                '[ERROR]: Failed to compute curve series',
+                'TRACKWAY: %s' % trackway.name,
+                'SITEMAP: %s' % sitemap.name], err)
+            raise
+
         self.data[trackway.uid] = curve
         for error in curve.errors:
             self.logger.write(error)

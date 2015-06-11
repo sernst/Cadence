@@ -31,7 +31,7 @@ class TrackwayDeflectionStage(CurveOrderedAnalysisStage):
 #___________________________________________________________________________________________________ GS: trackwayDirectionData
     @property
     def trackwayDirectionData(self):
-        return self.owner.getStage('direction').trackwaysData
+        return self.owner.getStage('direction').trackwayDirectionData
 
 #___________________________________________________________________________________________________ GS: trackwayDirectionData
     @property

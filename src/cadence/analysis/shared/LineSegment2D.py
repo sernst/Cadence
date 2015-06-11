@@ -83,6 +83,14 @@ class LineSegment2D(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ echo
+    def echo(self, asciiLabel =False):
+        """echo doc..."""
+        return '[%s %s -> %s]' % (
+            'LINE',
+            self.start.echo(asciiLabel=asciiLabel),
+            self.end.echo(asciiLabel=asciiLabel) )
+
 #___________________________________________________________________________________________________ addOffset
     def addOffset(self, point):
         """addOffset doc..."""
@@ -326,23 +334,33 @@ class LineSegment2D(object):
         """_extrapolateByLength doc..."""
 
         length = self.length
-        delta  = -abs(lengthAdjust) if self.start.x > self.end.x else abs(lengthAdjust)
-        if pre:
-            delta *= -1.0
-
-        targetLengthSqr = math.pow(length.raw + lengthAdjust, 2)
+        targetLengthSqr = (length.raw + lengthAdjust)**2
 
         s = self.start
         e = self.end
         deltaX = e.x - s.x
         deltaY = e.y - s.y
 
+        delta = lengthAdjust
+        if NumericUtils.equivalent(deltaX, 0.0):
+            # Vertical lines should invert delta if start is above the end
+            delta *= -1.0 if deltaY < 0.0 else 1.0
+        elif deltaX < 0.0:
+            # Other lines should invert delta if start is right of the end
+            delta *= -1.0
+
         if pre:
+            delta *= -1.0
+            startY = s.y
             prevX = s.x
             point = self.end
         else:
+            startY = e.y
             prevX = e.x
             point = self.start
+
+        if NumericUtils.equivalent(deltaX, 0.0):
+            return s.x, startY + delta
 
         i = 0
         while i < 100000:

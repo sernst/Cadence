@@ -24,6 +24,28 @@ class test_LineSegment2D(unittest.TestCase):
     def setUp(self):
         pass
 
+#___________________________________________________________________________________________________ test_lineExtension
+    def test_lineExtension(self):
+        """ Confirms that pre and post extension of a line segment properly extends the line with
+            the specified length and handles edge cases such as vertical and horizontal lines"""
+
+        angle = Angle()
+
+        while angle.degrees < 360.0:
+            start = PositionValue2D(0.0, 0.0, 0.1, 0.1)
+            end = PositionValue2D(2.0, 0.0, 0.1, 0.1)
+            end.rotate(angle, start)
+
+            line = LineSegment2D(start, end)
+
+            line.postExtendLine(2.0)
+            self.assertAlmostEqual(line.length.raw, 4.0, 4, '%s' % line.echo(asciiLabel=True))
+
+            line.preExtendLine(2.0)
+            self.assertAlmostEqual(line.length.raw, 6.0, 4, '%s' % line.echo(asciiLabel=True))
+
+            angle.degrees += 9.0
+
 #___________________________________________________________________________________________________ test_getParametricPosition
     def test_getParametricPosition(self):
         """getParametricPosition doc..."""

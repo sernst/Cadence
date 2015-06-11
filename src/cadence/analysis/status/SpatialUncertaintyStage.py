@@ -54,6 +54,18 @@ class SpatialUncertaintyStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _anal
     def _analyzeTrack(self, track, series, trackway, sitemap):
+        trackId = '%s (%s)' % (track.fingerprint, track.uid)
+
+        if NumericUtils.equivalent(track.width, 0.0):
+            self.logger.write('[ERROR]: Zero track width %s' % trackId)
+        if NumericUtils.equivalent(track.widthUncertainty, 0.0):
+            self.logger.write('[ERROR]: Zero track width uncertainty %s' % trackId)
+
+        if NumericUtils.equivalent(track.length, 0.0):
+            self.logger.write('[ERROR]: Zero track length %s' % trackId)
+        if NumericUtils.equivalent(track.lengthUncertainty, 0.0):
+            self.logger.write('[ERROR]: Zero track length uncertainty %s' % trackId)
+
         self._tracks.append(track)
         x = track.xValue
         self._uncs.append(x.uncertainty)
