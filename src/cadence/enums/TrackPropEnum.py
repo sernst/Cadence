@@ -100,8 +100,11 @@ class TrackPropEnum(object):
     # A serialized JSON string of that stores the last saved state of the track for reference
     SNAPSHOT = TRACK_PROP_NT('snapshot', 'string', None, False)
 
-    # A 32bit integer containing enumerated flags related to how the track data was imported
+    # A 32bit integer containing enumerated flags related to how the track data was sourced
     SOURCE_FLAGS = TRACK_PROP_NT('sourceFlags', 'long', None, False)
+
+    # A 32bit integer containing enumerated flags related to how the track data was imported
+    IMPORT_FLAGS = TRACK_PROP_NT('importFlags', 'lone', None, False)
 
     # a trackway is numbered at a given site/level, and consists of four (for quadrupedal) or
     # two (bipedal) track series.

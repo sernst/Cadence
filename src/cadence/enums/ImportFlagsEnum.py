@@ -37,3 +37,5 @@ class ImportFlagsEnum(object):
 
     HIGH_GLENO_ACETABULAR_UNCERTAINTY = 1 << 12
 
+    NO_FIELD_MEASUREMENTS = 1 << 13
+

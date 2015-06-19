@@ -83,7 +83,17 @@ class TrackCsvImporter(object):
                 rowDict = dict()
                 for column in Reflection.getReflectionList(TrackCsvColumnEnum):
                     value = row[column.index]
-                    value = StringUtils.strToUnicode(value)
+
+                    if value and not StringUtils.isTextType(value):
+                        # Try to decode the value into a unicode string using common codecs
+                        for codec in ['utf8', 'MacRoman']:
+                            try:
+                                decodedValue = value.decode(codec)
+                                if decodedValue:
+                                    value = decodedValue
+                                    break
+                            except Exception:
+                                continue
 
                     if value != u'' or value is None:
                         rowDict[column.name] = value
@@ -136,6 +146,8 @@ class TrackCsvImporter(object):
 
         try:
             year = csvRowData.get(TrackCsvColumnEnum.MEASURED_DATE.name)
+            year = re.compile('[^0-9]+').sub('', year)
+
             if not year:
                 year = u'2014'
             else:
@@ -178,10 +190,12 @@ class TrackCsvImporter(object):
 
         #-------------------------------------------------------------------------------------------
         # TRACKWAY
-        #       Parse the trackway entry into type and number values
+        #       Parse the trackway entry into type and number values. In the process illegal
+        #       characters are removed to keep the format something that can be handled correctly
+        #       within the database.
         try:
             test = csvRowData.get(TrackCsvColumnEnum.TRACKWAY.name).strip().upper()
-        except Exception as err:
+        except Exception:
             self._writeError({
                 'message':u'Missing trackway',
                 'data':csvRowData,
@@ -279,7 +293,7 @@ class TrackCsvImporter(object):
             model = Tracks_Track.MASTER
             t = model()
             t.uid = ts.uid
-            t.fromDict(ts.toDiffDict(t.toDict()))
+            t.fromDict(ts.toDiffDict(t.toDict(), invert=True))
             session.add(t)
             session.flush()
         else:
@@ -309,10 +323,19 @@ class TrackCsvImporter(object):
         # included in the database snapshot entry
         snapshot = dict()
         for column in Reflection.getReflectionList(TrackCsvColumnEnum):
-            # Exclude values that are marked in the enumeration as not to be included
+            # Include only values that are marked in the enumeration as to be included
             if not column.snapshot or column.name not in csvRowData:
                 continue
-            snapshot[column.name] = csvRowData[column.name]
+
+            value = csvRowData.get(column.name)
+            if value is None:
+                continue
+
+            value = value.strip()
+            if value in ['-', b'\xd0'.decode('MacRoman')]:
+                continue
+
+            snapshot[column.name] = value
 
         #-------------------------------------------------------------------------------------------
         # WIDTH
@@ -523,6 +546,10 @@ class TrackCsvImporter(object):
         except Exception as err:
             print('TrackStore:', ts)
             raise
+
+        if TrackCsvColumnEnum.MEASURED_BY.name not in snapshot:
+            # Mark entries that have no field measurements with a flag for future reference
+            ts.importFlags |= ImportFlagsEnum.NO_FIELD_MEASUREMENTS
 
         t.importFlags = ts.importFlags
 

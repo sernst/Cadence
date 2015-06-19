@@ -21,7 +21,7 @@ class TrackLinkConnector(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    _TRACK_NUMBER_RE = re.compile('(?P<prefix>[^0-9]*)(?P<number>[0-9]+)(?P<suffix>[^0-9]*)')
+    _TRACK_NUMBER_RE = re.compile('(?P<prefix>[^0-9\-]*)(?P<number>-?[0-9]+)(?P<suffix>[^0-9]*)')
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, logger =None):

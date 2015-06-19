@@ -25,15 +25,16 @@ class Tracks_TrackStore(TracksTrackDefault):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ toDiffDict
-    def toDiffDict(self, comparison):
+    def toDiffDict(self, comparison, invert =False):
         """ Compares the dictionary of properties against the properties of this track store
             instance and returns a dictionary of only the properties that differ. This is used
             to export changes made in a database to serial format for storage. """
 
         out = dict()
         for key,value in DictUtils.iter(comparison):
-            if getattr(self, key, value) != value:
-                out[key] = value
+            myValue = getattr(self, key, value)
+            if myValue != value:
+                out[key] = myValue if invert else value
 
         if len(list(out.keys())) == 0:
             return None
