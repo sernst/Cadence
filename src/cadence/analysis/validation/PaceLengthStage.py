@@ -284,7 +284,7 @@ class PaceLengthStage(AnalysisStage):
         """_postAnalyze doc..."""
         self._paths = []
 
-        self.logger.write('='*80 + '\nFRACTIONAL ERROR (Measured vs Entered)')
+        self.logger.write('%s\nFRACTIONAL ERROR (Measured vs Entered)' % ('='*80))
         self._process()
 
         self.mergePdfs(self._paths)
@@ -313,8 +313,8 @@ class PaceLengthStage(AnalysisStage):
 
         # noinspection PyUnresolvedReferences
         d = np.absolute(np.array(d))
-        self._paths.append(self._makePlot('Absolute ' + label, d, histRange=(0.0, 1.0)))
-        self._paths.append(self._makePlot('Absolute ' + label, d, isLog=True, histRange=(0.0, 1.0)))
+        self._paths.append(self._makePlot('Absolute %s' % label, d, histRange=(0.0, 1.0)))
+        self._paths.append(self._makePlot('Absolute %s' % label, d, isLog=True, histRange=(0.0, 1.0)))
 
         highDeviationCount = 0
 

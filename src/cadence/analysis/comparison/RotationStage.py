@@ -25,6 +25,8 @@ class RotationStage(AnalysisStage):
 #===================================================================================================
 #                                                                                       C L A S S
 
+    DRAWING_FOLDER_NAME = 'Rotation-Comparison-Maps'
+
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of RotationStage."""
@@ -78,7 +80,7 @@ class RotationStage(AnalysisStage):
 
         # start a drawing for the SVG and PDF files
         fileName = sitemap.name + "_" + sitemap.level + '_rotation.svg'
-        path = self.getPath(fileName, isFile=True)
+        path = self.getPath(self.DRAWING_FOLDER_NAME, fileName, isFile=True)
         self._currentDrawing = CadenceDrawing(path, sitemap)
 
         # create a group to be instanced for the map annotations

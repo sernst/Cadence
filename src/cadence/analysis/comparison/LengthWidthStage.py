@@ -133,10 +133,10 @@ class LengthWidthStage(AnalysisStage):
 
         self._paths = []
 
-        self.logger.write('='*80 + '\nFRACTIONAL ERROR (Measured vs Entered)')
+        self.logger.write('%s\nFRACTIONAL ERROR (Measured vs Entered)' % ('='*80))
         self._process('Error', 'wDev', 'lDev', self.trackDeviations)
 
-        self.logger.write('='*80 + '\nFRACTIONAL UNCERTAINTY ERROR')
+        self.logger.write('%s\nFRACTIONAL UNCERTAINTY ERROR' % ('='*80))
         self._process('Uncertainty Error', 'wDelta', 'lDelta', None, absoluteOnly=True)
 
         self._processAspectRatios()
@@ -276,7 +276,7 @@ class LengthWidthStage(AnalysisStage):
             else:
                 manAspects.append(value)
 
-        self.logger.write('='*80 + '\nASPECT RATIO')
+        self.logger.write('%s\nASPECT RATIO' % ('='*80))
         self.logger.write('Total: %s' % NumericUtils.getMeanAndDeviation(aspects).label)
         self.logger.write('Pes: %s' % NumericUtils.getMeanAndDeviation(pesAspects).label)
         self.logger.write('Manus: %s' % NumericUtils.getMeanAndDeviation(manAspects).label)

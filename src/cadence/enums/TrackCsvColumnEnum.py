@@ -70,7 +70,7 @@ class TrackCsvColumnEnum(object):
     """ Reference material exists for a plastic sheet drawing at 1:1 for the track. """
     OUTLINE_DRAWING = CSV_COLUMN_NT(14, 'outline_drawing', True)
 
-    """ Reference material the original print exists in the collection. """
+    """ Reference material of the original print exists in the collection. """
     PRESERVED = CSV_COLUMN_NT(15, 'preserved', True)
 
     """ Reference material exist as a cast in the collection. """

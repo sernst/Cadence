@@ -142,6 +142,11 @@ class TrackwayLoadStage(AnalysisStage):
             if t.uid in self._allTracks:
                 del self._allTracks[t.uid]
 
+            if t.next and t.next == t.uid:
+                self.logger.write([
+                    '[ERROR]: Circular track reference (track.uid == track.next)',
+                    'TRACK: %s (%s)' % (t.fingerprint, t.uid) ])
+
             if not t.hidden and t.next:
                 continue
 

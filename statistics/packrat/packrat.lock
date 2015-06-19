@@ -1,0 +1,31 @@
+PackratFormat: 1.4
+PackratVersion: 0.4.4
+RVersion: 3.2.0
+Repos: CRAN=http://cran.rstudio.com
+
+Package: DBI
+Source: CRAN
+Version: 0.3.1
+Hash: 096699d1ac1cf530acfc646a0c90ee5d
+
+Package: RSQLite
+Source: CRAN
+Version: 1.0.0
+Hash: 3df52a54766f420d257debad962146c0
+Requires: DBI
+
+Package: mnormt
+Source: CRAN
+Version: 1.5-3
+Hash: d23b1cdede7a20437b68aa11f51958b8
+
+Package: packrat
+Source: CRAN
+Version: 0.4.4
+Hash: aed7d17407538df551a57caf6289c8bf
+
+Package: psych
+Source: CRAN
+Version: 1.5.4
+Hash: 1ba194c7c85f51e7e8fa597e878f35b4
+Requires: mnormt

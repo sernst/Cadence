@@ -5,13 +5,14 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import numpy as np
-from pyaid.list.ListUtils import ListUtils
 from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
+from cadence.svg.CadenceDrawing import CadenceDrawing
+
 
 #*************************************************************************************************** StrideLengthStage
 class StrideLengthStage(AnalysisStage):
@@ -20,6 +21,8 @@ class StrideLengthStage(AnalysisStage):
 
 #===================================================================================================
 #                                                                                       C L A S S
+
+    MAPS_FOLDER_NAME = 'Stride-Lengths'
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
@@ -55,10 +58,32 @@ class StrideLengthStage(AnalysisStage):
             ('delta', 'Fractional Error (%)'))
         self._csv = csv
 
+#___________________________________________________________________________________________________ _analyzeSitemap
+    def _analyzeSitemap(self, sitemap):
+
+        drawing = CadenceDrawing(
+            self.getPath(
+                self.MAPS_FOLDER_NAME,
+                '%s-%s-STRIDE.svg' % (sitemap.name, sitemap.level),
+                isFile=True),
+            sitemap)
+
+        drawing.grid()
+        drawing.federalCoordinates()
+        sitemap.cache.set('drawing', drawing)
+
+        super(StrideLengthStage, self)._analyzeSitemap(sitemap)
+
+        try:
+            sitemap.cache.extract('drawing').save()
+        except Exception:
+            self.logger.write('[WARNING]: No sitemap saved for %s-%s' % (
+                sitemap.name, sitemap.level))
+
 #___________________________________________________________________________________________________ _analyzeTrackSeries
     def _analyzeTrackSeries(self, series, trackway, sitemap):
 
-        for index in ListUtils.range(series.count - 1):
+        for index in range(series.count):
             track   = series.tracks[index]
             data    = track.snapshotData
             stride  = data.get(SnapshotDataEnum.STRIDE_LENGTH)
@@ -66,22 +91,38 @@ class StrideLengthStage(AnalysisStage):
                 self.noData += 1
                 continue
 
+            if series.count < 2:
+                # Series of length 1 should not have a measured stride length
+                self.logger.write([
+                    '[ERROR]: Stride information on a single track series',
+                    'TRACK: %s (%s)' % (track.fingerprint, track.uid) ])
+                continue
+
             stride    = float(stride)
-            nextTrack = series.tracks[index + 1]
-            if track.next != nextTrack.uid:
-                self.logger.write(
-                    '[ERROR]: Invalid track ordering (%s -> %s)' % (track.uid, nextTrack.uid))
+            isLastTrack = (index == (series.count - 1))
+            pairTrack = series.tracks[index + (-1 if isLastTrack else 1)]
+
+            if isLastTrack and pairTrack.next != track.uid:
+                self.logger.write([
+                    '[ERROR]: Invalid track ordering (last track)',
+                    'PREV: %s (%s)' % (pairTrack.fingerprint, pairTrack.uid),
+                    'TRACK: %s (%s)' % (track.fingerprint, track.uid) ])
+            elif not isLastTrack and track.next != pairTrack.uid:
+                self.logger.write([
+                    '[ERROR]: Invalid track ordering',
+                    'TRACK: %s (%s)' % (track.fingerprint, track.uid),
+                    'NEXT: %s (%s)' % (pairTrack.fingerprint, pairTrack.uid) ])
 
             posTrack = track.positionValue
-            posNext  = nextTrack.positionValue
+            posPair  = pairTrack.positionValue
 
             try:
-                entered = posTrack.distanceTo(posNext)
+                entered = posTrack.distanceTo(posPair)
             except Exception:
                 self.logger.write([
                     '[WARNING]: Invalid track separation of 0.0. Ignoring track',
                     'TRACK: %s [%s]' % (track.fingerprint, track.uid),
-                    'NEXT: %s [%s]' % (nextTrack.fingerprint, track.uid)])
+                    'NEXT: %s [%s]' % (pairTrack.fingerprint, track.uid)])
                 continue
 
             measured   = NumericUtils.toValueUncertainty(stride, 0.06)
@@ -102,6 +143,19 @@ class StrideLengthStage(AnalysisStage):
                     # Sigma trackDeviations between
                 deviation=deviation)
 
+            drawing = sitemap.cache.get('drawing')
+
+            styles = ('red', 10) if deviation > 2.0 else ('green', 5)
+
+            if not isLastTrack:
+                drawing.line(
+                    posTrack.toMayaTuple(), posPair.toMayaTuple(),
+                    stroke=styles[0], stroke_width=1, stroke_opacity='0.1')
+
+            drawing.circle(
+                posTrack.toMayaTuple(), styles[1],
+                stroke='none', fill=styles[0], fill_opacity=0.5)
+
             self.entries.append(entry)
             track.cache.set('strideData', entry)
 
@@ -110,7 +164,7 @@ class StrideLengthStage(AnalysisStage):
         """_postAnalyze doc..."""
         self._paths = []
 
-        self.logger.write('='*80 + '\nFRACTIONAL ERROR (Measured vs Entered)')
+        self.logger.write('%s\nFRACTIONAL ERROR (Measured vs Entered)' % ('='*80))
         self._process()
 
         self.mergePdfs(self._paths)
@@ -139,8 +193,8 @@ class StrideLengthStage(AnalysisStage):
 
         # noinspection PyUnresolvedReferences
         d = np.absolute(np.array(d))
-        self._paths.append(self._makePlot('Absolute ' + label, d, histRange=(0.0, 1.0)))
-        self._paths.append(self._makePlot('Absolute ' + label, d, isLog=True, histRange=(0.0, 1.0)))
+        self._paths.append(self._makePlot('Absolute %s' % label, d, histRange=(0.0, 1.0)))
+        self._paths.append(self._makePlot('Absolute %s' % label, d, isLog=True, histRange=(0.0, 1.0)))
 
         highDeviationCount = 0
 

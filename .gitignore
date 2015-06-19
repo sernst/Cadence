@@ -2,3 +2,6 @@
 *.pyc
 /resources/local
 bin
+/statistics/input
+/statistics/output
+.Rproj.user
