@@ -36,6 +36,14 @@ class TrackSeriesBundle(object):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+#___________________________________________________________________________________________________ GS: isReady
+    @property
+    def isReady(self):
+        for series in self.asList():
+            if not series.isReady:
+                return False
+        return True
+
 #___________________________________________________________________________________________________ GS: count
     @property
     def count(self):

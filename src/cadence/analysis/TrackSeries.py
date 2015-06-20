@@ -97,6 +97,12 @@ class TrackSeries(object):
 #___________________________________________________________________________________________________ GS: fingerprint
     @property
     def fingerprint(self):
+        if not self.tracks:
+            return '-'.join([
+            self.trackway.name,
+            'L' if self.left else 'R',
+            'P' if self.pes else 'M' ])
+
         track = self.tracks[0]
         if track:
             return track.trackSeriesFingerprint
