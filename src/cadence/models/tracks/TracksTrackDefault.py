@@ -168,7 +168,7 @@ class TracksTrackDefault(TracksDefault):
         """ String created from the uniquely identifying track properties. """
         return '%s-%s' % (
             self.trackSeriesFingerprint,
-            getattr(self, TrackPropEnum.NUMBER.name, '0') )
+            getattr(self, TrackPropEnum.NUMBER.name.replace('-', 'N'), '0') )
 
 #___________________________________________________________________________________________________ GS: trackSeriesFingerprint
     @property

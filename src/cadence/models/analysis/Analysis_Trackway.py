@@ -18,5 +18,11 @@ class Analysis_Trackway(AnalysisDefault):
     __tablename__ = 'trackways'
 
     _index = sqla.Column(sqla.Integer,     default=0)
+
+    #-- Curvature Analyzer ---#
     _curveSeries  = sqla.Column(sqla.Unicode, default='')
     _curveLength  = sqla.Column(sqla.Float, default=0.0)
+
+    #--- Gauge Analyzer ---#
+    _simpleGauge        = sqla.Column(sqla.Float, default=0.0)
+    _simpleGaugeUnc     = sqla.Column(sqla.Float, default=0.0)

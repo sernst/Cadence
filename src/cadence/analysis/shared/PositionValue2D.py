@@ -211,7 +211,10 @@ class PositionValue2D(object):
             return Angle()
 
         try:
-            a = math.acos(b)
+            if NumericUtils.equivalent(b, -1.0):
+                a = math.pi
+            else:
+                a = math.acos(b)
         except Exception:
             print('[ERROR]: Unable to calculate angle between', b)
             return Angle()

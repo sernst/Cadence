@@ -83,8 +83,8 @@ class Tracks_Trackway(TracksDefault):
 #===================================================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ getTrackSeries
-    def getTrackSeries(self):
+#___________________________________________________________________________________________________ getTrackwaySeriesBundle
+    def getTrackwaySeriesBundle(self):
         """ Creates an ordered dictionary containing the track series for each series in the
             trackway, even if one of the series has no tracks. The keys of the dictionary match
             the key value of the track series instance, i.e. TrackSeries.key.

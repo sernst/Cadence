@@ -29,7 +29,6 @@ class CurveProjectionStage(AnalysisStage):
             label='Curve Projection',
             **kwargs)
 
-        self._drawing = None
         self._paths = []
 
 #===================================================================================================
@@ -45,7 +44,6 @@ class CurveProjectionStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
-        self._drawing = None
         self._paths = []
 
         self.initializeFolder(self.CURVE_MAP_FOLDER_NAME)
@@ -54,20 +52,9 @@ class CurveProjectionStage(AnalysisStage):
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
 
-        self._drawing = CadenceDrawing(
-            self.getPath(
-                self.CURVE_MAP_FOLDER_NAME,
-                '%s-%s-PROJECTION.svg' % (sitemap.name, sitemap.level),
-                isFile=True),
-            sitemap)
-
-        self._drawing.grid()
-        self._drawing.federalCoordinates()
-
+        self._createDrawing(sitemap, 'PROJECTION', self.CURVE_MAP_FOLDER_NAME)
         super(CurveProjectionStage, self)._analyzeSitemap(sitemap)
-
-        self._drawing.save()
-        self._drawing = None
+        self._saveDrawing(sitemap)
 
 #___________________________________________________________________________________________________ _analyzeTrackway
     def _analyzeTrackway(self, trackway, sitemap):
@@ -95,7 +82,7 @@ class CurveProjectionStage(AnalysisStage):
                 'CURVE_SERIES: %s' % analysisTrackway.curveSeries])
             return
 
-        curve = CurveSeries(stage=self, series=curveSeries)
+        curve = CurveSeries(stage=self, series=curveSeries, saveToAnalysisTracks=True)
 
         try:
             curve.compute()
@@ -109,7 +96,7 @@ class CurveProjectionStage(AnalysisStage):
         self.data[trackway.uid] = curve
         for error in curve.errors:
             self.logger.write(error)
-        curve.draw(self._drawing)
+        curve.draw(sitemap.cache.get('drawing'))
         #print(curve.getDebugReport())
 
 #___________________________________________________________________________________________________ _postAnalyze

@@ -23,11 +23,14 @@ class CurveSeries(object):
     def __init__(self, stage, series, **kwargs):
         """Creates a new instance of CurveSeries."""
 
+        self.saveToAnalysisTracks = kwargs.get('saveToAnalysisTracks', False)
+
         self._series = series
         self._stage = stage
         self._analysisTrackway = kwargs.get('analysisTrackway')
 
         self._populated = False
+        self._length = 0.0
         self._errors = []
         self._segments = []
 
@@ -69,10 +72,12 @@ class CurveSeries(object):
 #___________________________________________________________________________________________________ GS: length
     @property
     def length(self):
-        return self.analysisTrackway.curveLength
+        return self._length
     @length.setter
     def length(self, value):
-        self.analysisTrackway.curveLength = value
+        self._length = value
+        if self.saveToAnalysisTracks:
+            self.analysisTrackway.curveLength = value
 
 #___________________________________________________________________________________________________ GS: errors
     @property
@@ -81,6 +86,22 @@ class CurveSeries(object):
 
 #===================================================================================================
 #                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ getTrackSegment
+    def getTrackSegment(self, track):
+        """ Finds the segment in which the specified track resides and returns that segment or
+            None if no such segment was found.
+
+            @return CurveProjectionSegment """
+
+        for segment in self._segments:
+            if track == segment.track:
+                return segment
+
+            for pair in segment.pairs:
+                if pair['track'] == track:
+                    return segment
+        return None
 
 #___________________________________________________________________________________________________ compute
     def compute(self):
@@ -95,11 +116,11 @@ class CurveSeries(object):
         self._process()
 
 #___________________________________________________________________________________________________ draw
-    def draw(self, drawing):
+    def draw(self, drawing, **kwargs):
         """draw doc..."""
 
         for segment in self.segments:
-            segment.draw(drawing)
+            segment.draw(drawing, **kwargs)
 
 #___________________________________________________________________________________________________ getDebugReport
     def getDebugReport(self):
@@ -146,12 +167,13 @@ class CurveSeries(object):
                         tracks[i + 1].uid) ])
                 continue
 
-            # Populate analysis track data for curve series tracks
-            analysisTrack = tracks[i].getAnalysisPair(
-                self.stage.analysisSession, createIfMissing=True)
-            analysisTrack.curveSegment = len(segments)
-            analysisTrack.segmentPosition = 0.0
-            analysisTrack.curvePosition = offset
+            if self.saveToAnalysisTracks:
+                # Populate analysis track data for curve series tracks
+                analysisTrack = tracks[i].getAnalysisPair(
+                    self.stage.analysisSession, createIfMissing=True)
+                analysisTrack.curveSegment = len(segments)
+                analysisTrack.segmentPosition = 0.0
+                analysisTrack.curvePosition = offset
 
             s = CurveProjectionSegment(
                 index=i + 1,
@@ -174,10 +196,11 @@ class CurveSeries(object):
         segments.insert(0, s)
 
         track = tracks[-1]
-        analysisTrack = track.getAnalysisPair(self.stage.analysisSession, createIfMissing=True)
-        analysisTrack.curveSegment = len(tracks) - 1
-        analysisTrack.segmentPosition = 0.0
-        analysisTrack.curvePosition = offset
+        if self.saveToAnalysisTracks:
+            analysisTrack = track.getAnalysisPair(self.stage.analysisSession, createIfMissing=True)
+            analysisTrack.curveSegment = len(tracks) - 1
+            analysisTrack.segmentPosition = 0.0
+            analysisTrack.curvePosition = offset
 
         srcLine = segments[-1].line
         segLine = srcLine.createNextLineSegment(self.EXTENSION_LENGTH)
@@ -205,8 +228,10 @@ class CurveSeries(object):
 
         result = self._findSegmentMatch(track, self.segments)
         segment = result['segment']
-
         segment.pairs.append(result)
+
+        if not self.saveToAnalysisTracks:
+            return
 
         analysisTrack = track.getAnalysisPair(self.stage.analysisSession, createIfMissing=True)
         analysisTrack.curveSegment = segment.index
@@ -288,10 +313,14 @@ class CurveSeries(object):
         pair['line'].start.copyFrom(point)
 
         track = pair['track']
+        pair['distance'] = dist
+
+        if not self.saveToAnalysisTracks:
+            return
+
         at = track.getAnalysisPair(self.stage.analysisSession)
         at.curvePosition = segment.offset + dist
         at.segmentPosition = dist
-        pair['distance'] = dist
 
 #___________________________________________________________________________________________________ _findSegmentMatch
     @classmethod

@@ -8,6 +8,8 @@ from pyaid.time.TimeUtils import TimeUtils
 from cadence.analysis.comparison.ComparisonAnalyzer import ComparisonAnalyzer
 from cadence.analysis.curvature.CurvatureAnalyzer import CurvatureAnalyzer
 from cadence.analysis.direction.DirectionAnalyzer import DirectionAnalyzer
+from cadence.analysis.gauge.GaugeAnalyzer import GaugeAnalyzer
+from cadence.analysis.stats.StatisticsAnalyzer import StatisticsAnalyzer
 from cadence.analysis.status.StatusAnalyzer import StatusAnalyzer
 from cadence.analysis.validation.ValidationAnalyzer import ValidationAnalyzer
 
@@ -23,7 +25,9 @@ class AnalyzeAll(object):
         ComparisonAnalyzer,
         CurvatureAnalyzer,
         ValidationAnalyzer,
-        DirectionAnalyzer]
+        DirectionAnalyzer,
+        GaugeAnalyzer,
+        StatisticsAnalyzer]
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self):
@@ -44,7 +48,7 @@ class AnalyzeAll(object):
 
             print('\n\n%s\n%s\n\n' % (80*'#', 80*'#'))
 
-        print(80*'-' + '\nANALYSIS COMPLETE:')
+        print('%s\nANALYSIS COMPLETE:' % (80*'-'))
         for a in self.analyzers:
             print('  [%s]: %s (%s)' % (
                 'SUCCESS' if a[-1].success else 'FAILED',

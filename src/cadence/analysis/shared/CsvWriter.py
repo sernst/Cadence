@@ -28,6 +28,9 @@ class CsvWriter(object):
         self.removeIfSavedEmpty = kwargs.get('removeIfSavedEmpty', True)
         self._fields            = OrderedDict()
 
+        if 'fields' in kwargs:
+            self.addFields(*kwargs.get('fields'))
+
 #===================================================================================================
 #                                                                                   G E T / S E T
 

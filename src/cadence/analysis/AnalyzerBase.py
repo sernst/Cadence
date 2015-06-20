@@ -464,7 +464,7 @@ class AnalyzerBase(object):
         if trackway.uid in self._seriesBundles:
             return self._seriesBundles[trackway.uid]
 
-        bundle = trackway.getTrackSeries()
+        bundle = trackway.getTrackwaySeriesBundle()
         self._seriesBundles[trackway.uid] = bundle
         return bundle
 

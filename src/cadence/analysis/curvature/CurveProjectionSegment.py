@@ -90,7 +90,9 @@ class CurveProjectionSegment(object):
         return data
 
 #___________________________________________________________________________________________________ draw
-    def draw(self, drawing):
+    def draw(self, drawing, **kwargs):
+        drawPairs = kwargs.get('drawPairs', True)
+
         segLine = self.line
         edgeLineStyle = dict(stroke="#006666", stroke_width=1, stroke_opacity='0.25')
         lineStyles = [
@@ -111,12 +113,13 @@ class CurveProjectionSegment(object):
             segLine.end.toMayaTuple(), 5,
             stroke='none', fill='#002200', fill_opacity='0.1')
 
+        if not drawPairs:
+            return
+
         for pair in self.pairs:
             # Draw projection lines for each project pair in the segment
             line = pair['line']
-            drawing.line(
-                line.start.toMayaTuple(), line.end.toMayaTuple(),
-                stroke='blue', stroke_width=1, stroke_opacity='0.5')
+            drawing.lineSegment(line, stroke='blue', stroke_width=1, stroke_opacity='0.5')
 
             drawing.circle(
                 line.end.toMayaTuple(), 5, stroke='none', fill='blue', fill_opacity='0.5')

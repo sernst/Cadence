@@ -73,6 +73,21 @@ class TrackSeriesBundle(object):
 #===================================================================================================
 #                                                                                     P U B L I C
 
+#___________________________________________________________________________________________________ getOpposingSeries
+    def getOpposingSeries(self, series):
+        """getOpposingSeries doc..."""
+        if series == self.leftPes:
+            return self.rightPes
+        elif series == self.rightPes:
+            return self.leftPes
+        elif series == self.leftManus:
+            return self.rightManus
+        elif series == self.rightManus:
+            return self.leftManus
+
+        print('SERIES:', series)
+        raise ValueError('Specified series "%s" not part of this bundle' % series)
+
 #___________________________________________________________________________________________________ echoStatus
     def echoStatus(self, asPercent =False):
         if not self._leftPes:

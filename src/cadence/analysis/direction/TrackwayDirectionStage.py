@@ -66,24 +66,9 @@ class TrackwayDirectionStage(CurveOrderedAnalysisStage):
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
 
-        drawing = CadenceDrawing(
-            self.getPath(
-                self.MAPS_FOLDER_NAME,
-                '%s-%s-SAMPLED-DIRECTION.svg' % (sitemap.name, sitemap.level),
-                isFile=True),
-            sitemap)
-
-        drawing.grid()
-        drawing.federalCoordinates()
-        sitemap.cache.set('drawing', drawing)
-
+        self._createDrawing(sitemap, 'SAMPLED-DIRECTION', self.MAPS_FOLDER_NAME)
         super(TrackwayDirectionStage, self)._analyzeSitemap(sitemap)
-
-        try:
-            sitemap.cache.extract('drawing').save()
-        except Exception:
-            self.logger.write('[WARNING]: No sitemap saved for %s-%s' % (
-                sitemap.name, sitemap.level))
+        self._saveDrawing(sitemap)
 
 #___________________________________________________________________________________________________ _analyzeTrackway
     def _analyzeTrackway(self, trackway, sitemap):

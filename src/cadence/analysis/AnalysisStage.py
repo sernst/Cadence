@@ -13,6 +13,7 @@ from pyaid.string.StringUtils import StringUtils
 from pyaid.system.SystemUtils import SystemUtils
 from pyaid.time.TimeUtils import TimeUtils
 from cadence.analysis.AnalyzerBase import AnalyzerBase
+from cadence.svg.CadenceDrawing import CadenceDrawing
 
 try:
     import matplotlib.pyplot as plt
@@ -211,6 +212,29 @@ class AnalysisStage(object):
         for sitemap in self.owner.getSitemaps():
             if sitemap.isReady:
                 self._analyzeSitemap(sitemap)
+
+#___________________________________________________________________________________________________ _createDrawing
+    def _createDrawing(self, sitemap, suffix, folder):
+        """_createDrawing doc..."""
+        drawing = CadenceDrawing(
+            self.getPath(
+                folder,
+                '%s-%s-%s.svg' % (sitemap.name, sitemap.level, suffix), isFile=True),
+            sitemap)
+
+        drawing.grid()
+        drawing.federalCoordinates()
+        sitemap.cache.set('drawing', drawing)
+        return drawing
+
+#___________________________________________________________________________________________________ _saveDrawing
+    def _saveDrawing(self, sitemap):
+        """_saveDrawing doc..."""
+        try:
+            sitemap.cache.extract('drawing').save()
+        except Exception:
+            self.logger.write('[WARNING]: No sitemap saved for %s-%s' % (
+                sitemap.name, sitemap.level))
 
 #___________________________________________________________________________________________________ _analyzeSitemap
     def _analyzeSitemap(self, sitemap):

@@ -335,6 +335,11 @@ class CadenceDrawing(object):
         if not session:
             s.close()
 
+#___________________________________________________________________________________________________ lineSegment
+    def lineSegment(self, line, groupId =None, **extra):
+        """ Adds a line object to the svg file based on a LineSegment2D instance. """
+        self.line(line.start.toMayaTuple(), line.end.toMayaTuple(), groupId=groupId, **extra)
+
 #___________________________________________________________________________________________________ line
     def line(self, p1, p2, scene =True, groupId =None, **extra):
         """ Adds a line object to the svg file based on two scene points. It first converts from

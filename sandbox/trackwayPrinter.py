@@ -41,7 +41,7 @@ for siteMap in siteMaps:
     for trackway in trackways:
         print('\n\n\n%s\nTRACKWAY[%s]:' % (60*'=', trackway.name))
 
-        trackwaySeries = trackway.getTrackSeries()
+        trackwaySeries = trackway.getTrackwaySeriesBundle()
         for label, series in trackwaySeries.items():
             if not series.tracks:
                 continue

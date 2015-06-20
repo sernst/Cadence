@@ -26,7 +26,7 @@ print('TRACKWAY COUNT: %s' % len(trackways))
 for trackway in trackways:
     print('TRACKWAY[%s]: %s' % (trackway.index, trackway.name))
 
-    for key, series in DictUtils.iter(trackway.getTrackSeries()):
+    for key, series in DictUtils.iter(trackway.getTrackwaySeriesBundle()):
         for track in series.tracks:
             print('  * %s' % track.fingerprint)
             drawing.circle(

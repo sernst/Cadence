@@ -131,6 +131,10 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
                     separation = testSeparation
                     angle = test
 
+        # Add values to the analysis database
+        analysisTrack.headingAngle = angle.degrees
+        analysisTrack.headingAngleUnc = angle.uncertaintyDegrees
+
         data.append(self.TRACK_HEADING_DATA_NT(
             track=track,
             deviation=deviation,
