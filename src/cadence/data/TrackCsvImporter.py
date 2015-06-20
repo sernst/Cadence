@@ -34,9 +34,14 @@ class TrackCsvImporter(object):
 #___________________________________________________________________________________________________ __init__
     def __init__(self, path =None, logger =None):
         """Creates a new instance of TrackCsvImporter."""
-        self._path    = path
+        self._path = path
+
         self.created  = []
         self.modified = []
+
+        self.createdStore = []
+        self.modifiedStore = []
+
         self.fingerprints = dict()
         self._logger  = logger
         if not logger:
@@ -553,10 +558,15 @@ class TrackCsvImporter(object):
 
         t.importFlags = ts.importFlags
 
-        if existingStore:
-            self.modified.append(ts)
+        if existing:
+            self.modified.append(t)
         else:
-            self.created.append(ts)
+            self.created.append(t)
+
+        if existingStore:
+            self.modifiedStore.append(ts)
+        else:
+            self.createdStore.append(ts)
 
         return t
 

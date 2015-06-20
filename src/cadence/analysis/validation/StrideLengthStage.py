@@ -39,7 +39,7 @@ class StrideLengthStage(AnalysisStage):
 #===================================================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preDeviations
+#___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
         """_preDeviations doc..."""
         self.noData = 0
@@ -148,6 +148,10 @@ class StrideLengthStage(AnalysisStage):
             styles = ('red', 10) if deviation > 2.0 else ('green', 5)
 
             if not isLastTrack:
+                aTrack = track.getAnalysisPair(self.analysisSession)
+                aTrack.strideLength = entered.raw
+                aTrack.strideLengthUnc = entered.rawUncertainty
+
                 drawing.line(
                     posTrack.toMayaTuple(), posPair.toMayaTuple(),
                     stroke=styles[0], stroke_width=1, stroke_opacity='0.1')

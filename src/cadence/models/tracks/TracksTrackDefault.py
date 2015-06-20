@@ -148,7 +148,7 @@ class TracksTrackDefault(TracksDefault):
     @property
     def name(self):
         """ Human-readable display name for the track, based of its properties. """
-        number = StringUtils.toUnicode(int(self.number)) if self.number else '-'
+        number = StringUtils.toUnicode(int(self.number)) if self.number else '*'
         return ('L' if self.left else 'R') + ('P' if self.pes else 'M') + number
     @name.setter
     def name(self, value):
@@ -187,7 +187,7 @@ class TracksTrackDefault(TracksDefault):
             getattr(self, TrackPropEnum.YEAR.name, ''),
             getattr(self, TrackPropEnum.SECTOR.name, ''),
             getattr(self, TrackPropEnum.TRACKWAY_TYPE.name, ''),
-            getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0') ])
+            getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0').replace('-', 'N') ])
 
         if out == 'TCH-1000-2014-12-S-13BIS':
             # Fix a naming ambiguity from the catalog

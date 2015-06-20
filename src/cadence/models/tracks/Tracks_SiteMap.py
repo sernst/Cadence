@@ -144,7 +144,7 @@ class Tracks_SiteMap(TracksDefault):
 #___________________________________________________________________________________________________ GS: getLevelFromFilename
     @classmethod
     def getLevelFromFilename(cls, filename):
-        return filename.partition('_')[-1].rpartition(' ')[0]
+        return filename.split('_')[-1].split(' ')[0]
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

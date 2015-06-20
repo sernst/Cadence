@@ -195,6 +195,10 @@ class PaceLengthStage(AnalysisStage):
                 pairTrack=pairTrack,
                 drawFunc=functools.partial(self._drawPaceLine, sitemap, paceLine))
 
+            aTrack = track.getAnalysisPair(self.analysisSession)
+            aTrack.paceLength = entered.raw
+            aTrack.paceLengthUnc = entered.rawUncertainty
+
             self.entries.append(entry)
             # self._drawPaceLine(sitemap, paceLine, )
             track.cache.set('paceData', entry)

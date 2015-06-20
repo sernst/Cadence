@@ -2,19 +2,23 @@ library(RSQLite)
 library(dplyr)
 library(ggplot2)
 
+source('src/support/TrackUtils.R')
+
 # Create a connection to the tracks database and load the tracks database table
-tracksConn <- RSQLite::dbConnect(RSQLite::SQLite(), dbname="input/tracks.vdb")
-allTracks <- RSQLite::dbReadTable(tracksConn, "tracks")
-RSQLite::dbDisconnect(tracksConn)
-tracksConn <- NULL
+conn <- RSQLite::dbConnect(RSQLite::SQLite(), dbname="input/tracks.vdb")
+sitemaps <- RSQLite::dbReadTable(conn, "sitemaps")
+sourceTracks <- RSQLite::dbReadTable(conn, "tracks")
+RSQLite::dbDisconnect(conn)
+
+conn <- RSQLite::dbConnect(RSQLite::SQLite(), dbname="input/analysis.vdb")
+analysisTracks <- RSQLite::dbReadTable(conn, "tracks")
+RSQLite::dbDisconnect(conn)
+conn <- NULL
+
+allTracks <- dplyr::inner_join(sourceTracks, analysisTracks, by=c('uid'))
 
 # Add the fingerprint to the columns of data
-allTracks$fingerprint <- paste(
-  allTracks$site, allTracks$level, allTracks$year, allTracks$sector, 
-  allTracks$trackwayType, allTracks$trackwayNumber,
-  ifelse(allTracks$left, 'L', 'R'),
-  ifelse(allTracks$pes, 'P', 'M'),
-  allTracks$number, sep='-')
+allTracks$fingerprint <- generateFingerprints(allTracks)
 
 # Modify the tracks table for analysis
 hidden <- dplyr::filter(allTracks, allTracks$hidden == 1)
@@ -33,6 +37,7 @@ pesTracks <- tracks[which(tracks$pes == TRUE), ]
 pdf("output/Length-by-Width.pdf", useDingbats=FALSE)
 ggplot(pesTracks, aes(width, length)) + geom_point()
 ggplot(manusTracks, aes(width, length)) + geom_point()
+ggplot(allTracks, aes(strideLength, paceLength)) + geom_point()
 
 # Finalized PDF printing
 dev.off()

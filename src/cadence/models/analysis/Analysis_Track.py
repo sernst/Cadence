@@ -24,4 +24,9 @@ class Analysis_Track(AnalysisDefault):
     _curvePosition      = sqla.Column(sqla.Float, default=0.0)
     _nextCurveTrack     = sqla.Column(sqla.Unicode, default='')
 
+    _strideLength       = sqla.Column(sqla.Float, default=0.0)
+    _strideLengthUnc    = sqla.Column(sqla.Float, default=0.0)
+
+    _paceLength         = sqla.Column(sqla.Float, default=0.0)
+    _paceLengthUnc      = sqla.Column(sqla.Float, default=0.0)
 
