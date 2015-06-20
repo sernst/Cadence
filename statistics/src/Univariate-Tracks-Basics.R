@@ -38,6 +38,7 @@ pdf("output/Length-by-Width.pdf", useDingbats=FALSE)
 ggplot(pesTracks, aes(width, length)) + geom_point()
 ggplot(manusTracks, aes(width, length)) + geom_point()
 ggplot(allTracks, aes(strideLength, paceLength)) + geom_point()
+ggplot(allTracks, aes(strideLength, simpleGauge)) + geom_point()
 
 # Finalized PDF printing
 dev.off()
