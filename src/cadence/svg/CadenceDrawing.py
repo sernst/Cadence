@@ -1,14 +1,16 @@
 # CadenceDrawing.py
 # (C)2014-2015
-# Kent A. Stevens
+# Kent A. Stevens and Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-from pyaid.debug.Logger import Logger
-from pyaid.file.FileUtils import FileUtils
+
+import math
 
 import svgwrite
 from svgwrite import mm
 
+from pyaid.debug.Logger import Logger
+from pyaid.file.FileUtils import FileUtils
 from pyaid.system.SystemUtils import SystemUtils
 from pyaid.OsUtils import OsUtils
 
@@ -138,6 +140,18 @@ class CadenceDrawing(object):
                 showUncertainty=showUncertainty,
                 showCenters=showCenters)
 
+#===================================================================================================
+#                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: pixelWidth
+    @property
+    def pixelWidth(self):
+        return math.ceil(self.siteMap.width*self.pxPerMm)
+
+#___________________________________________________________________________________________________ GS: pixelHeight
+    @property
+    def pixelHeight(self):
+        return math.ceil(self.siteMap.height*self.pxPerMm)
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -275,6 +289,47 @@ class CadenceDrawing(object):
                 y = y0 + j*dy
                 self.use('mark', [self.pxPerMm*x, self.pxPerMm*y], rotation=45, scene=False)
 
+        p = 0
+        delta = 300
+        count = [0, 0]
+        while p <= self.pixelWidth:
+            # Vertical lines
+            count[0] += 1
+
+            obj = self._drawing.line(
+                (p, 0), (p, self.pixelHeight),
+                stroke='black', stroke_width=1, stroke_opacity='0.1',
+                stroke_dasharray='5,5')
+            self._drawing.add(obj)
+
+            if p == self.pixelWidth:
+                break
+            p = min(p + delta, self.pixelWidth)
+
+        p = 0
+        while p <= self.pixelHeight:
+            # Horizontal lines
+            count[1] += 1
+
+            obj = self._drawing.line(
+                (0, p), (self.pixelWidth, p),
+                stroke='black', stroke_width=1, stroke_opacity='0.1',
+                stroke_dasharray='5,5')
+            self._drawing.add(obj)
+
+            if p == self.pixelHeight:
+                break
+            p = min(p + delta, self.pixelHeight)
+
+        for ix in range(count[0] - 1):
+            # Text Coordinate Labels
+            for iy in range(count[1] - 1):
+                obj = self._drawing.text(
+                    '[%s-%s]' % (iy + 1, ix + 1),
+                    (delta*ix + 5, delta*iy + 17),
+                    font_size='12', fill='black', fill_opacity='0.15', stroke='none')
+                self._drawing.add(obj)
+
 #___________________________________________________________________________________________________ labelTracks
     def labelTracks(
             self,
@@ -301,7 +356,7 @@ class CadenceDrawing(object):
             # Use the position value to draw values rounded to uncertainty
             pos = track.positionValue.toMayaTuple()
 
-            if (pos[0] == 0 and pos[1] == 0):
+            if pos[0] == 0 and pos[1] == 0:
                 continue
 
             if showCenters:

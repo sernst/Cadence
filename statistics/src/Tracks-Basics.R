@@ -34,7 +34,7 @@ manusTracks <- tracks[which(tracks$pes == FALSE), ]
 pesTracks <- tracks[which(tracks$pes == TRUE), ]
 
 # [PLOT]: Length vs Width
-pdf("output/Length-by-Width.pdf", useDingbats=FALSE)
+pdf("output/Track-Basics.pdf", useDingbats=FALSE)
 ggplot(pesTracks, aes(width, length)) + geom_point()
 ggplot(manusTracks, aes(width, length)) + geom_point()
 ggplot(allTracks, aes(strideLength, paceLength)) + geom_point()
