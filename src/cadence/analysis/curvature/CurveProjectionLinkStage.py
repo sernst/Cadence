@@ -9,8 +9,6 @@ from pyaid.number.NumericUtils import NumericUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
-from cadence.svg.CadenceDrawing import CadenceDrawing
-
 
 #*************************************************************************************************** CurveProjectionLinkStage
 class CurveProjectionLinkStage(AnalysisStage):
@@ -30,7 +28,6 @@ class CurveProjectionLinkStage(AnalysisStage):
             label='Curve Projection Linking',
             **kwargs)
 
-        self._drawing = None
         self._paths = []
 
 #===================================================================================================
@@ -38,29 +35,15 @@ class CurveProjectionLinkStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ _preAnalyze
     def _preAnalyze(self):
-        self._drawing = None
         self._paths = []
-
-        self.initializeFolder(self.CURVE_MAP_FOLDER_NAME)
 
 #___________________________________________________________________________________________________ _analyzeSitemap
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
 
-        self._drawing = CadenceDrawing(
-            self.getPath(
-                self.CURVE_MAP_FOLDER_NAME,
-                '%s-%s-LINKAGES.svg' % (sitemap.name, sitemap.level),
-                isFile=True),
-            sitemap)
-
-        self._drawing.grid()
-        self._drawing.federalCoordinates()
-
+        self._createDrawing(sitemap, 'LINKAGES', self.CURVE_MAP_FOLDER_NAME)
         super(CurveProjectionLinkStage, self)._analyzeSitemap(sitemap)
-
-        self._drawing.save()
-        self._drawing = None
+        self._saveDrawing(sitemap)
 
 #___________________________________________________________________________________________________ _analyzeTrackway
     def _analyzeTrackway(self, trackway, sitemap):
@@ -88,8 +71,10 @@ class CurveProjectionLinkStage(AnalysisStage):
                 'BUNDLE START UIDS: %s' % seriesBundle.echoStartUids()])
             return
 
+        drawing = sitemap.cache.get('drawing')
+
         # Draw the curve series
-        self._drawCurveSeries(self._drawing, curveSeries)
+        self._drawCurveSeries(drawing, curveSeries)
 
         # Draw a path connecting each track in the trackway in the order they appear in the curve
         # series projection
@@ -102,7 +87,7 @@ class CurveProjectionLinkStage(AnalysisStage):
             at = track.analysisPair
             if not nextTrack:
                 at.nextCurveTrack = ''
-                self._drawLine(self._drawing, line, opacity=0.25, startCap=False, connect=False)
+                self._drawLine(drawing, line, opacity=0.25, startCap=False, connect=False)
                 break
 
             at.nextCurveTrack = nextTrack.uid
@@ -111,7 +96,7 @@ class CurveProjectionLinkStage(AnalysisStage):
 
             line = LineSegment2D(track.positionValue, nextTrack.positionValue)
             self._drawLine(
-                self._drawing, line,
+                drawing, line,
                 color='black' if curveIndex & 1 else 'blue',
                 opacity=0.25, endCap=False)
 

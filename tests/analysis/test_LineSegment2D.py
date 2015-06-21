@@ -7,8 +7,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import math
 import random
 import unittest
-from pyaid.dict.DictUtils import DictUtils
 
+from pyaid.dict.DictUtils import DictUtils
 from pyaid.number.Angle import Angle
 
 from cadence.analysis.shared.LineSegment2D import LineSegment2D

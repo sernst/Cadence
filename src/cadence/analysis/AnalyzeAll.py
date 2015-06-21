@@ -27,7 +27,8 @@ class AnalyzeAll(object):
         ValidationAnalyzer,
         DirectionAnalyzer,
         GaugeAnalyzer,
-        StatisticsAnalyzer]
+        StatisticsAnalyzer
+    ]
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self):

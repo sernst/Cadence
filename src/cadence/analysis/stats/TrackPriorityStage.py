@@ -1,16 +1,15 @@
-# OriginCheckStage.py
-# (C)2014-2015
+# TrackPriorityStage.py
+# (C)2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from pyaid.number.NumericUtils import NumericUtils
-
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
+from cadence.enums.TrackCsvColumnEnum import TrackCsvColumnEnum
 
-#*************************************************************************************************** OriginCheckStage
-class OriginCheckStage(AnalysisStage):
+#*************************************************************************************************** TrackPriorityStage
+class TrackPriorityStage(AnalysisStage):
     """A class for..."""
 
 #===================================================================================================
@@ -18,10 +17,10 @@ class OriginCheckStage(AnalysisStage):
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, key, owner, **kwargs):
-        """Creates a new instance of OriginCheckStage."""
-        super(OriginCheckStage, self).__init__(
+        """Creates a new instance of TrackPriorityStage."""
+        super(TrackPriorityStage, self).__init__(
             key, owner,
-            label='Origin Check',
+            label='Track Priority Report',
             **kwargs)
 
         self._tracks = []
@@ -35,21 +34,37 @@ class OriginCheckStage(AnalysisStage):
         self._tracks = []
 
         csv = CsvWriter()
-        csv.path = self.getPath('Origin-Located.csv')
+        csv.path = self.getPath('Track-Priority.csv')
         csv.autoIndexFieldName = 'Index'
         csv.addFields(
             ('uid', 'UID'),
-            ('fingerprint', 'Fingerprint') )
+            ('fingerprint', 'Fingerprint'),
+            ('priority', 'Priority'),
+            ('preserved', 'Preserved'),
+            ('cast', 'Cast'),
+            ('outlined', 'Outlined') )
         self._csv = csv
 
 #___________________________________________________________________________________________________ _analyzeTrack
     def _analyzeTrack(self, track, series, trackway, sitemap):
-        if NumericUtils.equivalent(track.x, 0.0) and NumericUtils.equivalent(track.z, 0.0):
-            self._tracks.append(track)
-            self._csv.addRow({'uid':track.uid, 'fingerprint':track.fingerprint})
+
+        snapshot = track.snapshot
+        isPreserved = TrackCsvColumnEnum.PRESERVED.name in snapshot
+        isCast = TrackCsvColumnEnum.CAST.name in snapshot
+        isOutlined = TrackCsvColumnEnum.OUTLINE_DRAWING.name in snapshot
+
+        bundle = series.bundle
+        trackwayTrackCount = bundle.count
+
+        self._csv.createRow(
+            uid=track.uid,
+            fingerprint=track.fingerprint,
+            priority=trackwayTrackCount,
+            preserved=1 if isPreserved else 0,
+            cast=1 if isCast else 0,
+            outlined=1 if isOutlined else 0)
 
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
-        self.logger.write('ORIGIN TRACK COUNT: %s' % len(self._tracks))
-        for t in self._tracks:
-            self.logger.write(' * %s (%s)' % (t.fingerprint, t.uid))
+        self._csv.save()
+

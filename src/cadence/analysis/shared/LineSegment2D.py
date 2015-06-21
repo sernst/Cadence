@@ -5,12 +5,12 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import math
-from pyaid.list.ListUtils import ListUtils
-from pyaid.number.Angle import Angle
 
+from pyaid.number.Angle import Angle
 from pyaid.number.NumericUtils import NumericUtils
 
 from cadence.analysis.shared.PositionValue2D import PositionValue2D
+
 
 #*************************************************************************************************** LineSegment2D
 class LineSegment2D(object):
@@ -243,30 +243,12 @@ class LineSegment2D(object):
             result.rotate(a, self.start)
             return result
 
-        intercept    = s.y - slope*s.x
-        interceptUnc = s.yUnc + abs(s.x)*slopeUnc + abs(slope)*s.xUnc
+        intercept = s.y - slope*s.x
+        denom = slope*slope + 1.0
+        numer = point.x + slope*(point.y - intercept)
 
-        denom   = slope*slope + 1.0
-        numer   = point.x + slope*(point.y - intercept)
-
-        x       = numer/denom
-        dxdpx   = 1.0/denom
-        dxdpy   = slope/denom
-        dxdb    = slope/denom
-        dxdm    = ((point.y - intercept)*denom - 2.0*slope*numer)/(denom*denom)
-        xUnc    = abs(dxdpx)*point.xUnc + abs(dxdpy)*point.yUnc \
-                + abs(dxdb)*interceptUnc + abs(dxdm)*slopeUnc
-
-        numer   *= slope
-
-        y       = numer/denom + intercept
-        dydpx   = slope/denom
-        dydpy   = slope*slope/denom
-        dydb    = 1.0 - slope*slope/denom
-        dndm    = 2.0*slope*(point.y - intercept) + point.x
-        dydm    = (dndm*denom - 2.0*slope*numer)/(denom*denom)
-        yUnc    = abs(dydpx)*point.xUnc + abs(dydpy)*point.yUnc \
-                + abs(dydb)*interceptUnc + abs(dydm)*slopeUnc
+        x = numer/denom
+        y = (slope*numer)/denom + intercept
 
         if contained:
             # Check to see if point is between start and end values
@@ -280,7 +262,18 @@ class LineSegment2D(object):
             if xRange[1] < xMin or xMax < xRange[0] or yRange[1] < yMin or yMax < yRange[0]:
                 return None
 
-        return PositionValue2D(x=x, xUnc=xUnc, y=y, yUnc=yUnc)
+        pos = PositionValue2D(x=x, y=y)
+
+        startDist = self.start.distanceTo(pos)
+        endDist = self.end.distanceTo(pos)
+
+        xUnc = startDist.raw/length.raw*self.start.xUnc + endDist.raw/length.raw*self.end.xUnc
+        pos.xUnc = math.sqrt(xUnc**2 + point.xUnc**2)
+
+        yUnc = startDist.raw/length.raw*self.start.yUnc + endDist.raw/length.raw*self.end.yUnc
+        pos.yUnc = math.sqrt(yUnc**2 + point.yUnc**2)
+
+        return pos
 
 #___________________________________________________________________________________________________ extendLine
     def postExtendLine(self, lengthAdjust, replace =True):

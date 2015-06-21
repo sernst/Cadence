@@ -5,10 +5,9 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
-from cadence.analysis.comparison.DrawLengthWidthStage import DrawLengthWidthStage
-
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
+from cadence.analysis.comparison.DrawLengthWidthStage import DrawLengthWidthStage
 from cadence.analysis.comparison.RotationStage import RotationStage
 from cadence.analysis.comparison.LengthWidthStage import LengthWidthStage
 from cadence.analysis.AnalyzerBase import AnalyzerBase

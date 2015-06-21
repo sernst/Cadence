@@ -78,8 +78,8 @@ class CurveProjectionSegment(object):
 
         # Populate the projection values if the projection was successful
         p  = testPoint.clone()
-        p.xUnc = position.xUnc
-        p.yUnc = position.yUnc
+        # p.xUnc = position.xUnc
+        # p.yUnc = position.yUnc
         data['segment'] = self
         data['projectionLength'] = position.distanceTo(p).raw
         data['line'] = LineSegment2D(p, position)

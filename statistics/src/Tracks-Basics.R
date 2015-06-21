@@ -39,6 +39,8 @@ ggplot(pesTracks, aes(width, length)) + geom_point()
 ggplot(manusTracks, aes(width, length)) + geom_point()
 ggplot(allTracks, aes(strideLength, paceLength)) + geom_point()
 ggplot(allTracks, aes(strideLength, simpleGauge)) + geom_point()
+ggplot(allTracks, aes(width, strideLength)) + geom_point()
+ggplot(allTracks, aes(width, simpleGauge)) + geom_point()
 
 # Finalized PDF printing
 dev.off()

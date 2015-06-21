@@ -5,7 +5,6 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import math
-
 import numpy as np
 
 from pyaid.number.NumericUtils import NumericUtils
@@ -14,7 +13,6 @@ from pyaid.string.StringUtils import StringUtils
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.analysis.shared.plotting.Histogram import Histogram
-
 
 #*************************************************************************************************** LengthWidthStage
 class LengthWidthStage(AnalysisStage):

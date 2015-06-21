@@ -191,12 +191,9 @@ class CurveSparsenessStage(AnalysisStage):
         # table. This data persists because it is used later to rebuild track curves in other
         # analyzers.
         for uid, data in DictUtils.iter(self.data):
-            if not data['dense']:
-                continue
-
             trackway = data['trackway']
             result = trackway.getAnalysisPair(self.analysisSession, createIfMissing=True)
-            result.curveSeries = data['dense'].firstTrackUid
+            result.curveSeries = data['dense'].firstTrackUid if data['dense'] else ''
 
 #___________________________________________________________________________________________________ _processSparsenessResults
     def _processSparsenessResults(self, key):
