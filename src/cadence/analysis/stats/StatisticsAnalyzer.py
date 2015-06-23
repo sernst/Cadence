@@ -7,6 +7,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
+from cadence.analysis.stats.KMeansClusterStage import KMeansClusterStage
 from cadence.analysis.stats.TrackPriorityStage import TrackPriorityStage
 from cadence.analysis.stats.TrackwayStatsStage import TrackwayStatsStage
 from cadence.analysis.AnalyzerBase import AnalyzerBase
@@ -24,6 +25,7 @@ class StatisticsAnalyzer(AnalyzerBase):
         super(StatisticsAnalyzer, self).__init__(**kwargs)
         self.addStage(TrackPriorityStage('priority', self))
         self.addStage(TrackwayStatsStage('trackwayStats', self))
+        self.addStage(KMeansClusterStage('kmeans', self))
 
 ####################################################################################################
 ####################################################################################################

@@ -31,6 +31,7 @@ class SimpleGaugeStage(CurveOrderedAnalysisStage):
         self._errorTracks = []
         self._ignoreTracks = []
         self._trackwayGauges = []
+        self._trackwayGaugeMeans = []
         self._count = 0
 
 #===================================================================================================
@@ -42,6 +43,7 @@ class SimpleGaugeStage(CurveOrderedAnalysisStage):
         self._errorTracks = []
         self._ignoreTracks = []
         self._trackwayGauges = []
+        self._trackwayGaugeMeans = []
         self._count = 0
 
 #___________________________________________________________________________________________________ _analyzeSitemap
@@ -91,6 +93,16 @@ class SimpleGaugeStage(CurveOrderedAnalysisStage):
         try:
             simpleGauge = NumericUtils.weightedAverage(lengths)
             self._trackwayGauges.append(simpleGauge)
+        except ZeroDivisionError:
+            return
+
+        values = []
+        for l in lengths:
+            values.append(l.raw)
+
+        try:
+            simpleGaugeVariance = NumericUtils.getMeanAndDeviation(values)
+            self._trackwayGaugeMeans.append(simpleGaugeVariance)
         except ZeroDivisionError:
             return
 
@@ -191,6 +203,18 @@ class SimpleGaugeStage(CurveOrderedAnalysisStage):
         if self._ignoreTracks:
             self.logger.write('%s tracks lacked suitability for gauge calculation' % len(
                 self._ignoreTracks))
+
+        out = []
+        for entry in self._trackwayGaugeMeans:
+            out.append(PositionValue2D(x=len(out), y=entry.value, yUnc=entry.uncertainty))
+
+        plot = ScatterPlot(
+            data=ListUtils.sortObjectList(out, 'y'),
+            title='Trackway Gauges & Variances',
+            xLabel='Arbitrary Trackway Index',
+            yLabel='Average Trackway Gauge (m)',
+            color='purple')
+        self._paths.insert(0, plot.save(self.getTempFilePath(extension='pdf')))
 
         out = []
         for entry in self._trackwayGauges:

@@ -37,10 +37,34 @@ pesTracks <- tracks[which(tracks$pes == TRUE), ]
 pdf("output/Track-Basics.pdf", useDingbats=FALSE)
 ggplot(pesTracks, aes(width, length)) + geom_point()
 ggplot(manusTracks, aes(width, length)) + geom_point()
-ggplot(allTracks, aes(strideLength, paceLength)) + geom_point()
-ggplot(allTracks, aes(strideLength, simpleGauge)) + geom_point()
-ggplot(allTracks, aes(width, strideLength)) + geom_point()
-ggplot(allTracks, aes(width, simpleGauge)) + geom_point()
+ggplot(tracks, aes(strideLength, paceLength)) + geom_point()
+ggplot(tracks, aes(strideLength, simpleGauge)) + geom_point()
+ggplot(tracks, aes(width, strideLength)) + geom_point()
+ggplot(tracks, aes(width, simpleGauge)) + geom_point()
+ggplot(tracks, aes(width)) + geom_histogram()
 
 # Finalized PDF printing
 dev.off()
+
+columnsToKeep <- c('width', 'rotation', 'strideLength', 'paceLength', 'headingAngle', 'simpleGauge')
+subsetTracks <- tracks[c('uid', columnsToKeep)]
+subsetTracks <- na.omit(subsetTracks)
+clusterTracks <- scale(subsetTracks[columnsToKeep])
+
+wss <- (nrow(clusterTracks)-1)*sum(apply(clusterTracks,2,var))
+for (i in 2:15) wss[i] <- sum(kmeans(clusterTracks, centers=i)$withinss)
+plot.new()
+plot(1:15, wss, type="b", xlab="Number of Clusters", ylab="Within groups sum of squares")
+
+fit <- kmeans(clusterTracks, 5)
+aggregate(clusterTracks,by=list(fit$cluster),FUN=mean)
+subsetTracks <- data.frame(subsetTracks, fit$cluster)
+
+plot.new()
+plot(fit[c("strideLength", "simpleGauge")], col=fit$cluster)
+points(fit$centers[,c("strideLength", "simpleGauge")], col=1:5, pch=8, cex=2)
+
+result <- subsetTracks[c('uid', 'fit.cluster')]
+result <- dplyr::select(result, uid, cluster = fit.cluster)
+write.csv(result, 'output/Clustered-Tracks.csv')
+

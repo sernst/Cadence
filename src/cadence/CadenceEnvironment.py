@@ -63,6 +63,12 @@ class CadenceEnvironment(object):
     def getResourcePath(cls, folder =None, filename =None):
         return cls._createAbsolutePath('resources', folder, filename)
 
+#___________________________________________________________________________________________________ getPath
+    @classmethod
+    def getPath(cls, *args, **kwargs):
+        """getPath doc..."""
+        return FileUtils.createPath(cls.ENV_PATH, '..', *args, **kwargs)
+
 #___________________________________________________________________________________________________ getResourceScriptPath
     @classmethod
     def getResourceScriptPath(cls, *args, **kwargs):
