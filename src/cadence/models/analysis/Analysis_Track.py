@@ -3,6 +3,7 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+from pyaid.number.NumericUtils import NumericUtils
 
 import sqlalchemy as sqla
 
@@ -41,3 +42,15 @@ class Analysis_Track(AnalysisDefault):
     _simpleGauge        = sqla.Column(sqla.Float, default=0.0)
     _simpleGaugeUnc     = sqla.Column(sqla.Float, default=0.0)
 
+#===================================================================================================
+#                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: paceLengthValue
+    @property
+    def paceLengthValue(self):
+        return NumericUtils.toValueUncertainty(self.paceLength, self.paceLengthUnc)
+
+#___________________________________________________________________________________________________ GS: strideLengthValue
+    @property
+    def strideLengthValue(self):
+        return NumericUtils.toValueUncertainty(self.strideLength, self.strideLengthUnc)

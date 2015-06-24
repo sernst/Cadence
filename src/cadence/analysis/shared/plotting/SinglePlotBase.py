@@ -3,6 +3,7 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+from matplotlib.ticker import FuncFormatter
 
 from cadence.analysis.shared.plotting.PlotBase import PlotBase
 
@@ -22,6 +23,8 @@ class SinglePlotBase(PlotBase):
         self.title   = kwargs.get('title')
         self.xLabel  = kwargs.get('xLabel')
         self.yLabel  = kwargs.get('yLabel')
+        self.yTickFunc = kwargs.get('yTickFunc')
+        self.xTickFunc = kwargs.get('xTickFunc')
 
         self._lineMarkers = []
 
@@ -40,6 +43,14 @@ class SinglePlotBase(PlotBase):
 
         for marker in self._lineMarkers:
             self._plotLineMarker(marker['value'], **marker['kwargs'])
+
+        ax = self.pl.gca()
+        if self.xTickFunc is not None:
+            formatter = FuncFormatter(self.xTickFunc)
+            ax.get_xaxis().set_major_formatter(formatter)
+        if self.yTickFunc is not None:
+            formatter = FuncFormatter(self.yTickFunc)
+            ax.get_yaxis().set_major_formatter(formatter)
 
 #___________________________________________________________________________________________________ addLineMarker
     def addLineMarker(self, yValue, vertical =False, **kwargs):

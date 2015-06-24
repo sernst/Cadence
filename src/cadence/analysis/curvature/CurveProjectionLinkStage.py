@@ -9,6 +9,9 @@ from pyaid.number.NumericUtils import NumericUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
+from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
+
 
 #*************************************************************************************************** CurveProjectionLinkStage
 class CurveProjectionLinkStage(AnalysisStage):
@@ -81,8 +84,10 @@ class CurveProjectionLinkStage(AnalysisStage):
         track = self._getNextTrack(None, trackway)
         line = None
 
+        tracks = []
         curveIndex = 0
         while track is not None:
+            tracks.append(track)
             nextTrack = self._getNextTrack(track, trackway)
             at = track.analysisPair
             if not nextTrack:
@@ -101,6 +106,8 @@ class CurveProjectionLinkStage(AnalysisStage):
                 opacity=0.25, endCap=False)
 
             track = nextTrack
+
+        self._plotTracks(tracks, trackway)
 
 #___________________________________________________________________________________________________ _getNextTrack
     def _getNextTrack(self, track, trackway):
@@ -160,6 +167,43 @@ class CurveProjectionLinkStage(AnalysisStage):
 
         return nextTrack
 
+#___________________________________________________________________________________________________ _plotTracks
+    def _plotTracks(self, tracks, trackway):
+        """_plotTracks doc..."""
+
+        points = []
+        labels = []
+        for t in tracks:
+            at = t.getAnalysisPair(self.analysisSession)
+            if t.pes:
+                signal = 1 if t.left else 2
+            else:
+                signal = 3 if t.left else 4
+            p = PositionValue2D(x=at.curvePosition, y=signal)
+            points.append(p)
+            labels.append(t.shortFingerprint)
+
+        def labelChannels(value, position):
+            if value == 1:
+                return 'LP'
+            elif value == 2:
+                return 'RP'
+            elif value == 3:
+                return 'LM'
+            elif value == 4:
+                return 'RM'
+            else:
+                return ''
+
+        plot = ScatterPlot(
+            data=points,
+            title='%s Trackway Ordering' % trackway,
+            xLabel='Trackway Curve Position (m)',
+            yLabel='Classification',
+            yLimits=[0, 5],
+            yTickFunc=labelChannels)
+        self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
+
 #___________________________________________________________________________________________________ _drawCurveSeries
     @classmethod
     def _drawCurveSeries(cls, drawing, series):
@@ -205,3 +249,6 @@ class CurveProjectionLinkStage(AnalysisStage):
             drawing.circle(
                 line.start.toMayaTuple(), 5, stroke='none', fill=color, fill_opacity=opacity)
 
+#___________________________________________________________________________________________________ _postAnalyze
+    def _postAnalyze(self):
+        self.mergePdfs(self._paths, 'Trackway-Ordering.pdf')

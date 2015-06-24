@@ -10,8 +10,8 @@ from cadence.models.analysis.Analysis_Sitemap import Analysis_Sitemap
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 from cadence.models.tracks.Tracks_Trackway import Tracks_Trackway
 
-SITEMAP_NAME = 'PMM'
-SITEMAP_LEVEL = '1505'
+SITEMAP_NAME = 'BSY'
+SITEMAP_LEVEL = '1000'
 TRACKWAY_NAME = '' #'BSY-1040-2008-20-S-19' #'CRO-500-2004-1-S-3'
 
 smModel   = Tracks_SiteMap.MASTER
@@ -52,7 +52,9 @@ for siteMap in siteMaps:
 
             for track in series.tracks:
                 print(track.echoForVerification())
-                print('        size: (%s, %s)' % (track.width, track.length))
+                print('        size: (%s, %s) | field (%s, %s)' % (
+                    track.width, track.length,
+                    track.widthMeasured, track.lengthMeasured))
 
                 aTrack = track.getAnalysisPair(aSession)
                 print('        curve[%s]: %s (%s)' % (

@@ -3,8 +3,8 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-from cadence.analysis.shared.PositionValue2D import PositionValue2D
 
+from cadence.analysis.shared.PositionValue2D import PositionValue2D
 from cadence.analysis.shared.plotting.SinglePlotBase import SinglePlotBase
 
 #*************************************************************************************************** ScatterPlot

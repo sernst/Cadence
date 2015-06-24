@@ -81,6 +81,16 @@ class TracksTrackDefault(TracksDefault):
 #===================================================================================================
 #                                                                                   G E T / S E T
 
+#___________________________________________________________________________________________________ GS: widthValue
+    @property
+    def widthValue(self):
+        return NumericUtils.toValueUncertainty(self.width, self.widthUncertainty)
+
+#___________________________________________________________________________________________________ GS: lengthValue
+    @property
+    def lengthValue(self):
+        return NumericUtils.toValueUncertainty(self.length, self.lengthUncertainty)
+
 #___________________________________________________________________________________________________ GS: trackSeries
     @property
     def trackSeries(self):
@@ -161,6 +171,15 @@ class TracksTrackDefault(TracksDefault):
             self.left = value[0].upper() == 'L'
             self.pes  = value[1].upper() == 'P'
         self.number = value[2:].upper()
+
+#___________________________________________________________________________________________________ GS: shortFingerprint
+    @property
+    def shortFingerprint(self):
+        return ''.join([
+            self.trackwayFingerprint,
+            'L' if getattr(self, TrackPropEnum.LEFT.name, False) else 'R',
+            'P' if getattr(self, TrackPropEnum.PES.name, False) else 'M',
+            getattr(self, TrackPropEnum.NUMBER.name.replace('-', 'N'), '0') ])
 
 #___________________________________________________________________________________________________ GS: fingerprint
     @property

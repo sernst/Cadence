@@ -5,6 +5,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from pyaid.config.ConfigsDict import ConfigsDict
+from pyaid.number.NumericUtils import NumericUtils
 
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
@@ -32,6 +33,24 @@ class TrackSeries(object):
 
 #===================================================================================================
 #                                                                                   G E T / S E T
+
+#___________________________________________________________________________________________________ GS: averageTrackWidth
+    @property
+    def averageTrackWidth(self):
+        values = []
+        for t in self.tracks:
+            values.append(t.widthValue)
+
+        return NumericUtils.weightedAverage(values)
+
+#___________________________________________________________________________________________________ GS: averageTrackLength
+    @property
+    def averageTrackLength(self):
+        values = []
+        for t in self.tracks:
+            values.append(t.lengthValue)
+
+        return NumericUtils.weightedAverage(values)
 
 #___________________________________________________________________________________________________ GS: bundle
     @property

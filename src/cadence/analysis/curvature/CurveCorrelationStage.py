@@ -28,6 +28,7 @@ class CurveCorrelationStage(CurveOrderedAnalysisStage):
             **kwargs)
 
         self._paths = []
+        self._pesPaths = []
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -40,25 +41,44 @@ class CurveCorrelationStage(CurveOrderedAnalysisStage):
     def _analyzeTrackway(self, trackway, sitemap):
 
         trackway.cache.set('curvePoints', {'x':[], 'y':[]})
+        trackway.cache.set('curvePointsPes', {'x':[], 'y':[]})
         super(CurveCorrelationStage, self)._analyzeTrackway(trackway, sitemap)
         data = trackway.cache.extract('curvePoints')
+        pesData = trackway.cache.extract('curvePointsPes')
 
-        if len(data['x']) < 2:
+        if len(data['x']) > 1:
+            xDelta = 0.05
+            xStart = data['x'][0]
+            xEnd = data['x'][-1]
+            xs = np.linspace(xStart, xEnd, int(math.ceil((xEnd - xStart)/xDelta)))
+
+            signal = self.interpConstant(data, xs)
+
+            plot = AutoCorrelationPlot(
+                data=signal['y'],
+                xScale=xDelta,
+                title='%s Trackway Phase Auto-Correlation' % trackway.name,
+                xLabel='Displacement (m)',
+                yLabel='Auto-Correlation')
+            self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
+
+        if len(pesData['x']) < 2:
             return
 
         xDelta = 0.05
-        xStart = data['x'][0]
-        xEnd = data['x'][-1]
+        xStart = pesData['x'][0]
+        xEnd = pesData['x'][-1]
         xs = np.linspace(xStart, xEnd, int(math.ceil((xEnd - xStart)/xDelta)))
 
-        signal = self.interpConstant(data, xs)
+        signal = self.interpConstant(pesData, xs)
 
         plot = AutoCorrelationPlot(
             data=signal['y'],
-            title='%s Trackway Phase Auto-Correlation' % trackway.name,
-            xLabel='Lag (5cm intervals)',
+            xScale=xDelta,
+            title='%s Trackway Pes Phase Auto-Correlation' % trackway.name,
+            xLabel='Displacement (m)',
             yLabel='Auto-Correlation')
-        self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
+        self._pesPaths.append(plot.save(self.getTempFilePath(extension='pdf')))
 
 #___________________________________________________________________________________________________ interpConstant
     @classmethod
@@ -89,6 +109,9 @@ class CurveCorrelationStage(CurveOrderedAnalysisStage):
 
         if track.pes:
             signal = 1 if track.left else -1
+            pesData = trackway.cache.get('curvePointsPes')
+            pesData['x'].append(analysisTrack.curvePosition)
+            pesData['y'].append(signal)
         else:
             signal = 2 if track.left else -2
 
@@ -97,3 +120,4 @@ class CurveCorrelationStage(CurveOrderedAnalysisStage):
 #___________________________________________________________________________________________________ _postAnalyze
     def _postAnalyze(self):
         self.mergePdfs(self._paths, 'Phase-Coherence.pdf')
+        self.mergePdfs(self._pesPaths, 'Pes-Phase-Coherence.pdf')

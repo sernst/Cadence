@@ -377,7 +377,7 @@ class TrackCsvImporter(object):
             ts.lengthMeasured = 0.01*float(self._collapseManusPesProperty(
                 ts, csvRowData,
                 TCCE.PES_LENGTH, TCCE.PES_LENGTH_GUESS,
-                TCCE.MANUS_WIDTH, TCCE.MANUS_WIDTH_GUESS,
+                TCCE.MANUS_LENGTH, TCCE.MANUS_LENGTH_GUESS,
                 '0', ImportFlagsEnum.HIGH_LENGTH_UNCERTAINTY, ImportFlagsEnum.NO_LENGTH ))
 
             t.lengthMeasured = ts.lengthMeasured
@@ -603,7 +603,7 @@ class TrackCsvImporter(object):
     def _getStrippedValue(cls, value):
         try:
             return value.strip()
-        except Exception as err:
+        except Exception:
             return value
 
 #___________________________________________________________________________________________________ _getStrippedRowData
@@ -612,7 +612,7 @@ class TrackCsvImporter(object):
         out = source.get(trackCsvEnum.name)
         try:
             return out.strip()
-        except Exception as err:
+        except Exception:
             return out
 
 #___________________________________________________________________________________________________ _collapseManusPesProperty

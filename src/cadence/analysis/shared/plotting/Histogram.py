@@ -1,8 +1,9 @@
 # Histogram.py
-# (C)2014
+# (C)2014-2015
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
 from pyaid.ArgsUtils import ArgsUtils
 
 from cadence.analysis.shared.plotting.SinglePlotBase import SinglePlotBase
@@ -23,7 +24,6 @@ class Histogram(SinglePlotBase):
         self.binCount   = kwargs.get('binCount', 100)
         self.data       = kwargs.get('data', [])
         self.isLog      = kwargs.get('isLog', False)
-
 
 #===================================================================================================
 #                                                                                     P U B L I C

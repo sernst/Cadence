@@ -4,6 +4,8 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from matplotlib.ticker import FuncFormatter
+
 import numpy as np
 import pandas as pd
 from pandas.tools import plotting as pdPlot
@@ -24,6 +26,7 @@ class AutoCorrelationPlot(SinglePlotBase):
         super(AutoCorrelationPlot, self).__init__(**kwargs)
         self.lineColor  = kwargs.get('lineColor', 'none')
         self.data       = kwargs.get('data', [])
+        self.xScale     = kwargs.get('xScale', 1.0)
 
 #===================================================================================================
 #                                                                                     P U B L I C
@@ -55,6 +58,11 @@ class AutoCorrelationPlot(SinglePlotBase):
         pl = self.pl
         ax = pl.gca()
         pdPlot.autocorrelation_plot(data, ax=ax)
+
+        if self.xScale != 1.0:
+            formatter = FuncFormatter(self._scaleTickMark)
+            ax.get_xaxis().set_major_formatter(formatter)
+
         pl.title(self.title)
         pl.xlabel(self.xLabel)
         pl.ylabel(self.yLabel)
@@ -63,3 +71,8 @@ class AutoCorrelationPlot(SinglePlotBase):
         if self.yLimits:
             pl.ylim(*self.yLimits)
         pl.grid(True)
+
+#___________________________________________________________________________________________________ _scaleTickMark
+    def _scaleTickMark(self, tickValue, tickPosition):
+        """_formatScaler doc..."""
+        return self.xScale*float(tickValue)
