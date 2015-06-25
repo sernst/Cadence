@@ -10,6 +10,7 @@ PyGlassEnvironment.initializeFromInternalPath(__file__)
 from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
 from cadence.data.TrackCsvImporter import TrackCsvImporter
 from cadence.data.TrackLinkConnector import TrackLinkConnector
+from cadence.models.analysis.Analysis_Track import Analysis_Track
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 ####################################################################################################
@@ -22,10 +23,11 @@ PATH = '/Users/scott/Dropbox/A16/spreadsheets/BEB_S_500/BEB_500.csv'
 #       Imports the tracks from the spreadsheet into the database
 
 session = Tracks_Track.MASTER.createSession()
+analysisSession = Analysis_Track.createSession()
 
 importer = TrackCsvImporter(path=PATH)
 print('IMPORTING: %s' % PATH)
-importer.read(session=session)
+importer.read(session=session, analysisSession=analysisSession)
 
 trackUids = []
 for track in importer.created + importer.modified:

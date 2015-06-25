@@ -183,26 +183,28 @@ class CurveProjectionLinkStage(AnalysisStage):
             points.append(p)
             labels.append(t.shortFingerprint)
 
-        def labelChannels(value, position):
-            if value == 1:
-                return 'LP'
-            elif value == 2:
-                return 'RP'
-            elif value == 3:
-                return 'LM'
-            elif value == 4:
-                return 'RM'
-            else:
-                return ''
-
         plot = ScatterPlot(
             data=points,
-            title='%s Trackway Ordering' % trackway,
+            title='%s Trackway Ordering' % trackway.name,
             xLabel='Trackway Curve Position (m)',
             yLabel='Classification',
             yLimits=[0, 5],
-            yTickFunc=labelChannels)
+            yTickFunc=self._plotLabelChannelsFunc)
         self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
+
+#___________________________________________________________________________________________________ _plotLabelChannelsFunc
+    @classmethod
+    def _plotLabelChannelsFunc(cls, value, position):
+        if value == 1:
+            return 'LP'
+        elif value == 2:
+            return 'RP'
+        elif value == 3:
+            return 'LM'
+        elif value == 4:
+            return 'RM'
+        else:
+            return ''
 
 #___________________________________________________________________________________________________ _drawCurveSeries
     @classmethod

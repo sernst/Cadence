@@ -9,6 +9,7 @@ from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
 
 from cadence.data.TrackCsvImporter import TrackCsvImporter
 from cadence.data.TrackJsonImporter import TrackJsonImporter
+from cadence.models.analysis.Analysis_Track import Analysis_Track
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 #___________________________________________________________________________________________________ TrackImporterRemoteThread
@@ -22,13 +23,14 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
     JSON = 'json'
 
 #___________________________________________________________________________________________________ __init__
-    def __init__(self, parent, path, importType, session =None, **kwargs):
+    def __init__(self, parent, path, importType, session =None, analysisSession =None, **kwargs):
         """Creates a new instance of TrackImporterRemoteThread."""
         self._compressed = ArgsUtils.extract('compressed', False, kwargs)
 
         RemoteExecutionThread.__init__(self, parent, **kwargs)
         self._path       = path
         self._session    = session
+        self._analysisSession = analysisSession
         self._importType = importType
         self._verbose    = ArgsUtils.get('verbose', True, kwargs)
 
@@ -39,6 +41,8 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
     def _runImpl(self):
         model   = Tracks_Track.MASTER
         session = self._session if self._session else model.createSession()
+        analysisModel = Analysis_Track.MASTER
+        aSession = self._analysisSession if self._analysisSession else analysisModel.createSession()
 
         try:
             if self._importType == self.CSV:
@@ -47,7 +51,7 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
                 importer = TrackJsonImporter(self._path, logger=self._log, verbose=self._verbose)
 
             self._log.write(u'<h1>Beginning Import...</h1>')
-            importer.read(session, compressed=self._compressed)
+            importer.read(session=session, analysisSession=aSession, compressed=self._compressed)
         except Exception as err:
             if not self._session:
                 session.rollback()
@@ -59,5 +63,9 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
         if self._session is None:
             session.commit()
             session.close()
+
+        if self._analysisSession is None:
+            aSession.commit()
+            aSession.close()
 
         return 0

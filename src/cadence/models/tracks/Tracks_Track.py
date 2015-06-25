@@ -179,6 +179,28 @@ class Tracks_Track(TracksTrackDefault):
         result = session.query(model).filter(model.uid == self.uid).all()
         return result[0] if result else None
 
+#___________________________________________________________________________________________________ removeTracksByUid
+    @classmethod
+    def removeTracksByUid(cls, uid, session, analysisSession):
+        """removeTrackByUid doc..."""
+        model = cls.MASTER
+        tracks = session.query(model).filter(model.uid == uid).all()
+        if not tracks:
+            return []
+
+        for track in tracks:
+            analysisTrack = track.getAnalysisPair(analysisSession)
+            if analysisTrack:
+                analysisSession.delete(analysisTrack)
+
+            from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
+            storeModel = Tracks_TrackStore.MASTER
+            for store in session.query(storeModel).filter(storeModel.uid == track.uid).all():
+                session.delete(store)
+
+            session.delete(track)
+        return tracks
+
 #===================================================================================================
 #                                                                               P R O T E C T E D
 

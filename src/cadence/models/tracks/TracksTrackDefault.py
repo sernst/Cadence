@@ -18,6 +18,7 @@ from pyaid.string.StringUtils import StringUtils
 
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from cadence.enums.ImportFlagsEnum import ImportFlagsEnum
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
 from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.TracksDefault import TracksDefault
@@ -159,7 +160,7 @@ class TracksTrackDefault(TracksDefault):
     def name(self):
         """ Human-readable display name for the track, based of its properties. """
         number = StringUtils.toUnicode(int(self.number)) if self.number else '*'
-        return ('L' if self.left else 'R') + ('P' if self.pes else 'M') + number
+        return '%s%s%s' % (('L' if self.left else 'R'), ('P' if self.pes else 'M'), number)
     @name.setter
     def name(self, value):
         value = value.strip()
@@ -179,7 +180,7 @@ class TracksTrackDefault(TracksDefault):
             self.trackwayFingerprint,
             'L' if getattr(self, TrackPropEnum.LEFT.name, False) else 'R',
             'P' if getattr(self, TrackPropEnum.PES.name, False) else 'M',
-            getattr(self, TrackPropEnum.NUMBER.name.replace('-', 'N'), '0') ])
+            StringUtils.toText(getattr(self, TrackPropEnum.NUMBER.name, '0')).replace('-', 'N') ])
 
 #___________________________________________________________________________________________________ GS: fingerprint
     @property
@@ -187,7 +188,7 @@ class TracksTrackDefault(TracksDefault):
         """ String created from the uniquely identifying track properties. """
         return '%s-%s' % (
             self.trackSeriesFingerprint,
-            getattr(self, TrackPropEnum.NUMBER.name.replace('-', 'N'), '0') )
+            StringUtils.toText(getattr(self, TrackPropEnum.NUMBER.name, '0')).replace('-', 'N') )
 
 #___________________________________________________________________________________________________ GS: trackSeriesFingerprint
     @property
@@ -201,12 +202,12 @@ class TracksTrackDefault(TracksDefault):
     @property
     def trackwayFingerprint(self):
         out = '-'.join([
-            getattr(self, TrackPropEnum.SITE.name, ''),
-            getattr(self, TrackPropEnum.LEVEL.name, ''),
-            getattr(self, TrackPropEnum.YEAR.name, ''),
-            getattr(self, TrackPropEnum.SECTOR.name, ''),
-            getattr(self, TrackPropEnum.TRACKWAY_TYPE.name, ''),
-            getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0').replace('-', 'N') ])
+            StringUtils.toText(getattr(self, TrackPropEnum.SITE.name, '')),
+            StringUtils.toText(getattr(self, TrackPropEnum.LEVEL.name, '')),
+            StringUtils.toText(getattr(self, TrackPropEnum.YEAR.name, '')),
+            StringUtils.toText(getattr(self, TrackPropEnum.SECTOR.name, '')),
+            StringUtils.toText(getattr(self, TrackPropEnum.TRACKWAY_TYPE.name, '')),
+            StringUtils.toText(getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0')) ])
 
         if out == 'TCH-1000-2014-12-S-13BIS':
             # Fix a naming ambiguity from the catalog
@@ -239,6 +240,15 @@ class TracksTrackDefault(TracksDefault):
 
 #===================================================================================================
 #                                                                                     P U B L I C
+
+#___________________________________________________________________________________________________ echoImportFlags
+    def echoImportFlags(self, separator =' | '):
+        """echoImportFlags doc..."""
+        out = []
+        for key, value in DictUtils.iter(Reflection.getReflectionDict(ImportFlagsEnum)):
+            if value & self.importFlags:
+                out.append(key)
+        return ('[%s]' % separator.join(out)) if out else '--'
 
 #___________________________________________________________________________________________________ getPreviousTrack
     def getPreviousTrack(self, session =None, getAll =False):

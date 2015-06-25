@@ -5,7 +5,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
-import csv
+import pandas as pd
 
 from pyaid.debug.Logger import Logger
 from pyaid.dict.DictUtils import DictUtils
@@ -28,8 +28,8 @@ class TrackCsvImporter(object):
     # Used to break trackway specifier into separate type and number entries
     _TRACKWAY_PATTERN = re.compile('(?P<type>[^0-9\s\t]+)[\s\t]*(?P<number>[^\(\s\t]+)')
 
-    _UNDERPRINT_IGNORE_TRACKWAY_STR = u':UTW'
-    _OVERPRINT_IGNORE_TRACKWAY_STR = u':OTW'
+    _UNDERPRINT_IGNORE_TRACKWAY_STR = ':UTW'
+    _OVERPRINT_IGNORE_TRACKWAY_STR = ':OTW'
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, path =None, logger =None):
@@ -43,6 +43,7 @@ class TrackCsvImporter(object):
         self.modifiedStore = []
 
         self.fingerprints = dict()
+        self.remainingTracks = dict()
         self._logger  = logger
         if not logger:
             self._logger = Logger(self, printOut=True)
@@ -51,7 +52,7 @@ class TrackCsvImporter(object):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ read
-    def read(self, session, path =None, compressed =False):
+    def read(self, session, analysisSession, path =None, compressed =False):
         """ Reads from the spreadsheet located at the absolute path argument and adds each row
             to the tracks in the database. """
 
@@ -60,52 +61,68 @@ class TrackCsvImporter(object):
         if self._path is None:
             return False
 
-        with open(self._path, 'rU') as f:
+        model = Tracks_Track.MASTER
+        for existingTrack in session.query(model).all():
+            self.remainingTracks[existingTrack.uid] = existingTrack.fingerprint
+
+        try:
+            data = pd.read_csv(self._path)
+        except Exception as err:
+            self._writeError({
+                'message':'ERROR: Unable to read CSV file "%s"' % self._path,
+                'error':err })
+            return
+
+        if data is None:
+            self._writeError({
+                'message':'ERROR: Failed to create CSV reader for file "%s"' % self._path })
+            return
+
+        for index, row in data.iterrows():
+            # Skip any rows that don't start with the proper numeric index value, which
+            # includes the header row (if it exists) with the column names
             try:
-                reader = csv.reader(
-                    f,
-                    delimiter=StringUtils.toStr2(','),
-                    quotechar=StringUtils.toStr2('"'))
-            except Exception as err:
-                self._writeError({
-                    'message':u'ERROR: Unable to read CSV file "%s"' % self._path,
-                    'error':err })
-                return
+                index = int(row[0])
+            except Exception:
+                continue
 
-            if reader is None:
-                self._writeError({
-                    'message':u'ERROR: Failed to create CSV reader for file "%s"' % self._path })
-                return
+            rowDict = dict()
+            for column in Reflection.getReflectionList(TrackCsvColumnEnum):
+                value = row[column.index]
 
-            for row in reader:
-                # Skip any rows that don't start with the proper numeric index value, which
-                # includes the header row (if it exists) with the column names
-                try:
-                    index = int(row[0])
-                except Exception as err:
-                    continue
+                if value and not StringUtils.isTextType(value):
+                    # Try to decode the value into a unicode string using common codecs
+                    for codec in ['utf8', 'MacRoman', 'utf16']:
+                        try:
+                            decodedValue = value.decode(codec)
+                            if decodedValue:
+                                value = decodedValue
+                                break
+                        except Exception:
+                            continue
 
-                rowDict = dict()
-                for column in Reflection.getReflectionList(TrackCsvColumnEnum):
-                    value = row[column.index]
+                if value != '' or value is None:
+                    rowDict[column.name] = value
+                elif column == TrackCsvColumnEnum.MEASURED_DATE:
+                    print('\n\n[ERROR Measure date]:', row)
 
-                    if value and not StringUtils.isTextType(value):
-                        # Try to decode the value into a unicode string using common codecs
-                        for codec in ['utf8', 'MacRoman']:
-                            try:
-                                decodedValue = value.decode(codec)
-                                if decodedValue:
-                                    value = decodedValue
-                                    break
-                            except Exception:
-                                continue
+            if TrackCsvColumnEnum.MEASURED_DATE.name not in rowDict:
+                print('[ERROR Measure date]:', row)
+            self.fromSpreadsheetEntry(rowDict, session)
 
-                    if value != u'' or value is None:
-                        rowDict[column.name] = value
-
-                self.fromSpreadsheetEntry(rowDict, session)
+        for uid, fingerprint in DictUtils.iter(self.remainingTracks):
+            tracks = Tracks_Track.removeTracksByUid(
+                uid=uid,
+                session=session,
+                analysisSession=analysisSession)
+            for track in tracks:
+                self._logger.write('[REMOVED]: No longer exists "%s" (%s)' % (
+                    track.fingerprint, track.uid))
 
         session.flush()
+
+        for track in self.created:
+            self._logger.write('[CREATED]: "%s" (%s)' % (track.fingerprint, track.uid))
 
         return True
 
@@ -113,8 +130,6 @@ class TrackCsvImporter(object):
     def fromSpreadsheetEntry(self, csvRowData, session):
         """ From the spreadsheet data dictionary representing raw track data, this method creates
             a track entry in the database. """
-
-        removeAndSkip = False
 
         #-------------------------------------------------------------------------------------------
         # MISSING
@@ -124,71 +139,52 @@ class TrackCsvImporter(object):
         try:
             missingValue = csvRowData[TrackCsvColumnEnum.MISSING.name].strip()
             if missingValue:
-                removeAndSkip = True
-        except Exception as err:
+                return False
+        except Exception:
             pass
 
         try:
             csvIndex = int(csvRowData[TrackCsvColumnEnum.INDEX.name])
-        except Exception as err:
+        except Exception:
             self._writeError({
-                'message':u'Missing spreadsheet index',
+                'message':'Missing spreadsheet index',
                 'data':csvRowData })
             return False
 
         model = Tracks_TrackStore.MASTER
         ts = model()
         ts.importFlags = 0
+        ts.index = csvIndex
 
+        #-------------------------------------------------------------------------------------------
+        # SITE
         try:
             ts.site = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip().upper()
-        except Exception as err:
+        except Exception:
             self._writeError({
-                'message':u'Missing track site',
+                'message':'Missing track site',
                 'data':csvRowData,
                 'index':csvIndex })
             return False
 
-        try:
-            year = csvRowData.get(TrackCsvColumnEnum.MEASURED_DATE.name)
-            year = re.compile('[^0-9]+').sub('', year)
-
-            if not year:
-                year = u'2014'
-            else:
-
-                year = int(re.compile('[^0-9]+').sub(u'', year.strip().split('_')[-1]))
-                if year > 2999:
-                    # When multiple year entries combine into a single large number
-                    year = int(StringUtils.toUnicode(year)[-4:])
-                elif year < 2000:
-                    # When two digit years (e.g. 09) are used instead of four digit years
-                    year += 2000
-
-                year = StringUtils.toUnicode(year)
-
-            ts.year = year
-        except Exception as err:
-            self._writeError({
-                'message':u'Missing cast date',
-                'data':csvRowData,
-                'index':csvIndex })
-            return False
-
+        #-------------------------------------------------------------------------------------------
+        # SECTOR
         try:
             ts.sector = csvRowData.get(TrackCsvColumnEnum.SECTOR.name).strip().upper()
-        except Exception as err:
+        except Exception:
             self._writeError({
-                'message':u'Missing sector',
+                'message':'Missing sector',
                 'data':csvRowData,
                 'index':csvIndex })
             return False
 
+        #-------------------------------------------------------------------------------------------
+        # LEVEL
         try:
             ts.level = csvRowData.get(TrackCsvColumnEnum.LEVEL.name)
-        except Exception as err:
+        except Exception:
             self._writeError({
-                'message':u'Missing level',
+                'message':'Missing level',
                 'data':csvRowData,
                 'index':csvIndex })
             return False
@@ -202,7 +198,7 @@ class TrackCsvImporter(object):
             test = csvRowData.get(TrackCsvColumnEnum.TRACKWAY.name).strip().upper()
         except Exception:
             self._writeError({
-                'message':u'Missing trackway',
+                'message':'Missing trackway',
                 'data':csvRowData,
                 'index':csvIndex })
             return False
@@ -217,16 +213,15 @@ class TrackCsvImporter(object):
         testParensIndex = test.find('(')
         for testIndex in testIndexes:
             if testIndex != -1 and (testParensIndex == -1 or testParensIndex > testIndex):
-                removeAndSkip = True
-                break
+                return False
 
         result = self._TRACKWAY_PATTERN.search(test)
         try:
             ts.trackwayType   = result.groupdict()['type'].upper().strip()
             ts.trackwayNumber = result.groupdict()['number'].upper().strip()
-        except Exception as err:
+        except Exception:
             self._writeError({
-                'message':u'Invalid trackway value: %s' % test,
+                'message':'Invalid trackway value: %s' % test,
                 'data':csvRowData,
                 'result':result,
                 'match':result.groupdict() if result else 'N/A',
@@ -238,9 +233,44 @@ class TrackCsvImporter(object):
         #       Parse the name value into left, pes, and number attributes
         try:
             ts.name = csvRowData.get(TrackCsvColumnEnum.TRACK_NAME.name).strip()
-        except Exception as err:
+        except Exception:
             self._writeError({
-                'message':u'Missing track name',
+                'message':'Missing track name',
+                'data':csvRowData,
+                'index':csvIndex })
+            return False
+
+        #-------------------------------------------------------------------------------------------
+        # YEAR
+        try:
+            year = csvRowData.get(TrackCsvColumnEnum.MEASURED_DATE.name)
+
+            if not year:
+                year = '2014'
+            else:
+
+                try:
+                    y = StringUtils.toText(year).split(';')[-1].strip().replace(
+                        '/', '_').replace(
+                        ' ', '').replace(
+                        '-', '_').split('_')[-1]
+                    year = int(re.compile('[^0-9]+').sub('', y))
+                except Exception:
+                    year = 2014
+
+                if year > 2999:
+                    # When multiple year entries combine into a single large number
+                    year = int(StringUtils.toUnicode(year)[-4:])
+                elif year < 2000:
+                    # When two digit years (e.g. 09) are used instead of four digit years
+                    year += 2000
+
+                year = StringUtils.toUnicode(year)
+
+            ts.year = year
+        except Exception:
+            self._writeError({
+                'message':'Missing cast date',
                 'data':csvRowData,
                 'index':csvIndex })
             return False
@@ -249,40 +279,30 @@ class TrackCsvImporter(object):
         # FIND EXISTING
         #       Use data set above to attempt to load the track database entry
         fingerprint = ts.fingerprint
+
+        for uid, fp in DictUtils.iter(self.remainingTracks):
+            # Remove the fingerprint from the list of fingerprints found in the database, which at
+            # the end will leave only those fingerprints that exist in the database but were not
+            # touched by the importer. These values can be used to identify tracks that should
+            # have been "touched" but were not.
+            if fp == fingerprint:
+                del self.remainingTracks[uid]
+                break
+
         existingStore = ts.findExistingTracks(session)
         if existingStore and not isinstance(existingStore, Tracks_TrackStore):
             existingStore = existingStore[0]
 
-        if (existingStore and existingStore.index != csvIndex) or fingerprint in self.fingerprints:
+        if fingerprint in self.fingerprints:
             if not existingStore:
                 existingStore = self.fingerprints[fingerprint]
 
             self._writeError({
-                'message':u'Ambiguous track entry [#%s -> #%s]' % (csvIndex, existingStore.index),
+                'message':'Ambiguous track entry "%s" [%s -> %s]' % (
+                    fingerprint, csvIndex, existingStore.index),
                 'data':csvRowData,
                 'existing':existingStore,
                 'index':csvIndex })
-            return False
-
-        #-------------------------------------------------------------------------------------------
-        # REMOVE MISSING/SKIPPED
-        #       If the track is missing or should be skipped for some reason remove any existing
-        #       entries from the database, which may exist due to previous imports that handled
-        #       the import process differently.
-        if removeAndSkip:
-            t = None
-            if existingStore:
-                t = existingStore.getMatchingTrack(session)
-                session.delete(existingStore)
-
-            if t is None:
-                t = ts.getMatchingTrack(session)
-
-            if t is not None:
-                session.delete(t)
-
-            if existingStore or t:
-                self._logger.write(u'<div>REMOVED TRACK: "%s"</div>' % fingerprint)
             return False
 
         self.fingerprints[fingerprint] = ts
@@ -320,7 +340,7 @@ class TrackCsvImporter(object):
             TrackCsvColumnEnum.OUTLINE_DRAWING.name]
         for columnName in removeNonColumns:
             if columnName in csvRowData:
-                testValue = csvRowData[columnName].strip().upper()
+                testValue = StringUtils.toText(csvRowData[columnName]).strip().upper()
                 if testValue.startswith('NON'):
                     del csvRowData[columnName]
 
@@ -335,9 +355,11 @@ class TrackCsvImporter(object):
             value = csvRowData.get(column.name)
             if value is None:
                 continue
+            elif not value is StringUtils.isStringType(value):
+                value = StringUtils.toText(value)
 
-            value = value.strip()
-            if value in ['-', b'\xd0'.decode('MacRoman')]:
+            value = StringUtils.toText(value).strip()
+            if value in ['-', b'\xd0'.decode(b'MacRoman')]:
                 continue
 
             snapshot[column.name] = value
@@ -359,9 +381,9 @@ class TrackCsvImporter(object):
                 t.widthUncertainty = ts.widthUncertainty
 
         except Exception as err:
-            print(Logger().echoError(u'WIDTH PARSE ERROR:', err))
+            print(Logger().echoError('WIDTH PARSE ERROR:', err))
             self._writeError({
-                'message':u'Width parse error',
+                'message':'Width parse error',
                 'data':csvRowData,
                 'error':err,
                 'index':csvIndex })
@@ -378,7 +400,7 @@ class TrackCsvImporter(object):
                 ts, csvRowData,
                 TCCE.PES_LENGTH, TCCE.PES_LENGTH_GUESS,
                 TCCE.MANUS_LENGTH, TCCE.MANUS_LENGTH_GUESS,
-                '0', ImportFlagsEnum.HIGH_LENGTH_UNCERTAINTY, ImportFlagsEnum.NO_LENGTH ))
+                '0', IFE.HIGH_LENGTH_UNCERTAINTY, IFE.NO_LENGTH ))
 
             t.lengthMeasured = ts.lengthMeasured
 
@@ -387,9 +409,9 @@ class TrackCsvImporter(object):
                 t.lengthUncertainty = ts.lengthUncertainty
 
         except Exception as err:
-            print(Logger().echoError(u'LENGTH PARSE ERROR:', err))
+            print(Logger().echoError('LENGTH PARSE ERROR:', err))
             self._writeError({
-                'message':u'Length parse error',
+                'message':'Length parse error',
                 'data':csvRowData,
                 'error':err,
                 'index':csvIndex })
@@ -415,7 +437,7 @@ class TrackCsvImporter(object):
                 t.depthUncertainty = ts.depthUncertainty
 
         except Exception as err:
-            print(Logger().echoError(u'DEPTH PARSE ERROR:', err))
+            print(Logger().echoError('DEPTH PARSE ERROR:', err))
             ts.depthMeasured = 0.0
 
             if not existingStore:
@@ -441,9 +463,9 @@ class TrackCsvImporter(object):
                 t.rotationUncertainty = ts.rotationUncertainty
 
         except Exception as err:
-            print(Logger().echoError(u'ROTATION PARSE ERROR:', err))
+            print(Logger().echoError('ROTATION PARSE ERROR:', err))
             self._writeError({
-                'message':u'Rotation parse error',
+                'message':'Rotation parse error',
                 'error':err,
                 'data':csvRowData,
                 'index':csvIndex })
@@ -469,7 +491,7 @@ class TrackCsvImporter(object):
             if strideLength:
                 snapshot[SnapshotDataEnum.STRIDE_LENGTH] = 0.01*float(strideLength)*float(strideFactor)
         except Exception as err:
-            print(Logger().echoError(u'STRIDE PARSE ERROR:', err))
+            print(Logger().echoError('STRIDE PARSE ERROR:', err))
 
         #-------------------------------------------------------------------------------------------
         # WIDTH ANGULATION PATTERN
@@ -483,7 +505,7 @@ class TrackCsvImporter(object):
             if widthAngulation:
                 snapshot[SnapshotDataEnum.WIDTH_ANGULATION_PATTERN] = 0.01*float(widthAngulation)
         except Exception as err:
-            print(Logger().echoError(u'WIDTH ANGULATION PARSE ERROR:', err))
+            print(Logger().echoError('WIDTH ANGULATION PARSE ERROR:', err))
 
         #-------------------------------------------------------------------------------------------
         # PACE
@@ -499,7 +521,7 @@ class TrackCsvImporter(object):
             if pace:
                 snapshot[SnapshotDataEnum.PACE] = 0.01*float(pace)
         except Exception as err:
-            print(Logger().echoError(u'PACE PARSE ERROR:', err))
+            print(Logger().echoError('PACE PARSE ERROR:', err))
 
         #-------------------------------------------------------------------------------------------
         # PACE ANGULATION PATTERN
@@ -513,7 +535,7 @@ class TrackCsvImporter(object):
             if paceAngulation:
                 snapshot[SnapshotDataEnum.PACE_ANGULATION_PATTERN] = float(paceAngulation)
         except Exception as err:
-            print(Logger().echoError(u'PACE ANGULATION PARSE ERROR:', err))
+            print(Logger().echoError('PACE ANGULATION PARSE ERROR:', err))
 
         #-------------------------------------------------------------------------------------------
         # PROGRESSION
@@ -529,7 +551,7 @@ class TrackCsvImporter(object):
             if progression:
                 snapshot[SnapshotDataEnum.PROGRESSION] = 0.01*float(progression)
         except Exception as err:
-            print(Logger().echoError(u'PROGRESSION PARSE ERROR:', err))
+            print(Logger().echoError('PROGRESSION PARSE ERROR:', err))
 
         #-------------------------------------------------------------------------------------------
         # GLENO-ACETABULAR DISTANCE
@@ -542,14 +564,13 @@ class TrackCsvImporter(object):
             if gad:
                 snapshot[SnapshotDataEnum.GLENO_ACETABULAR_LENGTH] = 0.01*float(gad)
         except Exception as err:
-            print(Logger().echoError(u'GLENO-ACETABULAR DISTANCE PARSE ERROR:', err))
+            print(Logger().echoError('GLENO-ACETABULAR DISTANCE PARSE ERROR:', err))
 
         # Save the snapshot
         try:
             ts.snapshot = JSON.asString(snapshot)
             t.snapshot = ts.snapshot
-        except Exception as err:
-            print('TrackStore:', ts)
+        except Exception:
             raise
 
         if TrackCsvColumnEnum.MEASURED_BY.name not in snapshot:
@@ -577,21 +598,25 @@ class TrackCsvImporter(object):
 
         if 'data' in data:
             for n,v in DictUtils.iter(data['data']):
-                source[u' '.join(n.split(u'_')).title()] = v
+                source[' '.join(n.split('_')).title()] = v
 
-        indexPrefix = u''
+        indexPrefix = ''
         if 'index' in data:
-            indexPrefix = u' [INDEX: %s]:' % data.get('index', u'Unknown')
+            indexPrefix = ' [INDEX: %s]:' % data.get('index', 'Unknown')
 
         result  = [
-            u'IMPORT ERROR%s: %s' % (indexPrefix, data['message']),
-            u'DATA: ' + DictUtils.prettyPrint(source)]
+            'IMPORT ERROR%s: %s' % (indexPrefix, data['message']),
+            'DATA: ' + DictUtils.prettyPrint(source)]
 
         if 'existing' in data:
             source = {}
-            for n,v in DictUtils.iter(JSON.fromString(data['existing'].snapshot)):
-                source[u' '.join(n.split(u'_')).title()] = v
-            result.append(u'CONFLICT: ' + DictUtils.prettyPrint(source))
+            snapshot = data['existing'].snapshot
+            if snapshot:
+                snapshot = JSON.fromString(snapshot)
+            if snapshot:
+                for n,v in DictUtils.iter(snapshot):
+                    source[' '.join(n.split('_')).title()] = v
+            result.append('CONFLICT: ' + DictUtils.prettyPrint(source))
 
         if 'error' in data:
             self._logger.writeError(result, data['error'])
@@ -624,10 +649,22 @@ class TrackCsvImporter(object):
 
         if track.pes:
             return cls._collapseGuessProperty(
-                track, csvRowData, pesEnum, pesGuessEnum, defaultValue, guessFlag, missingFlag)
+                track=track,
+                csvRowData=csvRowData,
+                regularPropertyEnum=pesEnum,
+                guessPropertyEnum=pesGuessEnum,
+                defaultValue=defaultValue,
+                guessFlag=guessFlag,
+                missingFlag=missingFlag)
         else:
             return cls._collapseGuessProperty(
-                track, csvRowData, manusEnum, manusGuessEnum, defaultValue, guessFlag, missingFlag)
+                track=track,
+                csvRowData=csvRowData,
+                regularPropertyEnum=manusEnum,
+                guessPropertyEnum=manusGuessEnum,
+                defaultValue=defaultValue,
+                guessFlag=guessFlag,
+                missingFlag=missingFlag)
 
 #___________________________________________________________________________________________________ _collapseLimbProperty
     @classmethod

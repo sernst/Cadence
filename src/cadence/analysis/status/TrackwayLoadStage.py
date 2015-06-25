@@ -30,6 +30,7 @@ class TrackwayLoadStage(AnalysisStage):
         self.count              = 0
         self.ignoredCount       = 0
         self.incompleteCount    = 0
+        self._badTrackCsv       = None
         self._sitemapCsv        = None
         self._trackwayCsv       = None
         self._orphanCsv         = None
@@ -50,6 +51,17 @@ class TrackwayLoadStage(AnalysisStage):
             ('uid', 'UID'),
             ('fingerprint', 'Fingerprint') )
         self._soloTrackCsv = csv
+
+        csv = CsvWriter()
+        csv.path = self.getPath('Corrupt-Track-Report.csv')
+        csv.removeIfSavedEmpty = True
+        csv.autoIndexFieldName = 'Index'
+        csv.addFields(
+            ('i', 'Database Index'),
+            ('uid', 'UID'),
+            ('fingerprint', 'Fingerprint'),
+            ('reason', 'Reason'))
+        self._badTrackCsv = csv
 
         csv = CsvWriter()
         csv.path = self.getPath('Unprocessed-Track-Report.csv')
@@ -116,8 +128,28 @@ class TrackwayLoadStage(AnalysisStage):
         model = Tracks_Track.MASTER
         session = model.createSession()
         for t in session.query(model).all():
+            self._checkTrackProperties(t)
             self._allTracks[t.uid] = {'uid':t.uid, 'fingerprint':t.fingerprint}
         session.close()
+
+#___________________________________________________________________________________________________ _checkTrackProperties
+    def _checkTrackProperties(self, track):
+        try:
+            year = int(track.year)
+        except Exception:
+            year = 0
+
+        if year > 2015 or year < 2004:
+            self.logger.write([
+                '[WARNING]: Invalid track year',
+                'YEAR: %s' % year,
+                'TRACK[#%s]: %s (%s)' % (track.i, track.fingerprint, track.uid)])
+            self._badTrackCsv.createRow(
+                i=track.i,
+                uid=track.uid,
+                fingerprint=track.fingerprint,
+                reason='INVALID-YEAR')
+            return
 
 #___________________________________________________________________________________________________ _analyzeSitemap
     # noinspection PyUnusedLocal
@@ -265,6 +297,7 @@ class TrackwayLoadStage(AnalysisStage):
         self.logger.write('UNKNOWN TRACK COUNT: %s' % self._unknownCsv.count)
         self._unknownCsv.save()
 
+        self._badTrackCsv.save()
         self._soloTrackCsv.save()
         self._unprocessedCsv.save()
         self._trackwayCsv.save()

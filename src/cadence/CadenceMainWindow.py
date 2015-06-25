@@ -7,6 +7,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from PySide import QtCore
 
 from pyaid.OsUtils import OsUtils
+from pyaid.string.StringUtils import StringUtils
 from pyglass.alembic.AlembicUtils import AlembicUtils
 
 from pyglass.windows.PyGlassWindow import PyGlassWindow
@@ -46,7 +47,7 @@ class CadenceMainWindow(PyGlassWindow):
 #                                                                                     P U B L I C
 
 #___________________________________________________________________________________________________ showLoading
-    def showLoading(self, target, header = u'Loading', info = u'(Please Stand By)', **kwargs):
+    def showLoading(self, target, header = 'Loading', info = '(Please Stand By)', **kwargs):
         super(CadenceMainWindow, self).showLoading(target=target, header=header, info=info, **kwargs)
 
 #___________________________________________________________________________________________________ showStatus
@@ -59,14 +60,14 @@ class CadenceMainWindow(PyGlassWindow):
         if not w.isShowing or w.target != target:
             return
 
-        message = message.replace(u'\r', u'')
+        message = StringUtils.toText(message).replace('\r', '')
         if formatAsHtml:
             parts = []
-            for p in message.strip().split(u'\n'):
-                parts.append(p.replace(u'\t', u'&nbsp;&nbsp;&nbsp;&nbsp;'))
-            message = u'<br/>'.join(parts)
+            for p in message.strip().split('\n'):
+                parts.append(p.replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;'))
+            message = '<br/>'.join(parts)
         else:
-            message = u'<div>' + message + u'</div>'
+            message = '<div>%s</div>' % message
 
         w.append(message)
         self.refreshGui()
