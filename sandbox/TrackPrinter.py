@@ -12,9 +12,9 @@ PyGlassEnvironment.initializeFromInternalPath(__file__)
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.models.analysis.Analysis_Track import Analysis_Track
 
-INDEXES = [307, 313]
+INDEXES = None
 UID_BEGINS = None # ['track1l2hy-_w-']
-UIDS = None # ['track3e_dn-1KC-XU4Y20XnBqUV']
+UIDS = ['track3f9e~-1h0-aoxCyaPosmdY'] # ['track1l2ho-1Z-TgaGkq43cFzW', 'track1l2if-1vL-xokpNmp5Hc4j'] # ['track3e_dn-1KC-XU4Y20XnBqUV']
 CSV_FILE = None #'/Users/scott/Python/Cadence/resources/local/analysis/StatusAnalyzer/Ignored-Track-Report.csv'
 
 trackModel = Tracks_Track.MASTER
@@ -52,6 +52,9 @@ for track in tracks:
     print(track.echoForVerification())
     print('        size: (%s, %s) | field (%s, %s)' % (
         track.width, track.length, track.widthMeasured, track.lengthMeasured))
+    print('        hidden: %s | custom: %s' % (
+        'Y' if track.hidden else 'N',
+        'Y' if track.custom else 'N'))
     aTrack = track.getAnalysisPair(aSession)
     print('        curve[%s]: %s (%s)' % (
         aTrack.curveSegment,

@@ -4,13 +4,13 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from pyaid.config.ConfigsDict import ConfigsDict
 from pyaid.debug.Logger import Logger
 from pyaid.radix.Base36 import Base36
 from pyaid.string.StringUtils import StringUtils
 import sqlalchemy as sqla
 
 from cadence.models.tracks.TracksDefault import TracksDefault
+
 
 # AS NEEDED: from cadence.analysis.TrackSeries import TrackSeries
 # AS NEEDED: from cadence.models.tracks.Tracks_Track import Tracks_Track
@@ -118,6 +118,8 @@ class Tracks_Trackway(TracksDefault):
         from cadence.models.tracks.Tracks_Track import Tracks_Track
         from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 
+        missingSitemaps = []
+
         sitemapModel = Tracks_SiteMap.MASTER
         trackModel   = Tracks_Track.MASTER
         model        = cls.MASTER
@@ -155,7 +157,17 @@ class Tracks_Trackway(TracksDefault):
 
             name = prev.trackwayFingerprint
 
-            if name not in trackways:
+            sitemapStamp = '%s-%s' % (prev.site, prev.level)
+            if sitemapStamp in missingSitemaps:
+                # Ignore the trackway if there's no sitemap to support it
+                continue
+
+            if name in trackways:
+                tw = trackways[name]
+            else:
+                # If the trackway name isn't in the list of existing trackways create a new
+                # trackway model instance for that trackway
+
                 tw       = Tracks_Trackway()
                 tw.index = index
                 tw.name  = name
@@ -164,14 +176,13 @@ class Tracks_Trackway(TracksDefault):
                     sitemapModel.name == prev.site).filter(
                     sitemapModel.level == prev.level).first()
                 if not sitemap:
+                    missingSitemaps.append(sitemapStamp)
                     logger.write('[WARNING]: No site map found for name "%s" and level "%s"' % (
                         prev.site, prev.level))
                 else:
                     tw.siteMapIndex = sitemap.index
-                index += 1
-                trackways[tw.name] = tw
-            else:
-                tw = trackways[name]
+                    index += 1
+                    trackways[tw.name] = tw
 
             if prev.left and prev.pes:
                 existing = tw.firstLeftPes

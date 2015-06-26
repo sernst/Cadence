@@ -49,7 +49,18 @@ class TracksTrackDefault(TracksDefault):
     _left                = sqla.Column(sqla.Boolean,     default=True)
     _pes                 = sqla.Column(sqla.Boolean,     default=True)
     _hidden              = sqla.Column(sqla.Boolean,     default=False)
-    _index               = sqla.Column(sqla.Integer,     default=0)
+
+    # Tracks entered manually that do not exist in a source spreadsheet for import. Such tracks
+    # are ignored by the import process.
+    _custom = sqla.Column(sqla.Boolean, default=False)
+
+    # The source of the track material. Allows us to enter tracks from multiple source for
+    # comparison.
+    _source = sqla.Column(sqla.Unicode, default='A16')
+
+    # Index of the imported material within the source spreadsheet.
+    _index = sqla.Column(sqla.Integer, default=0)
+
     _width               = sqla.Column(sqla.Float,       default=0.0)
     _length              = sqla.Column(sqla.Float,       default=0.0)
     _rotation            = sqla.Column(sqla.Float,       default=0.0)
@@ -177,7 +188,6 @@ class TracksTrackDefault(TracksDefault):
     @property
     def shortFingerprint(self):
         return ''.join([
-            self.trackwayFingerprint,
             'L' if getattr(self, TrackPropEnum.LEFT.name, False) else 'R',
             'P' if getattr(self, TrackPropEnum.PES.name, False) else 'M',
             StringUtils.toText(getattr(self, TrackPropEnum.NUMBER.name, '0')).replace('-', 'N') ])
@@ -186,9 +196,16 @@ class TracksTrackDefault(TracksDefault):
     @property
     def fingerprint(self):
         """ String created from the uniquely identifying track properties. """
-        return '%s-%s' % (
-            self.trackSeriesFingerprint,
-            StringUtils.toText(getattr(self, TrackPropEnum.NUMBER.name, '0')).replace('-', 'N') )
+        return '-'.join([
+            StringUtils.toText(getattr(self, TrackPropEnum.SITE.name, '')),
+            StringUtils.toText(getattr(self, TrackPropEnum.LEVEL.name, '')),
+            StringUtils.toText(getattr(self, TrackPropEnum.YEAR.name, '')),
+            StringUtils.toText(getattr(self, TrackPropEnum.SECTOR.name, '')),
+            StringUtils.toText(getattr(self, TrackPropEnum.TRACKWAY_TYPE.name, '')),
+            StringUtils.toText(getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0')),
+            'L' if getattr(self, TrackPropEnum.LEFT.name, False) else 'R',
+            'P' if getattr(self, TrackPropEnum.PES.name, False) else 'M',
+            StringUtils.toText(getattr(self, TrackPropEnum.NUMBER.name, '0')).replace('-', 'N') ])
 
 #___________________________________________________________________________________________________ GS: trackSeriesFingerprint
     @property

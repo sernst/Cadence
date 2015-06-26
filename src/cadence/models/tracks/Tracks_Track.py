@@ -5,7 +5,6 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import nimble
-from pyaid.config.ConfigsDict import ConfigsDict
 
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
 from cadence.mayan.trackway import GetTrackNodeData
@@ -189,17 +188,26 @@ class Tracks_Track(TracksTrackDefault):
             return []
 
         for track in tracks:
-            analysisTrack = track.getAnalysisPair(analysisSession)
-            if analysisTrack:
-                analysisSession.delete(analysisTrack)
-
-            from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
-            storeModel = Tracks_TrackStore.MASTER
-            for store in session.query(storeModel).filter(storeModel.uid == track.uid).all():
-                session.delete(store)
-
-            session.delete(track)
+            cls.removeTrack(track, analysisSession)
         return tracks
+
+#___________________________________________________________________________________________________ removeTrack
+    @classmethod
+    def removeTrack(cls, track, analysisSession):
+        """removeTrack doc..."""
+        session = track.mySession
+        analysisTrack = track.getAnalysisPair(analysisSession)
+
+        if analysisTrack:
+            analysisSession.delete(analysisTrack)
+
+        from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
+        storeModel = Tracks_TrackStore.MASTER
+        for store in session.query(storeModel).filter(storeModel.uid == track.uid).all():
+            session.delete(store)
+
+        session.delete(track)
+
 
 #===================================================================================================
 #                                                                               P R O T E C T E D

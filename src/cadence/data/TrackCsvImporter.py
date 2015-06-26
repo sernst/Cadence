@@ -111,13 +111,18 @@ class TrackCsvImporter(object):
             self.fromSpreadsheetEntry(rowDict, session)
 
         for uid, fingerprint in DictUtils.iter(self.remainingTracks):
-            tracks = Tracks_Track.removeTracksByUid(
-                uid=uid,
-                session=session,
-                analysisSession=analysisSession)
-            for track in tracks:
-                self._logger.write('[REMOVED]: No longer exists "%s" (%s)' % (
-                    track.fingerprint, track.uid))
+            # Iterate through the list of remaining tracks, which are tracks not found by the
+            # importer. If the track is marked as custom (meaning it is not managed by the importer)
+            # it is ignored. Otherwise, the track is deleted from the database as a track that no
+            # longer exists.
+
+            track = Tracks_Track.MASTER.getByUid(uid, session)
+            if track.custom:
+                continue
+
+            Tracks_Track.removeTrack(track, analysisSession)
+            self._logger.write('[REMOVED]: No longer exists "%s" (%s)' % (
+                track.fingerprint, track.uid))
 
         session.flush()
 

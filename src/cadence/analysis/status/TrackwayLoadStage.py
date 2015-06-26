@@ -3,14 +3,12 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
 from pyaid.number.NumericUtils import NumericUtils
-from pyaid.system.SystemUtils import SystemUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.models.tracks.Tracks_Track import Tracks_Track
-
-
 
 #*************************************************************************************************** TrackwayLoadStage
 class TrackwayLoadStage(AnalysisStage):
@@ -127,13 +125,21 @@ class TrackwayLoadStage(AnalysisStage):
         #       sitemaps, which would never be loaded by standard analysis methods
         model = Tracks_Track.MASTER
         session = model.createSession()
-        for t in session.query(model).all():
-            self._checkTrackProperties(t)
+        tracks = session.query(model).all()
+        for t in tracks:
+            self._checkTrackProperties(t, tracks)
             self._allTracks[t.uid] = {'uid':t.uid, 'fingerprint':t.fingerprint}
         session.close()
 
 #___________________________________________________________________________________________________ _checkTrackProperties
-    def _checkTrackProperties(self, track):
+    def _checkTrackProperties(self, track, tracks):
+        trackDebugMessage = 'TRACK[#%s]: %s (%s)' % (track.i, track.fingerprint, track.uid)
+        trackRow = dict(
+            i=track.i,
+            uid=track.uid,
+            fingerprint=track.fingerprint,
+            reason='UNKNOWN')
+
         try:
             year = int(track.year)
         except Exception:
@@ -143,12 +149,27 @@ class TrackwayLoadStage(AnalysisStage):
             self.logger.write([
                 '[WARNING]: Invalid track year',
                 'YEAR: %s' % year,
-                'TRACK[#%s]: %s (%s)' % (track.i, track.fingerprint, track.uid)])
-            self._badTrackCsv.createRow(
-                i=track.i,
-                uid=track.uid,
-                fingerprint=track.fingerprint,
-                reason='INVALID-YEAR')
+                trackDebugMessage ])
+            trackRow['reason'] = 'INVALID-YEAR'
+            self._badTrackCsv.addRow(trackRow)
+            return
+
+        if track.hidden and track.next:
+            for t in tracks:
+                if t.uid == track.next:
+                    self.logger.write([
+                        '[WARNING]: Hidden track with linkage',
+                        'NEXT: %s (%s)' % (t.fingerprint, t.uid),
+                        trackDebugMessage ])
+                    trackRow['reason'] = 'HIDDEN-LINK -> %s (%s)' % (t.fingerprint, t.uid)
+                    self._badTrackCsv.addRow(trackRow)
+                    return
+
+            self.logger.write([
+                '[WARNING]: Hidden track with non-existent linkage "%s"' % track.next,
+                trackDebugMessage ])
+            trackRow['reason'] = 'CORRUPT-HIDDEN-LINK -> %s' % track.next
+            self._badTrackCsv.addRow(trackRow)
             return
 
 #___________________________________________________________________________________________________ _analyzeSitemap
@@ -223,7 +244,14 @@ class TrackwayLoadStage(AnalysisStage):
             twIncomplete    = 0
             isReady         = True
 
-            for s in self.owner.getSeriesBundle(tw).asList():
+            try:
+                bundle = self.owner.getSeriesBundle(tw)
+            except Exception:
+                self.logger.write(
+                    '[ERROR]: Invalid trackway series in %s. Skipping status check.' % tw.name)
+                continue
+
+            for s in bundle.asList():
                 isReady         = isReady and s.isReady
                 twCount        += s.count
                 twIncomplete   += len(s.incompleteTracks)
