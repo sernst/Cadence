@@ -76,7 +76,9 @@ class TrackwayLoadStage(AnalysisStage):
         csv.autoIndexFieldName = 'Index'
         csv.addFields(
             ('uid', 'UID'),
-            ('fingerprint', 'Fingerprint') )
+            ('fingerprint', 'Fingerprint'),
+            ('hidden', 'Hidden'),
+            ('complete', 'Complete') )
         self._unknownCsv = csv
 
         csv = CsvWriter()
@@ -128,7 +130,11 @@ class TrackwayLoadStage(AnalysisStage):
         tracks = session.query(model).all()
         for t in tracks:
             self._checkTrackProperties(t, tracks)
-            self._allTracks[t.uid] = {'uid':t.uid, 'fingerprint':t.fingerprint}
+            self._allTracks[t.uid] = dict(
+                uid=t.uid,
+                fingerprint=t.fingerprint,
+                hidden=t.hidden,
+                complete=t.isComplete)
         session.close()
 
 #___________________________________________________________________________________________________ _checkTrackProperties
@@ -321,7 +327,11 @@ class TrackwayLoadStage(AnalysisStage):
             count, ignoreCount, count + ignoreCount))
 
         for uid, data in self._allTracks.items():
-            self._unknownCsv.createRow(uid=uid, fingerprint=data['fingerprint'])
+            self._unknownCsv.createRow(
+                uid=uid,
+                fingerprint=data['fingerprint'],
+                hidden='YES' if data['hidden'] else 'NO',
+                complete='YES' if data['complete'] else 'NO')
         self.logger.write('UNKNOWN TRACK COUNT: %s' % self._unknownCsv.count)
         self._unknownCsv.save()
 

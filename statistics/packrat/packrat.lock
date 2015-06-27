@@ -13,6 +13,12 @@ Source: CRAN
 Version: 0.3.1
 Hash: 096699d1ac1cf530acfc646a0c90ee5d
 
+Package: PKI
+Source: CRAN
+Version: 0.1-1
+Hash: 7318a29e43951c37bd9990219fd26487
+Requires: base64enc
+
 Package: R6
 Source: CRAN
 Version: 2.0.1
@@ -22,6 +28,17 @@ Package: RColorBrewer
 Source: CRAN
 Version: 1.1-2
 Hash: c0d56cd15034f395874c870141870c25
+
+Package: RCurl
+Source: CRAN
+Version: 1.95-4.6
+Hash: f07380ac0925611455ecf9dcdb8be545
+Requires: bitops
+
+Package: RJSONIO
+Source: CRAN
+Version: 1.3-0
+Hash: fb672e20eb6f3010a3639f855d8ef6de
 
 Package: RSQLite
 Source: CRAN
@@ -38,6 +55,11 @@ Package: assertthat
 Source: CRAN
 Version: 0.1
 Hash: 0afb92b59b02593c70ff8046700ba9d3
+
+Package: base64enc
+Source: CRAN
+Version: 0.1-2
+Hash: df66773c6ea9cad0beb6dc3e33e3e3e1
 
 Package: bitops
 Source: CRAN
@@ -192,6 +214,21 @@ Source: CRAN
 Version: 0.7
 Hash: bf9c8cfc700d2417a309dd7a5ebd41d3
 Requires: caTools, htmltools, knitr, yaml
+
+Package: rsconnect
+Source: github
+Version: 0.3.79
+Hash: 60f6e76f07c5b4fad2ca6f5ad47e4d15
+Requires: PKI, RCurl, RJSONIO, digest, packrat, rstudioapi, yaml
+GithubRepo: rsconnect
+GithubUsername: rstudio
+GithubRef: v0.99
+GithubSha1: 79f5016e589f622ecf999a64048a46d1e3e683bb
+
+Package: rstudioapi
+Source: CRAN
+Version: 0.3.1
+Hash: 88eea830c60277b858ce9334041b08bb
 
 Package: scales
 Source: CRAN

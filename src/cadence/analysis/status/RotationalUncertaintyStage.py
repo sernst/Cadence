@@ -28,9 +28,9 @@ class RotationalUncertaintyStage(AnalysisStage):
             label='Rotational Uncertainty',
             **kwargs)
 
-        self._uncs        = []
+        self._uncs = []
         self._largeUncCsv = None
-        self._tracks      = []
+        self._tracks = []
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
