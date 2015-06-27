@@ -31,6 +31,7 @@ for track in session.query(trackModel).all():
         written = True
     if track.rotationMeasured is None:
         track.rotationMeasured = 0.0
+        written = True
 
     if written:
         print('[EDITED]: %s (%s)' % (track.fingerprint, track.uid))

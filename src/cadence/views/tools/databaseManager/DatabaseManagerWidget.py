@@ -16,7 +16,6 @@ from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
 from cadence.data.SitemapImporterRemoteThread import SitemapImporterRemoteThread
 from cadence.data.TrackExporterRemoteThread import TrackExporterRemoteThread
-from cadence.data.TrackMergeRemoteThread import TrackMergeRemoteThread
 from cadence.enums.UserConfigEnum import UserConfigEnum
 from cadence.data.TrackImporterRemoteThread import TrackImporterRemoteThread
 from cadence.models.tracks.Tracks_Track import Tracks_Track
@@ -40,9 +39,7 @@ class DatabaseManagerWidget(PyGlassWidget):
         self._thread = None
 
         self.importCsvBtn.clicked.connect(self._handleImport)
-        self.importJsonBtn.clicked.connect(self._handleImport)
         self.exportBtn.clicked.connect(self._handleExport)
-        self.mergeBtn.clicked.connect(self._handleMerge)
         self.sitemapImportBtn.clicked.connect(self._handleImportSitemaps)
         self.databaseReplaceBtn.clicked.connect(self._handleReplaceDatabase)
 
@@ -58,9 +55,6 @@ class DatabaseManagerWidget(PyGlassWidget):
         PyGlassElementUtils.registerCheckBox(
             self, self.exportDiffCheck,
             configSetting=UserConfigEnum.EXPORT_DIFF)
-        PyGlassElementUtils.registerCheckBox(
-            self, self.importCompressCheck,
-            configSetting=UserConfigEnum.IMPORT_COMPRESSED)
 
 #===================================================================================================
 #                                                                               P R O T E C T E D
@@ -74,13 +68,8 @@ class DatabaseManagerWidget(PyGlassWidget):
 
 #___________________________________________________________________________________________________ _handleImport
     def _handleImport(self):
-        btn  = self.sender()
-        if btn == self.importCsvBtn:
-            label = u'CSV'
-            importType = TrackImporterRemoteThread.CSV
-        else:
-            label = u'JSON'
-            importType = TrackImporterRemoteThread.JSON
+        label = u'CSV'
+        importType = TrackImporterRemoteThread.CSV
 
         self.mainWindow.showLoading(
             self,
@@ -111,14 +100,13 @@ class DatabaseManagerWidget(PyGlassWidget):
             path=path,
             verbose=self.verboseDisplayCheck.isChecked(),
             importType=importType,
-            compressed=self.importCompressCheck.isChecked()
+            compressed=False
         ).execute(
             callback=self._handleImportComplete,
             logCallback=self._handleImportStatusUpdate )
 
 #___________________________________________________________________________________________________ _handleImportSitemaps
     def _handleImportSitemaps(self):
-
 
         self.mainWindow.showLoading(
             self,
@@ -171,12 +159,12 @@ class DatabaseManagerWidget(PyGlassWidget):
             PyGlassBasicDialogManager.openOk(
                 parent=self,
                 header='ERROR',
-                message=actionType + ' operation failed')
+                message='%s operation failed' % actionType)
         else:
             PyGlassBasicDialogManager.openOk(
                 parent=self,
                 header='Success',
-                message=actionType + ' operation complete')
+                message='%s operation complete' % actionType)
 
         self.mainWindow.showStatusDone(self)
 
@@ -259,7 +247,7 @@ class DatabaseManagerWidget(PyGlassWidget):
         if not OsUtils.isWindows():
             sourcePath = u'/' + sourcePath
 
-        savePath = sourcePath + u'.store'
+        savePath = '%s.store' % sourcePath
         try:
             if os.path.exists(savePath):
                 SystemUtils.remove(savePath, throwError=True)
@@ -291,27 +279,6 @@ class DatabaseManagerWidget(PyGlassWidget):
 
         self.mainWindow.appendStatus(self, u'<span style="color:#33CC33;">Database Replaced</span>')
         self.mainWindow.showStatusDone(self)
-
-#___________________________________________________________________________________________________ _handleMerge
-    def _handleMerge(self):
-
-        result = PyGlassBasicDialogManager.openYesNo(
-            self,
-            u'Are You Sure?',
-            u'Merging this database will overwrite existing storage values for all tracks.',
-            False,
-            u'Confirm Merge?')
-
-        if not result:
-            return
-
-        self.mainWindow.showStatus(
-            self,
-            u'Merging Database',
-            u'Changes to tracks are being applied to the storage entries')
-
-        thread = TrackMergeRemoteThread(self, None)
-        thread.execute(self._handleMergeComplete, self._handleLogMessage)
 
 #___________________________________________________________________________________________________ _handleMergeComplete
     def _handleMergeComplete(self, event):

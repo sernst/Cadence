@@ -5,6 +5,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
+
+import numpy as np
 import pandas as pd
 
 from pyaid.debug.Logger import Logger
@@ -12,11 +14,12 @@ from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
 from pyaid.reflection.Reflection import Reflection
 from pyaid.string.StringUtils import StringUtils
+
 from cadence.enums.ImportFlagsEnum import ImportFlagsEnum
 from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
 from cadence.enums.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
-from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
+
 
 #___________________________________________________________________________________________________ TrackCsvImporter
 class TrackCsvImporter(object):
@@ -38,9 +41,6 @@ class TrackCsvImporter(object):
 
         self.created  = []
         self.modified = []
-
-        self.createdStore = []
-        self.modifiedStore = []
 
         self.fingerprints = dict()
         self.remainingTracks = dict()
@@ -90,7 +90,7 @@ class TrackCsvImporter(object):
             for column in Reflection.getReflectionList(TrackCsvColumnEnum):
                 value = row[column.index]
 
-                if value and not StringUtils.isTextType(value):
+                if value and StringUtils.isStringType(value) and not StringUtils.isTextType(value):
                     # Try to decode the value into a unicode string using common codecs
                     for codec in ['utf8', 'MacRoman', 'utf16']:
                         try:
@@ -101,13 +101,16 @@ class TrackCsvImporter(object):
                         except Exception:
                             continue
 
+                try:
+                    # Check to see if the value is NaN, and if it is replace it with an empty
+                    # string to be ignored during import
+                    value = '' if np.isnan(value) else value
+                except Exception:
+                    pass
+
                 if value != '' or value is None:
                     rowDict[column.name] = value
-                elif column == TrackCsvColumnEnum.MEASURED_DATE:
-                    print('\n\n[ERROR Measure date]:', row)
 
-            if TrackCsvColumnEnum.MEASURED_DATE.name not in rowDict:
-                print('[ERROR Measure date]:', row)
             self.fromSpreadsheetEntry(rowDict, session)
 
         for uid, fingerprint in DictUtils.iter(self.remainingTracks):
@@ -156,15 +159,15 @@ class TrackCsvImporter(object):
                 'data':csvRowData })
             return False
 
-        model = Tracks_TrackStore.MASTER
-        ts = model()
-        ts.importFlags = 0
-        ts.index = csvIndex
+        model = Tracks_Track.MASTER
+        t = model()
+        t.importFlags = 0
+        t.index = csvIndex
 
         #-------------------------------------------------------------------------------------------
         # SITE
         try:
-            ts.site = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip().upper()
+            t.site = csvRowData.get(TrackCsvColumnEnum.TRACKSITE.name).strip().upper()
         except Exception:
             self._writeError({
                 'message':'Missing track site',
@@ -175,7 +178,7 @@ class TrackCsvImporter(object):
         #-------------------------------------------------------------------------------------------
         # SECTOR
         try:
-            ts.sector = csvRowData.get(TrackCsvColumnEnum.SECTOR.name).strip().upper()
+            t.sector = csvRowData.get(TrackCsvColumnEnum.SECTOR.name).strip().upper()
         except Exception:
             self._writeError({
                 'message':'Missing sector',
@@ -186,7 +189,7 @@ class TrackCsvImporter(object):
         #-------------------------------------------------------------------------------------------
         # LEVEL
         try:
-            ts.level = csvRowData.get(TrackCsvColumnEnum.LEVEL.name)
+            t.level = csvRowData.get(TrackCsvColumnEnum.LEVEL.name)
         except Exception:
             self._writeError({
                 'message':'Missing level',
@@ -222,8 +225,8 @@ class TrackCsvImporter(object):
 
         result = self._TRACKWAY_PATTERN.search(test)
         try:
-            ts.trackwayType   = result.groupdict()['type'].upper().strip()
-            ts.trackwayNumber = result.groupdict()['number'].upper().strip()
+            t.trackwayType   = result.groupdict()['type'].upper().strip()
+            t.trackwayNumber = result.groupdict()['number'].upper().strip()
         except Exception:
             self._writeError({
                 'message':'Invalid trackway value: %s' % test,
@@ -237,7 +240,7 @@ class TrackCsvImporter(object):
         # NAME
         #       Parse the name value into left, pes, and number attributes
         try:
-            ts.name = csvRowData.get(TrackCsvColumnEnum.TRACK_NAME.name).strip()
+            t.name = csvRowData.get(TrackCsvColumnEnum.TRACK_NAME.name).strip()
         except Exception:
             self._writeError({
                 'message':'Missing track name',
@@ -272,7 +275,7 @@ class TrackCsvImporter(object):
 
                 year = StringUtils.toUnicode(year)
 
-            ts.year = year
+            t.year = year
         except Exception:
             self._writeError({
                 'message':'Missing cast date',
@@ -283,7 +286,7 @@ class TrackCsvImporter(object):
         #-------------------------------------------------------------------------------------------
         # FIND EXISTING
         #       Use data set above to attempt to load the track database entry
-        fingerprint = ts.fingerprint
+        fingerprint = t.fingerprint
 
         for uid, fp in DictUtils.iter(self.remainingTracks):
             # Remove the fingerprint from the list of fingerprints found in the database, which at
@@ -294,43 +297,29 @@ class TrackCsvImporter(object):
                 del self.remainingTracks[uid]
                 break
 
-        existingStore = ts.findExistingTracks(session)
-        if existingStore and not isinstance(existingStore, Tracks_TrackStore):
-            existingStore = existingStore[0]
+        existing = t.findExistingTracks(session)
+        if existing and not isinstance(existing, Tracks_Track):
+            existing = existing[0]
 
         if fingerprint in self.fingerprints:
-            if not existingStore:
-                existingStore = self.fingerprints[fingerprint]
+            if not existing:
+                existing = self.fingerprints[fingerprint]
 
             self._writeError({
                 'message':'Ambiguous track entry "%s" [%s -> %s]' % (
-                    fingerprint, csvIndex, existingStore.index),
+                    fingerprint, csvIndex, existing.index),
                 'data':csvRowData,
-                'existing':existingStore,
+                'existing':existing,
                 'index':csvIndex })
             return False
 
-        self.fingerprints[fingerprint] = ts
+        self.fingerprints[fingerprint] = t
 
-        if existingStore:
-            ts = existingStore
+        if existing:
+            t = existing
         else:
-            session.add(ts)
-            session.flush()
-
-        existing = ts.getMatchingTrack(session)
-        if existing is None:
-            model = Tracks_Track.MASTER
-            t = model()
-            t.uid = ts.uid
-            t.fromDict(ts.toDiffDict(t.toDict(), invert=True))
             session.add(t)
             session.flush()
-        else:
-            t = existing
-
-        t.indx = csvIndex
-        ts.index = csvIndex
 
         TCCE = TrackCsvColumnEnum
         IFE  = ImportFlagsEnum
@@ -373,17 +362,16 @@ class TrackCsvImporter(object):
         # WIDTH
         #       Parse the width into a numerical value and assign appropriate default uncertainty
         try:
-            ts.widthMeasured = 0.01*float(self._collapseManusPesProperty(
-                ts, csvRowData,
+            t.widthMeasured = 0.01*float(self._collapseManusPesProperty(
+                t, csvRowData,
                 TCCE.PES_WIDTH, TCCE.PES_WIDTH_GUESS,
                 TCCE.MANUS_WIDTH, TCCE.MANUS_WIDTH_GUESS,
                 '0', IFE.HIGH_WIDTH_UNCERTAINTY, IFE.NO_WIDTH ))
 
-            t.widthMeasured = ts.widthMeasured
+            t.widthMeasured = t.widthMeasured
 
-            if (not existing and not existingStore) or t.widthUncertainty == 0:
-                ts.widthUncertainty = 0.05 if (ts.importFlags & IFE.HIGH_WIDTH_UNCERTAINTY) else 0.03
-                t.widthUncertainty = ts.widthUncertainty
+            if not existing or t.widthUncertainty == 0:
+                t.widthUncertainty = 0.05 if (t.importFlags & IFE.HIGH_WIDTH_UNCERTAINTY) else 0.03
 
         except Exception as err:
             print(Logger().echoError('WIDTH PARSE ERROR:', err))
@@ -393,25 +381,24 @@ class TrackCsvImporter(object):
                 'error':err,
                 'index':csvIndex })
 
-            ts.widthMeasured = 0.0
-            if not existingStore:
-                ts.widthUncertainty = 0.05
+            t.widthMeasured = 0.0
+            if not existing:
+                t.widthUncertainty = 0.05
 
         #-------------------------------------------------------------------------------------------
         # LENGTH
         #       Parse the length into a numerical value and assign appropriate default uncertainty
         try:
-            ts.lengthMeasured = 0.01*float(self._collapseManusPesProperty(
-                ts, csvRowData,
+            t.lengthMeasured = 0.01*float(self._collapseManusPesProperty(
+                t, csvRowData,
                 TCCE.PES_LENGTH, TCCE.PES_LENGTH_GUESS,
                 TCCE.MANUS_LENGTH, TCCE.MANUS_LENGTH_GUESS,
                 '0', IFE.HIGH_LENGTH_UNCERTAINTY, IFE.NO_LENGTH ))
 
-            t.lengthMeasured = ts.lengthMeasured
+            t.lengthMeasured = t.lengthMeasured
 
-            if (not existing and not existingStore) or t.lengthUncertainty == 0:
-                ts.lengthUncertainty = 0.05 if (ts.importFlags & IFE.HIGH_LENGTH_UNCERTAINTY) else 0.03
-                t.lengthUncertainty = ts.lengthUncertainty
+            if not existing or t.lengthUncertainty == 0:
+                t.lengthUncertainty = 0.05 if (t.importFlags & IFE.HIGH_LENGTH_UNCERTAINTY) else 0.03
 
         except Exception as err:
             print(Logger().echoError('LENGTH PARSE ERROR:', err))
@@ -421,51 +408,44 @@ class TrackCsvImporter(object):
                 'error':err,
                 'index':csvIndex })
 
-            ts.lengthMeasured = 0.0
-            if not existingStore:
-                ts.lengthUncertainty = 0.05
+            t.lengthMeasured = 0.0
+            if not existing:
+                t.lengthUncertainty = 0.05
 
         #-------------------------------------------------------------------------------------------
         # DEPTH
         #       Parse the depth into a numerical value and assign appropriate default uncertainty
         try:
-            ts.depthMeasured = 0.01*float(self._collapseManusPesProperty(
-                ts, csvRowData,
+            t.depthMeasured = 0.01*float(self._collapseManusPesProperty(
+                t, csvRowData,
                 TCCE.PES_DEPTH, TCCE.PES_DEPTH_GUESS,
                 TCCE.MANUS_DEPTH, TCCE.MANUS_DEPTH_GUESS,
                 '0', IFE.HIGH_DEPTH_UNCERTAINTY, 0 ))
 
-            t.depthMeasured = ts.depthMeasured
-
-            if (not existing and not existingStore) or t.depthUncertainty == 0:
-                ts.depthUncertainty = 0.05 if IFE.HIGH_DEPTH_UNCERTAINTY else 0.03
-                t.depthUncertainty = ts.depthUncertainty
+            if not existing or t.depthUncertainty == 0:
+                t.depthUncertainty = 0.05 if (t.importFlags & IFE.HIGH_DEPTH_UNCERTAINTY) else 0.03
 
         except Exception as err:
             print(Logger().echoError('DEPTH PARSE ERROR:', err))
-            ts.depthMeasured = 0.0
-
-            if not existingStore:
-                ts.depthUncertainty = 0.05
-
+            t.depthMeasured = 0.0
+            if not existing:
+                t.depthUncertainty = 0.05
 
         #-------------------------------------------------------------------------------------------
         # ROTATION
         #       Parse the rotation into a numerical value and assign appropriate default uncertainty
         try:
-            ts.rotationMeasured = float(self._collapseLimbProperty(
-                ts, csvRowData,
+            t.rotationMeasured = float(self._collapseLimbProperty(
+                t, csvRowData,
                 TCCE.LEFT_PES_ROTATION, TCCE.LEFT_PES_ROTATION_GUESS,
                 TCCE.RIGHT_PES_ROTATION, TCCE.RIGHT_PES_ROTATION_GUESS,
                 TCCE.LEFT_MANUS_ROTATION, TCCE.LEFT_MANUS_ROTATION_GUESS,
                 TCCE.RIGHT_MANUS_ROTATION, TCCE.RIGHT_MANUS_ROTATION_GUESS,
                 '0', IFE.HIGH_ROTATION_UNCERTAINTY, 0 ))
 
-            t.rotationMeasured = ts.rotationMeasured
-
-            if not existingStore and not existing:
-                ts.rotationUncertainty = 10.0 if IFE.HIGH_ROTATION_UNCERTAINTY else 45.0
-                t.rotationUncertainty = ts.rotationUncertainty
+            if not existing or t.rotationUncertainty == 0:
+                t.rotationUncertainty = \
+                    10.0 if (t.importFlags & IFE.HIGH_ROTATION_UNCERTAINTY) else 45.0
 
         except Exception as err:
             print(Logger().echoError('ROTATION PARSE ERROR:', err))
@@ -475,21 +455,21 @@ class TrackCsvImporter(object):
                 'data':csvRowData,
                 'index':csvIndex })
 
-            ts.rotationMeasured  = 0.0
-            if not existingStore:
-                ts.rotationUncertainty = 45.0
+            t.rotationMeasured  = 0.0
+            if not existing:
+                t.rotationUncertainty = 45.0
 
         #-------------------------------------------------------------------------------------------
         # STRIDE
         try:
             strideLength = self._collapseManusPesProperty(
-                ts, csvRowData,
+                t, csvRowData,
                 TCCE.PES_STRIDE, TCCE.PES_STRIDE_GUESS,
                 TCCE.MANUS_STRIDE, TCCE.MANUS_STRIDE_GUESS,
                 None, IFE.HIGH_STRIDE_UNCERTAINTY )
 
             strideFactor = self._collapseManusPesProperty(
-                ts, csvRowData,
+                t, csvRowData,
                 TCCE.PES_STRIDE_FACTOR, None,
                 TCCE.MANUS_STRIDE_FACTOR, None, 1.0)
 
@@ -502,7 +482,7 @@ class TrackCsvImporter(object):
         # WIDTH ANGULATION PATTERN
         try:
             widthAngulation = self._collapseManusPesProperty(
-                ts, csvRowData,
+                t, csvRowData,
                 TCCE.WIDTH_PES_ANGULATION_PATTERN, TCCE.WIDTH_PES_ANGULATION_PATTERN_GUESS,
                 TCCE.WIDTH_MANUS_ANGULATION_PATTERN, TCCE.WIDTH_MANUS_ANGULATION_PATTERN_GUESS,
                 None, IFE.HIGH_WIDTH_ANGULATION_UNCERTAINTY )
@@ -516,7 +496,7 @@ class TrackCsvImporter(object):
         # PACE
         try:
             pace = self._collapseLimbProperty(
-                ts, csvRowData,
+                t, csvRowData,
                 TCCE.LEFT_PES_PACE, TCCE.LEFT_PES_PACE_GUESS,
                 TCCE.RIGHT_PES_PACE, TCCE.RIGHT_PES_PACE_GUESS,
                 TCCE.LEFT_MANUS_PACE, TCCE.LEFT_MANUS_PACE_GUESS,
@@ -532,7 +512,7 @@ class TrackCsvImporter(object):
         # PACE ANGULATION PATTERN
         try:
             paceAngulation = self._collapseManusPesProperty(
-                ts, csvRowData,
+                t, csvRowData,
                 TCCE.PES_PACE_ANGULATION, TCCE.PES_PACE_ANGULATION_GUESS,
                 TCCE.MANUS_PACE_ANGULATION, TCCE.MANUS_PACE_ANGULATION_GUESS,
                 None, IFE.HIGH_WIDTH_ANGULATION_UNCERTAINTY )
@@ -546,7 +526,7 @@ class TrackCsvImporter(object):
         # PROGRESSION
         try:
             progression = self._collapseLimbProperty(
-                ts, csvRowData,
+                t, csvRowData,
                 TCCE.LEFT_PES_PROGRESSION, TCCE.LEFT_PES_PROGRESSION_GUESS,
                 TCCE.RIGHT_PES_PROGRESSION, TCCE.RIGHT_PES_PROGRESSION_GUESS,
                 TCCE.LEFT_MANUS_PROGRESSION, TCCE.LEFT_MANUS_PROGRESSION_GUESS,
@@ -562,7 +542,7 @@ class TrackCsvImporter(object):
         # GLENO-ACETABULAR DISTANCE
         try:
             gad = self._collapseGuessProperty(
-                ts, csvRowData,
+                t, csvRowData,
                 TCCE.GLENO_ACETABULAR_DISTANCE, TCCE.GLENO_ACETABULAR_DISTANCE_GUESS,
                 None, IFE.HIGH_GLENO_ACETABULAR_UNCERTAINTY )
 
@@ -573,26 +553,18 @@ class TrackCsvImporter(object):
 
         # Save the snapshot
         try:
-            ts.snapshot = JSON.asString(snapshot)
-            t.snapshot = ts.snapshot
+            t.snapshot = JSON.asString(snapshot)
         except Exception:
             raise
 
         if TrackCsvColumnEnum.MEASURED_BY.name not in snapshot:
             # Mark entries that have no field measurements with a flag for future reference
-            ts.importFlags |= ImportFlagsEnum.NO_FIELD_MEASUREMENTS
-
-        t.importFlags = ts.importFlags
+            t.importFlags |= ImportFlagsEnum.NO_FIELD_MEASUREMENTS
 
         if existing:
             self.modified.append(t)
         else:
             self.created.append(t)
-
-        if existingStore:
-            self.modifiedStore.append(ts)
-        else:
-            self.createdStore.append(ts)
 
         return t
 

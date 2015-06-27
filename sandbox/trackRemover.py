@@ -15,7 +15,6 @@ from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
 from cadence.models.tracks.Tracks_Track import Tracks_Track
-from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
 from cadence.models.analysis.Analysis_Track import Analysis_Track
 
 #---------------------------------------------------------------------------------------------------
@@ -28,7 +27,6 @@ if not CSV_FILE or not os.path.exists(CSV_FILE):
     sys.exit(1)
 
 tracksModel = Tracks_Track.MASTER
-storeModel = Tracks_TrackStore.MASTER
 tracksSession = tracksModel.createSession()
 
 analysisModel = Analysis_Track.MASTER
@@ -40,9 +38,6 @@ def removeTrack(track):
     analysisTrack = track.getAnalysisPair(analysisSession)
     if analysisTrack:
         analysisSession.delete(analysisTrack)
-
-    for store in tracksSession.query(storeModel).filter(storeModel.uid == track.uid).all():
-        tracksSession.delete(store)
 
     tracksSession.delete(track)
 

@@ -8,7 +8,6 @@ from pyaid.ArgsUtils import ArgsUtils
 from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
 
 from cadence.data.TrackCsvImporter import TrackCsvImporter
-from cadence.data.TrackJsonImporter import TrackJsonImporter
 from cadence.models.analysis.Analysis_Track import Analysis_Track
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
@@ -18,9 +17,6 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
 
 #===================================================================================================
 #                                                                                       C L A S S
-
-    CSV  = 'csv'
-    JSON = 'json'
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, parent, path, importType, session =None, analysisSession =None, **kwargs):
@@ -45,11 +41,7 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
         aSession = self._analysisSession if self._analysisSession else analysisModel.createSession()
 
         try:
-            if self._importType == self.CSV:
-                importer = TrackCsvImporter(self._path, logger=self._log)
-            else:
-                importer = TrackJsonImporter(self._path, logger=self._log, verbose=self._verbose)
-
+            importer = TrackCsvImporter(self._path, logger=self._log)
             self._log.write(u'<h1>Beginning Import...</h1>')
             importer.read(session=session, analysisSession=aSession, compressed=self._compressed)
         except Exception as err:

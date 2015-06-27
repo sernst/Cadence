@@ -104,7 +104,7 @@ class RotationStage(AnalysisStage):
             return
 
         for track in series.tracks:
-            fieldAngle = Angle(degrees=track.rotationMeasured)
+            fieldAngle = Angle(degrees=track.rotationMeasured if track.rotationMeasured else  0.0)
             dataAngle  = Angle(degrees=track.rotation)
             strideLine = StrideLine(track=track, series=series)
 

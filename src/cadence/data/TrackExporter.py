@@ -10,7 +10,8 @@ from pyaid.json.JSON import JSON
 from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
 
-from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
+from cadence.models.tracks.Tracks_Track import Tracks_Track
+
 
 #___________________________________________________________________________________________________ TrackExporter
 class TrackExporter(object):
@@ -41,12 +42,12 @@ class TrackExporter(object):
             return True
 
         results = []
-        storeModel = Tracks_TrackStore.MASTER
+        model = Tracks_Track.MASTER
 
         if session is None:
-            session = storeModel.createSession()
+            session = model.createSession()
 
-        trackStores = session.query(storeModel).all()
+        trackStores = session.query(model).all()
         index = 0
         indices = NumericUtils.linearSpace(0, len(trackStores), roundToIntegers=True)[1:]
 

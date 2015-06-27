@@ -13,7 +13,6 @@ from cadence.mayan.trackway import CreateTrackNode
 from cadence.models.tracks.TracksTrackDefault import TracksTrackDefault
 
 
-# AS NEEDED: from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
 # AS NEEDED: from cadence.models.analysis.Analysis_Track import Analysis_Track
 
 #___________________________________________________________________________________________________ Tracks_Track
@@ -159,25 +158,6 @@ class Tracks_Track(TracksTrackDefault):
 
         return False
 
-#___________________________________________________________________________________________________ mergeToStorage
-    def mergeToStorage(self, session):
-        store = self.getMatchingTrackStore(session)
-        if not store:
-            return False
-
-        store.fromDict(self.toDict())
-        return True
-
-#___________________________________________________________________________________________________ getMatchingTrack
-    def getMatchingTrackStore(self, session):
-        """ Returns the Tracks_Track instance that corresponds to this Tracks_TrackStore instance
-            if such an instance exists. """
-
-        from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
-        model  = Tracks_TrackStore.MASTER
-        result = session.query(model).filter(model.uid == self.uid).all()
-        return result[0] if result else None
-
 #___________________________________________________________________________________________________ removeTracksByUid
     @classmethod
     def removeTracksByUid(cls, uid, session, analysisSession):
@@ -200,11 +180,6 @@ class Tracks_Track(TracksTrackDefault):
 
         if analysisTrack:
             analysisSession.delete(analysisTrack)
-
-        from cadence.models.tracks.Tracks_TrackStore import Tracks_TrackStore
-        storeModel = Tracks_TrackStore.MASTER
-        for store in session.query(storeModel).filter(storeModel.uid == track.uid).all():
-            session.delete(store)
 
         session.delete(track)
 
