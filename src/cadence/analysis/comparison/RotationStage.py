@@ -66,7 +66,7 @@ class RotationStage(AnalysisStage):
         csv.addFields(
             ('uid', 'UID'),
             ('fingerprint', 'Fingerprint'),
-            ('delta', 'Difference'),
+            ('delta', 'Discrepancy'),
             ('entered', 'Entered'),
             ('measured', 'Measured'),
             ('deviation', 'Deviation (sigmas)'),
@@ -172,7 +172,7 @@ class RotationStage(AnalysisStage):
                 fingerprint=track.fingerprint,
                 entered=dataDeg.label,
                 measured=fieldDeg.label,
-                delta=NumericUtils.roundToOrder(diffDeg.value, -2),
+                delta=abs(NumericUtils.roundToOrder(diffDeg.value, -2)),
                 deviation=NumericUtils.roundToSigFigs(deviation, 3),
                 relative=NumericUtils.roundToOrder(track.rotationMeasured, -2),
                 axis=NumericUtils.roundToOrder(axisAngle.degrees, -2),
@@ -210,7 +210,7 @@ class RotationStage(AnalysisStage):
                 stroke_width=1,
                 stroke='red')
 
-            # place a translucent disk of radius proportional to the diference in degrees
+            # place a translucent disk of radius proportional to the difference in degrees
             radius = 100.0*diffDeg.value/180.0
             self._currentDrawing.circle(
                 (track.x, track.z),
@@ -257,7 +257,15 @@ class RotationStage(AnalysisStage):
             diffs.append(abs(diffDeg.value))
             diffsUnc.append(diffDeg.uncertainty)
 
+            # Compute the circularity of the track from its aspect ratio. If the aspect is less
+            # than or equal to 1.0 use the aspect value directly. However, if the value is greater
+            # than one, take the reciprocal so that large and small aspect ratios can be compared
+            # equally.
             aspect = entry['aspect']
+            if aspect.value > 1.0:
+                a = 1.0/aspect.raw
+                aspect = NumericUtils.toValueUncertainty(a, a*(aspect.rawUncertainty/aspect.raw))
+
             circs.append(abs(aspect.value - 1.0))
             circsUnc.append(aspect.uncertainty)
 

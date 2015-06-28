@@ -66,12 +66,8 @@ class TrackwayPlotStrideStage(AnalysisStage):
             if not entry:
                 continue
 
-            try:
-                xv = int(track.number)
-            except Exception:
-                xv = int(re.sub(r'[^0-9]+', '', track.number))
-
-            x.append(xv)
+            aTrack = track.getAnalysisPair(self.analysisSession)
+            x.append(aTrack.curvePosition)
             y.append(entry['entered'].value)
             error.append(entry['entered'].uncertainty)
             lw.append(2.0)
