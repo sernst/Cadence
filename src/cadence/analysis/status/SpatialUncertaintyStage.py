@@ -135,10 +135,10 @@ class SpatialUncertaintyStage(AnalysisStage):
             z = t.zValue
 
             if x.uncertainty > 0.15 or z.uncertainty > 0.15:
-                s = '%s%s %s%s: %s %s'% (
-                    t.site, t.level, t.trackwayType, t.trackwayNumber, t.name, t.uid)
-                print('%s:  (%s and %s)' % (s, x.uncertainty, z.uncertainty))
-
+                # s = '%s%s %s%s: %s %s'% (
+                #     t.site, t.level, t.trackwayType, t.trackwayNumber, t.name, t.uid)
+                # print('%s:  (%s and %s)' % (s, x.uncertainty, z.uncertainty))
+                print('%s\t%s' % (t.uid, t.fingerprint))
 
             if max(x.uncertainty, z.uncertainty) <= 2.0*average.uncertainty:
                 # then just indicate that this track has low uncertainty

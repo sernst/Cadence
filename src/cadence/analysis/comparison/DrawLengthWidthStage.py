@@ -4,6 +4,8 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import math
+
 from pyaid.number.NumericUtils import NumericUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
@@ -62,12 +64,13 @@ class DrawLengthWidthStage(AnalysisStage):
            self.logger.write('[WARNING]: No drawing to draw track %s' % track.fingerprint)
            return
 
+        self._drawMeasuredLength(track, drawing)
+        self._drawMeasuredWidth(track, drawing)
         self._drawLength(track, drawing)
         self._drawWidth(track, drawing)
-        self._drawOverlay(track, drawing)
 
-#___________________________________________________________________________________________________ _drawLength
-    def _drawLength(self, track, drawing):
+#___________________________________________________________________________________________________ _drawMeasuredLength
+    def _drawMeasuredLength(self, track, drawing):
         if NumericUtils.equivalent(track.lengthMeasured, 0.0):
             return
 
@@ -83,28 +86,20 @@ class DrawLengthWidthStage(AnalysisStage):
             strokeWidth = 1.0
             color = 'green'
 
-        drawing.use(
-            'bar',
-            (track.x, track.z),
-            scale=1.0,
-            scaleY=track.lengthRatio*track.lengthMeasured,
-            rotation=track.rotation,
-            scene=True,
-            stroke=color,
-            stroke_width=strokeWidth)
+        l   = 100*track.lengthMeasured
+        rot = math.radians(track.rotation)
+        z1  = track.lengthRatio*l
+        z2  = z1 - l
 
-        drawing.use(
-            'bar',
-            (track.x, track.z),
-            scale=1.0,
-            scaleY=(1.0 - track.lengthRatio)*track.lengthMeasured,
-            rotation=track.rotation + 180.0,
-            scene=True,
-            stroke=color,
-            stroke_width=strokeWidth)
+        drawing.line(
+             (track.x + z1*math.sin(rot), track.z + z1*math.cos(rot)),
+             (track.x + z2*math.sin(rot), track.z + z2*math.cos(rot)),
+             scene=True,
+             stroke=color,
+             stroke_width=strokeWidth)
 
-#___________________________________________________________________________________________________ _drawWidth
-    def _drawWidth(self, track, drawing):
+#___________________________________________________________________________________________________ _drawMeasuredWidth
+    def _drawMeasuredWidth(self, track, drawing):
         if NumericUtils.equivalent(track.widthMeasured, 0.0):
             return
 
@@ -120,71 +115,49 @@ class DrawLengthWidthStage(AnalysisStage):
             strokeWidth = 1.0
             color = 'green'
 
-        drawing.use(
-            'bar',
-            (track.x, track.z),
-            scale=2.0,
-            scaleY=track.widthMeasured/2.0,
-            rotation=track.rotation + 90.0,
-            scene=True,
-            stroke=color,
-            stroke_width=strokeWidth)
+        w   = 100*track.widthMeasured
+        rot = math.radians(track.rotation)
+        x1  = w/2.0
+        x2  = -w/2.0
 
-        drawing.use(
-            'bar',
-            (track.x, track.z),
-            scale=2.0,
-            scaleY=track.widthMeasured/2.0,
-            rotation=track.rotation - 90.0,
-            scene=True,
-            stroke=color,
-            stroke_width=strokeWidth)
+        drawing.line(
+             (track.x + x1*math.cos(rot), track.z - x1*math.sin(rot)),
+             (track.x + x2*math.cos(rot), track.z - x2*math.sin(rot)),
+             scene=True,
+             stroke=color,
+             stroke_width=strokeWidth)
 
-#___________________________________________________________________________________________________ _drawOverlay
-    @classmethod
-    def _drawOverlay(cls, track, drawing, color ='orange'):
+#___________________________________________________________________________________________________ _drawLength
+    def _drawLength(self, track, drawing, color ='orange', strokeWidth =0.5):
+        if NumericUtils.equivalent(track.lengthMeasured, 0.0):
+            return
 
-        # now overlay onto the above measured-dimension bars the corresponding length indicators
-        drawing.use(
-            'bar',
-            (track.x, track.z),
-            scale=1.0,
-            scaleY=track.lengthRatio*track.length,
-            rotation=track.rotation,
-            scene=True,
-            stroke=color,
-            stroke_width=0.5)
+        l   = 100*track.length
+        rot = math.radians(track.rotation)
+        z1  = track.lengthRatio*l
+        z2  = z1 - l
 
-        # draw the remaining portion of the length bar
-        drawing.use(
-            'bar',
-            (track.x, track.z),
-            scale=1.0,
-            scaleY=(1.0 - track.lengthRatio)*track.length,
-            rotation=track.rotation + 180.0,
-            scene=True,
-            stroke=color,
-            stroke_width=0.5)
+        # draw the length line
+        drawing.line(
+             (track.x + z1*math.sin(rot), track.z + z1*math.cos(rot)),
+             (track.x + z2*math.sin(rot), track.z + z2*math.cos(rot)),
+             scene=True,
+             stroke=color,
+             stroke_width=strokeWidth)
 
-        # and draw a bar representing the width (first drawing that part to the right of center)
-        drawing.use(
-            'bar',
-            (track.x, track.z),
-            scale=1.0,
-            scaleY=track.width/2.0,
-            rotation=track.rotation + 90.0,
-            scene=True,
-            stroke=color,
-            stroke_width=0.5)
+#___________________________________________________________________________________________________ _drawWidth
+    def _drawWidth(self, track, drawing, color ='orange', strokeWidth =0.5):
+        if NumericUtils.equivalent(track.widthMeasured, 0.0):
+            return
 
-        # then drawing the other part of the width bar that is to the left of center
-        drawing.use(
-            'bar',
-            (track.x, track.z),
-            scale=1.0,
-            scaleY=track.width/2.0,
-            rotation=track.rotation - 90.0,
-            scene=True,
-            stroke=color,
-            stroke_width=0.5)
+        w   = 100*track.width
+        rot = math.radians(track.rotation)
+        x1  = w/2.0
+        x2  = -w/2.0
 
+        drawing.line(
+             (track.x + x1*math.cos(rot), track.z - x1*math.sin(rot)),
+             (track.x + x2*math.cos(rot), track.z - x2*math.sin(rot)),
+             scene=True,
+             stroke=color,
+             stroke_width=strokeWidth)

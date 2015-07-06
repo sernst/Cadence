@@ -656,7 +656,7 @@ class CadenceDrawing(object):
             is then placed at the specfified center location (which either in map coordinates or
             scene coordinates depending upon the kwarg scene).  For example, for a group 'g' to
             be placed at some point (xScene, yScene) and rotated 45 degrees, and with 2x scale:
-                use('g', (xScene, yScene), scene=True, rotation=45, scale = 2) """
+                use('g', (xScene, yScene), scene=True, rotation=45, scale=2) """
 
         if not self.siteMapReady:
             return

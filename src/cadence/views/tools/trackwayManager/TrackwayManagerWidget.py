@@ -50,18 +50,20 @@ class TrackwayManagerWidget(PyGlassWidget):
     SET_TO_MEASURED      = 'Set to MEASURED Dimensions'
     SET_DATUM            = 'Set Datum'
     SET_LINKS            = 'Set Links'
+    SET_COMPLETED        = 'Set Selected Tracks Complete'
     SET_ALL_INCOMPLETE   = 'Set All Tracks Incomplete'
     SET_COMPLETE         = 'Set Complete & Get Next'
 
     SET_UNCERTAINTY_LOW      = 'Set Uncertainties LOW'          # for exceptional tracks
     SET_UNCERTAINTY_MODERATE = 'Set Uncertainties MODERATE'     # a reasonable default
     SET_UNCERTAINTY_HIGH     = 'Set Uncertainties HIGH'         # for incomplete or circular tracks
+    REDUCE_ROT_UNCERTAINTY   = 'Reduce Rotational uncertainty'
 
     DIMENSION_UNCERTAINTY_LOW      = 0.01
     DIMENSION_UNCERTAINTY_MODERATE = 0.03
     DIMENSION_UNCERTAINTY_HIGH     = 0.08
 
-    ROTATION_UNCERTAINTY_LOW      = 3.0
+    ROTATION_UNCERTAINTY_LOW      = 6.0
     ROTATION_UNCERTAINTY_MODERATE = 10.0
     ROTATION_UNCERTAINTY_HIGH     = 30.0
 
@@ -154,8 +156,10 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.SET_UNCERTAINTY_LOW,
             self.SET_UNCERTAINTY_MODERATE,
             self.SET_UNCERTAINTY_HIGH,
+            self.REDUCE_ROT_UNCERTAINTY,
             self.LINK_SELECTED,
             self.UNLINK_SELECTED,
+            self.SET_COMPLETED,
             self.SET_ALL_INCOMPLETE,
             self.SET_COMPLETE )
 
@@ -316,9 +320,11 @@ class TrackwayManagerWidget(PyGlassWidget):
         uid                 = props[TrackPropEnum.UID.name]
 
         self.widthSbx.setValue(100.0*width)
-        self.widthLbl.setText('Width: [%2.0f]' % (100.0*widthMeasured))
+        if widthMeasured is not None:
+            self.widthLbl.setText('Width: [%2.0f]' % (100.0*widthMeasured))
         self.lengthSbx.setValue(100.0*length)
-        self.lengthLbl.setText('Length: [%2.0f]' % (100.0*lengthMeasured))
+        if lengthMeasured is not None:
+            self.lengthLbl.setText('Length: [%2.0f]' % (100.0*lengthMeasured))
         self.widthUncertaintySbx.setValue(100.0*widthUncertainty)
         self.lengthUncertaintySbx.setValue(100.0*lengthUncertainty)
 
@@ -1261,6 +1267,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         elif op == self.SET_UNCERTAINTY_HIGH:
             self.handleSetUncertaintyHigh()
 
+        elif op == self.REDUCE_ROT_UNCERTAINTY:
+            self.handleReduceRotationalUncertainty()
+
         elif op == self.LINK_SELECTED:
             self.handleLink()
 
@@ -1272,6 +1281,9 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         elif op == self.SET_LINKS:
             self.handleSetNodeLinks()
+
+        elif op == self.SET_COMPLETED:
+            self.handleSetCompleted()
 
         elif op == self.SET_ALL_INCOMPLETE:
             self.handleSetAllIncompleted()
@@ -1356,6 +1368,64 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
+
+#___________________________________________________________________________________________________ handleReduceRotationalUncertainty
+    def handleReduceRotationalUncertainty(self):
+        """ The selected tracks are assigned a lower uncertainty value for rotation. """
+        #
+        # if not self._lock():
+        #     return
+        #
+        # selectedTracks = self._trackwayManager.getSelectedTracks()
+        # if selectedTracks is None:
+        #     self._unlock()
+        #     return
+        #
+        # track = selectedTracks[0]
+        #
+        # track.rotationUncertainty -= 2.0
+        # track.updateNode()
+        #
+        # # update the Maya node and the UI
+        # dict = track.toDict()
+        # self.refreshTrackUI(dict)
+        #
+        # self._trackwayManager.closeSession(commit=True)
+        # self._unlock()
+
+        if not self._lock():
+            return
+
+        # make sure this is not an accident
+        result = PyGlassBasicDialogManager.openYesNo(
+                self,
+                u'CONFIRMATION REQUIRED',
+                u'Are you sure you want to set reduce uncertainty of all uncompleted tracks?',
+                False)
+        if not result:
+            self._uiLock()
+            return
+
+        uids = self._trackwayManager.getUidList()
+
+        if not uids:
+            self._uiLock()
+            return
+
+        for uid in uids:
+            track = self._trackwayManager.getTrackByUid(uid)
+            if not track.completed:
+                track.lengthUncertainty   = self.DIMENSION_UNCERTAINTY_LOW
+                track.widthUncertainty    = self.DIMENSION_UNCERTAINTY_LOW
+                track.rotationUncertainty = self.ROTATION_UNCERTAINTY_LOW
+
+
+        # now select the track corresponding to the first UID in the list of UIDs
+        self._trackwayManager.selectTrack(self._trackwayManager.getTrackByUid(uids[0]))
+
+        self._trackwayManager.closeSession(commit=True)
+        self._unlock()
+
 
 #___________________________________________________________________________________________________ handleRotationSBox
     def handleRotationSbx(self):
@@ -1767,6 +1837,28 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
+#___________________________________________________________________________________________________ handleSetCompleted
+    def handleSetCompleted(self):
+        """ This sets all selected tracks to be complete. """
+
+        if not self._lock():
+            return
+
+        selectedTracks = self._trackwayManager.getSelectedTracks()
+        if selectedTracks is None:
+            self._unlock()
+            return
+
+        for track in selectedTracks:
+                track.completed = True
+                track.hidden    = True
+        self._trackwayManager.selectTrack(track)
+        self.refreshTrackUI(track.toDict())
+        self._trackwayManager.setCameraFocus()
+
+        self._trackwayManager.closeSession(commit=True)
+        self._unlock()
+
 #___________________________________________________________________________________________________ handleSetAllIncompleted
     def handleSetAllIncompleted(self):
         """ This sets all tracks to be incomplete, so that they can be examined individually using
@@ -1800,6 +1892,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
+
 
 #___________________________________________________________________________________________________ handleSetTrackCompleted
     def handleSetTrackCompleted(self):
@@ -1969,7 +2062,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         # update the Maya node and the UI
         dict = track.toDict()
-        self.selectTrack(track)
+        self._trackwayManager.selectTrack(track)
         self.refreshTrackUI(dict)
         self._trackwayManager.setCameraFocus()
 
@@ -1996,7 +2089,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         # update the Maya node and the UI
         dict = track.toDict()
-        self.selectTrack(track)
+        self._trackwayManager.selectTrack(track)
         self.refreshTrackUI(dict)
         self._trackwayManager.setCameraFocus()
 
