@@ -18,8 +18,8 @@ from cadence.models.tracks.TracksDefault import TracksDefault
 #___________________________________________________________________________________________________ Tracks_SiteMap
 class Tracks_SiteMap(TracksDefault):
     """ A database model class containing coordinate information for trackway excavation site maps.
-        The following public methods assist in mapping from scene coordinates to siteMap coordinates,
-        and vice versa, and  Federal coordinates:
+        The following public methods assist in mapping from scene coordinates to siteMap
+        coordinates, and vice versa, and a getter for the Federal coordinates:
 
             projectToMap(sceneX, sceneZ)    returns the corresponding site map point [mapX, mapY]
             projectToScene(mapX, mapY) 	    returns the corresponding scene point [sceneX, sceneZ]
@@ -39,30 +39,48 @@ class Tracks_SiteMap(TracksDefault):
 
     __tablename__ = u'sitemaps'
 
-    _index               = sqla.Column(sqla.Integer,     default=0)
-    _name                = sqla.Column(sqla.Unicode,     default=u'')
-    _level               = sqla.Column(sqla.Unicode,     default=u'')
-    _filename            = sqla.Column(sqla.Unicode,     default=u'')
-    _federalEast         = sqla.Column(sqla.Integer,     default=0)
-    _federalNorth        = sqla.Column(sqla.Integer,     default=0)
-    _left                = sqla.Column(sqla.Float,       default=0.0)
-    _top                 = sqla.Column(sqla.Float,       default=0.0)
-    _width               = sqla.Column(sqla.Float,       default=0.0)
-    _height              = sqla.Column(sqla.Float,       default=0.0)
-    _xFederal            = sqla.Column(sqla.Float,       default=0.0)
-    _yFederal            = sqla.Column(sqla.Float,       default=0.0)
-    _xTranslate          = sqla.Column(sqla.Float,       default=0.0)
-    _zTranslate          = sqla.Column(sqla.Float,       default=0.0)
-    _xRotate             = sqla.Column(sqla.Float,       default=0.0)
-    _yRotate             = sqla.Column(sqla.Float,       default=0.0)
-    _zRotate             = sqla.Column(sqla.Float,       default=0.0)
-    _scale               = sqla.Column(sqla.Float,       default=1.0)
+    # the row number to which map is assigned (e.g., index 1 refers to BEB_502)
+    _index         = sqla.Column(sqla.Integer, default=0)
+    # the tracksite name, either:  'BEB', 'BSY', 'CRO', 'CRT', 'PMM', 'SCR', or 'TCH'
+    _name          = sqla.Column(sqla.Unicode, default=u'')
+    # the level within a tracksite, ranging from '502' to '1060'
+    _level         = sqla.Column(sqla.Unicode, default=u'')
+    # the name of the Adobe Illustrator .AI file, such as "BEB_515 sy-su" (but no suffix)
+    _filename      = sqla.Column(sqla.Unicode, default=u'')
+    # the'x' (or eastward) Federal Coordinate, a string of six numerals such as '568500'
+    _federalEast   = sqla.Column(sqla.Integer, default=0)
+    # the 'y' (or northward) Federal Coordinate, a string of six numerals such as '251920'
+    _federalNorth  = sqla.Column(sqla.Integer, default=0)
+    # the x value of the upper left of the map's canvas (typically zero)
+    _left          = sqla.Column(sqla.Float,   default=0.0)
+    # the y value of the upper left of the map's canvas (typically zero)
+    _top           = sqla.Column(sqla.Float,   default=0.0)
+    # the canvas width, typically in the range 200-3000
+    _width         = sqla.Column(sqla.Float,   default=0.0)
+    # the canvas height, typically in the range 200-3000
+    _height        = sqla.Column(sqla.Float,   default=0.0)
+    # the x coordinate of the Federal Coordinate marker within the canvas
+    _xFederal      = sqla.Column(sqla.Float,   default=0.0)
+    # the y coordinate of the Federal Coordinate marker within the canvas
+    _yFederal      = sqla.Column(sqla.Float,   default=0.0)
+    # the canvas is translated to shift the Federal Coordinate marker to the Maya scene origin
+    _xTranslate    = sqla.Column(sqla.Float,   default=0.0)
+    # with (xTranslate, zTranslate)
+    _zTranslate    = sqla.Column(sqla.Float,   default=0.0)
+    # the canvas is also rotated to align the positive X axis with West
+    _xRotate       = sqla.Column(sqla.Float,   default=0.0)
+    # the y axis is of course up
+    _yRotate       = sqla.Column(sqla.Float,   default=0.0)
+    # and the positive Z axis is aligned with North on the map
+    _zRotate       = sqla.Column(sqla.Float,   default=0.0)
+    # the map is scaled by 50 (as each map mm = 20 'real world' mm)
+    _scale         = sqla.Column(sqla.Float,   default=1.0)
 
-    _flags               = sqla.Column(sqla.Integer,     default=0)
-    _sourceFlags         = sqla.Column(sqla.Integer,     default=0)
-    _displayFlags        = sqla.Column(sqla.Integer,     default=0)
-    _importFlags         = sqla.Column(sqla.Integer,     default=0)
-    _analysisFlags       = sqla.Column(sqla.Integer,     default=0)
+    _flags         = sqla.Column(sqla.Integer, default=0)
+    _sourceFlags   = sqla.Column(sqla.Integer, default=0)
+    _displayFlags  = sqla.Column(sqla.Integer, default=0)
+    _importFlags   = sqla.Column(sqla.Integer, default=0)
+    _analysisFlags = sqla.Column(sqla.Integer, default=0)
 
 #___________________________________________________________________________________________________ __init__
     def __init__(self, **kwargs):

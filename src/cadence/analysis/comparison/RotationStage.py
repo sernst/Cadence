@@ -167,11 +167,22 @@ class RotationStage(AnalysisStage):
             deviation = diffDeg.value/diffDeg.uncertainty
             self.deviations[track.uid] = diffDeg
 
+            # for now, convert +/- 180 headings to 0-360, using e and m
+            # comment the next four lines toggle comments for entered and measured below to revert
+            e = dataDeg.value
+            m = fieldDeg.value
+            if e < 0.0:
+                e += 360.0
+            if m < 0.0:
+                m += 360.0
+
             data = dict(
                 uid=track.uid,
                 fingerprint=track.fingerprint,
-                entered=dataDeg.label,
-                measured=fieldDeg.label,
+                entered=str(e),
+    #           entered=dataDeg.label,
+                measured=str(m),
+    #           measured=fieldDeg.label,
                 delta=abs(NumericUtils.roundToOrder(diffDeg.value, -2)),
                 deviation=NumericUtils.roundToSigFigs(deviation, 3),
                 relative=NumericUtils.roundToOrder(track.rotationMeasured, -2),
