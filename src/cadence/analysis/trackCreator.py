@@ -8,6 +8,7 @@ import sys
 import os
 
 import pandas as pd
+from pyaid.json.JSON import JSON
 
 from pyaid.string.StringUtils import StringUtils
 
@@ -59,24 +60,24 @@ try:
         t.year = '2014'
         t.index = -1
 
-        existing = t.findExistingTracks(session)
+        existing = t.findExistingTracks(session=session)
         if existing:
             # Do not create a track if the fingerprint for the new track matches one already found
             # in the database
             print('[WARNING]: Track "%s" already exists. Skipping this entry.')
             continue
+        session.add(t)
 
         # Populate the new tracks with "reasonable" starting values to make the tracks easier to
         # manipulate. The number "42" is used in repetition to make the starting values obviously
         # fake and require adjustment.
-        t.snapshot = dict()
+        t.snapshotData = dict()
         t.width = 0.424242
         t.widthUncertainty = 0.05
         t.length = 0.424242
         t.lengthUncertainty = 0.05
         t.rotation = 42.4242
 
-        session.add(t)
 except Exception:
     print('[FATAL]: Improperly formatted spreadsheet')
     session.close()
