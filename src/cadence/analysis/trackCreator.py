@@ -8,6 +8,7 @@ import sys
 import os
 
 import pandas as pd
+
 from pyaid.string.StringUtils import StringUtils
 
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
@@ -19,7 +20,7 @@ from cadence.models.tracks.Tracks_Track import Tracks_Track
 # INITIALIZATION
 #       The following variables must be set for the script to work properly
 
-CSV_SOURCE_PATH = ''
+CSV_SOURCE_PATH = '/Users/scott/Dropbox/a16/spreadsheets/beb_s_500/Custom_Tracks.csv'
 
 ####################################################################################################
 
@@ -52,7 +53,7 @@ try:
         t.sector = StringUtils.toText(row.sector)
         t.level = StringUtils.toText(row.level)
         t.trackwayNumber = StringUtils.toText(row.trackwayNumber)
-        t.name = StringUtils.toText(row.name)
+        t.name = StringUtils.toText(row.trackwayName)
 
         t.trackwayType = 'S'
         t.year = '2014'
