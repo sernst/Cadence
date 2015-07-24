@@ -8,6 +8,7 @@ import sys
 import os
 
 import pandas as pd
+from pyaid.string.StringUtils import StringUtils
 
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 PyGlassEnvironment.initializeFromInternalPath(__file__)
@@ -47,11 +48,11 @@ try:
         t = Tracks_Track()
         t.custom = True
 
-        t.site = row.site
-        t.sector = row.sector
-        t.level = row.level
-        t.trackwayNumber = row.trackwayNumber
-        t.name = row.name
+        t.site = StringUtils.toText(row.site)
+        t.sector = StringUtils.toText(row.sector)
+        t.level = StringUtils.toText(row.level)
+        t.trackwayNumber = StringUtils.toText(row.trackwayNumber)
+        t.name = StringUtils.toText(row.name)
 
         t.trackwayType = 'S'
         t.year = '2014'
