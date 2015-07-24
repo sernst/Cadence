@@ -54,9 +54,9 @@ class TracksDefault(PyGlassModelsDefault):
 #___________________________________________________________________________________________________ echoForVerification
     def echoForVerification(self):
         """echoAnalysis doc..."""
-        return '    * %s%s [%s] -> [%s] (%s, %s)' % (
+        return '    * %s%s [#%s] [%s] -> [%s] (%s, %s)' % (
             '' if self.isComplete else '[INCOMPLETE] ',
-            self.fingerprint, self.uid, self.next, self.xValue.label, self.zValue.label)
+            self.fingerprint, self.index, self.uid, self.next, self.xValue.label, self.zValue.label)
 
 #___________________________________________________________________________________________________ getAnalysisPair
     def getAnalysisPair(self, analysisSession, createIfMissing =True):

@@ -8,11 +8,9 @@ from collections import OrderedDict
 import csv
 
 from pyaid.string.StringUtils import StringUtils
-
-#*************************************************************************************************** CsvWriter
 from pyaid.system.SystemUtils import SystemUtils
 
-
+#*************************************************************************************************** CsvWriter
 class CsvWriter(object):
     """A class for..."""
 

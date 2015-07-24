@@ -1,19 +1,12 @@
-library(RSQLite)
 library(dplyr)
 library(ggplot2)
 
 source('src/support/TrackUtils.R')
 
 # Create a connection to the tracks database and load the tracks database table
-conn <- RSQLite::dbConnect(RSQLite::SQLite(), dbname="input/tracks.vdb")
-sitemaps <- RSQLite::dbReadTable(conn, "sitemaps")
-sourceTracks <- RSQLite::dbReadTable(conn, "tracks")
-RSQLite::dbDisconnect(conn)
-
-conn <- RSQLite::dbConnect(RSQLite::SQLite(), dbname="input/analysis.vdb")
-analysisTracks <- RSQLite::dbReadTable(conn, "tracks")
-RSQLite::dbDisconnect(conn)
-conn <- NULL
+sitemaps <- getSitemapsData()
+sourceTracks <- getTracksData()
+analysisTracks <- getAnalysisTracksData()
 
 allTracks <- dplyr::inner_join(sourceTracks, analysisTracks, by=c('uid'))
 
