@@ -13,7 +13,7 @@ class SourceFlagsEnum(object):
 #===================================================================================================
 #                                                                                       C L A S S
 
-    CLEARED   = 0
+    CLEARED = 0
     COMPLETED = 1 << 0
     MARKED    = 1 << 1
     LOCKED    = 1 << 2

@@ -21,7 +21,7 @@ from cadence.models.tracks.Tracks_Track import Tracks_Track
 # INITIALIZATION
 #       The following variables must be set for the script to work properly
 
-CSV_SOURCE_PATH = '/Users/scott/Dropbox/a16/spreadsheets/beb_s_500/Custom_Tracks.csv'
+CSV_SOURCE_PATH = '/Users/kent/Dropbox/A16/spreadsheets/BEB_S_500/Custom_Tracks.csv'
 
 ####################################################################################################
 

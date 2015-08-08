@@ -72,7 +72,7 @@ class AnalyzerBase(object):
         self._stages            = []
         self._sitemaps          = []
         self._trackways         = dict()
-        self._seriesBundles       = dict()
+        self._seriesBundles     = dict()
         self._plotFigures       = dict()
         self._currentStage      = None
         self._success           = False

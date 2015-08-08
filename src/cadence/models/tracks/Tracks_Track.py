@@ -7,6 +7,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import nimble
 
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
+from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum
 from cadence.mayan.trackway import GetTrackNodeData
 from cadence.mayan.trackway import UpdateTrackNode
 from cadence.mayan.trackway import CreateTrackNode
@@ -50,7 +51,7 @@ class Tracks_Track(TracksTrackDefault):
         return SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED)
     @completed.setter
     def completed(self, value):
-        """ Setter sets or clears the 'completed' source flag, depending on the boolean value. """
+        """ Setter sets or clears the 'completed' source flag, depending on the boolean. """
         # preserve the state of any other flags
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
@@ -58,6 +59,42 @@ class Tracks_Track(TracksTrackDefault):
             self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.COMPLETED)
         else:
             self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.COMPLETED)
+
+#___________________________________________________________________________________________________ GS: ignorePace
+    @property
+    def ignorePace(self):
+        """ Getter returns a boolean indicating whether the 'ignorePace' analysis flag is set. """
+        flags = self.analysisFlags & ~AnalysisFlagsEnum.IGNORE_PACE
+
+        return AnalysisFlagsEnum.get(flags, AnalysisFlagsEnum.IGNORE_PACE)
+    @ignorePace.setter
+    def ignorePace(self, value):
+        """ Setter sets or clears the 'ignorePace' analysis flag, depending on the boolean. """
+        # preserve the state of any other flags
+        flags = self.analysisFlags & ~AnalysisFlagsEnum.IGNORE_PACE
+
+        if value:
+            self.analysisFlags = AnalysisFlagsEnum.set(flags, AnalysisFlagsEnum.IGNORE_PACE)
+        else:
+            self.analysisFlags = AnalysisFlagsEnum.clear(flags, AnalysisFlagsEnum.IGNORE_PACE)
+
+#___________________________________________________________________________________________________ GS: ignoreStride
+    @property
+    def ignoreStride(self):
+        """ Getter returns a boolean indicating whether the 'ignoreStride' analysis flag is set. """
+        flags = self.analysisFlags & ~AnalysisFlagsEnum.IGNORE_STRIDE
+
+        return AnalysisFlagsEnum.get(flags, AnalysisFlagsEnum.IGNORE_STRIDE)
+    @ignoreStride.setter
+    def ignoreStride(self, value):
+        """ Setter sets or clears the 'ignoreStride' analysis flag, depending on the boolean. """
+        # preserve the state of any other flags
+        flags = self.analysisFlags & ~AnalysisFlagsEnum.IGNORE_STRIDE
+
+        if value:
+            self.analysisFlags = AnalysisFlagsEnum.set(flags, AnalysisFlagsEnum.IGNORE_STRIDE)
+        else:
+            self.analysisFlags = AnalysisFlagsEnum.clear(flags, AnalysisFlagsEnum.IGNORE_STRIDE)
 
 #___________________________________________________________________________________________________ GS: locked
     @property
@@ -67,7 +104,7 @@ class Tracks_Track(TracksTrackDefault):
         return SourceFlagsEnum.get(flags, SourceFlagsEnum.LOCKED)
     @locked.setter
     def locked(self, value):
-        """ Setter sets or clears the 'locked' source flag, depending on the boolean value. """
+        """ Setter sets or clears the 'locked' source flag, depending on the boolean. """
         # preserve the state of any other flags
         flags = self.sourceFlags & ~SourceFlagsEnum.LOCKED
 
@@ -92,6 +129,7 @@ class Tracks_Track(TracksTrackDefault):
             self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.MARKED)
         else:
             self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.MARKED)
+
 
 #===================================================================================================
 #                                                                                     P U B L I C

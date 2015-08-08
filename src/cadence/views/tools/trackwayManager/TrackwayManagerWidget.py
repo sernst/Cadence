@@ -12,6 +12,7 @@ from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
+from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum
 from cadence.svg.CadenceDrawing import CadenceDrawing
 from cadence.views.tools.trackwayManager.TrackwayManager import TrackwayManager
 
@@ -60,11 +61,11 @@ class TrackwayManagerWidget(PyGlassWidget):
     REDUCE_ROT_UNCERTAINTY   = 'Reduce Rotational uncertainty'
 
     DIMENSION_UNCERTAINTY_LOW      = 0.01
-    DIMENSION_UNCERTAINTY_MODERATE = 0.03
+    DIMENSION_UNCERTAINTY_MODERATE = 0.02
     DIMENSION_UNCERTAINTY_HIGH     = 0.08
 
     ROTATION_UNCERTAINTY_LOW      = 6.0
-    ROTATION_UNCERTAINTY_MODERATE = 10.0
+    ROTATION_UNCERTAINTY_MODERATE = 8.0
     ROTATION_UNCERTAINTY_HIGH     = 30.0
 
     RESOURCE_FOLDER_PREFIX = ['tools']
@@ -103,6 +104,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.hiddenCkbx.clicked.connect(self.handleHiddenCkbx)
         self.lockedCkbx.clicked.connect(self.handleLockedCkbx)
         self.markedCkbx.clicked.connect(self.handleMarkedCkbx)
+
+        self.ignorePaceCkbx.clicked.connect(self.handleIgnorePaceCkbx)
+        self.ignoreStrideCkbx.clicked.connect(self.handleIgnoreStrideCkbx)
 
         self.lengthRatioSbx.valueChanged.connect(self.handleLengthRatioSbx)
         self.noteLE.textChanged.connect(self.handleNoteLE)
@@ -222,6 +226,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.completedCkbx.setEnabled(enable)
         self.markedCkbx.setEnabled(enable)
         self.hiddenCkbx.setEnabled(enable)
+        self.ignorePace.setEnabled(enable)
+        self.ignoreStride.setEnabled(enable)
 
         self.lengthRatioSbx.setEnabled(enable)
 
@@ -253,6 +259,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.lockedCkbx.setChecked(False)
         self.markedCkbx.setChecked(False)
         self.hiddenCkbx.setChecked(False)
+        self.ignorePaceCkbx.setChecked(False)
+        self.ignoreStrideCkbx.setChecked(False)
 
         self.lengthRatioSbx.setValue(0)
 
@@ -310,6 +318,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         rotation            = props[TrackPropEnum.ROTATION.name]
         rotationUncertainty = props[TrackPropEnum.ROTATION_UNCERTAINTY.name]
         sourceFlags         = props[TrackPropEnum.SOURCE_FLAGS.name]
+        analysisFlags       = props[TrackPropEnum.ANALYSIS_FLAGS.name]
         hidden              = props[TrackPropEnum.HIDDEN.name]
         lengthRatio         = props[TrackPropEnum.LENGTH_RATIO.name]
         note                = props[TrackPropEnum.NOTE.name]
@@ -341,6 +350,13 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.markedCkbx.setChecked(marked)
         self.completedCkbx.setChecked(completed)
 
+        # set the ignore pace and stride checkboxes according to the analysis flags
+        pace   = AnalysisFlagsEnum.get(analysisFlags, AnalysisFlagsEnum.IGNORE_PACE)
+        stride = AnalysisFlagsEnum.get(analysisFlags, AnalysisFlagsEnum.IGNORE_STRIDE)
+        self.ignorePaceCkbx.setChecked(pace)
+        self.ignorePaceCkbx.setChecked(stride)
+
+        # finish off a few more fields
         self.hiddenCkbx.setChecked(hidden)
         self.lengthRatioSbx.setValue(lengthRatio)
         self.noteLE.setText(note)
@@ -544,6 +560,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         t = selectedTracks[-1]
         p = self._trackwayManager.getPreviousTrack(t)
 
+        # complete the current track
+        t.completed = True
+
         # the first track must be in place, but if attempting to extrapolate the second track based
         # on just the first track, there is no displacement yet on which to estimate forward
         # progress (so drag that track manually off of the first track).
@@ -589,7 +608,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         # but be careful to check if t's values were measured in the first place
         if n.widthMeasured == 0.0:
             n.width            = t.width
-            n.widthUncertainty = self.DIMENSION_UNCERTAINTY_HIGH
+            #n.widthUncertainty = self.DIMENSION_UNCERTAINTY_MODERATE
+            n.widthUncertainty = t.widthUncertainty
         else:
             n.width            = n.widthMeasured
             n.widthUncertainty = t.widthUncertainty
@@ -597,14 +617,16 @@ class TrackwayManagerWidget(PyGlassWidget):
         # similarly for track length, based on whether it was measured originally
         if n.lengthMeasured == 0.0:
             n.length            = t.length
-            n.lengthUncertainty = self.DIMENSION_UNCERTAINTY_HIGH
+            #n.lengthUncertainty = self.DIMENSION_UNCERTAINTY_MODERATE
+            n.lengthUncertainty = t.lengthUncertainty
         else:
             n.length            = n.lengthMeasured
             n.lengthUncertainty = t.lengthUncertainty
 
         # and presume rotational uncertainty will be high if both measured values are zero
         if n.widthMeasured == 0.0 and n.lengthMeasured == 0.0:
-            n.rotationUncertainty = self.ROTATION_UNCERTAINTY_HIGH
+            #n.rotationUncertainty = self.ROTATION_UNCERTAINTY_MODERATE
+            n.rotationUncertainty = t.rotationUncertainty
         else:
             n.rotationUncertainty = t.rotationUncertainty
 
@@ -620,6 +642,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.refreshTrackUI(n.toDict())
         self._trackwayManager.setCameraFocus()
 
+        self.refreshTrackCountsUI()
         self._trackwayManager.closeSession(commit=True)
 
         self._unlock()
@@ -688,7 +711,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         # but be careful to check if t's values were measured in the first place
         if p.widthMeasured == 0.0:
             p.width            = t.width
-            p.widthUncertainty = self.DIMENSION_UNCERTAINTY_HIGH
+            p.widthUncertainty = self.DIMENSION_UNCERTAINTY_MODERATE
         else:
             p.width            = p.widthMeasured
             p.widthUncertainty = t.widthUncertainty
@@ -696,14 +719,14 @@ class TrackwayManagerWidget(PyGlassWidget):
         # similarly for track length, based on whether it was measured originally
         if p.lengthMeasured == 0.0:
             p.length            = t.length
-            p.lengthUncertainty = self.DIMENSION_UNCERTAINTY_HIGH
+            p.lengthUncertainty = self.DIMENSION_UNCERTAINTY_MODERATE
         else:
             p.length            = p.lengthMeasured
             p.lengthUncertainty = t.lengthUncertainty
 
         # and presume rotational uncertainty will be high if both measured values are zero
         if p.widthMeasured == 0.0 and p.lengthMeasured == 0.0:
-            p.rotationUncertainty = self.ROTATION_UNCERTAINTY_HIGH
+            p.rotationUncertainty = self.ROTATION_UNCERTAINTY_MODERATE
         else:
             p.rotationUncertainty = t.rotationUncertainty
 
@@ -747,9 +770,9 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         # if track length or width (or both) were not measured originally, posit high uncertainties
         if track.widthMeasured == 0.0 or track.lengthMeasured == 0.0:
-            track.widthUncertainty    = self.DIMENSION_UNCERTAINTY_HIGH
-            track.lengthUncertainty   = self.DIMENSION_UNCERTAINTY_HIGH
-            track.rotationUncertainty = self.ROTATION_UNCERTAINTY_HIGH
+            track.widthUncertainty    = self.DIMENSION_UNCERTAINTY_MODERATE
+            track.lengthUncertainty   = self.DIMENSION_UNCERTAINTY_MODERATE
+            track.rotationUncertainty = self.ROTATION_UNCERTAINTY_MODERATE
         else:
             track.widthUncertainty    = self.DIMENSION_UNCERTAINTY_MODERATE
             track.lengthUncertainty   = self.DIMENSION_UNCERTAINTY_MODERATE
@@ -794,9 +817,9 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         # if track length or width (or both) were not measured originally, posit high uncertainties
         if track.widthMeasured == 0.0 or track.lengthMeasured == 0.0:
-            track.widthUncertainty    = self.DIMENSION_UNCERTAINTY_HIGH
-            track.lengthUncertainty   = self.DIMENSION_UNCERTAINTY_HIGH
-            track.rotationUncertainty = self.ROTATION_UNCERTAINTY_HIGH
+            track.widthUncertainty    = self.DIMENSION_UNCERTAINTY_MODERATE
+            track.lengthUncertainty   = self.DIMENSION_UNCERTAINTY_MODERATE
+            track.rotationUncertainty = self.ROTATION_UNCERTAINTY_MODERATE
         else:
             track.widthUncertainty    = self.DIMENSION_UNCERTAINTY_MODERATE
             track.lengthUncertainty   = self.DIMENSION_UNCERTAINTY_MODERATE
@@ -937,6 +960,55 @@ class TrackwayManagerWidget(PyGlassWidget):
             track.z        = 0.0
             track.rotation = 0.0
 
+        track.updateNode()
+
+        self._trackwayManager.closeSession(commit=True)
+        self._unlock()
+
+
+#___________________________________________________________________________________________________ handleIgnorePaceCkbx
+    def handleIgnorePaceCkbx(self):
+        """ This track has its IGNORE_PACE analysis flag set or cleared, based on the
+            value of the checkbox. """
+
+        if not self._lock():
+            return
+
+        selectedTracks = self._trackwayManager.getSelectedTracks()
+        if not selectedTracks:
+            self._unlock()
+            return
+        if len(selectedTracks) != 1:
+            self._unlock()
+            return
+
+        track = selectedTracks[0]
+
+        track.ignorePace = self.ignorePaceCkbx.isChecked()
+        track.updateNode()
+
+        self._trackwayManager.closeSession(commit=True)
+        self._unlock()
+
+#___________________________________________________________________________________________________ handleIgnoreStrideCkbx
+    def handleIgnoreStrideCkbx(self):
+        """ This track has its IGNORE_STRIDE analysis flag set or cleared, based on the
+            value of the checkbox. """
+
+        if not self._lock():
+            return
+
+        selectedTracks = self._trackwayManager.getSelectedTracks()
+        if not selectedTracks:
+            self._unlock()
+            return
+        if len(selectedTracks) != 1:
+            self._unlock()
+            return
+
+        track = selectedTracks[0]
+
+        track.ignoreStride = self.ignoreStrideCkbx.isChecked()
         track.updateNode()
 
         self._trackwayManager.closeSession(commit=True)

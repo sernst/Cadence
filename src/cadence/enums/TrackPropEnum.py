@@ -103,8 +103,11 @@ class TrackPropEnum(object):
     # A 32bit integer containing enumerated flags related to how the track data was sourced
     SOURCE_FLAGS = TRACK_PROP_NT('sourceFlags', 'long', None, False)
 
+    # A 32bit integer containing enumerated flags related to how the track data is analyzed
+    ANALYSIS_FLAGS = TRACK_PROP_NT('analysisFlags', 'long', None, False)
+
     # A 32bit integer containing enumerated flags related to how the track data was imported
-    IMPORT_FLAGS = TRACK_PROP_NT('importFlags', 'lone', None, False)
+    IMPORT_FLAGS = TRACK_PROP_NT('importFlags', 'long', None, False)
 
     # a trackway is numbered at a given site/level, and consists of four (for quadrupedal) or
     # two (bipedal) track series.
