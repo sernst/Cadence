@@ -15,11 +15,11 @@ from cadence.config.ConfigReader import ConfigReader
 from cadence.shared.io.channel.DataChannel import DataChannel
 
 
-#___________________________________________________________________________________________________ CadenceData
+#_______________________________________________________________________________
 class CadenceData(object):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     VERSION         = 1
@@ -31,7 +31,7 @@ class CadenceData(object):
     _NAME_KEY       = 'name'
     _CHANNELS_KEY   = 'channels'
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, **kwargs):
         """ Creates a new instance of CadenceData.
 
@@ -43,10 +43,10 @@ class CadenceData(object):
         self._configs  = ArgsUtils.get('configs', None, kwargs)
         self._channels = ArgsUtils.get('channels', [], kwargs)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: name
+#_______________________________________________________________________________
     @property
     def name(self):
         """The name identifier for the CadenceData instance."""
@@ -55,7 +55,7 @@ class CadenceData(object):
     def name(self, value):
         self._name = value
 
-#___________________________________________________________________________________________________ GS: configs
+#_______________________________________________________________________________
     @property
     def configs(self):
         """The Cadence configs object associated with the data."""
@@ -64,27 +64,27 @@ class CadenceData(object):
     def configs(self, value):
         self._configs = value
 
-#___________________________________________________________________________________________________ GS: channels
+#_______________________________________________________________________________
     @property
     def channels(self):
         """Data keyframe channels in the created/loaded dataset."""
         return self._channels
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ toString
+#_______________________________________________________________________________
     def echo(self):
         print(self.toString())
 
-#___________________________________________________________________________________________________ toString
+#_______________________________________________________________________________
     def toString(self):
         out = []
         for ch in self.channels:
             out.append(ch.toString())
         return u'\n'.join(out)
 
-#___________________________________________________________________________________________________ getChannelByName
+#_______________________________________________________________________________
     def getChannelByName(self, name):
         for c in self._channels:
             if c.name == name:
@@ -92,7 +92,7 @@ class CadenceData(object):
 
         return None
 
-#___________________________________________________________________________________________________ getChannels
+#_______________________________________________________________________________
     def getChannels(self, kind =None, target =None):
         if not kind and not target:
             return self.channels
@@ -110,7 +110,7 @@ class CadenceData(object):
 
         return out
 
-#___________________________________________________________________________________________________ getChannelsByKind
+#_______________________________________________________________________________
     def getChannelsByKind(self, kind):
         out = []
         for c in self._channels:
@@ -119,7 +119,7 @@ class CadenceData(object):
 
         return out if out else None
 
-#___________________________________________________________________________________________________ getChannelsByTarget
+#_______________________________________________________________________________
     def getChannelsByTarget(self, target):
         out = []
         for c in self._channels:
@@ -128,15 +128,15 @@ class CadenceData(object):
 
         return out if out else None
 
-#___________________________________________________________________________________________________ createChannel
+#_______________________________________________________________________________
     def createChannel(self, name, channelData):
         self._channels.append(DataChannel(name=name, **channelData))
 
-#___________________________________________________________________________________________________ addChannel
+#_______________________________________________________________________________
     def addChannel(self, channelData):
         self._channels.append(channelData)
 
-#___________________________________________________________________________________________________ addChannels
+#_______________________________________________________________________________
     def addChannels(self, channels):
         if isinstance(channels, list):
             for v in channels:
@@ -145,7 +145,7 @@ class CadenceData(object):
             for n,v in DictUtils.iter(channels):
                 self.addChannel(v)
 
-#___________________________________________________________________________________________________ loadFile
+#_______________________________________________________________________________
     def loadFile(self, path):
         """ Same as the load method, except the data is loaded from the file specified by path,
             relative to Cadence's root data folder.
@@ -177,7 +177,7 @@ class CadenceData(object):
 
         return self.load(data)
 
-#___________________________________________________________________________________________________ load
+#_______________________________________________________________________________
     def load(self, data):
         """ Loads the data into the CadenceData instance, parsing if necessary beforehand.
 
@@ -211,7 +211,7 @@ class CadenceData(object):
 
         return True
 
-#___________________________________________________________________________________________________ write
+#_______________________________________________________________________________
     def write(self, folder =None, name =None):
         """ Writes the Cadence data to an encoded string and returns that string. If a path is
             specified, it will also write the data to that file before returning the string. If the

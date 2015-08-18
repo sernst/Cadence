@@ -12,14 +12,14 @@ from cadence.shared.enum.MayaTangentsEnum import MayaTangentsEnum
 from cadence.shared.enum.TangentsEnum import TangentsEnum
 from cadence.util.math3D.Vector3D import Vector3D
 
-#___________________________________________________________________________________________________ DataChannelKey
+#_______________________________________________________________________________
 class DataChannelKey(object):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, **kwargs):
         """ Creates a new instance of DataChannelKey.
 
@@ -47,37 +47,37 @@ class DataChannelKey(object):
             ArgsUtils.get('outTangent', None, kwargs), self.dataType
         )
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: inTangent
+#_______________________________________________________________________________
     @property
     def inTangent(self):
         return self.__class__._getTangentEnum(self._inTangent, self.dataType, maya=False)
 
-#___________________________________________________________________________________________________ GS: inTangentMaya
+#_______________________________________________________________________________
     @property
     def inTangentMaya(self):
         return self.__class__._getTangentEnum(self.inTangent, self.dataType, maya=True)
 
-#___________________________________________________________________________________________________ GS: outTangent
+#_______________________________________________________________________________
     @property
     def outTangent(self):
         return self.__class__._getTangentEnum(self._outTangent, self.dataType, maya=False)
 
-#___________________________________________________________________________________________________ GS: outTangentMaya
+#_______________________________________________________________________________
     @property
     def outTangentMaya(self):
         return self.__class__._getTangentEnum(self.outTangent,  self.dataType, maya=True)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ echo
+#_______________________________________________________________________________
     def echo(self):
         print(self.toString('KEY'))
 
-#___________________________________________________________________________________________________ toString
+#_______________________________________________________________________________
     def toString(self,  prefix =''):
         tangents = ''
         if self.inTangent == 'lin' and self.outTangent == 'lin':
@@ -121,7 +121,7 @@ class DataChannelKey(object):
             info
         )
 
-#___________________________________________________________________________________________________ toDict
+#_______________________________________________________________________________
     def toDict(self):
         if self.dataType == DataTypeEnum.VECTOR:
             inTangent = self.inTangent
@@ -155,7 +155,7 @@ class DataChannelKey(object):
 
         return d
 
-#___________________________________________________________________________________________________ fromDict
+#_______________________________________________________________________________
     @classmethod
     def fromDict(cls, src):
         dataType = ArgsUtils.get(['dt', 'dataType'], None, src)
@@ -170,10 +170,10 @@ class DataChannelKey(object):
             outTangent=ArgsUtils.get(['ot', 'outTangent'], TangentsEnum.LINEAR, src)
         )
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _getTangentEnum
+#_______________________________________________________________________________
     @classmethod
     def _getTangentEnum(cls, source, dataType, maya =False):
         if dataType == DataTypeEnum.VECTOR:
@@ -188,7 +188,7 @@ class DataChannelKey(object):
         else:
             return cls._getTangentEnumValue(source, maya)
 
-#___________________________________________________________________________________________________ _getTangentEnumValue
+#_______________________________________________________________________________
     @classmethod
     def _getTangentEnumValue(cls, source, maya =False):
         enums = MayaTangentsEnum if maya else TangentsEnum
@@ -220,14 +220,14 @@ class DataChannelKey(object):
 
         return enums.LINEAR
 
-#___________________________________________________________________________________________________ _getSerializedValue
+#_______________________________________________________________________________
     @classmethod
     def _getSerializedValue(cls, value, dataType):
         if dataType == DataTypeEnum.VECTOR or isinstance(value, Vector3D):
             return value.toList()
         return value
 
-#___________________________________________________________________________________________________ _getDataTypeFromValue
+#_______________________________________________________________________________
     @classmethod
     def _getDataTypeFromValue(cls, value):
         if StringUtils.isStringType(value):
@@ -239,7 +239,7 @@ class DataChannelKey(object):
 
         return DataTypeEnum.SCALAR
 
-#___________________________________________________________________________________________________ _formatValueFromDataType
+#_______________________________________________________________________________
     @classmethod
     def _formatValueFromDataType(cls, value, dataType):
         if dataType == DataTypeEnum.VECTOR:

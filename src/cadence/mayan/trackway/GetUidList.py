@@ -10,18 +10,18 @@ from nimble import NimbleScriptBase
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 
 
-#___________________________________________________________________________________________________ GetUidList
+#_______________________________________________________________________________
 class GetUidList(NimbleScriptBase):
     """ A remote script class for returning a list of the UIDs for all track nodes in Maya.
          --- RETURNS ---
         success:    True if at least one valid track node is found, else False
         UidList:    (string[]) (default: []) The list of all UIDs. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
 
-#___________________________________________________________________________________________________ run
+#_______________________________________________________________________________
     def run(self, *args, **kwargs):
         """ Fetches the nodes in the current trackSetNode, then for each such node, appends its UID
             to a list l which is then returned. """

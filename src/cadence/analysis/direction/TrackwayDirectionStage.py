@@ -19,7 +19,7 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 class TrackwayDirectionStage(CurveOrderedAnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     SAMPLE_DATA_NT = namedtuple('SAMPLE_DATA_NT', [
@@ -33,7 +33,7 @@ class TrackwayDirectionStage(CurveOrderedAnalysisStage):
 
     COLORS = ['#AAAAAA', 'black', 'blue', 'green', 'red']
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of TrackwayDirectionStage."""
         super(TrackwayDirectionStage, self).__init__(
@@ -42,27 +42,27 @@ class TrackwayDirectionStage(CurveOrderedAnalysisStage):
             **kwargs)
         self._paths = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: trackHeadingData
+#_______________________________________________________________________________
     @property
     def trackHeadingData(self):
         return self.owner.getStage('heading').trackwaysData
 
-#___________________________________________________________________________________________________ GS: trackwayDirectionData
+#_______________________________________________________________________________
     @property
     def trackwayDirectionData(self):
         return self.owner.cache.get('trackwayDirectionData')
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         self.owner.cache.set('trackwayDirectionData', {})
 
-#___________________________________________________________________________________________________ _analyzeSitemap
+#_______________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
 
@@ -70,7 +70,7 @@ class TrackwayDirectionStage(CurveOrderedAnalysisStage):
         super(TrackwayDirectionStage, self)._analyzeSitemap(sitemap)
         self._saveDrawing(sitemap)
 
-#___________________________________________________________________________________________________ _analyzeTrackway
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         if trackway.uid not in self.trackHeadingData:
             return
@@ -95,7 +95,7 @@ class TrackwayDirectionStage(CurveOrderedAnalysisStage):
 
         self.trackwayDirectionData[trackway.uid] = {'trackway':trackway, 'samples':samples}
 
-#___________________________________________________________________________________________________ _drawTrackwaySamples
+#_______________________________________________________________________________
     def _drawTrackwaySamples(self, sitemap, samples):
         """_drawTrackwaySamples doc..."""
 
@@ -122,7 +122,7 @@ class TrackwayDirectionStage(CurveOrderedAnalysisStage):
                     pos.toMayaTuple(), 5,
                     stroke='none', fill=color, fill_opacity='0.75')
 
-#___________________________________________________________________________________________________ _plotTrackwaySamples
+#_______________________________________________________________________________
     def _plotTrackwaySamples(self, trackway, samples):
         """_plotTrackwaySamples doc..."""
 
@@ -144,7 +144,7 @@ class TrackwayDirectionStage(CurveOrderedAnalysisStage):
 
         self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
 
-#___________________________________________________________________________________________________ _sampleTrackway
+#_______________________________________________________________________________
     def _sampleTrackway(self, trackway, windowSize):
         """
             Samples the trackway and returns result
@@ -221,7 +221,7 @@ class TrackwayDirectionStage(CurveOrderedAnalysisStage):
         self._extendSampleToTrackwayEnd(entries[-1], samples)
         return samples
 
-#___________________________________________________________________________________________________ _extendSamplesToTrackwayStart
+#_______________________________________________________________________________
     def _extendSamplesToTrackwayStart(self, firstEntry, samples):
         """_extendSamplesToTrackwayStart doc..."""
 
@@ -247,7 +247,7 @@ class TrackwayDirectionStage(CurveOrderedAnalysisStage):
             curvePosition=samples[0].curvePosition.clone(),
             track=firstTrack ))
 
-#___________________________________________________________________________________________________ _extendSampleToTrackwayEnd
+#_______________________________________________________________________________
     def _extendSampleToTrackwayEnd(self, lastEntry, samples):
 
         if len(samples) < 2 or samples[-1].track == lastEntry.track:
@@ -271,6 +271,6 @@ class TrackwayDirectionStage(CurveOrderedAnalysisStage):
             curvePosition=samples[-1].curvePosition.clone(),
             track=lastTrack ))
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         self.mergePdfs(self._paths, 'Trackway-Direction.pdf')

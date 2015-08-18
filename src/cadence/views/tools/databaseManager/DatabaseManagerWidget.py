@@ -20,19 +20,19 @@ from cadence.enums.UserConfigEnum import UserConfigEnum
 from cadence.data.TrackImporterRemoteThread import TrackImporterRemoteThread
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
-#___________________________________________________________________________________________________ DatabaseManagerWidget
+#_______________________________________________________________________________
 class DatabaseManagerWidget(PyGlassWidget):
     """ User interface class for handling track data IO from any of the possible sources and
         saving them to, or loading them from the database. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     _OVERWRITE_IMPORT_SUFFIX = '_OVERWRITE_IMPORT'
 
     RESOURCE_FOLDER_PREFIX = ['tools']
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, **kwargs):
         super(DatabaseManagerWidget, self).__init__(parent, **kwargs)
 
@@ -56,17 +56,17 @@ class DatabaseManagerWidget(PyGlassWidget):
             self, self.exportDiffCheck,
             configSetting=UserConfigEnum.EXPORT_DIFF)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
+#_______________________________________________________________________________
     def _activateWidgetDisplayImpl(self, **kwargs):
         pass
 
-#===================================================================================================
+#===============================================================================
 #                                                                                 H A N D L E R S
 
-#___________________________________________________________________________________________________ _handleImport
+#_______________________________________________________________________________
     def _handleImport(self):
         label = u'CSV'
         importType = TrackImporterRemoteThread.CSV
@@ -105,7 +105,7 @@ class DatabaseManagerWidget(PyGlassWidget):
             callback=self._handleImportComplete,
             logCallback=self._handleImportStatusUpdate )
 
-#___________________________________________________________________________________________________ _handleImportSitemaps
+#_______________________________________________________________________________
     def _handleImportSitemaps(self):
 
         self.mainWindow.showLoading(
@@ -140,15 +140,15 @@ class DatabaseManagerWidget(PyGlassWidget):
             callback=self._sitemapImportComplete,
             logCallback=self._handleImportStatusUpdate)
 
-#___________________________________________________________________________________________________ _sitemapImportComplete
+#_______________________________________________________________________________
     def _sitemapImportComplete(self, event):
         self.mainWindow.showStatusDone(self)
 
-#___________________________________________________________________________________________________ _handleImportStatusUpdate
+#_______________________________________________________________________________
     def _handleImportStatusUpdate(self, event):
         self.mainWindow.appendStatus(self, event.get('message'))
 
-#___________________________________________________________________________________________________ _handleImportComplete
+#_______________________________________________________________________________
     def _handleImportComplete(self, event):
         actionType = 'Export' if isinstance(self._thread, TrackExporterRemoteThread) else 'Import'
 
@@ -168,7 +168,7 @@ class DatabaseManagerWidget(PyGlassWidget):
 
         self.mainWindow.showStatusDone(self)
 
-#___________________________________________________________________________________________________ _handleExport
+#_______________________________________________________________________________
     def _handleExport(self):
 
         self.mainWindow.showLoading(
@@ -211,7 +211,7 @@ class DatabaseManagerWidget(PyGlassWidget):
             callback=self._handleImportComplete,
             logCallback=self._handleImportStatusUpdate)
 
-#___________________________________________________________________________________________________ _handleReplaceDatabase
+#_______________________________________________________________________________
     def _handleReplaceDatabase(self):
 
         self.mainWindow.showLoading(
@@ -280,10 +280,10 @@ class DatabaseManagerWidget(PyGlassWidget):
         self.mainWindow.appendStatus(self, u'<span style="color:#33CC33;">Database Replaced</span>')
         self.mainWindow.showStatusDone(self)
 
-#___________________________________________________________________________________________________ _handleMergeComplete
+#_______________________________________________________________________________
     def _handleMergeComplete(self, event):
         self.mainWindow.showStatusDone(self)
 
-#___________________________________________________________________________________________________ _handleLogMessage
+#_______________________________________________________________________________
     def _handleLogMessage(self, event):
         self.mainWindow.appendStatus(self, event.get('message'))

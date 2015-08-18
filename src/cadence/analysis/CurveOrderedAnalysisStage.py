@@ -10,18 +10,18 @@ from cadence.analysis.AnalysisStage import AnalysisStage
 class CurveOrderedAnalysisStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, label =None, **kwargs):
         """Creates a new instance of CurveOrderedAnalysisStage."""
         super(CurveOrderedAnalysisStage, self).__init__(key, owner, label, **kwargs)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _analyzeTrackway
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         """_analyzeTrackway doc..."""
 
@@ -34,12 +34,12 @@ class CurveOrderedAnalysisStage(AnalysisStage):
 
         super(CurveOrderedAnalysisStage, self)._analyzeTrackway(trackway, sitemap)
 
-#___________________________________________________________________________________________________ _analyzeTrackSeries
+#_______________________________________________________________________________
     def _analyzeTrackSeries(self, series, trackway, sitemap):
         """ _analyzeTrackSeries """
         pass
 
-#___________________________________________________________________________________________________ _getNextTrack
+#_______________________________________________________________________________
     def _getNextTrack(self, bundle, lastTrack =None):
         """_getNextTrack doc..."""
 

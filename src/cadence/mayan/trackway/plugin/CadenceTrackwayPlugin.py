@@ -14,10 +14,10 @@ except Exception:
 from cadence.mayan.trackway.plugin.commands import VersionInfoCommand
 from cadence.mayan.trackway.plugin.nodes import TrackManagerNode
 
-#___________________________________________________________________________________________________ PLUGIN_VERSION
+#_______________________________________________________________________________
 PLUGIN_VERSION = (1, 0, 0, 0)
 
-#___________________________________________________________________________________________________ initializePlugin
+#_______________________________________________________________________________
 def initializePlugin(plugin):
     """ Initialize the script plug-in """
     pluginMFn = OpenMayaMPx.MFnPlugin(plugin)
@@ -28,7 +28,7 @@ def initializePlugin(plugin):
     ModuleUtils.reloadModule(VersionInfoCommand)
     VersionInfoCommand.VersionInfoCommand.register(pluginMFn, version=PLUGIN_VERSION)
 
-#___________________________________________________________________________________________________ uninitializePlugin
+#_______________________________________________________________________________
 def uninitializePlugin(plugin):
     """ Un-initialize the script plug-in """
 

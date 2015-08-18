@@ -8,16 +8,16 @@ from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
 from cadence.views.tools.mayaInitializer.MayaIniRemoteThread import MayaIniRemoteThread
 
-#___________________________________________________________________________________________________ MayaIniWidget
+#_______________________________________________________________________________
 class MayaIniWidget(PyGlassWidget):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     RESOURCE_FOLDER_PREFIX = ['tools']
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, **kwargs):
         """Creates a new instance of MayaIniWidget."""
         super(MayaIniWidget, self).__init__(parent, **kwargs)
@@ -27,37 +27,37 @@ class MayaIniWidget(PyGlassWidget):
 
         self._thread = None
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _runInitializer
+#_______________________________________________________________________________
     def _runInitializer(self, install =True, test =False):
         self.mainWindow.showStatus(self, u'Initializing Maya', u'Running Maya Initialization')
 
         self._thread = MayaIniRemoteThread(self, test=test, install=install)
         self._thread.execute(self._handleInitializerComplete, self._handleThreadLog)
 
-#___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
+#_______________________________________________________________________________
     def _deactivateWidgetDisplayImpl(self, **kwargs):
         self.mainWindow.getWidgetFromID('home').refreshMayaStatus()
 
-#===================================================================================================
+#===============================================================================
 #                                                                                 H A N D L E R S
 
-#___________________________________________________________________________________________________ _handleExecute
+#_______________________________________________________________________________
     def _handleExecute(self):
         self._runInitializer(install=True, test=self.testChk.isChecked())
 
-#___________________________________________________________________________________________________ _handleRemove
+#_______________________________________________________________________________
     def _handleRemove(self):
         self._runInitializer(install=False, test=self.testChk.isChecked())
 
-#___________________________________________________________________________________________________ _handleInitializerComplete
+#_______________________________________________________________________________
     def _handleInitializerComplete(self, event):
         self.mainWindow.showStatusDone(self)
         self.refreshGui()
         self._thread = None
 
-#___________________________________________________________________________________________________ _handleThreadLog
+#_______________________________________________________________________________
     def _handleThreadLog(self, event):
         self.mainWindow.appendStatus(self, event.get('message'))

@@ -11,14 +11,14 @@ from cadence.data.TrackCsvImporter import TrackCsvImporter
 from cadence.models.analysis.Analysis_Track import Analysis_Track
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
-#___________________________________________________________________________________________________ TrackImporterRemoteThread
+#_______________________________________________________________________________
 class TrackImporterRemoteThread(RemoteExecutionThread):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, path, importType, session =None, analysisSession =None, **kwargs):
         """Creates a new instance of TrackImporterRemoteThread."""
         self._compressed = ArgsUtils.extract('compressed', False, kwargs)
@@ -30,10 +30,10 @@ class TrackImporterRemoteThread(RemoteExecutionThread):
         self._importType = importType
         self._verbose    = ArgsUtils.get('verbose', True, kwargs)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _runImpl
+#_______________________________________________________________________________
     def _runImpl(self):
         model   = Tracks_Track.MASTER
         session = self._session if self._session else model.createSession()

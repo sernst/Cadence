@@ -14,12 +14,12 @@ from cadence.analysis.AnalysisStage import AnalysisStage
 class DrawLengthWidthStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     DRAWING_FOLDER_NAME = 'Spatial-Comparison-Maps'
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of LengthWidthStage."""
 
@@ -29,19 +29,19 @@ class DrawLengthWidthStage(AnalysisStage):
             **kwargs)
         self._paths = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: trackDeviations
+#_______________________________________________________________________________
     @property
     def trackDeviations(self):
         """ This returns a dictionary of deviation data: track uid, wSigma, and lSigma. """
         return self.owner.getStage('lengthWidth').trackDeviations
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _analyzeSitemap
+#_______________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
         """ This sets up the Cadence drawing for this current sitemap. """
 
@@ -54,7 +54,7 @@ class DrawLengthWidthStage(AnalysisStage):
         super(DrawLengthWidthStage, self)._analyzeSitemap(sitemap)
         self._saveDrawing(sitemap)
 
-#___________________________________________________________________________________________________ _analyzeTrack
+#_______________________________________________________________________________
     def _analyzeTrack(self, track, series, trackway, sitemap):
         """ The dimensions of a given track is drawn, and added to a given drawing, using the given
             CadenceDrawing group (a line oriented with the SVG positive Y direction. """
@@ -69,7 +69,7 @@ class DrawLengthWidthStage(AnalysisStage):
         self._drawLength(track, drawing)
         self._drawWidth(track, drawing)
 
-#___________________________________________________________________________________________________ _drawMeasuredLength
+#_______________________________________________________________________________
     def _drawMeasuredLength(self, track, drawing):
         if NumericUtils.equivalent(track.lengthMeasured, 0.0):
             return
@@ -98,7 +98,7 @@ class DrawLengthWidthStage(AnalysisStage):
              stroke=color,
              stroke_width=strokeWidth)
 
-#___________________________________________________________________________________________________ _drawMeasuredWidth
+#_______________________________________________________________________________
     def _drawMeasuredWidth(self, track, drawing):
         if NumericUtils.equivalent(track.widthMeasured, 0.0):
             return
@@ -127,7 +127,7 @@ class DrawLengthWidthStage(AnalysisStage):
              stroke=color,
              stroke_width=strokeWidth)
 
-#___________________________________________________________________________________________________ _drawLength
+#_______________________________________________________________________________
     def _drawLength(self, track, drawing, color ='orange', strokeWidth =0.5):
         if NumericUtils.equivalent(track.lengthMeasured, 0.0):
             return
@@ -145,7 +145,7 @@ class DrawLengthWidthStage(AnalysisStage):
              stroke=color,
              stroke_width=strokeWidth)
 
-#___________________________________________________________________________________________________ _drawWidth
+#_______________________________________________________________________________
     def _drawWidth(self, track, drawing, color ='orange', strokeWidth =0.5):
         if NumericUtils.equivalent(track.widthMeasured, 0.0):
             return

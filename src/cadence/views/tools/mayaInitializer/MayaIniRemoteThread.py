@@ -12,14 +12,14 @@ import elixir
 
 import cadence
 
-#___________________________________________________________________________________________________ MayaIniRemoteThread
+#_______________________________________________________________________________
 class MayaIniRemoteThread(RemoteExecutionThread):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, test =True, install =True, check =False, verbose =True, **kwargs):
         """Creates a new instance of MayaIniRemoteThread."""
         super(MayaIniRemoteThread, self).__init__(parent, **kwargs)
@@ -35,16 +35,16 @@ class MayaIniRemoteThread(RemoteExecutionThread):
         self._elixirEntry = MayaEnvEntry.fromRootPath(FileUtils.createPath(
             FileUtils.getDirectoryOf(elixir.__file__), noTail=True))
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _verboseLog
+#_______________________________________________________________________________
     def _verboseLog(self, message):
         """_verboseLog doc..."""
         if self._verbose:
             self.log.write(message)
 
-#___________________________________________________________________________________________________ _runImpl
+#_______________________________________________________________________________
     def _runImpl(self):
         """Doc..."""
         if self._check:
@@ -91,7 +91,7 @@ class MayaIniRemoteThread(RemoteExecutionThread):
         self._verboseLog(u'<h2>Operation Complete</h2>')
         return 0
 
-#___________________________________________________________________________________________________ _runCheck
+#_______________________________________________________________________________
     def _runCheck(self):
         self._verboseLog(u'<h1>Running Check...</h1>')
         envFiles = MayaEnvUtils.locateMayaEnvFiles()

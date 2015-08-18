@@ -21,11 +21,11 @@ from cadence.enums.TrackCsvColumnEnum import TrackCsvColumnEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
 
-#___________________________________________________________________________________________________ TrackCsvImporter
+#_______________________________________________________________________________
 class TrackCsvImporter(object):
     """ Imports track data from CSV formatted spreadsheets into the local Cadence database. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     # Used to break trackway specifier into separate type and number entries
@@ -34,7 +34,7 @@ class TrackCsvImporter(object):
     _UNDERPRINT_IGNORE_TRACKWAY_STR = ':UTW'
     _OVERPRINT_IGNORE_TRACKWAY_STR = ':OTW'
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, path =None, logger =None):
         """Creates a new instance of TrackCsvImporter."""
         self._path = path
@@ -48,10 +48,10 @@ class TrackCsvImporter(object):
         if not logger:
             self._logger = Logger(self, printOut=True)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ read
+#_______________________________________________________________________________
     def read(self, session, analysisSession, path =None, compressed =False):
         """ Reads from the spreadsheet located at the absolute path argument and adds each row
             to the tracks in the database. """
@@ -134,7 +134,7 @@ class TrackCsvImporter(object):
 
         return True
 
-#___________________________________________________________________________________________________ fromSpreadsheetEntry
+#_______________________________________________________________________________
     def fromSpreadsheetEntry(self, csvRowData, session):
         """ From the spreadsheet data dictionary representing raw track data, this method creates
             a track entry in the database. """
@@ -568,7 +568,7 @@ class TrackCsvImporter(object):
 
         return t
 
-#___________________________________________________________________________________________________ _writeError
+#_______________________________________________________________________________
     def _writeError(self, data):
         """ Writes import error data to the logger, formatting it for human readable display. """
         source = {}
@@ -600,7 +600,7 @@ class TrackCsvImporter(object):
         else:
             self._logger.write(result)
 
-#___________________________________________________________________________________________________ _getStrippedValue
+#_______________________________________________________________________________
     @classmethod
     def _getStrippedValue(cls, value):
         try:
@@ -608,7 +608,7 @@ class TrackCsvImporter(object):
         except Exception:
             return value
 
-#___________________________________________________________________________________________________ _getStrippedRowData
+#_______________________________________________________________________________
     @classmethod
     def _getStrippedRowData(cls, source, trackCsvEnum):
         out = source.get(trackCsvEnum.name)
@@ -617,7 +617,7 @@ class TrackCsvImporter(object):
         except Exception:
             return out
 
-#___________________________________________________________________________________________________ _collapseManusPesProperty
+#_______________________________________________________________________________
     @classmethod
     def _collapseManusPesProperty(
             cls, track, csvRowData, pesEnum, pesGuessEnum, manusEnum, manusGuessEnum,
@@ -643,7 +643,7 @@ class TrackCsvImporter(object):
                 guessFlag=guessFlag,
                 missingFlag=missingFlag)
 
-#___________________________________________________________________________________________________ _collapseLimbProperty
+#_______________________________________________________________________________
     @classmethod
     def _collapseLimbProperty(
             cls, track, csvRowData, lpEnum, lpGuessEnum, rpEnum, rpGuessEnum, lmEnum, lmGuessEnum,
@@ -665,7 +665,7 @@ class TrackCsvImporter(object):
         else:
             return None
 
-#___________________________________________________________________________________________________ _collapseGuessProperty
+#_______________________________________________________________________________
     @classmethod
     def _collapseGuessProperty(
             cls, track, csvRowData, regularPropertyEnum, guessPropertyEnum, defaultValue,
@@ -687,17 +687,17 @@ class TrackCsvImporter(object):
 
         return value
 
-#===================================================================================================
+#===============================================================================
 #                                                                               I N T R I N S I C
 
-#___________________________________________________________________________________________________ __repr__
+#_______________________________________________________________________________
     def __repr__(self):
         return self.__str__()
 
-#___________________________________________________________________________________________________ __unicode__
+#_______________________________________________________________________________
     def __unicode__(self):
         return StringUtils.toUnicode(self.__str__())
 
-#___________________________________________________________________________________________________ __str__
+#_______________________________________________________________________________
     def __str__(self):
         return '<%s>' % self.__class__.__name__

@@ -52,7 +52,7 @@ print 'and back again, to siteMap, p = (%s, %s)' % pScene
 print 'scaling to scene, siteMap.xFederal maps to %s' % drawing.scaleToScene(xFed)
 print 'and this maps back to %s' % drawing.scaleToMap(drawing.scaleToScene(xFed))
 
-#===================================================================================================
+#===============================================================================
 
 # place a circle of radius 5 at (100.0, 100.0) in scene coordinates
 # drawing.circle((100, 100), 5, scene=True, stroke='red', fill='green')

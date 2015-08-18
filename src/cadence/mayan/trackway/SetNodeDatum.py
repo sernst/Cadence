@@ -7,17 +7,17 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from nimble import cmds
 from nimble import NimbleScriptBase
 
-#___________________________________________________________________________________________________ SetNodeDatum
+#_______________________________________________________________________________
 class SetNodeDatum(NimbleScriptBase):
     """ A remote script class for setting the prev and next links for a given set of nodes, passed
         in as a list of 'nodeLinks'.  Each is a tuple (thisNode, prevNode, nextNode).
          --- RETURNS ---
         success:    True if at least one track node is processed else False """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ run
+#_______________________________________________________________________________
 
     def run(self, *args, **kwargs):
         """ Sets the prev and next links for a list of node-value pairs that provide information
@@ -33,7 +33,7 @@ class SetNodeDatum(NimbleScriptBase):
         self.puts(success=True)
         return
 
-#___________________________________________________________________________________________________ setNodeDatum
+#_______________________________________________________________________________
     def setNodeDatum(self, node, value):
         """ Sets the node's datum value, creating the attribute if not already defined. """
 

@@ -13,11 +13,11 @@ from pyglass.themes.ThemeColorBundle import ThemeColorBundle
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.views.tools.mayaInitializer.MayaIniRemoteThread import MayaIniRemoteThread
 
-#___________________________________________________________________________________________________ CadenceMayaStatusElement
+#_______________________________________________________________________________
 class CadenceMayaStatusElement(PyGlassElement):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     _CHECKING_LABEL = u'Checking Maya...'
@@ -35,7 +35,7 @@ class CadenceMayaStatusElement(PyGlassElement):
     _LABEL_STYLE  = "QLabel { font-size:16px; color:#C#; }"
     _INFO_STYLE   = "QLabel { font-size:11x; color:#C#; }"
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, **kwargs):
         """Creates a new instance of CadenceNimbleStatusElement."""
         super(CadenceMayaStatusElement, self).__init__(parent, **kwargs)
@@ -64,17 +64,17 @@ class CadenceMayaStatusElement(PyGlassElement):
         self._refreshBtn = btn
         buttonLayout.addWidget(btn)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ paintEvent
+#_______________________________________________________________________________
     def paintEvent(self, *args, **kwargs):
         """Doc..."""
         if self._colors:
             PyGlassGuiUtils.gradientPainter(
                 self, self.size(), self._colors.light.qColor, self._colors.dark.qColor)
 
-#___________________________________________________________________________________________________ refresh
+#_______________________________________________________________________________
     def refresh(self):
         if self._running:
             return
@@ -92,14 +92,14 @@ class CadenceMayaStatusElement(PyGlassElement):
             self.mainWindow, False, False, check=True, verbose=False).execute(
             self._handleMayaCheckResults)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _handleRetryClick
+#_______________________________________________________________________________
     def _handleRetryClick(self):
         self.refresh()
 
-#___________________________________________________________________________________________________ _handleMayaCheckResults
+#_______________________________________________________________________________
     def _handleMayaCheckResults(self, event):
         self._running = False
 

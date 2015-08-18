@@ -19,19 +19,19 @@ from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.util.threading.RunPythonModuleThread import RunPythonModuleThread
 
 
-#___________________________________________________________________________________________________ TrackwayLoaderWidget
+#_______________________________________________________________________________
 class TrackwayLoaderWidget(PyGlassWidget):
     """ User interface class for handling track data IO from any of the possible sources and
         saving them to, or loading them from the database. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     _OVERWRITE_IMPORT_SUFFIX = '_OVERWRITE_IMPORT'
 
     RESOURCE_FOLDER_PREFIX = ['tools']
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, **kwargs):
         super(TrackwayLoaderWidget, self).__init__(parent, **kwargs)
 
@@ -70,10 +70,10 @@ class TrackwayLoaderWidget(PyGlassWidget):
             self._filterList.append(f)
             index += 1
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
+#_______________________________________________________________________________
     def _activateWidgetDisplayImpl(self, **kwargs):
         model   = Tracks_Track.MASTER
         session = model.createSession()
@@ -81,7 +81,7 @@ class TrackwayLoaderWidget(PyGlassWidget):
             self._updateFilterList(filterDef, session)
         session.close()
 
-#___________________________________________________________________________________________________ _updateFilterList
+#_______________________________________________________________________________
     def _updateFilterList(self, filterDef, session, filterDict =None):
         model = Tracks_Track.MASTER
         query = session.query(sqla.distinct(getattr(model, filterDef['enum'].name)))
@@ -106,7 +106,7 @@ class TrackwayLoaderWidget(PyGlassWidget):
         first.setSelected(True)
         fl.itemSelectionChanged.connect(self._handleFilterChange)
 
-#___________________________________________________________________________________________________ _getFilteredTracks
+#_______________________________________________________________________________
     def _getFilteredTracks(self, session):
         model = Tracks_Track.MASTER
         query = session.query(model)
@@ -122,10 +122,10 @@ class TrackwayLoaderWidget(PyGlassWidget):
 
         return query.all()
 
-#===================================================================================================
+#===============================================================================
 #                                                                                 H A N D L E R S
 
-#___________________________________________________________________________________________________ _handleRunIntegrityTests
+#_______________________________________________________________________________
     def _handleLoadTracks(self):
         self.mainWindow.showLoading(self, u'Loading Tracks')
 
@@ -146,7 +146,7 @@ class TrackwayLoaderWidget(PyGlassWidget):
         thread.userData = {'count':count}
         thread.execute(callback=self._handleTrackNodesCreated)
 
-#___________________________________________________________________________________________________ _handleTrackNodesCreated
+#_______________________________________________________________________________
     def _handleTrackNodesCreated(self, event):
         result = event.target.output
 
@@ -159,7 +159,7 @@ class TrackwayLoaderWidget(PyGlassWidget):
 
         self.mainWindow.hideLoading(self)
 
-#___________________________________________________________________________________________________ _handleUpdateLinks
+#_______________________________________________________________________________
     def _handleUpdateLinks(self):
 
         result = PyGlassBasicDialogManager.openYesNo(
@@ -185,7 +185,7 @@ class TrackwayLoaderWidget(PyGlassWidget):
             callback=self._handleLinkagesComplete,
             logCallback=self._handleLinkagesStatusUpdate)
 
-#___________________________________________________________________________________________________ _handleLinkagesComplete
+#_______________________________________________________________________________
     def _handleLinkagesComplete(self, event):
         session = event.target.userData
         if event.target.success:
@@ -196,11 +196,11 @@ class TrackwayLoaderWidget(PyGlassWidget):
 
         self.mainWindow.showStatusDone(self)
 
-#___________________________________________________________________________________________________ _handleImportStatusUpdate
+#_______________________________________________________________________________
     def _handleLinkagesStatusUpdate(self, event):
         self.mainWindow.appendStatus(self, event.get('message'))
 
-#___________________________________________________________________________________________________ _handleFilterChange
+#_______________________________________________________________________________
     def _handleFilterChange(self):
         if self._processingFilters:
             return

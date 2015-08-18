@@ -25,10 +25,10 @@ class AnalysisStage(object):
     """ The base class for creating analysis stages, which are distinct pieces of analysis carried
         out within the scope of an AnalyzerBase instance that owns the stage. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, label =None, **kwargs):
         """Creates a new instance of AnalysisStage.
 
@@ -42,17 +42,17 @@ class AnalysisStage(object):
         self._label = label if label else self.__class__.__name__
         self._startTime = None
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: key
+#_______________________________________________________________________________
     @property
     def key(self):
         """ The identification key for this analyzer stage, which is how the AnalyzerBase
             references this stage. """
         return self._key
 
-#___________________________________________________________________________________________________ GS: index
+#_______________________________________________________________________________
     @property
     def index(self):
         """ The integer index of this stage within its AnalyzerBase owner. """
@@ -61,41 +61,41 @@ class AnalysisStage(object):
         except Exception:
             return -1
 
-#___________________________________________________________________________________________________ GS: cache
+#_______________________________________________________________________________
     @property
     def cache(self):
         """ A DataCache instance used to easily store dynamic key-based data during the analysis
             process. """
         return self._cache
 
-#___________________________________________________________________________________________________ GS: logger
+#_______________________________________________________________________________
     @property
     def logger(self):
         """ The Logger instance for writing all analysis process information. This logger
             instance is owned by the AnalyzerBase and shared across stages. """
         return self.owner.logger
 
-#___________________________________________________________________________________________________ GS: plot
+#_______________________________________________________________________________
     @property
     def plot(self):
         """ A convenience reference to Matplotlib's PyPlot module. Included here so Analyzers do
             not have to handle failed Matplotlib loading internally. """
         return plt
 
-#___________________________________________________________________________________________________ GS: tracksSession
+#_______________________________________________________________________________
     @property
     def tracksSession(self):
         return self.owner.getTracksSession()
 
-#___________________________________________________________________________________________________ GS: analysisSession
+#_______________________________________________________________________________
     @property
     def analysisSession(self):
         return self.owner.getAnalysisSession()
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ initializeFolder
+#_______________________________________________________________________________
     def initializeFolder(self, *args):
         """ Initializes a folder within the root analysis path by removing any existing contents
             and then creating a new folder if it does not already exist. """
@@ -105,13 +105,13 @@ class AnalysisStage(object):
         os.makedirs(path)
         return path
 
-#___________________________________________________________________________________________________ getPath
+#_______________________________________________________________________________
     def getPath(self, *args, **kwargs):
         """ Convenience method for creating paths relative to the output root path for this
             Analyzer. """
         return self.owner.getPath(*args, **kwargs)
 
-#___________________________________________________________________________________________________ getTempFilePath
+#_______________________________________________________________________________
     def getTempFilePath(self, name =None, extension =None, *args):
         """ Used to create a temporary file path within this instance's temporary folder.
             Any file on this path will be automatically removed at the end of the analysis
@@ -134,13 +134,13 @@ class AnalysisStage(object):
 
         return self.owner.getTempFilePath(name=name, extension=extension, *args)
 
-#___________________________________________________________________________________________________ getTempPath
+#_______________________________________________________________________________
     def getTempPath(self, *args, **kwargs):
         """ Creates a path relative to this instance's root temporary path. Uses the
             FileUtils.createPath() format for args and kwargs. """
         return self.owner.getTempPath(*args, **kwargs)
 
-#___________________________________________________________________________________________________ analyze
+#_______________________________________________________________________________
     def analyze(self):
         """ Executes the analysis process for this stage, which consists largely of calling the
             analysis hook methods in their specified order. """
@@ -155,7 +155,7 @@ class AnalysisStage(object):
         self._postAnalyze()
         self._writeFooter()
 
-#___________________________________________________________________________________________________ mergePdfs
+#_______________________________________________________________________________
     def mergePdfs(self, paths, fileName =None):
         """ Takes a list of paths to existing PDF files and merges them into a single pdf with
             the given file name.
@@ -177,10 +177,10 @@ class AnalysisStage(object):
         with open(self.getPath(fileName, isFile=True), 'wb') as f:
             merger.write(f)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _writeHeader
+#_______________________________________________________________________________
     def _writeHeader(self):
         """ Method for writing the logging header for this stage. This is the first method called
             during the analysis process to denote in the log file that the following output was
@@ -192,18 +192,18 @@ class AnalysisStage(object):
             '  * Run on %s' % TimeUtils.toZuluFormat(self._startTime).replace('T', ' at ')
         ] + self._getHeaderArgs(), indent=False)
 
-#___________________________________________________________________________________________________ _getHeaderArgs
+#_______________________________________________________________________________
     # noinspection PyMethodMayBeStatic
     def _getHeaderArgs(self):
         """ A hook method used to add information to the log header for this stage. """
         return []
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         """ A hook method called just before starting the analysis process. """
         pass
 
-#___________________________________________________________________________________________________ _analyze
+#_______________________________________________________________________________
     def _analyze(self):
         """ The core method in the analysis process. Unless overridden directly or by callback,
             this method will iterate through the sitemaps in the database and call the
@@ -213,7 +213,7 @@ class AnalysisStage(object):
             if sitemap.isReady:
                 self._analyzeSitemap(sitemap)
 
-#___________________________________________________________________________________________________ _createDrawing
+#_______________________________________________________________________________
     def _createDrawing(self, sitemap, suffix, folder):
         """_createDrawing doc..."""
         drawing = CadenceDrawing(
@@ -227,7 +227,7 @@ class AnalysisStage(object):
         sitemap.cache.set('drawing', drawing)
         return drawing
 
-#___________________________________________________________________________________________________ _saveDrawing
+#_______________________________________________________________________________
     def _saveDrawing(self, sitemap):
         """_saveDrawing doc..."""
         try:
@@ -236,7 +236,7 @@ class AnalysisStage(object):
             self.logger.write('[WARNING]: No sitemap saved for %s-%s' % (
                 sitemap.name, sitemap.level))
 
-#___________________________________________________________________________________________________ _analyzeSitemap
+#_______________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
         """ Iterates over each trackway within the specified sitemap and calls the
             _analyzeTrackway() method on each one.
@@ -247,7 +247,7 @@ class AnalysisStage(object):
         for tw in self.owner.getTrackways(sitemap):
             self._analyzeTrackway(tw, sitemap)
 
-#___________________________________________________________________________________________________ _analyzeTrackway
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         """ Iterates over each track series in the trackway and calls the _analyzeTrackSeries()
             method on each one.
@@ -262,7 +262,7 @@ class AnalysisStage(object):
             if series.isReady:
                 self._analyzeTrackSeries(series, trackway, sitemap)
 
-#___________________________________________________________________________________________________ _analyzeTrackSeries
+#_______________________________________________________________________________
     def _analyzeTrackSeries(self, series, trackway, sitemap):
         """ Iterates over the tracks within the track series and calls the _analyzeTrack() method
             on each one.
@@ -279,7 +279,7 @@ class AnalysisStage(object):
         for t in series.tracks:
             self._analyzeTrack(t, series, trackway, sitemap)
 
-#___________________________________________________________________________________________________ _analyzeTrack
+#_______________________________________________________________________________
     def _analyzeTrack(self, track, series, trackway, sitemap):
         """ Analyzes the specified track. By default nothing happens unless a trackCallback has
             been specified. This method should be otherwise overridden to analyze each track
@@ -298,12 +298,12 @@ class AnalysisStage(object):
                 The sitemap in which the track resides. """
         pass
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         """ A hook method called when the analysis process completes. """
         pass
 
-#___________________________________________________________________________________________________ _writeFooter
+#_______________________________________________________________________________
     def _writeFooter(self):
         """ The final method called in the analysis process, which writes the final information
             about the analysis stage to the log file for reference. This includes basic operational
@@ -320,21 +320,21 @@ class AnalysisStage(object):
             '  * Elapsed Time: %s' % TimeUtils.toPrettyElapsedTime(elapsed)
         ] + self._getFooterArgs(), indent=False)
 
-#___________________________________________________________________________________________________ _getFooterArgs
+#_______________________________________________________________________________
     # noinspection PyMethodMayBeStatic
     def _getFooterArgs(self):
         """ Specifies additional arguments to be written to the log file as part of the analysis
             footer. This method returns an empty list by default. """
         return []
 
-#===================================================================================================
+#===============================================================================
 #                                                                               I N T R I N S I C
 
-#___________________________________________________________________________________________________ __repr__
+#_______________________________________________________________________________
     def __repr__(self):
         return self.__str__()
 
-#___________________________________________________________________________________________________ __str__
+#_______________________________________________________________________________
     def __str__(self):
         return '<%s>' % self.__class__.__name__
 

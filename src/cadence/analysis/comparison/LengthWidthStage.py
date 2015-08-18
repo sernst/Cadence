@@ -18,10 +18,10 @@ from cadence.analysis.shared.plotting.Histogram import Histogram
 class LengthWidthStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of LengthWidthStage."""
         super(LengthWidthStage, self).__init__(
@@ -30,20 +30,20 @@ class LengthWidthStage(AnalysisStage):
             **kwargs)
         self._paths = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: trackDeviations
+#_______________________________________________________________________________
     @property
     def trackDeviations(self):
         return self.cache.get('trackDeviations')
 
-#___________________________________________________________________________________________________ GS: widths
+#_______________________________________________________________________________
     @property
     def entries(self):
         return self.cache.get('entries')
 
-#___________________________________________________________________________________________________ GS: noWidths
+#_______________________________________________________________________________
     @property
     def noWidths(self):
         return self.cache.get('noWidths', 0)
@@ -51,7 +51,7 @@ class LengthWidthStage(AnalysisStage):
     def noWidths(self, value):
         self.cache.set('noWidths', value)
 
-#___________________________________________________________________________________________________ GS: noLengths
+#_______________________________________________________________________________
     @property
     def noLengths(self):
         return self.cache.get('noLengths', 0)
@@ -59,10 +59,10 @@ class LengthWidthStage(AnalysisStage):
     def noLengths(self, value):
         self.cache.set('noLengths', value)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         """ Initialize the entries to empty and sets to zero the counters of those tracks with no
             width measurement, and those with no length measurement. """
@@ -72,7 +72,7 @@ class LengthWidthStage(AnalysisStage):
         self.cache.set('noWidth', 0)
         self.cache.set('noLength', 0)
 
-#___________________________________________________________________________________________________ _analyzeTrack
+#_______________________________________________________________________________
     def _analyzeTrack(self, track, series, trackway, sitemap):
         """ Performs analysis on each track. A dictionary is created to be added to the entries
             list.  That dictionary contains track, wDev (the fractional difference in width between
@@ -125,7 +125,7 @@ class LengthWidthStage(AnalysisStage):
 
         self.entries.append(data)
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         """ Write the logs. """
 
@@ -141,14 +141,14 @@ class LengthWidthStage(AnalysisStage):
 
         self.mergePdfs(self._paths)
 
-#___________________________________________________________________________________________________ _getFooterArgs
+#_______________________________________________________________________________
     def _getFooterArgs(self):
         return [
             'Processed %s tracks' % len(self.entries),
             '%s tracks with no measured width' % self.cache.get('noWidths'),
             '%s tracks with no measured length' % self.cache.get('noLengths') ]
 
-#___________________________________________________________________________________________________ _process
+#_______________________________________________________________________________
     def _process(self, label, widthKey, lengthKey, trackDeviations, absoluteOnly =False):
         """_process doc..."""
         pl  = self.plot
@@ -238,7 +238,7 @@ class LengthWidthStage(AnalysisStage):
             self.logger.write(
                 '[WARNING]: Large deviation count exceeds normal distribution expectations.')
 
-#___________________________________________________________________________________________________ _makePlot
+#_______________________________________________________________________________
     def _makePlot(self, label, data, attrs, isLog =False, histRange =None):
         """_makePlot doc..."""
 
@@ -259,7 +259,7 @@ class LengthWidthStage(AnalysisStage):
         self.owner.saveFigure(attrs[0], path)
         return path
 
-#___________________________________________________________________________________________________ _processAspectRatios
+#_______________________________________________________________________________
     def _processAspectRatios(self):
         """_processAspectRatios doc..."""
         aspects    = []

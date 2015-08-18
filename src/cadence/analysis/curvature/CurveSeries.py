@@ -14,12 +14,12 @@ from cadence.analysis.shared.LineSegment2D import LineSegment2D
 class CurveSeries(object):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     EXTENSION_LENGTH = 10.0
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, stage, series, **kwargs):
         """Creates a new instance of CurveSeries."""
 
@@ -34,42 +34,42 @@ class CurveSeries(object):
         self._errors = []
         self._segments = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: segments
+#_______________________________________________________________________________
     @property
     def segments(self):
         return self._segments
 
-#___________________________________________________________________________________________________ GS: bundle
+#_______________________________________________________________________________
     @property
     def bundle(self):
         return self.series.bundle
 
-#___________________________________________________________________________________________________ GS: bundle
+#_______________________________________________________________________________
     @property
     def series(self):
         return self._series
 
-#___________________________________________________________________________________________________ GS: trackway
+#_______________________________________________________________________________
     @property
     def trackway(self):
         return self.bundle.trackway
 
-#___________________________________________________________________________________________________ GS: stage
+#_______________________________________________________________________________
     @property
     def stage(self):
         return self._stage
 
-#___________________________________________________________________________________________________ GS: analysisTrackway
+#_______________________________________________________________________________
     @property
     def analysisTrackway(self):
         if not self._analysisTrackway:
             self._analysisTrackway = self.trackway.getAnalysisPair(self.stage.analysisSession)
         return self._analysisTrackway
 
-#___________________________________________________________________________________________________ GS: length
+#_______________________________________________________________________________
     @property
     def length(self):
         return self._length
@@ -79,15 +79,15 @@ class CurveSeries(object):
         if self.saveToAnalysisTracks:
             self.analysisTrackway.curveLength = value
 
-#___________________________________________________________________________________________________ GS: errors
+#_______________________________________________________________________________
     @property
     def errors(self):
         return self._errors
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ getTrackSegment
+#_______________________________________________________________________________
     def getTrackSegment(self, track):
         """ Finds the segment in which the specified track resides and returns that segment or
             None if no such segment was found.
@@ -103,7 +103,7 @@ class CurveSeries(object):
                     return segment
         return None
 
-#___________________________________________________________________________________________________ compute
+#_______________________________________________________________________________
     def compute(self):
         """load doc..."""
 
@@ -115,14 +115,14 @@ class CurveSeries(object):
         self._populate()
         self._process()
 
-#___________________________________________________________________________________________________ draw
+#_______________________________________________________________________________
     def draw(self, drawing, **kwargs):
         """draw doc..."""
 
         for segment in self.segments:
             segment.draw(drawing, **kwargs)
 
-#___________________________________________________________________________________________________ getDebugReport
+#_______________________________________________________________________________
     def getDebugReport(self):
         out = ['\nTRACKWAY[%s]:' % self.trackway.name]
         for segment in self.segments:
@@ -139,10 +139,10 @@ class CurveSeries(object):
 
         return '\n'.join(out)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _generateSegments
+#_______________________________________________________________________________
     def _generateSegments(self):
         """_generateSegments doc..."""
 
@@ -211,7 +211,7 @@ class CurveSeries(object):
             offset=offset)
         segments.append(s)
 
-#___________________________________________________________________________________________________ _populate
+#_______________________________________________________________________________
     def _populate(self):
         for series in self.bundle.asList():
             if self.series == series:
@@ -220,7 +220,7 @@ class CurveSeries(object):
             for track in series.tracks:
                 self._analyzeTrack(track)
 
-#___________________________________________________________________________________________________ _analyzeTrack
+#_______________________________________________________________________________
     def _analyzeTrack(self, track):
         """ Analyze the track by finding the segment on which it should be projected, along with
             the projection results data, and then drawing the projection to a sitemap drawing for
@@ -238,7 +238,7 @@ class CurveSeries(object):
         analysisTrack.segmentPosition = result['distance']
         analysisTrack.curvePosition = segment.offset + result['distance']
 
-#___________________________________________________________________________________________________ _process
+#_______________________________________________________________________________
     def _process(self):
         """_process doc..."""
         length = 0.0
@@ -257,7 +257,7 @@ class CurveSeries(object):
 
         self.length = length
 
-#___________________________________________________________________________________________________ _resolveSpatialCoincidences
+#_______________________________________________________________________________
     def _resolveSpatialCoincidences(self, pair):
         """ Correct for cases where projected prints reside at the same spatial location on the
             curve series by adjusting one of the tracks projection position slightly. """
@@ -287,7 +287,7 @@ class CurveSeries(object):
         if npDist <= pDist or NumericUtils.equivalent(pDist, npDist):
             self._adjustPositionForward(nextPair, nextOffset)
 
-#___________________________________________________________________________________________________ _adjustPositionForward
+#_______________________________________________________________________________
     def _adjustPositionForward(self, pair, maxOffset =1.0e8):
         """_adjustPositionForward doc..."""
 
@@ -322,7 +322,7 @@ class CurveSeries(object):
         at.curvePosition = segment.offset + dist
         at.segmentPosition = dist
 
-#___________________________________________________________________________________________________ _findSegmentMatch
+#_______________________________________________________________________________
     @classmethod
     def _findSegmentMatch(cls, track, segments):
         position = track.positionValue
@@ -352,14 +352,14 @@ class CurveSeries(object):
 
         return pair
 
-#===================================================================================================
+#===============================================================================
 #                                                                               I N T R I N S I C
 
-#___________________________________________________________________________________________________ __repr__
+#_______________________________________________________________________________
     def __repr__(self):
         return self.__str__()
 
-#___________________________________________________________________________________________________ __str__
+#_______________________________________________________________________________
     def __str__(self):
         return '<%s>' % self.__class__.__name__
 

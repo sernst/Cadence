@@ -12,11 +12,13 @@ from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
+from cadence.enums.SourceFlagsEnum import SourceFlagsEnumOps
 from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum
+from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnumOps
 from cadence.svg.CadenceDrawing import CadenceDrawing
 from cadence.views.tools.trackwayManager.TrackwayManager import TrackwayManager
 
-#___________________________________________________________________________________________________ TrackwayManagerWidget
+#_______________________________________________________________________________
 class TrackwayManagerWidget(PyGlassWidget):
     """ This widget is the primary GUI for interacting with the Maya scene representation of a
         trackway.  It permits selection of tracks interactively in Maya and display and editing of
@@ -25,7 +27,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         position, and rotation (about Y) are used to intrinsically represent track dimensions,
         position, and orientation.  Track models are accessed by query based on the UID. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     NO_OP                  = ''
@@ -70,7 +72,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
     RESOURCE_FOLDER_PREFIX = ['tools']
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, **kwargs):
         super(TrackwayManagerWidget, self).__init__(parent, **kwargs)
 
@@ -204,10 +206,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         # populate the track site data based on the initial value of the index
         self.handleTrackSiteIndexSbx()
 
-#===================================================================================================
+#===============================================================================
 #                                                                                        P U B L I C
 #
-#___________________________________________________________________________________________________ enableTrackUI
+#_______________________________________________________________________________
     def enableTrackUI(self, enable =True):
         """ The track ui is either enabled (if passed True) or disabled (if passed False). This
             is useful for tracks that are locked to prevent accidental modification. """
@@ -236,10 +238,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.indexLE.setEnabled(enable)
 
 #
-#===================================================================================================
+#===============================================================================
 #                                                                  T R A C K  U I  U T I L I T I E S
 
-#___________________________________________________________________________________________________ clearTrackUI
+#_______________________________________________________________________________
     def clearTrackUI(self):
         """ Clears out the text fields associated with the track parameters in the UI. This is
             called by several handlers that invalidate the track information in the UI. """
@@ -269,7 +271,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.indexLE.setText(u'')
         self.uidLE.setText(u'')
 
-#___________________________________________________________________________________________________ clearTrackSiteUI
+#_______________________________________________________________________________
     def clearTrackSiteUI(self):
         """ This clears the track site data in the Trackways tab. This method is used only by
             handleTrackSiteIndexSbx. """
@@ -290,7 +292,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.rotZLbl.setText(u'')
         self.scaleLbl.setText(u'')
 
-#___________________________________________________________________________________________________ clearTrackwayUI
+#_______________________________________________________________________________
     def clearTrackwayUI(self):
         """ Clears the banner at the top of the UI. This is called by a few handlers that invalidate
             the trackway information in the UI (such as handleSelectCompleted, which selects all
@@ -343,16 +345,16 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.rotationUncertaintySbx.setValue(rotationUncertainty)
 
         # set the checkboxes 'Completed', 'Locked', and 'Marked' according to the source flags
-        locked    = SourceFlagsEnum.get(sourceFlags, SourceFlagsEnum.LOCKED)
-        marked    = SourceFlagsEnum.get(sourceFlags, SourceFlagsEnum.MARKED)
-        completed = SourceFlagsEnum.get(sourceFlags, SourceFlagsEnum.COMPLETED)
+        locked    = SourceFlagsEnumOps.get(sourceFlags, SourceFlagsEnum.LOCKED)
+        marked    = SourceFlagsEnumOps.get(sourceFlags, SourceFlagsEnum.MARKED)
+        completed = SourceFlagsEnumOps.get(sourceFlags, SourceFlagsEnum.COMPLETED)
         self.lockedCkbx.setChecked(locked)
         self.markedCkbx.setChecked(marked)
         self.completedCkbx.setChecked(completed)
 
         # set the ignore pace and stride checkboxes according to the analysis flags
-        pace   = AnalysisFlagsEnum.get(analysisFlags, AnalysisFlagsEnum.IGNORE_PACE)
-        stride = AnalysisFlagsEnum.get(analysisFlags, AnalysisFlagsEnum.IGNORE_STRIDE)
+        pace   = AnalysisFlagsEnumOps.get(analysisFlags, AnalysisFlagsEnum.IGNORE_PACE)
+        stride = AnalysisFlagsEnumOps.get(analysisFlags, AnalysisFlagsEnum.IGNORE_STRIDE)
         self.ignorePaceCkbx.setChecked(pace)
         self.ignorePaceCkbx.setChecked(stride)
 
@@ -367,13 +369,13 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.uidLE.setText(StringUtils.toUnicode(uid))
 
         # now, depending on whether this track is locked or unlocked, disable/enable the UI
-        # locked = SourceFlagsEnum.get(f, SourceFlagsEnum.LOCKED)
+        # locked = SourceFlagsEnumOps.get(f, SourceFlagsEnum.LOCKED)
         # if locked:
         #     self.enableTrackUI(False)
         # else:
         #     self.enableTrackUI(True)
 
-#___________________________________________________________________________________________________ refreshTrackSiteUI
+#_______________________________________________________________________________
     def refreshTrackSiteUI(self, siteMap):
         """ The data displayed for the given track site index is updated. Note that the siteMap
             argument is a Tracks_SiteMap model instance. """
@@ -394,7 +396,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.rotZLbl.setText(StringUtils.toUnicode(siteMap.zRotate))
         self.scaleLbl.setText(StringUtils.toUnicode(siteMap.scale))
 
-#___________________________________________________________________________________________________ refreshTrackwayUI
+#_______________________________________________________________________________
     def refreshTrackwayUI(self, dict):
         """ The trackway UI is populated with values based on the specified properties. """
 
@@ -427,7 +429,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             trackway = ''
         self.trackwayLE.setText(trackway)
 
-#___________________________________________________________________________________________________ refreshTrackCountsUI
+#_______________________________________________________________________________
     def refreshTrackCountsUI(self):
         """ Run a script to return a list of all Maya Track Nodes so we can get a count of both the
             total number of tracks in the scene and of those that are completed. """
@@ -454,7 +456,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         # And show how many are currently selected
         self.selectedTrackCountLbl.setText('Selected:  ' + StringUtils.toUnicode(selectedCount))
 
-#___________________________________________________________________________________________________ getTrackwayPropertiesFromUI
+#_______________________________________________________________________________
     def getTrackwayPropertiesFromUI(self):
         """ Returns a dictionary of trackway properties, extracted from the UI. The trackway type
             and number are included only if the trackway line edit field is non-empty."""
@@ -472,9 +474,9 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         return props
 
-#===================================================================================================
+#===============================================================================
 #                                                                T R A C K   T A B   H A N D L E R S
-#___________________________________________________________________________________________________ handleCompletedCkbx
+#_______________________________________________________________________________
     def handleCompletedCkbx(self):
         """ The COMPLETED source flag for the selected track (or tracks) is set or cleared, based
             on the value of the checkbox. """
@@ -508,7 +510,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleCountsBtn
+#_______________________________________________________________________________
     def handleCountsBtn(self):
         """ This updates the total number of tracks in the scene and the number completed. """
 
@@ -519,7 +521,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleErasePathsBtn
+#_______________________________________________________________________________
     def handleErasePathsBtn(self):
         """ Deletes all curves representing paths (e.g., connecting a given track series). """
 
@@ -530,7 +532,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleExportAllTrackwaysBtn
+#_______________________________________________________________________________
     def handleExportAllTrackwaysBtn(self):
         """ tbd """
 
@@ -541,7 +543,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleExtrapolateNext
+#_______________________________________________________________________________
     def handleExtrapolateNext(self):
         """ Given at least two tracks in a series, this method allows the next track to be placed in
             a straight line extrapolation of the given track and its previous track. The next track
@@ -647,7 +649,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleExtrapolatePrevious
+#_______________________________________________________________________________
     def handleExtrapolatePrevious(self):
         """ Given at least two tracks in a series, this method allows the previous track to be
             placed in a straight line extrapolation of the given track and its next track. The
@@ -744,7 +746,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleFetchByName
+#_______________________________________________________________________________
     def handleFetchByName(self):
         """ This fetches the track specified by the trackwayUI banner, and translates that track
             directly under the CadenceCam. """
@@ -792,7 +794,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleFetchByIndex
+#_______________________________________________________________________________
     def handleFetchByIndex(self):
         """ This fetches the track specified by the index in the trackwayUI banner, and translates
             that track to place it directly under the CadenceCam. """
@@ -841,7 +843,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleFetchNextIncomplete
+#_______________________________________________________________________________
     def handleFetchNextIncomplete(self):
         """ The next incomplete track is translated to place that track directly under the
             CadenceCam. """
@@ -874,7 +876,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.selectTrack(track, setFocus=False)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleFirstTrackBtn
+#_______________________________________________________________________________
     def handleFirstTrackBtn(self):
         """ Get the first track, select the corresponding node, and focus the camera on it. """
 
@@ -895,7 +897,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleHideAllTrackwaysBtn
+#_______________________________________________________________________________
     def handleHideAllTrackwaysBtn(self):
         """ This sets all layers invisible. """
 
@@ -906,7 +908,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleHideTrackwayBtn
+#_______________________________________________________________________________
     def handleHideTrackwayBtn(self):
         """ This hides the layer specified by the current value in the trackway combo box. """
 
@@ -917,7 +919,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleHiddenCkbx
+#_______________________________________________________________________________
     def handleHiddenCkbx(self):
         """ The selected track has its HIDDEN flag set (or cleared). """
 
@@ -1014,7 +1016,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleInterpolate
+#_______________________________________________________________________________
     def handleInterpolate(self):
         """ Based on a previous and next tracks to a given (single) selected track node t, the
             parameters are interpolated. """
@@ -1059,7 +1061,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleLastTrackBtn
+#_______________________________________________________________________________
     def handleLastTrackBtn(self):
         """ Get the last track, select the corresponding node, focus the camera on it, and update
             the UIs"""
@@ -1080,7 +1082,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleLengthSbx
+#_______________________________________________________________________________
     def handleLengthSbx(self):
         """ The length of the selected track is adjusted. Length is stored in the database in
             fractional meters but send to Maya in cm and displayed in integer cm units."""
@@ -1105,7 +1107,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleLengthUncertaintySbx
+#_______________________________________________________________________________
     def handleLengthUncertaintySbx(self):
         """ The length uncertainty of the selected track is adjusted. """
 
@@ -1128,7 +1130,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleLengthRatioSbx
+#_______________________________________________________________________________
     def handleLengthRatioSbx(self):
         """ The ratio from 0.0 to 1.0 representing fraction of distance from the 'anterior' extreme
             of the track to the 'center' (point of greatest width). """
@@ -1162,7 +1164,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleLink
+#_______________________________________________________________________________
     def handleLink(self):
         """ Two or more tracks are linked by selecting them in Maya (in the intended order) then,
             for each track, assigning the UID of each successive track to the 'next' attribute for
@@ -1203,7 +1205,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleLockedCkbx
+#_______________________________________________________________________________
     def handleLockedCkbx(self):
         """ The selected track has its LOCKED flag set (or cleared). """
 
@@ -1235,7 +1237,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleMarkedCkbx
+#_______________________________________________________________________________
     def handleMarkedCkbx(self):
         """ This track has its MARKED source flag set or cleared, based on the value of the
             checkbox. """
@@ -1259,7 +1261,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleNextBtn
+#_______________________________________________________________________________
     def handleNextBtn(self):
         """ Get the next track, select its corresponding node, and focus the camera on it. If
             there is no next node, just leave the current node selected. """
@@ -1290,7 +1292,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleNoteLE
+#_______________________________________________________________________________
     def handleNoteLE(self):
         """ The note line edit is handled here. """
 
@@ -1314,7 +1316,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleOperation
+#_______________________________________________________________________________
     def handleOperation(self, op):
         """ A number of operations can be performed on (one or more) selected track(s). """
 
@@ -1363,25 +1365,25 @@ class TrackwayManagerWidget(PyGlassWidget):
         elif op == self.SET_COMPLETE:
             self.handleSetTrackCompleted()
 
-#___________________________________________________________________________________________________ handleOperation1Btn
+#_______________________________________________________________________________
     def handleOperation1Btn(self):
         """ Passes the selected operation to be performed. """
 
         self.handleOperation(self.operation1Cmbx.currentText())
 
-#___________________________________________________________________________________________________ handleOperation2Btn
+#_______________________________________________________________________________
     def handleOperation2Btn(self):
         """ Passes the selected operation to be performed. """
 
         self.handleOperation(self.operation2Cmbx.currentText())
 
-#___________________________________________________________________________________________________ handleOperation3Btn
+#_______________________________________________________________________________
     def handleOperation3Btn(self):
         """ Passes the selected operation to be performed. """
 
         self.handleOperation(self.operation3Cmbx.currentText())
 
-#___________________________________________________________________________________________________ handlePrevBtn
+#_______________________________________________________________________________
     def handlePrevBtn(self):
         """ Get the previous track, select its corresponding node, and focus the camera on it. If
             there is no previous node, just leave the current node selected. """
@@ -1412,7 +1414,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handlePullBtn
+#_______________________________________________________________________________
     def handlePullBtn(self):
         """ The transform data in the selected track node(s) is used to populate the UI. Note that
             if multiple track nodes are selected, the last such track node is used to extract data
@@ -1441,7 +1443,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleReduceRotationalUncertainty
+#_______________________________________________________________________________
     def handleReduceRotationalUncertainty(self):
         """ The selected tracks are assigned a lower uncertainty value for rotation. """
         #
@@ -1499,7 +1501,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._unlock()
 
 
-#___________________________________________________________________________________________________ handleRotationSBox
+#_______________________________________________________________________________
     def handleRotationSbx(self):
         """ The rotation of the selected track (manus or pes) is adjusted. """
 
@@ -1523,7 +1525,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleRotationUncertaintySbx
+#_______________________________________________________________________________
     def handleRotationUncertaintySbx(self):
         """ The track node has a pair of nodes that represent the angular uncertainty (plus or minus
             some value set up in the rotation uncertainty spin box (calibrated in degrees). """
@@ -1547,7 +1549,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelect1Btn
+#_______________________________________________________________________________
     def handleSelect1Btn(self):
         """ The various options for track selection are dispatched from here. The UI locking occurs
             within the specific handlers. """
@@ -1583,7 +1585,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.refreshTrackCountsUI()
         self._trackwayManager.closeSession(commit=True)
 
-#___________________________________________________________________________________________________ handleSelect2Btn
+#_______________________________________________________________________________
     def handleSelect2Btn(self):
         """ The various options for track selection are dispatched from here. """
 
@@ -1618,7 +1620,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.refreshTrackCountsUI()
         self._trackwayManager.closeSession(commit=True)
 
-#___________________________________________________________________________________________________ handleSelectAllTrackwaysBtn
+#_______________________________________________________________________________
     def handleSelectAllTrackwaysBtn(self):
         """ A list of all track nodes across all layers is compiled and selected. """
 
@@ -1629,7 +1631,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectByIndex
+#_______________________________________________________________________________
     def handleSelectByIndex(self):
         """ Handles the selection of a track by the index of its catalog entry. """
 
@@ -1654,7 +1656,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.refreshTrackUI(dict)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectByName
+#_______________________________________________________________________________
     def handleSelectByName(self):
         """ Handles the selection of a track by name. """
 
@@ -1683,7 +1685,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectByUid
+#_______________________________________________________________________________
     def handleSelectByUid(self):
         """ Handles the selection of a track by its UID. """
 
@@ -1705,7 +1707,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.refreshTrackUI(dict)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectCadenceCamBtn
+#_______________________________________________________________________________
     def handleSelectCadenceCamBtn(self):
         """ Handles the selection of the CadenceCam. """
 
@@ -1732,7 +1734,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectCompleted
+#_______________________________________________________________________________
     def handleSelectCompleted(self, completed=True):
         """ Selects all completed track nodes (those with UIDs in the scene that have their
             COMPLETED source flag set).  Batch this task into sublists due to limitations. This is
@@ -1762,7 +1764,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectMarked
+#_______________________________________________________________________________
     def handleSelectMarked(self, marked=True):
         """ Selects all marked track nodes (those with UIDs in the scene that have their
             MARKED source flag set).  Batch this task into sublists due to limitations. """
@@ -1786,7 +1788,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectNextIncomplete
+#_______________________________________________________________________________
     def handleSelectNextIncomplete(self):
         """ The next incomplete track is selected, focussed upon, and ready to edit. """
 
@@ -1814,7 +1816,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectPerspectiveBtn
+#_______________________________________________________________________________
     def handleSelectPerspectiveBtn(self):
         """ This selects the persp camera. """
 
@@ -1840,7 +1842,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectSeries
+#_______________________________________________________________________________
     def handleSelectSeries(self):
         """ Select in Maya the nodes for the entire track series based on the given selection. """
 
@@ -1866,7 +1868,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectSeriesBefore
+#_______________________________________________________________________________
     def handleSelectSeriesBefore(self):
         """ Selects all track nodes up to (but excluding) the first currently-selected track(s). """
 
@@ -1880,7 +1882,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectSeriesAfter
+#_______________________________________________________________________________
     def handleSelectSeriesAfter(self):
         """ Selects all track nodes after the last of the currently-selected track(s). """
 
@@ -1894,7 +1896,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSelectTrackwayBtn
+#_______________________________________________________________________________
     def handleSelectTrackwayBtn(self):
         """ Trackways are selected by Trackway type and number (such as S18). First put the trackway
             into a layer if it is not already, then select the members of that track. """
@@ -1909,7 +1911,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSetCompleted
+#_______________________________________________________________________________
     def handleSetCompleted(self):
         """ This sets all selected tracks to be complete. """
 
@@ -1931,7 +1933,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSetAllIncompleted
+#_______________________________________________________________________________
     def handleSetAllIncompleted(self):
         """ This sets all tracks to be incomplete, so that they can be examined individually using
             selectNextIncomplete. """
@@ -1966,7 +1968,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._unlock()
 
 
-#___________________________________________________________________________________________________ handleSetTrackCompleted
+#_______________________________________________________________________________
     def handleSetTrackCompleted(self):
         """ The currently selected track is set as completed and the next incomplete track is
             selected, focussed upon, and ready to edit. """
@@ -2012,7 +2014,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.setCameraFocus()
 
         self._unlock()
-#___________________________________________________________________________________________________ handleSetDatum
+#_______________________________________________________________________________
     def handleSetDatum(self):
         """ Set the datum attribute in all nodes for the entire track series based on the given
             selection.  The datum value is the disparity between track width and measured track
@@ -2032,7 +2034,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSetNodeLinks
+#_______________________________________________________________________________
     def handleSetNodeLinks(self):
         """ Sets the prev and next links in the selected track nodes. """
 
@@ -2051,7 +2053,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._unlock()
 
 
-#___________________________________________________________________________________________________ handleSetToMeasuredDimensions
+#_______________________________________________________________________________
     def handleSetToMeasuredDimensions(self):
         """ The selected track is assigned the length and width as measured in the field. """
 
@@ -2084,7 +2086,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSetUncertaintyHigh
+#_______________________________________________________________________________
     def handleSetUncertaintyHigh(self):
         """ The selected tracks are assigned high uncertainty values. """
 
@@ -2112,7 +2114,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSetUncertaintyLow
+#_______________________________________________________________________________
     def handleSetUncertaintyLow(self):
         """ The selected track is assigned low uncertainty values. """
 
@@ -2141,7 +2143,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSetUncertaintyModerate
+#_______________________________________________________________________________
     def handleSetUncertaintyModerate(self):
         """ The selected tracks are assigned moderate uncertainty values. """
 
@@ -2168,7 +2170,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleShowAllTrackwaysBtn
+#_______________________________________________________________________________
     def handleShowAllTrackwaysBtn(self, visible=True):
         """ This straightforwardly sets all layers either visible (default) or invisible. """
 
@@ -2178,7 +2180,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.setAllLayersVisible(visible)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleShowTrackwayBtn
+#_______________________________________________________________________________
     def handleShowTrackwayBtn(self, visible=True):
         """ With the tracks comprising each trackway (e.g., S18) placed in their own layer, with a
             corresponding layer name (e.g., S18_layer) the visibility of each trackway is controlled
@@ -2192,7 +2194,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSvgAddSelectedBtn
+#_______________________________________________________________________________
     def handleSvgAddSelectedBtn(self):
         """ The current selection of tracks (if non-empty) is added to the current SVG file """
 
@@ -2225,7 +2227,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ drawTrack
+#_______________________________________________________________________________
     def drawTrack(self, track, drawing, group, thickness =1.0, tolerance =0.1):
         """ The dimensions of a given track is drawn, and added to a given drawing, using the given
             CadenceDrawing group (a line oriented with the SVG positive Y direction. """
@@ -2344,7 +2346,7 @@ class TrackwayManagerWidget(PyGlassWidget):
                         stroke_opacity=opacity,
                         fill_opacity=opacity)
 
-#___________________________________________________________________________________________________ handleSvgOpenBtn
+#_______________________________________________________________________________
     def handleSvgOpenBtn(self):
         """ A file name is specified relative to the local root. This file is then explicitly
             opened by a separate button press "Open", followed by compilation of the SVG drawing by
@@ -2399,7 +2401,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSvgSaveBtn
+#_______________________________________________________________________________
     def handleSvgSaveBtn(self):
         """ The currently open Cadence drawing (SVG file) is written here after pressing "Save". If
             no Cadence drawing is already open, this complains and returns. """
@@ -2438,7 +2440,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleSvgNameLE
+#_______________________________________________________________________________
     def handleSvgNameLE(self):
         """ Simply a file name is specified in the ui, which is later used in responding to the
             button press 'Open' in order to create an SVG file. """
@@ -2448,7 +2450,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleTrackSiteIndexSbx
+#_______________________________________________________________________________
     def handleTrackSiteIndexSbx(self):
         """ Tracksites are indexed in a database table (see Tracks_SiteMap).  That same index
             provides a convenient but slightly arcane means to select a given tracksite by selection
@@ -2470,7 +2472,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleUnlink
+#_______________________________________________________________________________
     def handleUnlink(self):
         """ The 'next' attribute is cleared for the selected track. Unlinking does not
             attempt to relink tracks automatically (one must do it explicitly; see handleLink). """
@@ -2495,7 +2497,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleUpdateLayersBtn
+#_______________________________________________________________________________
     def handleUpdateLayersBtn(self):
         """ A set of Maya display layers is constructed, one for each trackway, and the names of
             these trackways (e.g. S18) are placed in a combo box, permitting selection of a specific
@@ -2512,7 +2514,7 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._unlock()
 
-#___________________________________________________________________________________________________ handleWidthSbx
+#_______________________________________________________________________________
     def handleWidthSbx(self):
         """ The width of the selected track is adjusted. Width is stored in the database in
             fractional meters but send to Maya in cm and displayed in integer cm units."""
@@ -2537,7 +2539,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#___________________________________________________________________________________________________ handleWidthUncertaintySbx
+#_______________________________________________________________________________
     def handleWidthUncertaintySbx(self):
         """ The width uncertainty of the selected track is adjusted. """
 
@@ -2561,10 +2563,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   P R I V A T E
 
-#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
+#_______________________________________________________________________________
     def _activateWidgetDisplayImpl(self, **kwargs):
         if not CadenceEnvironment.NIMBLE_IS_ACTIVE:
             self.setVisible(False)
@@ -2588,13 +2590,13 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.refreshTrackCountsUI()
 
 
-#___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
+#_______________________________________________________________________________
     def _deactivateWidgetDisplayImpl(self, **kwargs):
         """ Commit any unfinished database changes when the widget is closed. """
 
         self._trackwayManager.closeSession(commit=True)
 
-#___________________________________________________________________________________________________ _lock
+#_______________________________________________________________________________
     def _lock(self):
         """ Used to prevent chain reactions of UI widget handlers calling other handlers.  Each
             handler sets the lock by calling this, and if successful, the code continues in that
@@ -2606,13 +2608,13 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._uiLock = True
         return True
 
-#___________________________________________________________________________________________________ _unlock
+#_______________________________________________________________________________
     def _unlock(self):
         """ Each UI widget handler must unlock on exit. """
 
         self._uiLock = False
 
-#___________________________________________________________________________________________________ _closeSession
+#_______________________________________________________________________________
     def _closeSession(self):
         """ Used to close the database session from the TrackwayManagerWidget, when necessary. """
 

@@ -12,10 +12,10 @@ from cadence.shared.enum.TargetsEnum import TargetsEnum
 from cadence.config.enum.GeneralConfigEnum import GeneralConfigEnum
 
 
-#___________________________________________________________________________________________________ GaitPlot
+#_______________________________________________________________________________
 class GaitPlot(object):
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   C L A S S
     """
     A GaitPlot instance can have multiple individual graphs arranged into a single column, one graph per row. The
@@ -40,7 +40,7 @@ class GaitPlot(object):
         gp.save(<file>)               # save as a .png
         gp.show()                     # launch the display popup
     """
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
 
     def __init__(self, rows=1, width=8, height=4):
         self._cd         = None
@@ -64,7 +64,7 @@ class GaitPlot(object):
         self.setColorMap('Greys')
         self.setLineColor('sandybrown')
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
 #__________________________________________________________________________________________________GS: channelStartTime
@@ -87,10 +87,10 @@ class GaitPlot(object):
     def plotStopTime(self):
         return self._plotStopTime
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ loadGait
+#_______________________________________________________________________________
 
     def loadGait(self, fileName):
         """
@@ -117,33 +117,33 @@ class GaitPlot(object):
         self.setPlotInterval(self._channelStartTime, self._channelStopTime)
 
         return True
-    #___________________________________________________________________________________________________ setPlotInterval
+    #_______________________________________________________________________________
 
     def setPlotInterval(self, startTime, stopTime):
         self._plotStartTime = startTime
         self._plotStopTime  = stopTime
 
-    #___________________________________________________________________________________________________ setColorMap
+    #_______________________________________________________________________________
 
     def setColorMap(self, name):
        self._colorMap = plt.get_cmap(name)
 
-#___________________________________________________________________________________________________ setColorMap
+#_______________________________________________________________________________
 
     def setLineColor(self, name):
         self._lineColor = name
 
-#___________________________________________________________________________________________________ setBackground
+#_______________________________________________________________________________
 
     def setBackground(self, name):
         self._background = name
 
-#___________________________________________________________________________________________________mapValueToColor
+#_______________________________________________________________________________
 
     def mapValueToColor(self, v):
         return self._colorMap(v)
 
-#___________________________________________________________________________________________________plotChannel
+#_______________________________________________________________________________
 
     def plotChannel(self, channel, graph, y, lineWidth=10):
         plt.axes(graph)
@@ -159,7 +159,7 @@ class GaitPlot(object):
                            color=self.mapValueToColor(key.value))
             prevKey = key
 
-#___________________________________________________________________________________________________ plotGait
+#_______________________________________________________________________________
 
     def plotGait(self, graphNumber=1, background='gray', lineWidth=10):
         graph = self._figure.add_subplot(self._numberRows, 1, graphNumber)
@@ -185,7 +185,7 @@ class GaitPlot(object):
     #    plt.xticks(plt.arange(0.0, 24.0, 1.0))
         return True
 
-#___________________________________________________________________________________________________ value
+#_______________________________________________________________________________
 
     def value(self, channel, time):
         prevKey = channel.keys[0]
@@ -195,7 +195,7 @@ class GaitPlot(object):
             prevKey = key
         return channel.keys[0].value
 
-#___________________________________________________________________________________________________ values
+#_______________________________________________________________________________
 
     def values(self, channel, times):
         values = []
@@ -204,7 +204,7 @@ class GaitPlot(object):
             values.append(self.value(channel, t))
         return values
 
-#___________________________________________________________________________________________________ plotGait_v2
+#_______________________________________________________________________________
 
     def plotGait2(self, graphNumber=1, background='gray', lineWidth=10):
         graph = self._figure.add_subplot(self._numberRows, 1, graphNumber)
@@ -257,14 +257,14 @@ class GaitPlot(object):
         plt.yticks(positions, labels)
         return True
 
-    #___________________________________________________________________________________________________ clearGraph
+    #_______________________________________________________________________________
 
     def clearGraph(self, graphNumber=1, background='black'):
         graph = self._figure.add_subplot(self._numberRows, 1, graphNumber)
         rect = graph.patch
         rect.set_facecolor(background)
 
-#___________________________________________________________________________________________________ save
+#_______________________________________________________________________________
 
     def save(self, fileName, backgroundColor=None):
         """ Specifying backgroundColor overrides the GaitPlot's background color."""
@@ -272,7 +272,7 @@ class GaitPlot(object):
             backgroundColor = self._figure.get_facecolor()
         self._figure.saveFig(fileName, backgroundColor=backgroundColor)
 
-#___________________________________________________________________________________________________plotCurve
+#_______________________________________________________________________________
 
     def plotCurve(self, xValues, yValues, graphNumber, color='black', lineWidth=1.0):
         graph = self._figure.add_subplot(self._numberRows, 1, graphNumber)
@@ -282,13 +282,13 @@ class GaitPlot(object):
        # plt.xticks(xValues)
         return True
 
-#___________________________________________________________________________________________________ show
+#_______________________________________________________________________________
 
     def show(self):
         plt.show()
         return True
 
-#___________________________________________________________________________________________________ colorNames
+#_______________________________________________________________________________
 
     def colorNames(self):
         """ These are named colors available in matplotlib"""
@@ -326,7 +326,7 @@ class GaitPlot(object):
         'whitesmoke':'#F5F5F5', 'yellow':'#FFFF00', 'yellowgreen':'#9ACD32',
         }
 
-#___________________________________________________________________________________________________ colorMapNames
+#_______________________________________________________________________________
     def colorMapNames(self):
         """ These are named color maps available in matplotlib"""
         maps = [m for m in plt.cm.datad if not m.endswith("_r")]

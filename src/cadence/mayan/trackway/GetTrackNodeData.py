@@ -8,7 +8,7 @@ from nimble import NimbleScriptBase
 
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 
-#___________________________________________________________________________________________________ GetTrackNodeData
+#_______________________________________________________________________________
 class GetTrackNodeData(NimbleScriptBase):
     """ A remote script class for locating a track based on its uid property and returning its
         property data.
@@ -21,10 +21,10 @@ class GetTrackNodeData(NimbleScriptBase):
         <- [nodeName]   | Node name of the transform nodeName found with the matching uid if such a
                             nodeName was found. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ run
+#_______________________________________________________________________________
     def run(self, *args, **kwargs):
         uid  = self.fetch('uid', None)
         node = self.fetch('nodeName', None)

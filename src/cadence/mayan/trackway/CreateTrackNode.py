@@ -8,15 +8,15 @@ from nimble import NimbleScriptBase
 
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 
-#___________________________________________________________________________________________________ CreateTrackNode
+#_______________________________________________________________________________
 class CreateTrackNode(NimbleScriptBase):
     """ A remotely run script to creates a Maya node to represent a specific track. The
         procedure to create the transforms and geometry is createTrackNode in TrackSceneUtils. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ run
+#_______________________________________________________________________________
     def run(self, *args, **kwargs):
         uid  = self.fetch('uid', None)
         if uid is None:

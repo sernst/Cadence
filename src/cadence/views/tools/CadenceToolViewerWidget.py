@@ -14,11 +14,11 @@ from pyglass.widgets.LineSeparatorWidget import LineSeparatorWidget
 from cadence.views.tools.ToolViewerHeaderElement import ToolViewerHeaderElement
 from cadence.views.tools.ToolsHelpCommunicator import ToolsHelpCommunicator
 
-#___________________________________________________________________________________________________ CadenceToolViewerWidget
+#_______________________________________________________________________________
 class CadenceToolViewerWidget(PyGlassWidget):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     _HTML_WRAPPER = """\
@@ -28,7 +28,7 @@ class CadenceToolViewerWidget(PyGlassWidget):
         </html>
     """
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, **kwargs):
         """Creates a new instance of CadenceToolViewerWidget."""
         super(CadenceToolViewerWidget, self).__init__(parent, widgetFile=False, **kwargs)
@@ -63,21 +63,21 @@ class CadenceToolViewerWidget(PyGlassWidget):
         self._helpWebView = web
         l.addWidget(self._helpWebView)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ toggleHelpDisplay
+#_______________________________________________________________________________
     def toggleHelpDisplay(self):
         self._helpBox.setVisible(self._hasHelp and not self._helpBox.isVisible())
 
-#___________________________________________________________________________________________________ toggleInteractivity
+#_______________________________________________________________________________
     def toggleInteractivity(self, value):
         self._header.setEnabled(value)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
+#_______________________________________________________________________________
     def _activateWidgetDisplayImpl(self, **kwargs):
         super(CadenceToolViewerWidget, self)._activateWidgetDisplayImpl(**kwargs)
 
@@ -115,7 +115,7 @@ class CadenceToolViewerWidget(PyGlassWidget):
         self.mainWindow.hideLoading(self)
         self.refreshGui()
 
-#___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
+#_______________________________________________________________________________
     def _deactivateWidgetDisplayImpl(self, **kwargs):
         super(CadenceToolViewerWidget, self)._deactivateWidgetDisplayImpl(**kwargs)
         self.clearActiveWidget()

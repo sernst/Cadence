@@ -17,14 +17,14 @@ from cadence.analysis.shared.PositionValue2D import PositionValue2D
 #*************************************************************************************************** test_LineSegment2D
 class test_LineSegment2D(unittest.TestCase):
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ setUp
+#_______________________________________________________________________________
     def setUp(self):
         pass
 
-#___________________________________________________________________________________________________ test_lineExtension
+#_______________________________________________________________________________
     def test_lineExtension(self):
         """ Confirms that pre and post extension of a line segment properly extends the line with
             the specified length and handles edge cases such as vertical and horizontal lines"""
@@ -46,7 +46,7 @@ class test_LineSegment2D(unittest.TestCase):
 
             angle.degrees += 9.0
 
-#___________________________________________________________________________________________________ test_getParametricPosition
+#_______________________________________________________________________________
     def test_getParametricPosition(self):
         """getParametricPosition doc..."""
         start = PositionValue2D(0.0, 0.0, 0.1, 0.1)
@@ -61,7 +61,7 @@ class test_LineSegment2D(unittest.TestCase):
         self.assertAlmostEqual(result.x, 4.0, msg='Invalid x value %s' % result.x)
         self.assertAlmostEqual(result.y, 4.0, msg='Invalid y value %s' % result.y)
 
-#___________________________________________________________________________________________________ test_adjustPointAlongLine
+#_______________________________________________________________________________
     def test_adjustPointAlongLine(self):
         """test_ doc..."""
         start = PositionValue2D(0.0, 0.0, 0.1, 0.1)
@@ -87,7 +87,7 @@ class test_LineSegment2D(unittest.TestCase):
                 result.y, point.y + coordinate,
                 msg='Invalid y value %s' % result.y)
 
-#___________________________________________________________________________________________________ test_closestPointOnLine
+#_______________________________________________________________________________
     def test_closestPointOnLine_contained(self):
         start = PositionValue2D(10.0, 10.0, 0.1, 0.1)
         end = PositionValue2D(20.0, 10.0, 0.1, 0.1)
@@ -101,7 +101,7 @@ class test_LineSegment2D(unittest.TestCase):
         self.assertAlmostEqual(result.x, 30.0)
         self.assertAlmostEqual(result.y, 10.0)
 
-#___________________________________________________________________________________________________ test_closestPointOnLine
+#_______________________________________________________________________________
     def test_closestPointOnLine(self):
         """ doc... """
         count = 5000

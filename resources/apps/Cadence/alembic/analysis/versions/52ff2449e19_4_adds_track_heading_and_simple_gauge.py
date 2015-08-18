@@ -16,7 +16,7 @@ depends_on = None
 from alembic import op
 import sqlalchemy as sa
 
-#___________________________________________________________________________________________________ upgrade
+#_______________________________________________________________________________
 def upgrade():
     entries = [
         ('tracks', sa.Column('headingAngle', sa.Float, default=0.0)),
@@ -33,7 +33,7 @@ def upgrade():
             print('[ERROR]: Adding column %s.%s' % entry)
             print(err)
 
-#___________________________________________________________________________________________________ downgrade
+#_______________________________________________________________________________
 def downgrade():
     entries = [
         ('tracks', 'headingAngle'),

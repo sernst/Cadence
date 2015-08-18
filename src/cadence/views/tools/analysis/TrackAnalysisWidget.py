@@ -8,40 +8,40 @@ from pyglass.threading.FunctionRemoteExecutionThread import FunctionRemoteExecut
 
 from pyglass.widgets.PyGlassWidget import PyGlassWidget
 
-#___________________________________________________________________________________________________ TrackAnalysisWidget
+#_______________________________________________________________________________
 class TrackAnalysisWidget(PyGlassWidget):
     """ User interface class for handling track data IO from any of the possible sources and
         saving them to, or loading them from the database. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     RESOURCE_FOLDER_PREFIX = ['tools']
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, **kwargs):
         super(TrackAnalysisWidget, self).__init__(parent, **kwargs)
 
         self.runIntegrityBtn.clicked.connect(self._handleRunIntegrityTests)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
+#_______________________________________________________________________________
     def _activateWidgetDisplayImpl(self, **kwargs):
         pass
 
-#___________________________________________________________________________________________________ _runIntegrityTests
+#_______________________________________________________________________________
     @classmethod
     def _runIntegrityTests(cls):
         # tester = DataIntegrityTester()
         # return tester.run()
         pass
 
-#===================================================================================================
+#===============================================================================
 #                                                                                 H A N D L E R S
 
-#___________________________________________________________________________________________________ _handleRunIntegrityTests
+#_______________________________________________________________________________
     def _handleRunIntegrityTests(self):
         self.mainWindow.showStatus(
             self,
@@ -53,11 +53,11 @@ class TrackAnalysisWidget(PyGlassWidget):
             callback=self._handleIntegrityTestsComplete,
             logCallback=self._handleThreadLog)
 
-#___________________________________________________________________________________________________ _handleThreadLog
+#_______________________________________________________________________________
     def _handleThreadLog(self, event):
         self.mainWindow.appendStatus(self, event.get('message'))
 
-#___________________________________________________________________________________________________ _handleIntegrityTestsComplete
+#_______________________________________________________________________________
     def _handleIntegrityTestsComplete(self, event):
         self.mainWindow.showStatusDone(self)
 

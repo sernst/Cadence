@@ -9,11 +9,11 @@ import sqlalchemy as sqla
 
 from cadence.models.analysis.AnalysisDefault import AnalysisDefault
 
-#___________________________________________________________________________________________________ Analysis_Track
+#_______________________________________________________________________________
 class Analysis_Track(AnalysisDefault):
     """ Doc... """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     __tablename__ = 'tracks'
@@ -42,15 +42,15 @@ class Analysis_Track(AnalysisDefault):
     _simpleGauge        = sqla.Column(sqla.Float, default=0.0)
     _simpleGaugeUnc     = sqla.Column(sqla.Float, default=0.0)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: paceLengthValue
+#_______________________________________________________________________________
     @property
     def paceLengthValue(self):
         return NumericUtils.toValueUncertainty(self.paceLength, self.paceLengthUnc)
 
-#___________________________________________________________________________________________________ GS: strideLengthValue
+#_______________________________________________________________________________
     @property
     def strideLengthValue(self):
         return NumericUtils.toValueUncertainty(self.strideLength, self.strideLengthUnc)

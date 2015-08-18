@@ -15,10 +15,10 @@ from pyaid.string.StringUtils import StringUtils
 class PositionValue2D(object):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, x = 0.0, y = 0.0, xUnc = 0.0, yUnc = 0.0):
         """Creates a new instance of PositionValue."""
         self.x    = float(x)
@@ -26,33 +26,33 @@ class PositionValue2D(object):
         self.xUnc = float(xUnc)
         self.yUnc = float(yUnc)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: xValue
+#_______________________________________________________________________________
     @property
     def xValue(self):
         return NumericUtils.toValueUncertainty(self.x, self.xUnc)
 
-#___________________________________________________________________________________________________ GS: yValue
+#_______________________________________________________________________________
     @property
     def yValue(self):
         return NumericUtils.toValueUncertainty(self.y, self.yUnc)
 
-#___________________________________________________________________________________________________ GS: length
+#_______________________________________________________________________________
     @property
     def length(self):
         return self.distanceTo(PositionValue2D())
 
-#___________________________________________________________________________________________________ GS: nonzero
+#_______________________________________________________________________________
     @property
     def nonzero(self):
         return self.xValue.value != 0.0 or self.yValue.value != 0.0
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ update
+#_______________________________________________________________________________
     def update(self, x =None, y =None, xUnc =None, yUnc =None):
         """update doc..."""
         if x is not None:
@@ -64,23 +64,23 @@ class PositionValue2D(object):
         if yUnc is not None:
             self.yUnc = yUnc
 
-#___________________________________________________________________________________________________ copyFrom
+#_______________________________________________________________________________
     def copyFrom(self, value):
         """copyFrom doc..."""
         self.update(x=value.x, y=value.y, xUnc=value.xUnc, yUnc=value.yUnc)
 
-#___________________________________________________________________________________________________ clone
+#_______________________________________________________________________________
     def clone(self):
         """clone doc..."""
         return PositionValue2D(x=self.x, y=self.y, xUnc=self.xUnc, yUnc=self.yUnc)
 
-#___________________________________________________________________________________________________ invert
+#_______________________________________________________________________________
     def invert(self):
         """ Switches the sign of the x and y values so that x = -x and y = -y. """
         self.x = -self.x
         self.y = -self.y
 
-#___________________________________________________________________________________________________ add
+#_______________________________________________________________________________
     def add(self, point):
         """add doc..."""
         self.x += point.x
@@ -88,7 +88,7 @@ class PositionValue2D(object):
         self.xUnc = math.sqrt(self.xUnc*self.xUnc + point.xUnc*point.xUnc)
         self.yUnc = math.sqrt(self.yUnc*self.yUnc + point.yUnc*point.yUnc)
 
-#___________________________________________________________________________________________________ subtract
+#_______________________________________________________________________________
     def subtract(self, point):
         """add doc..."""
         self.x -= point.x
@@ -96,7 +96,7 @@ class PositionValue2D(object):
         self.xUnc = math.sqrt(self.xUnc*self.xUnc + point.xUnc*point.xUnc)
         self.yUnc = math.sqrt(self.yUnc*self.yUnc + point.yUnc*point.yUnc)
 
-#___________________________________________________________________________________________________ rotate
+#_______________________________________________________________________________
     def rotate(self, angle, origin =None):
         """ Rotates the position value by the specified angle using a standard 2D rotation matrix
             formulation. If an origin Position2D instance is not specified the rotation will
@@ -116,7 +116,7 @@ class PositionValue2D(object):
         self.xUnc = math.sqrt(self.xUnc*self.xUnc + origin.xUnc*origin.xUnc)
         self.yUnc = math.sqrt(self.yUnc*self.yUnc + origin.yUnc*origin.yUnc)
 
-#___________________________________________________________________________________________________ distanceTo
+#_______________________________________________________________________________
     def distanceTo(self, position):
         """distanceBetween doc..."""
         xDelta   = self.x - position.x
@@ -135,41 +135,41 @@ class PositionValue2D(object):
 
         return NumericUtils.toValueUncertainty(distance, error)
 
-#___________________________________________________________________________________________________ xFromUncertaintyValue
+#_______________________________________________________________________________
     def xFromUncertaintyValue(self, value):
         """xFromUncertaintyValue doc..."""
         self.x = value.value
         self.xUnc = value.uncertainty
 
-#___________________________________________________________________________________________________ yFromUncertaintyValue
+#_______________________________________________________________________________
     def yFromUncertaintyValue(self, value):
         """xFromUncertaintyValue doc..."""
         self.y = value.value
         self.yUnc = value.uncertainty
 
-#___________________________________________________________________________________________________ toDict
+#_______________________________________________________________________________
     def toDict(self):
         """toDict doc..."""
         return dict(x=self.x, y=self.y, xUnc=self.xUnc, yUnc=self.yUnc)
 
-#___________________________________________________________________________________________________ toTuple
+#_______________________________________________________________________________
     def toTuple(self):
         """toList doc..."""
         return self.x, self.y, self.xUnc, self.yUnc
 
-#___________________________________________________________________________________________________ toMayaTuple
+#_______________________________________________________________________________
     def toMayaTuple(self):
         """toMayaTuple doc..."""
         return 100.0*self.y, 100.0*self.x
 
-#___________________________________________________________________________________________________ echo
+#_______________________________________________________________________________
     def echo(self, asciiLabel =False):
         """echo doc..."""
         return '(%s, %s)' % (
             NumericUtils.toValueUncertainty(self.x, self.xUnc, asciiLabel=asciiLabel).rawLabel,
             NumericUtils.toValueUncertainty(self.y, self.yUnc, asciiLabel=asciiLabel).rawLabel)
 
-#___________________________________________________________________________________________________ normalize
+#_______________________________________________________________________________
     def normalize(self):
         """normalize doc..."""
         length = self.length
@@ -183,7 +183,7 @@ class PositionValue2D(object):
 
         return True
 
-#___________________________________________________________________________________________________ angleBetween
+#_______________________________________________________________________________
     def angleBetween(self, position):
         """angleBetween doc..."""
 
@@ -230,19 +230,19 @@ class PositionValue2D(object):
 
         return Angle(radians=a, uncertainty=aUnc)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               I N T R I N S I C
 
-#___________________________________________________________________________________________________ __repr__
+#_______________________________________________________________________________
     def __repr__(self):
         return self.__str__()
 
-#___________________________________________________________________________________________________ __str__
+#_______________________________________________________________________________
     def __str__(self):
         """__str__ doc..."""
         return StringUtils.toStr2(self.__unicode__())
 
-#___________________________________________________________________________________________________ __str__
+#_______________________________________________________________________________
     def __unicode__(self):
         isPy2 = bool(sys.version < '3')
 

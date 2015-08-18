@@ -7,7 +7,9 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import nimble
 
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
-from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum
+from cadence.enums.SourceFlagsEnum import SourceFlagsEnumOps
+from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum, \
+    AnalysisFlagsEnumOps
 from cadence.mayan.trackway import GetTrackNodeData
 from cadence.mayan.trackway import UpdateTrackNode
 from cadence.mayan.trackway import CreateTrackNode
@@ -16,21 +18,21 @@ from cadence.models.tracks.TracksTrackDefault import TracksTrackDefault
 
 # AS NEEDED: from cadence.models.analysis.Analysis_Track import Analysis_Track
 
-#___________________________________________________________________________________________________ Tracks_Track
+#_______________________________________________________________________________
 # noinspection PyAttributeOutsideInit
 class Tracks_Track(TracksTrackDefault):
     """ Database model representation of a track with all the attributes and information for a
         specific track as well connectivity information for the track within its series. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     __tablename__  = 'tracks'
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: nodeName
+#_______________________________________________________________________________
     @property
     def nodeName(self):
         """ A cached value for the name of the Maya nodeName representing this track if one exists,
@@ -48,7 +50,7 @@ class Tracks_Track(TracksTrackDefault):
         """ Getter returns a boolean indicating whether the 'completed' source flag is set. """
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
-        return SourceFlagsEnum.get(flags, SourceFlagsEnum.COMPLETED)
+        return SourceFlagsEnumOps.get(flags, SourceFlagsEnum.COMPLETED)
     @completed.setter
     def completed(self, value):
         """ Setter sets or clears the 'completed' source flag, depending on the boolean. """
@@ -56,9 +58,9 @@ class Tracks_Track(TracksTrackDefault):
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
         if value:
-            self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.COMPLETED)
+            self.sourceFlags = SourceFlagsEnumOps.set(flags, SourceFlagsEnum.COMPLETED)
         else:
-            self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.COMPLETED)
+            self.sourceFlags = SourceFlagsEnumOps.clear(flags, SourceFlagsEnum.COMPLETED)
 
 #___________________________________________________________________________________________________ GS: ignorePace
     @property
@@ -66,7 +68,7 @@ class Tracks_Track(TracksTrackDefault):
         """ Getter returns a boolean indicating whether the 'ignorePace' analysis flag is set. """
         flags = self.analysisFlags & ~AnalysisFlagsEnum.IGNORE_PACE
 
-        return AnalysisFlagsEnum.get(flags, AnalysisFlagsEnum.IGNORE_PACE)
+        return AnalysisFlagsEnumOps.get(flags, AnalysisFlagsEnum.IGNORE_PACE)
     @ignorePace.setter
     def ignorePace(self, value):
         """ Setter sets or clears the 'ignorePace' analysis flag, depending on the boolean. """
@@ -74,9 +76,9 @@ class Tracks_Track(TracksTrackDefault):
         flags = self.analysisFlags & ~AnalysisFlagsEnum.IGNORE_PACE
 
         if value:
-            self.analysisFlags = AnalysisFlagsEnum.set(flags, AnalysisFlagsEnum.IGNORE_PACE)
+            self.analysisFlags = AnalysisFlagsEnumOps.set(flags, AnalysisFlagsEnum.IGNORE_PACE)
         else:
-            self.analysisFlags = AnalysisFlagsEnum.clear(flags, AnalysisFlagsEnum.IGNORE_PACE)
+            self.analysisFlags = AnalysisFlagsEnumOps.clear(flags, AnalysisFlagsEnum.IGNORE_PACE)
 
 #___________________________________________________________________________________________________ GS: ignoreStride
     @property
@@ -84,7 +86,7 @@ class Tracks_Track(TracksTrackDefault):
         """ Getter returns a boolean indicating whether the 'ignoreStride' analysis flag is set. """
         flags = self.analysisFlags & ~AnalysisFlagsEnum.IGNORE_STRIDE
 
-        return AnalysisFlagsEnum.get(flags, AnalysisFlagsEnum.IGNORE_STRIDE)
+        return AnalysisFlagsEnumOps.get(flags, AnalysisFlagsEnum.IGNORE_STRIDE)
     @ignoreStride.setter
     def ignoreStride(self, value):
         """ Setter sets or clears the 'ignoreStride' analysis flag, depending on the boolean. """
@@ -92,16 +94,16 @@ class Tracks_Track(TracksTrackDefault):
         flags = self.analysisFlags & ~AnalysisFlagsEnum.IGNORE_STRIDE
 
         if value:
-            self.analysisFlags = AnalysisFlagsEnum.set(flags, AnalysisFlagsEnum.IGNORE_STRIDE)
+            self.analysisFlags = AnalysisFlagsEnumOps.set(flags, AnalysisFlagsEnum.IGNORE_STRIDE)
         else:
-            self.analysisFlags = AnalysisFlagsEnum.clear(flags, AnalysisFlagsEnum.IGNORE_STRIDE)
+            self.analysisFlags = AnalysisFlagsEnumOps.clear(flags, AnalysisFlagsEnum.IGNORE_STRIDE)
 
-#___________________________________________________________________________________________________ GS: locked
+#_______________________________________________________________________________
     @property
     def locked(self):
         """ Getter returns a boolean indicating whether the 'locked' source flag is set. """
         flags = self.sourceFlags & ~SourceFlagsEnum.LOCKED
-        return SourceFlagsEnum.get(flags, SourceFlagsEnum.LOCKED)
+        return SourceFlagsEnumOps.get(flags, SourceFlagsEnum.LOCKED)
     @locked.setter
     def locked(self, value):
         """ Setter sets or clears the 'locked' source flag, depending on the boolean. """
@@ -109,16 +111,16 @@ class Tracks_Track(TracksTrackDefault):
         flags = self.sourceFlags & ~SourceFlagsEnum.LOCKED
 
         if value:
-            self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.LOCKED)
+            self.sourceFlags = SourceFlagsEnumOps.set(flags, SourceFlagsEnum.LOCKED)
         else:
-            self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.LOCKED)
+            self.sourceFlags = SourceFlagsEnumOps.clear(flags, SourceFlagsEnum.LOCKED)
 
-#___________________________________________________________________________________________________ GS: marked
+#_______________________________________________________________________________
     @property
     def marked(self):
         """ Getter returns a boolean indicating whether the 'marked' source flag is set. """
         flags = self.sourceFlags & ~SourceFlagsEnum.MARKED
-        return SourceFlagsEnum.get(flags, SourceFlagsEnum.MARKED)
+        return SourceFlagsEnumOps.get(flags, SourceFlagsEnum.MARKED)
     @marked.setter
     def marked(self, value):
         """ Setter sets or clears the 'marked' source flag, depending on the boolean value. """
@@ -126,15 +128,15 @@ class Tracks_Track(TracksTrackDefault):
         flags = self.sourceFlags & ~SourceFlagsEnum.MARKED
 
         if value:
-            self.sourceFlags = SourceFlagsEnum.set(flags, SourceFlagsEnum.MARKED)
+            self.sourceFlags = SourceFlagsEnumOps.set(flags, SourceFlagsEnum.MARKED)
         else:
-            self.sourceFlags = SourceFlagsEnum.clear(flags, SourceFlagsEnum.MARKED)
+            self.sourceFlags = SourceFlagsEnumOps.clear(flags, SourceFlagsEnum.MARKED)
 
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ createTrackNode
+#_______________________________________________________________________________
     def createTrackNode(self):
         """ Create a visual representation of a track, to signify the position, dimensions (length
             and width), and rotation of either a manus or pes track.  The representation has
@@ -156,7 +158,7 @@ class Tracks_Track(TracksTrackDefault):
 
         return self.nodeName
 
-#___________________________________________________________________________________________________ updateNode
+#_______________________________________________________________________________
     def updateNode(self):
         """ Sends values to Maya nodeName representation of the track to synchronize the values in
             the model and the nodeName. """
@@ -173,7 +175,7 @@ class Tracks_Track(TracksTrackDefault):
         self.nodeName = result.payload.get('nodeName')
         return True
 
-#___________________________________________________________________________________________________ updateFromNode
+#_______________________________________________________________________________
     def updateFromNode(self):
         """ Retrieves Maya values from the nodeName representation of the track and updates this
             model instance with those values. """
@@ -196,7 +198,7 @@ class Tracks_Track(TracksTrackDefault):
 
         return False
 
-#___________________________________________________________________________________________________ removeTracksByUid
+#_______________________________________________________________________________
     @classmethod
     def removeTracksByUid(cls, uid, session, analysisSession):
         """removeTrackByUid doc..."""
@@ -209,7 +211,7 @@ class Tracks_Track(TracksTrackDefault):
             cls.removeTrack(track, analysisSession)
         return tracks
 
-#___________________________________________________________________________________________________ removeTrack
+#_______________________________________________________________________________
     @classmethod
     def removeTrack(cls, track, analysisSession):
         """removeTrack doc..."""
@@ -222,10 +224,10 @@ class Tracks_Track(TracksTrackDefault):
         session.delete(track)
 
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _getAnalysisPair
+#_______________________________________________________________________________
     def _getAnalysisPair(self, session, createIfMissing):
         """_getAnalysisPair doc..."""
 

@@ -8,12 +8,12 @@ from nimble import cmds
 from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.CadenceEnvironment import CadenceEnvironment
 
-#___________________________________________________________________________________________________ TrackNodeUtils
+#_______________________________________________________________________________
 class TrackNodeUtils(object):
     """ A class for operating directly upon the track nodes in a Maya scene, without dependence
         upon a database session. """
 
-#___________________________________________________________________________________________________ getTrackSetNode
+#_______________________________________________________________________________
     @classmethod
     def getTrackSetNode(cls):
         """ Get the TrackSet from the Maya scene so we can map from UID to track nodes """
@@ -23,7 +23,7 @@ class TrackNodeUtils(object):
                 return node
         return None
 
-#___________________________________________________________________________________________________ getTrackNode
+#_______________________________________________________________________________
     @classmethod
     def getTrackNode(cls, uid):
         """ This returns the (string) name of the track node for a given UID, else None. """
@@ -44,7 +44,7 @@ class TrackNodeUtils(object):
                 return node
         return None
 
-#___________________________________________________________________________________________________ setNodeDatum
+#_______________________________________________________________________________
     @classmethod
     def setNodeDatum(cls, node, value):
         """ Sets the numeric datum value, creating the attribute if not already defined. """
@@ -54,7 +54,7 @@ class TrackNodeUtils(object):
 
         cmds.setAttr(node + '.datum', value)
 
-#___________________________________________________________________________________________________ getNodeDatum
+#_______________________________________________________________________________
     @classmethod
     def getNodeDatum(cls, node):
         """ Returns the numeric datum value, else None. """
@@ -64,7 +64,7 @@ class TrackNodeUtils(object):
 
         return cmds.getAttr(node + '.datum')
 
-#___________________________________________________________________________________________________ setNodeLinks
+#_______________________________________________________________________________
     @classmethod
     def setNodeLinks(cls, node, prev, next):
         """ Sets up two attributes, prev and next, that directly link the given node to its
@@ -91,14 +91,14 @@ class TrackNodeUtils(object):
         if next:
             cmds.setAttr(node + '.nextNode', next, type='string')
 
-#___________________________________________________________________________________________________ getLength
+#_______________________________________________________________________________
     @classmethod
     def getLength(cls, node):
         """ Returns the length value directly from the node. """
 
         return cmds.getAttr(node + '.length')
 
-#___________________________________________________________________________________________________ getLengthUncertainty
+#_______________________________________________________________________________
     @classmethod
     def getLengthUncertainty(cls, node):
         """ Returns the length uncertainty value directly from the node. """
@@ -106,7 +106,7 @@ class TrackNodeUtils(object):
         return cmds.getAttr(node + '.lengthUncertainty')
 
 
-#___________________________________________________________________________________________________ getNextNode
+#_______________________________________________________________________________
     @classmethod
     def getNextNode(cls, node):
         """ Returns the next track node to a given node else None. """
@@ -116,14 +116,14 @@ class TrackNodeUtils(object):
 
         return cmds.getAttr(node + '.next')
 
-#___________________________________________________________________________________________________ getPosition
+#_______________________________________________________________________________
     @classmethod
     def getPosition(cls, node):
         """ Returns the pair of coordiantes for this track node directly from the node. """
 
         return (cmds.getAttr(node + '.translateX'), cmds.getAttr(node + '.translateZ'))
 
-#___________________________________________________________________________________________________ getPrevNode
+#_______________________________________________________________________________
     @classmethod
     def getPrevNode(cls, node):
         """ Returns the previous track node to a given node else None. """
@@ -133,27 +133,27 @@ class TrackNodeUtils(object):
 
         return cmds.getAttr(node + '.prev')
 
- #___________________________________________________________________________________________________ getRotation
+ #_______________________________________________________________________________
     @classmethod
     def getRotation(cls, node):
         """ Returns the rotationvalue directly from the node. """
 
         return cmds.getAttr(node + '.rotateY')
-#___________________________________________________________________________________________________ getRotationUncertainty
+#_______________________________________________________________________________
     @classmethod
     def getRotationUncertainty(cls, node):
         """ Returns the rotation uncertainty value directly from the node. """
 
         return cmds.getAttr(node + '.rotationUncertainty')
 
-#___________________________________________________________________________________________________ getWidth
+#_______________________________________________________________________________
     @classmethod
     def getWidth(cls, node):
         """ Returns the width value directly from the node. """
 
         return cmds.getAttr(node + '.width')
 
-#___________________________________________________________________________________________________ getWidthUncertainty
+#_______________________________________________________________________________
     @classmethod
     def getWidthUncertainty(cls, node):
         """ Returns the width uncertainty value directly from the node. """

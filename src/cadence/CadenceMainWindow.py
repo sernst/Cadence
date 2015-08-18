@@ -18,14 +18,14 @@ from cadence.views.loading.LoadingWidget import LoadingWidget
 from cadence.views.status.StatusWidget import StatusWidget
 from cadence.views.tools.CadenceToolViewerWidget import CadenceToolViewerWidget
 
-#___________________________________________________________________________________________________ CadenceMainWindow
+#_______________________________________________________________________________
 class CadenceMainWindow(PyGlassWindow):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, **kwargs):
         PyGlassWindow.__init__(
             self,
@@ -43,18 +43,18 @@ class CadenceMainWindow(PyGlassWindow):
 
         self.showLoading(self)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ showLoading
+#_______________________________________________________________________________
     def showLoading(self, target, header = 'Loading', info = '(Please Stand By)', **kwargs):
         super(CadenceMainWindow, self).showLoading(target=target, header=header, info=info, **kwargs)
 
-#___________________________________________________________________________________________________ showStatus
+#_______________________________________________________________________________
     def showStatus(self, target, header, info, clear =True):
         self.showApplicationLevelWidget('status', target=target, header=header, info=info, clear=clear)
 
-#___________________________________________________________________________________________________ appendStatus
+#_______________________________________________________________________________
     def appendStatus(self, target, message, formatAsHtml =True):
         w = self.getApplicationLevelWidget('status')
         if not w.isShowing or w.target != target:
@@ -72,7 +72,7 @@ class CadenceMainWindow(PyGlassWindow):
         w.append(message)
         self.refreshGui()
 
-#___________________________________________________________________________________________________ clearStatus
+#_______________________________________________________________________________
     def clearStatus(self, target):
         w = self.getApplicationLevelWidget('status')
         if not w.isShowing or w.target != target:
@@ -81,7 +81,7 @@ class CadenceMainWindow(PyGlassWindow):
         w.clear()
         self.refreshGui()
 
-#___________________________________________________________________________________________________ showStatusDone
+#_______________________________________________________________________________
     def showStatusDone(self, target):
         w = self.getApplicationLevelWidget('status')
         if not w.isShowing or w.target != target:
@@ -90,11 +90,11 @@ class CadenceMainWindow(PyGlassWindow):
         w.showStatusDone()
         self.refreshGui()
 
-#___________________________________________________________________________________________________ hideStatus
+#_______________________________________________________________________________
     def hideStatus(self, target):
         self.hideApplicationLevelWidget('status')
 
-#___________________________________________________________________________________________________ toggleInteractivity
+#_______________________________________________________________________________
     def toggleInteractivity(self, value):
         if self._currentWidget.widgetID == 'home':
             self.setEnabled(value)
@@ -104,10 +104,10 @@ class CadenceMainWindow(PyGlassWindow):
             self._currentWidget.toggleInteractivity(value)
         self.refreshGui()
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _initializeImpl
+#_______________________________________________________________________________
     def _initializeImpl(self, *args, **kwargs):
         # Initialize databases
         import cadence.models.tracks as tracks
@@ -122,15 +122,15 @@ class CadenceMainWindow(PyGlassWindow):
 
         super(CadenceMainWindow, self)._initializeImpl()
 
-#___________________________________________________________________________________________________ _firstShowImpl
+#_______________________________________________________________________________
     def _firstShowImpl(self):
         self.hideLoading(self)
         self.setActiveWidget('home')
 
-#===================================================================================================
+#===============================================================================
 #                                                                                 H A N D L E R S
 
-#___________________________________________________________________________________________________ _handleKeyboardCallback
+#_______________________________________________________________________________
     def _handleKeyboardCallback(self, event):
         mod  = event.modifiers()
         mods = QtCore.Qt.ShiftModifier | QtCore.Qt.ControlModifier

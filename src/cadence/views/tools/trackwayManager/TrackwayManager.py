@@ -25,7 +25,7 @@ from cadence.mayan.trackway import GetTrackNodeData
 from cadence.mayan.trackway import SetNodeDatum
 from cadence.mayan.trackway import SetNodeLinks
 
-#___________________________________________________________________________________________________ TrackwayManager
+#_______________________________________________________________________________
 class TrackwayManager(object):
     """ This class provides access to the database and to the Maya scene. Tracks in Maya are
         represented by track nodes, each a transform node with an additional attribute specifying
@@ -33,7 +33,7 @@ class TrackwayManager(object):
         intrinsically represent track dimensions, position, and orientation.  Track models are
         accessed by query based on the UID, and for a given session. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 # RESOURCE_FOLDER_PREFIX = ['tools']
 
@@ -42,14 +42,14 @@ class TrackwayManager(object):
     FIT_FACTOR   = 0.4
     CADENCE_CAM  = 'CadenceCam'
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self):
         self._session = None
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 #
-#___________________________________________________________________________________________________ getUidList
+#_______________________________________________________________________________
     def getUidList(self):
         """ Returns a list of the UIDs of all track nodes currently loaded into Maya. """
 
@@ -69,7 +69,7 @@ class TrackwayManager(object):
         self.closeSession()
         return result.payload['uidList']
 
-#___________________________________________________________________________________________________ getAllTracksInMaya
+#_______________________________________________________________________________
     def getAllTracksInMaya(self):
         """ Returns a list of all tracks that are currently loaded into Maya. """
 
@@ -85,7 +85,7 @@ class TrackwayManager(object):
         self.closeSession()
         return tracks if len(tracks) > 0 else None
 
-#___________________________________________________________________________________________________ getCompletedTracks
+#_______________________________________________________________________________
     def getCompletedTracks(self, completed =True, uidList =None):
         """ Returns a list of all tracks within the scene that are either completed or incomplete,
             depending on the boolean kwarg. """
@@ -97,7 +97,7 @@ class TrackwayManager(object):
         # completed (or incomplete, depending on the boolean), and return those as a list of tracks
         return self.getFlaggedTracks(uidList, SourceFlagsEnum.COMPLETED, completed)
 
-#___________________________________________________________________________________________________ getFirstTrack
+#_______________________________________________________________________________
     def getFirstTrack(self):
         """ Returns the track model corresponding to the first track in a series, based on a given
             selection of one or more track nodes. """
@@ -115,7 +115,7 @@ class TrackwayManager(object):
 
         return t
 
-#___________________________________________________________________________________________________ getFirstSelectedTrack
+#_______________________________________________________________________________
     def getFirstSelectedTrack(self):
         """ Returns the track model corresponding to the first of a series of selected nodes. """
 
@@ -132,7 +132,7 @@ class TrackwayManager(object):
 
         return t
 
-#___________________________________________________________________________________________________ getFlaggedTracks
+#_______________________________________________________________________________
     def getFlaggedTracks(self, uidList, flag, set=True):
         """ Creates a list of all tracks that have a given source flag either set or cleared,
             based on the boolean argument set. """
@@ -164,7 +164,7 @@ class TrackwayManager(object):
 
         return entries if len(entries) > 0 else None
 
-#___________________________________________________________________________________________________ getLastTrack
+#_______________________________________________________________________________
     def getLastTrack(self):
         """ Returns the track model corresponding to the last track in a series. """
 
@@ -180,7 +180,7 @@ class TrackwayManager(object):
             n = self.getNextTrack(n)
         return t
 
-#___________________________________________________________________________________________________ getLastSelectedTrack
+#_______________________________________________________________________________
     def getLastSelectedTrack(self):
         """ Returns the track model corresponding to the last of a series of selected nodes. """
         selectedTracks = self.getSelectedTracks()
@@ -194,7 +194,7 @@ class TrackwayManager(object):
             n = self.getNextTrack(n)
         return t
 
-#___________________________________________________________________________________________________ getMarkedTracks
+#_______________________________________________________________________________
     def getMarkedTracks(self, marked =True):
         """ Returns a list of all tracks with the MARKED flag set. """
 
@@ -203,13 +203,13 @@ class TrackwayManager(object):
 
         return tracks
 
-#___________________________________________________________________________________________________ getNextTrack
+#_______________________________________________________________________________
     def getNextTrack(self, track):
         """ This method just encapsulates the session getter. """
 
         return track.getNextTrack(self._getSession())
 
-#___________________________________________________________________________________________________ getPreviousTrack
+#_______________________________________________________________________________
     def getPreviousTrack(self, track):
         """ This method just encapsulates the session getter. """
 
@@ -246,7 +246,7 @@ class TrackwayManager(object):
             tracks.append(track)
         return tracks
 
-#___________________________________________________________________________________________________ getSiteMap
+#_______________________________________________________________________________
     def getSiteMap(self, index):
         """ If the track site specified by the given index is valid, a Tracks_TrackSite instance is
             returned, otherwise None. """
@@ -264,28 +264,28 @@ class TrackwayManager(object):
         else:
             return siteMap
 
-#___________________________________________________________________________________________________ getTrackByUid
+#_______________________________________________________________________________
     def getTrackByUid(self, uid):
         """ This gets the track model instance corresponding to a given uid. """
 
         model = Tracks_Track.MASTER
         return model.getByUid(uid, self._getSession())
 
-#___________________________________________________________________________________________________ getTracksByProperties
+#_______________________________________________________________________________
     def getTracksByProperties(self, **kwargs):
         """ This gets the track model instances with specified properties. """
 
         model = Tracks_Track.MASTER
         return model.getByProperties(self._getSession(), **kwargs)
 
-#___________________________________________________________________________________________________ getTrackByName
+#_______________________________________________________________________________
     def getTrackByName(self, name, **kwargs):
         """ This gets the track model instance by name (plus trackway properties). """
 
         model = Tracks_Track.MASTER
         return model.getByName(name, self._getSession(), **kwargs)
 
-#___________________________________________________________________________________________________ getTrackNode
+#_______________________________________________________________________________
     def getTrackNode(self, track):
         """ This gets the (transient) Maya node name corresponding to a given track, or returns
             None if that track has not yet been loaded into Maya as a node. """
@@ -307,7 +307,7 @@ class TrackwayManager(object):
 
         return result.payload.get('nodeName')
 
-#___________________________________________________________________________________________________ getTrackSetNode
+#_______________________________________________________________________________
     def getTrackSetNode(cls):
         """ This is redundunt with the version in TrackSceneUtils, but running locally. Note that
             if no TrackSetNode is found, it does not create one. """
@@ -318,7 +318,7 @@ class TrackwayManager(object):
 
         return None
 
-#___________________________________________________________________________________________________ getTracksAfter
+#_______________________________________________________________________________
     def getTracksAfter(self, track):
         """ This returns all tracks that are subsequent to a given specified track. If track is the
             last track in the series (or an isolated track), it returns None, rather than the empty
@@ -336,7 +336,7 @@ class TrackwayManager(object):
 
         return tracks
 
-#___________________________________________________________________________________________________ getTracksBefore
+#_______________________________________________________________________________
     def getTracksBefore(self, track):
         """ This returns all tracks that are before a given specified track.  If track is the first
             track in the series (or an isolated track), it returns None, rather than the empty
@@ -375,7 +375,7 @@ class TrackwayManager(object):
 
         return series
 
-#___________________________________________________________________________________________________ getTrackway
+#_______________________________________________________________________________
     def getTrackway(self, trackwayName, uidList =None):
         """ Creates a list of all tracks that have Maya tracknodes (hence are in the uidList) and
             have the specified trackwayName (trackway type and trackway number). """
@@ -412,7 +412,7 @@ class TrackwayManager(object):
         self.closeSession(commit=False)
         return tracks if len(tracks) > 0 else None
 
-#___________________________________________________________________________________________________ getTrackwayNames
+#_______________________________________________________________________________
     def getTrackwayNames(self, site, level, sector):
         """ Compiles a list of the names of trackways for a specified site/level/sector. In some
             tracksites, for some levels, a given trackway name (such as S1) may appear in two
@@ -439,7 +439,7 @@ class TrackwayManager(object):
 
         return trackwayNames if len(trackwayNames) > 0 else None
 
-#___________________________________________________________________________________________________ getTrackwayProps
+#_______________________________________________________________________________
     def getTrackwayProps(self, track):
         """ Returns a dictionary of trackway properties associated with a given track. """
 
@@ -449,7 +449,7 @@ class TrackwayManager(object):
                   TrackPropEnum.SECTOR.name:track.sector }
         return props
 
-#___________________________________________________________________________________________________ selectAllTracks
+#_______________________________________________________________________________
     def selectAllTracks(self):
         """ All tracks are selected, by accumulating a list of all track nodes in the trackway
             layers. """
@@ -461,7 +461,7 @@ class TrackwayManager(object):
                nodes.extend(cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True))
         cmds.select(nodes)
 
-#___________________________________________________________________________________________________ selectTrack
+#_______________________________________________________________________________
     def selectTrack(self, track, setFocus =True):
         """ Select the node corresponding to this track model instance, then focus the camera
             upon this node. """
@@ -473,7 +473,7 @@ class TrackwayManager(object):
         else:
             cmds.select(clear=True)
 
-#___________________________________________________________________________________________________ selectTracks
+#_______________________________________________________________________________
     def selectTracks(self, tracks):
         """ Given a list of tracks, first compiles a list of track nodes then has Maya select
             them. """
@@ -486,7 +486,7 @@ class TrackwayManager(object):
         if len(nodes) > 0:
             cmds.select(nodes)
 
-#___________________________________________________________________________________________________ selectSeriesAfter
+#_______________________________________________________________________________
     def selectSeriesAfter(self, track):
         """ Selects all tracks in a sequence after a given specific track. """
         tracks = self.getTracksAfter(track)
@@ -495,7 +495,7 @@ class TrackwayManager(object):
         if tracks:
             self.selectTracks(tracks)
 
-#___________________________________________________________________________________________________ selectSeriesBefore
+#_______________________________________________________________________________
     def selectSeriesBefore(self, track):
         """ Selects all tracks in a sequence up to (but not including) a given specific track. """
 
@@ -503,7 +503,7 @@ class TrackwayManager(object):
 
         if track:
             self.selectTracks(tracks)
-#___________________________________________________________________________________________________ selectTrackSeries
+#_______________________________________________________________________________
     def selectTrackSeries(self, track):
         """ Select all the tracks in the series from first to last for a given track. """
 
@@ -513,10 +513,10 @@ class TrackwayManager(object):
             self.selectTracks(tracks)
 
 
-#===================================================================================================
+#===============================================================================
 #                                                                   N O D E   O P E R A T I O N S
 
-#___________________________________________________________________________________________________ setNodeDatum
+#_______________________________________________________________________________
     def setNodeDatum(self, tracks):
         """ For each track, compute some value that will be associated with the 'datum' attribute
             of its corresponding node. A list of (node, value) pairs will be passed, where the
@@ -548,7 +548,7 @@ class TrackwayManager(object):
                 'Error')
             return None
 
-#___________________________________________________________________________________________________ setNodeLinks
+#_______________________________________________________________________________
     def setNodeLinks(self, tracks):
         """ For each track in the specified list of tracks, its previous and next tracks are
             determined, then the track nodes for these three tracks are bundled in a tuple
@@ -588,10 +588,10 @@ class TrackwayManager(object):
                 'Error')
             return None
 
-#===================================================================================================
+#===============================================================================
 #                                                                 C U R V E S   A N D   P A T H S
 
-#___________________________________________________________________________________________________ createPathFromTrackSeries
+#_______________________________________________________________________________
     def addPath(self, tracks, degree =1):
         """ Creates a list of the (x, z) track coordinates in a scene from a given track series.
             The hidden tracks are not included, nor are tracks that are still at the origin. The
@@ -609,7 +609,7 @@ class TrackwayManager(object):
         self.createLayer(layer)
         cmds.editDisplayLayerMembers(layer, curve, noRecurse=True)
 
-#___________________________________________________________________________________________________ deleteAllPaths
+#_______________________________________________________________________________
     def deleteAllPaths(self):
         """ Deletes all curves that have been placed in the PATH_LAYER. """
         curves = cmds.editDisplayLayerMembers(self.PATH_LAYER, query=True, noRecurse=True)
@@ -618,10 +618,10 @@ class TrackwayManager(object):
         cmds.delete(self.PATH_LAYER)
 
 
-#===================================================================================================
+#===============================================================================
 #                                                               C A M E R A   O P E R A T I O N S
 
-#___________________________________________________________________________________________________ initializeCadenceCam
+#_______________________________________________________________________________
     def initializeCadenceCam(self):
         """ This creates an orthographic camera that looks down the Y axis onto the XZ plane, and
             rotated so that the AI file track labels are legible.  This camera is positioned so
@@ -645,21 +645,21 @@ class TrackwayManager(object):
         MayaUtils.setSelection(priorSelection)
 
 
-#___________________________________________________________________________________________________ selectCadenceCam
+#_______________________________________________________________________________
     def selectCadenceCam(self):
         """ Selects the CadenceCam. """
 
         cmds.lookThru(self.CADENCE_CAM)
         self.setCameraFocus()
 
-#___________________________________________________________________________________________________ selectPerspectiveCam
+#_______________________________________________________________________________
     def selectPerspectiveCam(self):
         """ Selects the default perspective camera. """
 
         cmds.lookThru('persp')
         self.setCameraFocus()
 
-#___________________________________________________________________________________________________ getCadenceCamLocation
+#_______________________________________________________________________________
     def getCadenceCamLocation(self):
         """ Returns the current (x, z) location of the CadenceCam. This is useful for placing the
             camera above a given track, or for snapping a track to the current location of the
@@ -669,7 +669,7 @@ class TrackwayManager(object):
         z = cmds.getAttr(self.CADENCE_CAM + '.translateZ')
 
         return (x, z)
-#___________________________________________________________________________________________________ setCameraFocus
+#_______________________________________________________________________________
     def setCameraFocus(self):
         """ Center the current camera (CadenceCam or persp) on the currently selected node. If
             using the CadenceCam, the view is fitted to FIT_FACTOR; with the persp camera, it is
@@ -677,10 +677,10 @@ class TrackwayManager(object):
 
         cmds.viewFit(fitFactor=self.FIT_FACTOR, animate=True)
 
-#===================================================================================================
+#===============================================================================
 #                                                    D I S P L A Y   L A Y E R   U T I L I T I E S
 
-#___________________________________________________________________________________________________ initializeLayers
+#_______________________________________________________________________________
     def initializeLayers(self):
         """ Creates a new layer for each trackway in this site/level/sector, based on the first UID
             found (returned by getUidList).  It is important to load into the Maya scene only
@@ -720,7 +720,7 @@ class TrackwayManager(object):
 
         return trackwayNames
 
-#___________________________________________________________________________________________________ addTrackwayToLayer
+#_______________________________________________________________________________
     def addTrackwayToLayer(self, layer, tracks):
         """ Populates the specified display layer with the track nodes corresponding to the
             specified tracks. """
@@ -737,7 +737,7 @@ class TrackwayManager(object):
         # now add those nodes to the layer
         cmds.editDisplayLayerMembers(layer, nodes, noRecurse=True)
 
-#___________________________________________________________________________________________________ createLayer
+#_______________________________________________________________________________
     def createLayer(self, layer, useExisting =True):
         """ Creates a display layer with the specified name. """
 
@@ -753,25 +753,25 @@ class TrackwayManager(object):
         #  Restore the prior state of selection
         MayaUtils.setSelection(priorSelection)
 
-#___________________________________________________________________________________________________ showLayer
+#_______________________________________________________________________________
     def selectTracksInLayer(self, layer):
         """ A fast way to select the track nodes within a given layer. """
 
         nodes = cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True)
         cmds.select(nodes)
 
-#___________________________________________________________________________________________________ show
+#_______________________________________________________________________________
 
         nodes = cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True)
         cmds.select(nodes)
-#___________________________________________________________________________________________________ deleteLayer
+#_______________________________________________________________________________
     def deleteLayer(self, layer):
         """ Deletes a display layer. """
 
         if not cmds.objExists(layer):
             cmds.delete(layer)
 
-#___________________________________________________________________________________________________ setAllLayersVisible
+#_______________________________________________________________________________
     def setAllLayersVisible(self, visible):
         """ This sets all layers visible, as the name suggests. """
 
@@ -781,7 +781,7 @@ class TrackwayManager(object):
             if layer.endswith(self.LAYER_SUFFIX):
                 cmds.setAttr('%s.visibility' % layer, visible)
 
-#___________________________________________________________________________________________________ showTrackway
+#_______________________________________________________________________________
     def showTrackway(self, trackwayName, visible =True):
         """ Presuming that the track nodes for a specified trackway are already in a corresponding
             layer, this turns on visibility of that layer. """
@@ -792,7 +792,7 @@ class TrackwayManager(object):
         cmds.setAttr('%s.visibility' % layer, visible)
 
 
-#___________________________________________________________________________________________________ closeSession
+#_______________________________________________________________________________
     def closeSession(self, commit =True):
         """ Closes a session and indicates such by nulling out model and session.  This is public
             because the TrackwayManagerWidget needs to call it."""
@@ -807,10 +807,10 @@ class TrackwayManager(object):
 
         return bool(session is not None)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                    P R I V A T E
 #
-#___________________________________________________________________________________________________ _getSession
+#_______________________________________________________________________________
     def _getSession(self):
         """ Access to model instances is based on the current model and session, stored in two
             local instance variables so that multiple operations can be performed before closing

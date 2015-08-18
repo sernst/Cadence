@@ -17,13 +17,13 @@ from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
 class CurveProjectionLinkStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     EXTENSION_LENGTH      = 10.0
     CURVE_MAP_FOLDER_NAME = 'Projection-Linkage-Maps'
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of CurveProjectionLinkStage."""
         super(CurveProjectionLinkStage, self).__init__(
@@ -33,14 +33,14 @@ class CurveProjectionLinkStage(AnalysisStage):
 
         self._paths = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         self._paths = []
 
-#___________________________________________________________________________________________________ _analyzeSitemap
+#_______________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
 
@@ -48,7 +48,7 @@ class CurveProjectionLinkStage(AnalysisStage):
         super(CurveProjectionLinkStage, self)._analyzeSitemap(sitemap)
         self._saveDrawing(sitemap)
 
-#___________________________________________________________________________________________________ _analyzeTrackway
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
 
         seriesBundle = self.owner.getSeriesBundle(trackway)
@@ -109,7 +109,7 @@ class CurveProjectionLinkStage(AnalysisStage):
 
         self._plotTracks(tracks, trackway)
 
-#___________________________________________________________________________________________________ _getNextTrack
+#_______________________________________________________________________________
     def _getNextTrack(self, track, trackway):
         """ Iterates through all the tracks in the trackway and finds the track closest to the
             specified track. If the track argument is None the first track in the trackway will
@@ -167,7 +167,7 @@ class CurveProjectionLinkStage(AnalysisStage):
 
         return nextTrack
 
-#___________________________________________________________________________________________________ _plotTracks
+#_______________________________________________________________________________
     def _plotTracks(self, tracks, trackway):
         """_plotTracks doc..."""
 
@@ -192,7 +192,7 @@ class CurveProjectionLinkStage(AnalysisStage):
             yTickFunc=self._plotLabelChannelsFunc)
         self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
 
-#___________________________________________________________________________________________________ _plotLabelChannelsFunc
+#_______________________________________________________________________________
     @classmethod
     def _plotLabelChannelsFunc(cls, value, position):
         if value == 1:
@@ -206,7 +206,7 @@ class CurveProjectionLinkStage(AnalysisStage):
         else:
             return ''
 
-#___________________________________________________________________________________________________ _drawCurveSeries
+#_______________________________________________________________________________
     @classmethod
     def _drawCurveSeries(cls, drawing, series):
         """_drawCurveSeries doc..."""
@@ -227,7 +227,7 @@ class CurveProjectionLinkStage(AnalysisStage):
             line = LineSegment2D(track.positionValue, nextTrack.positionValue)
             cls._drawLine(drawing=drawing, line=line, color='#009900', opacity=0.1, endCap=False)
 
-#___________________________________________________________________________________________________ _drawPaceLine
+#_______________________________________________________________________________
     @classmethod
     def _drawLine(
             cls, drawing, line, color ='black', opacity=1.0, endCap =True, startCap=True,
@@ -251,6 +251,6 @@ class CurveProjectionLinkStage(AnalysisStage):
             drawing.circle(
                 line.start.toMayaTuple(), 5, stroke='none', fill=color, fill_opacity=opacity)
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         self.mergePdfs(self._paths, 'Trackway-Ordering.pdf')

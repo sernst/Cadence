@@ -15,11 +15,11 @@ from pyglass.sqlalchemy.PyGlassModelsDefault import PyGlassModelsDefault
 from pyglass.sqlalchemy.ConcretePyGlassModelsMeta import ConcretePyGlassModelsMeta
 import six
 
-#___________________________________________________________________________________________________ AnalysisDefault
+#_______________________________________________________________________________
 @six.add_metaclass(ConcretePyGlassModelsMeta)
 class AnalysisDefault(PyGlassModelsDefault):
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     __abstract__  = True
@@ -27,20 +27,20 @@ class AnalysisDefault(PyGlassModelsDefault):
     _flags               = sqla.Column(sqla.Integer,     default=0)
     _displayFlags        = sqla.Column(sqla.Integer,     default=0)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: id
+#_______________________________________________________________________________
     @property
     def id(self):
         return Base36.to36(self.i)
 
-#___________________________________________________________________________________________________ GS: uid
+#_______________________________________________________________________________
     @property
     def uid(self):
         return '%s-%s' % (self.__class__.__name__, self.id)
 
-#___________________________________________________________________________________________________ GS: cache
+#_______________________________________________________________________________
     @property
     def cache(self):
         """ Caching object used during analysis to store transient data related to this sitemap """

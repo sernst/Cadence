@@ -10,14 +10,14 @@ from pyaid.ArgsUtils import ArgsUtils
 
 from pyglass.widgets.ApplicationLevelWidget import ApplicationLevelWidget
 
-#___________________________________________________________________________________________________ LoadingWidget
+#_______________________________________________________________________________
 class LoadingWidget(ApplicationLevelWidget):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, **kwargs):
         """Creates a new instance of LoadingWidget."""
         super(LoadingWidget, self).__init__(parent, **kwargs)
@@ -29,10 +29,10 @@ class LoadingWidget(ApplicationLevelWidget):
         self.isShowing = False
         self.setVisible(False)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: header
+#_______________________________________________________________________________
     @property
     def header(self):
         return self.headerLabel.text()
@@ -40,7 +40,7 @@ class LoadingWidget(ApplicationLevelWidget):
     def header(self, value):
         self.headerLabel.setText(value)
 
-#___________________________________________________________________________________________________ GS: info
+#_______________________________________________________________________________
     @property
     def info(self):
         return self.infoLabel.text()
@@ -53,10 +53,10 @@ class LoadingWidget(ApplicationLevelWidget):
         self.infoLabel.setVisible(True)
         self.infoLabel.setText(value)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
+#_______________________________________________________________________________
     def _activateWidgetDisplayImpl(self, **kwargs):
         super(LoadingWidget, self)._activateWidgetDisplayImpl(**kwargs)
         self.target     = ArgsUtils.get('target', None, kwargs)
@@ -65,7 +65,7 @@ class LoadingWidget(ApplicationLevelWidget):
         self.isShowing  = True
         self._animatedIcon.start()
 
-#___________________________________________________________________________________________________ _deactivateWidgetDisplayImpl
+#_______________________________________________________________________________
     def _deactivateWidgetDisplayImpl(self, **kwargs):
         super(LoadingWidget, self)._deactivateWidgetDisplayImpl(**kwargs)
         self.isShowing = False

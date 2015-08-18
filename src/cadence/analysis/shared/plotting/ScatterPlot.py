@@ -11,10 +11,10 @@ from cadence.analysis.shared.plotting.SinglePlotBase import SinglePlotBase
 class ScatterPlot(SinglePlotBase):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, **kwargs):
         """Creates a new instance of ScatterPlot."""
         super(ScatterPlot, self).__init__(**kwargs)
@@ -23,10 +23,10 @@ class ScatterPlot(SinglePlotBase):
         self.data       = kwargs.get('data', [])
         self.size       = kwargs.get('size', 6)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ shaveDataToXLimits
+#_______________________________________________________________________________
     def shaveDataToXLimits(self):
         """shaveData doc..."""
 
@@ -36,10 +36,10 @@ class ScatterPlot(SinglePlotBase):
         self.data = self._shaveDataToLimits(self.data, *self.xLimits)
         return self.data
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _plot
+#_______________________________________________________________________________
     def _plot(self):
         """_plot doc..."""
         pl = self.pl
@@ -53,12 +53,12 @@ class ScatterPlot(SinglePlotBase):
             pl.ylim(*self.yLimits)
         pl.grid(True)
 
-#___________________________________________________________________________________________________ _plotImpl
+#_______________________________________________________________________________
     def _plotImpl(self):
         """_plotImpl doc..."""
         self._plotScatterSeries(data=self.data, format=self.format, color=self.color)
 
-#___________________________________________________________________________________________________ _plotScatterSeries
+#_______________________________________________________________________________
     def _plotScatterSeries(self, data, **kwargs):
         """_plotScatterSeries doc..."""
         x = []
@@ -81,7 +81,7 @@ class ScatterPlot(SinglePlotBase):
         if kwargs.get('line'):
             self.pl.plot(x, y, '-', color=color)
 
-#___________________________________________________________________________________________________ _shaveDataToLimits
+#_______________________________________________________________________________
     @classmethod
     def _shaveDataToLimits(cls, data, xMin, xMax):
         """_shaveDataToLimits doc..."""
@@ -92,7 +92,7 @@ class ScatterPlot(SinglePlotBase):
                 out.append(value)
         return out
 
-#___________________________________________________________________________________________________ _dataItemToValue
+#_______________________________________________________________________________
     @classmethod
     def _dataItemToValue(cls, value):
         """_dataItemToValue doc..."""

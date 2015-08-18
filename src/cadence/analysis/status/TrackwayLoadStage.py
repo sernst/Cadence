@@ -14,10 +14,10 @@ from cadence.models.tracks.Tracks_Track import Tracks_Track
 class TrackwayLoadStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of TrackwayLoadStage."""
         super(TrackwayLoadStage, self).__init__(
@@ -37,10 +37,10 @@ class TrackwayLoadStage(AnalysisStage):
         self._soloTrackCsv      = None
         self._allTracks         = None
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         csv = CsvWriter()
         csv.path = self.getPath('Solo-Track-Report.csv')
@@ -137,7 +137,7 @@ class TrackwayLoadStage(AnalysisStage):
                 complete=t.isComplete)
         session.close()
 
-#___________________________________________________________________________________________________ _checkTrackProperties
+#_______________________________________________________________________________
     def _checkTrackProperties(self, track, tracks):
         trackDebugMessage = 'TRACK[#%s]: %s (%s)' % (track.i, track.fingerprint, track.uid)
         trackRow = dict(
@@ -178,7 +178,7 @@ class TrackwayLoadStage(AnalysisStage):
             self._badTrackCsv.addRow(trackRow)
             return
 
-#___________________________________________________________________________________________________ _analyzeSitemap
+#_______________________________________________________________________________
     # noinspection PyUnusedLocal
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
@@ -319,7 +319,7 @@ class TrackwayLoadStage(AnalysisStage):
             completion=completion,
             unprocessed=smUnprocessed)
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         count       = self.count
         ignoreCount = self.ignoredCount

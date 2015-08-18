@@ -15,12 +15,12 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 class RotationalUncertaintyStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     DRAWING_FOLDER_NAME = 'Rotational-Unc-Maps'
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of RotationalUncertaintyStage."""
         super(RotationalUncertaintyStage, self).__init__(
@@ -32,10 +32,10 @@ class RotationalUncertaintyStage(AnalysisStage):
         self._largeUncCsv = None
         self._tracks = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         self._uncs = []
         self._tracks = []
@@ -51,13 +51,13 @@ class RotationalUncertaintyStage(AnalysisStage):
             ('rotation', 'Rotation') )
         self._largeUncCsv = csv
 
-#___________________________________________________________________________________________________ _analyzeTrack
+#_______________________________________________________________________________
     def _analyzeTrack(self, track, series, trackway, sitemap):
         self._tracks.append(track)
         r = track.rotationAngle
         self._uncs.append(r.valueDegrees.uncertainty)
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         h = Histogram(
             data=self._uncs,
@@ -182,7 +182,7 @@ class RotationalUncertaintyStage(AnalysisStage):
         self._largeUncCsv.save()
         self._tracks = []
 
-#___________________________________________________________________________________________________ _drawLowUncertaintyMarker
+#_______________________________________________________________________________
     @classmethod
     def _drawLowUncertaintyMarker(cls, drawing, track):
         """ Indicate a low-uncertainty track at the specified location.  The radius is the average
@@ -196,7 +196,7 @@ class RotationalUncertaintyStage(AnalysisStage):
             fill='green',
             stroke='green')
 
-#___________________________________________________________________________________________________ _drawHighUncertaintyMarker
+#_______________________________________________________________________________
     @classmethod
     def _drawHighUncertaintyMarker(cls, drawing, track):
         """ Indicate a low-uncertainty track at the specified location.  Radius is average

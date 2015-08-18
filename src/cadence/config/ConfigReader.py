@@ -21,11 +21,11 @@ from pyaid.ArgsUtils import ArgsUtils
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.util.math3D.Vector3D import Vector3D
 
-#___________________________________________________________________________________________________ ConfigReader
+#_______________________________________________________________________________
 class ConfigReader(object):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     EXTENSION = '.cfg'
@@ -34,7 +34,7 @@ class ConfigReader(object):
     _JSON_PREFIX   = 'JSON:'
     _NUMERIC_REGEX = re.compile('^[-\.0-9]+$')
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, **kwargs):
         """Creates a new instance of ConfigReader."""
         self._configs     = ArgsUtils.get('configs', dict(), kwargs)
@@ -65,10 +65,10 @@ class ConfigReader(object):
         self._overrides = dict()
         self.setOverrides(ArgsUtils.get('overrides', None, kwargs))
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: configPath
+#_______________________________________________________________________________
     @property
     def configPath(self):
         return self._configPath
@@ -76,10 +76,10 @@ class ConfigReader(object):
     def configPath(self, value):
         self._configPath = value
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ set
+#_______________________________________________________________________________
     def set(self, propertyID, value):
         parts = propertyID.split('_')
 
@@ -89,7 +89,7 @@ class ConfigReader(object):
 
         return self._setValue(*parts, value=value)
 
-#___________________________________________________________________________________________________ setOverrides
+#_______________________________________________________________________________
     def setOverrides(self, overrides):
         if not overrides:
             return False
@@ -112,7 +112,7 @@ class ConfigReader(object):
 
         return True
 
-#___________________________________________________________________________________________________ get
+#_______________________________________________________________________________
     def get(self, propertyID, default =None):
         parts = propertyID.split('_')
 
@@ -122,7 +122,7 @@ class ConfigReader(object):
 
         return self._getValue(*parts, defaultValue=default)
 
-#___________________________________________________________________________________________________ getOverrides
+#_______________________________________________________________________________
     def getOverrides(self):
         out = dict()
         for n,v in DictUtils.iter(self._overrides):
@@ -130,19 +130,19 @@ class ConfigReader(object):
 
         return out
 
-#___________________________________________________________________________________________________ toDict
+#_______________________________________________________________________________
     def toDict(self):
         return self.__class__._toSerializedDict(self._configs)
 
-#___________________________________________________________________________________________________ fromDict
+#_______________________________________________________________________________
     @classmethod
     def fromDict(cls, src):
         return ConfigReader(configs=cls._fromSerializedDict(src))
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _fromSerializedDict
+#_______________________________________________________________________________
     @classmethod
     def _fromSerializedDict(cls, src):
         out = dict()
@@ -157,7 +157,7 @@ class ConfigReader(object):
 
         return out
 
-#___________________________________________________________________________________________________ _toSerializedDict
+#_______________________________________________________________________________
     @classmethod
     def _toSerializedDict(cls, src):
         out = dict()
@@ -170,7 +170,7 @@ class ConfigReader(object):
 
         return out
 
-#___________________________________________________________________________________________________ _configParserToDict
+#_______________________________________________________________________________
     def _configParserToDict(self, parser):
         out = dict()
         for section in parser.sections():
@@ -206,7 +206,7 @@ class ConfigReader(object):
 
         return out
 
-#___________________________________________________________________________________________________ _getValue
+#_______________________________________________________________________________
     def _getValue(self, configID, group, key, defaultValue =None):
         config = self._configs.get(configID)
         if not config:
@@ -223,7 +223,7 @@ class ConfigReader(object):
         except Exception:
             return defaultValue
 
-#___________________________________________________________________________________________________ _setValue
+#_______________________________________________________________________________
     def _setValue(self, configID, group, key, value):
         config = self._configs.get(configID)
         if not config:

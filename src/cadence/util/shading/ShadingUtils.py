@@ -8,14 +8,14 @@ from nimble import cmds
 
 from cadence.util.maya.MayaUtils import MayaUtils
 
-#___________________________________________________________________________________________________ ShadingUtils.
+#_______________________________________________________________________________
 class ShadingUtils(object):
     """A utility class for loading and manipulating shaders, to provide material properties."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ applyShader
+#_______________________________________________________________________________
     @classmethod
     def applyShader(cls, shaderConfig, transforms):
         shader, shaderEngine = cls.createShaderFromConfig(shaderConfig)
@@ -25,7 +25,7 @@ class ShadingUtils(object):
         cmds.sets(forceElement=shaderEngine)
         MayaUtils.setSelection(priorSelection)
 
-#___________________________________________________________________________________________________ createShaderFromConfig
+#_______________________________________________________________________________
     @classmethod
     def createShaderFromConfig(cls, shaderConfig):
         """create a shader and engine if not already available"""
@@ -62,12 +62,12 @@ class ShadingUtils(object):
 
         return shader, shaderEngine
 
-#___________________________________________________________________________________________________ shaderExistsInScene
+#_______________________________________________________________________________
     @classmethod
     def shaderExistsInScene(cls, shaderConfig):
        return cmds.objExists(shaderConfig['uid'])
 
-#___________________________________________________________________________________________________ getAllShaded
+#_______________________________________________________________________________
     @classmethod
     def getAllShaded(cls, shaderConfig):
         """ Returns the list of transform nodes that have a geometry nodeName shaded by the

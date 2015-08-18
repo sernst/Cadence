@@ -6,17 +6,17 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from collections import namedtuple
 
-#___________________________________________________________________________________________________ TRACK_PROP_NT
+#_______________________________________________________________________________
 # A custom data type for sitemap csv column enumerations that contain the following information:
 #   * index     | Index of the column within the source spreadsheet
 #   * name      | Key for the column. Used by the importer and stored by the database
 SITEMAP_PROP_NT = namedtuple('SITEMAP_PROP_NT', ['index', 'name'])
 
-#___________________________________________________________________________________________________ SitemapCsvColumnEnum
+#_______________________________________________________________________________
 class SitemapCsvColumnEnum(object):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     """ A unique decimal index that identifies the sitemap when referenced within the database. """

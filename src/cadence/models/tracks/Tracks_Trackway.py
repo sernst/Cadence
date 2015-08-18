@@ -15,10 +15,10 @@ from cadence.models.tracks.TracksDefault import TracksDefault
 # AS NEEDED: from cadence.analysis.TrackSeries import TrackSeries
 # AS NEEDED: from cadence.models.tracks.Tracks_Track import Tracks_Track
 
-#___________________________________________________________________________________________________ Tracks_Trackway
+#_______________________________________________________________________________
 class Tracks_Trackway(TracksDefault):
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     __tablename__ = 'trackways'
@@ -38,19 +38,19 @@ class Tracks_Trackway(TracksDefault):
     _firstLeftManus      = sqla.Column(sqla.Unicode,     default='')
     _firstRightManus     = sqla.Column(sqla.Unicode,     default='')
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, **kwargs):
         super(Tracks_Trackway, self).__init__(**kwargs)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: isEmpty
+#_______________________________________________________________________________
     @property
     def isEmpty(self):
         return len(self.firstTracksList) == 0
 
-#___________________________________________________________________________________________________ GS: firstTracksList
+#_______________________________________________________________________________
     @property
     def firstTracksList(self):
         out = []
@@ -64,12 +64,12 @@ class Tracks_Trackway(TracksDefault):
             out.append(self.firstRightManus)
         return out
 
-#___________________________________________________________________________________________________ GS: uid
+#_______________________________________________________________________________
     @property
     def uid(self):
         return Base36.to36(self.index)
 
-#___________________________________________________________________________________________________ GS: sitemap
+#_______________________________________________________________________________
     @property
     def sitemap(self):
         out = self.fetchTransient('sitemap')
@@ -80,10 +80,10 @@ class Tracks_Trackway(TracksDefault):
     def sitemap(self, value):
         self.putTransient('sitemap', value)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ getTrackwaySeriesBundle
+#_______________________________________________________________________________
     def getTrackwaySeriesBundle(self):
         """ Creates an ordered dictionary containing the track series for each series in the
             trackway, even if one of the series has no tracks. The keys of the dictionary match
@@ -97,7 +97,7 @@ class Tracks_Trackway(TracksDefault):
         bundle.load()
         return bundle
 
-#___________________________________________________________________________________________________ getSitemap
+#_______________________________________________________________________________
     def getSitemap(self):
         """getSitemap doc..."""
         if not self.siteMapIndex:
@@ -107,7 +107,7 @@ class Tracks_Trackway(TracksDefault):
         model = Tracks_SiteMap.MASTER
         return self.mySession.query(model).filter(model.index == self.siteMapIndex).first()
 
-#___________________________________________________________________________________________________ populateTrackwaysTable
+#_______________________________________________________________________________
     @classmethod
     def populateTrackwaysTable(cls, session =None, logger =None):
         """ Populate the trackways table by removing all existing rows and attempting to calculate
@@ -216,10 +216,10 @@ class Tracks_Trackway(TracksDefault):
             session.commit()
             session.close()
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _getAnalysisPair
+#_______________________________________________________________________________
     def _getAnalysisPair(self, session, createIfMissing):
         """_getAnalysisPair doc..."""
 
@@ -236,10 +236,10 @@ class Tracks_Trackway(TracksDefault):
 
         return result
 
-#===================================================================================================
+#===============================================================================
 #                                                                               I N T R I N S I C
 
-#___________________________________________________________________________________________________ __str__
+#_______________________________________________________________________________
     def __str__(self):
         """__str__ doc..."""
         return StringUtils.toStr2(

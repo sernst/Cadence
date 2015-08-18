@@ -6,17 +6,17 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from collections import namedtuple
 
-#___________________________________________________________________________________________________ TRACK_PROP_NT
+#_______________________________________________________________________________
 # A custom data type for track csv column enumerations that contain the following information:
 #   * index     | Index of the column within the source spreadsheet
 #   * name      | Key for the column. Used by the importer and stored by the database
 CSV_COLUMN_NT = namedtuple('TRACK_PROP_NT', ['index', 'name', 'snapshot' ])
 
-#___________________________________________________________________________________________________ TrackCsvColumnEnum
+#_______________________________________________________________________________
 class TrackCsvColumnEnum(object):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     """ Row index within the spreadsheet file where the entry is found. This value can change any

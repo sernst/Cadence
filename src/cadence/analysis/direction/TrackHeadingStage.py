@@ -22,7 +22,7 @@ from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
 class TrackHeadingStage(CurveOrderedAnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     TRACK_HEADING_DATA_NT = namedtuple('TRACK_HEADING_DATA_NT', [
@@ -31,7 +31,7 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
         'point', # Point representation of the data (curvePosition, angle.degrees)
         'headingAngle' ]) # The heading angle for the track
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of TrackHeadingStage."""
         super(TrackHeadingStage, self).__init__(
@@ -40,22 +40,22 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
             **kwargs)
         self._paths  = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: trackwaysData
+#_______________________________________________________________________________
     @property
     def trackwaysData(self):
         return self.cache.get('trackwaysData')
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         self.cache.set('trackwaysData', {})
 
-#___________________________________________________________________________________________________ _analyzeTrackSeries
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         entries = []
         data = {'entries':entries}
@@ -96,7 +96,7 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
             xLabel='Trackway Curve Position (m)')
         self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
 
-#___________________________________________________________________________________________________ _analyzeTrack
+#_______________________________________________________________________________
     def _analyzeTrack(self, track, series, trackway, sitemap):
 
         if len(series.tracks) < 2:
@@ -144,7 +144,7 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
                 yUnc=angle.uncertaintyDegrees),
             headingAngle=angle ))
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         """_postAnalyze doc..."""
 
@@ -163,7 +163,7 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
 
         self.mergePdfs(self._paths, 'Trackway-Headings.pdf')
 
-#___________________________________________________________________________________________________ _processCurveDeviations
+#_______________________________________________________________________________
     def _processCurveDeviations(self, key, label):
         """_processCurveDeviations doc..."""
 

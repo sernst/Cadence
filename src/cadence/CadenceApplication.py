@@ -6,33 +6,36 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from pyglass.app.PyGlassApplication import PyGlassApplication
 
-#___________________________________________________________________________________________________ CadenceApplication
+#_______________________________________________________________________________
+from cadence.CadenceEnvironment import CadenceEnvironment
+
+
 class CadenceApplication(PyGlassApplication):
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: debugRootResourcePath
+#_______________________________________________________________________________
     @property
     def debugRootResourcePath(self):
         return ['..', '..', 'resources']
 
-#___________________________________________________________________________________________________ GS: splashScreenUrl
+#_______________________________________________________________________________
     @property
     def splashScreenUrl(self):
         return 'splashscreen.png'
 
-#___________________________________________________________________________________________________ GS: appID
+#_______________________________________________________________________________
     @property
     def appID(self):
-        return 'Cadence'
+        return CadenceEnvironment.APP_ID
 
-#___________________________________________________________________________________________________ GS: appGroupID
+#_______________________________________________________________________________
     @property
     def appGroupID(self):
         return 'cadence'
 
-#___________________________________________________________________________________________________ GS: mainWindowClass
+#_______________________________________________________________________________
     @property
     def mainWindowClass(self):
         from cadence.CadenceMainWindow import CadenceMainWindow

@@ -10,6 +10,7 @@ from pyaid.string.StringUtils import StringUtils
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
+from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum
 from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
 from cadence.svg.CadenceDrawing import CadenceDrawing
 
@@ -19,12 +20,12 @@ class StrideLengthStage(AnalysisStage):
     """ The primary analysis stage for validating the stride lengths between the digitally entered
         data and the catalog data measured in the field. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     MAPS_FOLDER_NAME = 'Stride-Lengths'
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of StrideLengthStage."""
         super(StrideLengthStage, self).__init__(
@@ -36,10 +37,10 @@ class StrideLengthStage(AnalysisStage):
         self.noData  = 0
         self.entries = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         """_preDeviations doc..."""
         self.noData = 0
@@ -58,7 +59,7 @@ class StrideLengthStage(AnalysisStage):
             ('delta', 'Fractional Error (%)'))
         self._csv = csv
 
-#___________________________________________________________________________________________________ _analyzeSitemap
+#_______________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
 
         drawing = CadenceDrawing(
@@ -80,13 +81,16 @@ class StrideLengthStage(AnalysisStage):
             self.logger.write('[WARNING]: No sitemap saved for %s-%s' % (
                 sitemap.name, sitemap.level))
 
-#___________________________________________________________________________________________________ _analyzeTrackSeries
+#_______________________________________________________________________________
     def _analyzeTrackSeries(self, series, trackway, sitemap):
 
         for index in range(series.count):
-            track   = series.tracks[index]
-            data    = track.snapshotData
-            stride  = data.get(SnapshotDataEnum.STRIDE_LENGTH)
+            track = series.tracks[index]
+            stride = self.getStride(track)
+            aTrack = track.getAnalysisPair(self.analysisSession)
+            aTrack.strideLength = 0.0
+            aTrack.strideLengthUnc = 0.0
+
             if stride is None:
                 self.noData += 1
                 continue
@@ -148,7 +152,6 @@ class StrideLengthStage(AnalysisStage):
             styles = ('red', 10) if deviation > 2.0 else ('green', 5)
 
             if not isLastTrack:
-                aTrack = track.getAnalysisPair(self.analysisSession)
                 aTrack.strideLength = entered.raw
                 aTrack.strideLengthUnc = entered.rawUncertainty
 
@@ -163,7 +166,7 @@ class StrideLengthStage(AnalysisStage):
             self.entries.append(entry)
             track.cache.set('strideData', entry)
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         """_postAnalyze doc..."""
         self._paths = []
@@ -173,13 +176,13 @@ class StrideLengthStage(AnalysisStage):
 
         self.mergePdfs(self._paths)
 
-#___________________________________________________________________________________________________ _getFooterArgs
+#_______________________________________________________________________________
     def _getFooterArgs(self):
         return [
             'Processed %s tracks' % len(self.entries),
             '%s tracks with no stride data' % self.noData]
 
-#___________________________________________________________________________________________________ _process
+#_______________________________________________________________________________
     def _process(self):
         """_processDeviations doc..."""
         errors  = []
@@ -231,7 +234,7 @@ class StrideLengthStage(AnalysisStage):
             self.logger.write(
                 '[WARNING]: Large deviation count exceeds normal distribution expectations.')
 
-#___________________________________________________________________________________________________ _makePlot
+#_______________________________________________________________________________
     def _makePlot(self, label, data, color ='b', isLog =False, histRange =None):
         """_makePlot doc..."""
 
@@ -248,7 +251,15 @@ class StrideLengthStage(AnalysisStage):
         xlims = axis.get_xlim()
         pl.xlim((max(histRange[0], xlims[0]), min(histRange[1], xlims[1])))
 
-        path = self.getTempPath('%s.pdf' % StringUtils.getRandomString(16), isFile=True)
+        path = self.getTempPath(
+            '%s.pdf' % StringUtils.getRandomString(16), isFile=True)
         self.owner.saveFigure('makePlot', path)
         return path
 
+#_______________________________________________________________________________
+    @classmethod
+    def getStride(cls, track):
+        """hasPace doc..."""
+        if track.analysisFlags & AnalysisFlagsEnum.IGNORE_STRIDE:
+            return None
+        return track.snapshotData.get(SnapshotDataEnum.STRIDE_LENGTH)

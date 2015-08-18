@@ -18,11 +18,11 @@ from cadence.enums.UserConfigEnum import UserConfigEnum
 from cadence.mayan.trackway import InitializeTrackwayScene
 
 
-#___________________________________________________________________________________________________ CadenceNimbleStatusElement
+#_______________________________________________________________________________
 class CadenceNimbleStatusElement(PyGlassElement):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     _ACTIVE_LABEL = u'Nimble Connected'
@@ -37,7 +37,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
     _LABEL_STYLE  = "QLabel { font-size:16px; color:#C#; }"
     _INFO_STYLE   = "QLabel { font-size:11x; color:#C#; }"
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, enabled =False, **kwargs):
         """Creates a new instance of CadenceNimbleStatusElement."""
         super(CadenceNimbleStatusElement, self).__init__(parent, **kwargs)
@@ -83,17 +83,17 @@ class CadenceNimbleStatusElement(PyGlassElement):
         buttonLayout.addWidget(btn)
         self._iniBtn = btn
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ paintEvent
+#_______________________________________________________________________________
     def paintEvent(self, *args, **kwargs):
         """Doc..."""
         if self._colors:
             PyGlassGuiUtils.gradientPainter(
                 self, self.size(), self._colors.light.qColor, self._colors.dark.qColor)
 
-#___________________________________________________________________________________________________ refresh
+#_______________________________________________________________________________
     def refresh(self):
         if self._activeCheck or self._canceled:
             return
@@ -138,10 +138,10 @@ class CadenceNimbleStatusElement(PyGlassElement):
             QtCore.QTimer.singleShot(10000, self._handleTimer)
         self._activeCheck = False
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _handleTimer
+#_______________________________________________________________________________
     def _handleTimer(self):
         if self._canceled:
             return
@@ -152,14 +152,14 @@ class CadenceNimbleStatusElement(PyGlassElement):
         else:
             self.refresh()
 
-#___________________________________________________________________________________________________ _handleRetryClick
+#_______________________________________________________________________________
     def _handleRetryClick(self):
         self.mainWindow.appConfig.set(UserConfigEnum.NIMBLE_TEST_STATUS, True)
 
         self.disabled = False
         self.refresh()
 
-#___________________________________________________________________________________________________ _handleCancelClick
+#_______________________________________________________________________________
     def _handleCancelClick(self):
         if self.disabled:
             return
@@ -169,7 +169,7 @@ class CadenceNimbleStatusElement(PyGlassElement):
         self.disabled = True
         self.refresh()
 
-#___________________________________________________________________________________________________ _handleInitializeSceneClick
+#_______________________________________________________________________________
     def _handleInitializeSceneClick(self):
         conn   = nimble.getConnection()
         result = conn.runPythonModule(InitializeTrackwayScene)

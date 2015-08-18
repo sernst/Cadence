@@ -21,12 +21,12 @@ from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
 class SimpleGaugeStage(CurveOrderedAnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     _GAUGE_DATA_NT = namedtuple('GAUGE_DATA_NT', ['abs', 'width', 'pace', 'stride'])
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of SimpleGaugeStage."""
         super(SimpleGaugeStage, self).__init__(
@@ -40,10 +40,10 @@ class SimpleGaugeStage(CurveOrderedAnalysisStage):
         self._count = 0
         self._trackwayCsv = None
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         self._trackwayGauges = self._GAUGE_DATA_NT([], [], [], [])
         self._paths = []
@@ -66,13 +66,13 @@ class SimpleGaugeStage(CurveOrderedAnalysisStage):
                 ('width', 'Width Norm'),
                 ('widthUnc', 'Width Unc')])
 
-#___________________________________________________________________________________________________ _analyzeSitemap
+#_______________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
         self._createDrawing(sitemap, 'SIMPLE-GAUGE', 'Simple-Gauge')
         super(SimpleGaugeStage, self)._analyzeSitemap(sitemap)
         self._saveDrawing(sitemap)
 
-#___________________________________________________________________________________________________ _analyzeTrackway
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         bundle = self.owner.getSeriesBundle(trackway)
         if not bundle.isReady:
@@ -83,7 +83,7 @@ class SimpleGaugeStage(CurveOrderedAnalysisStage):
         if data['gauges'].abs:
             self._processGaugeData(bundle, trackway, data)
 
-#___________________________________________________________________________________________________ _collectGaugeData
+#_______________________________________________________________________________
     def _collectGaugeData(self, bundle, trackway, sitemap):
         """ Collects the trackway gauge data by generating projections for each series and then
             iterating over every track in the trackway and extracting the gauge information from
@@ -120,7 +120,7 @@ class SimpleGaugeStage(CurveOrderedAnalysisStage):
             series.cache.remove('referenceWidth')
         return trackway.cache.extract('data')
 
-#___________________________________________________________________________________________________ _processGaugeData
+#_______________________________________________________________________________
     def _processGaugeData(self, bundle, trackway, data):
         pesCount = bundle.leftPes.count + bundle.rightPes.count
         record = {'name':trackway.name, 'count':pesCount}
@@ -171,7 +171,7 @@ class SimpleGaugeStage(CurveOrderedAnalysisStage):
         analysisTrackway.simpleGauge = widthValue.raw
         analysisTrackway.simpleGaugeUnc = widthValue.rawUncertainty
 
-#___________________________________________________________________________________________________ _analyzeTrack
+#_______________________________________________________________________________
     def _analyzeTrack(self, track, series, trackway, sitemap):
         if series.count < 1 or not track.pes:
             return
@@ -248,7 +248,7 @@ class SimpleGaugeStage(CurveOrderedAnalysisStage):
 
         self._count += 1
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         self.logger.write('%s gauge calculated tracks' % self._count)
 
@@ -300,7 +300,7 @@ class SimpleGaugeStage(CurveOrderedAnalysisStage):
 
         self.mergePdfs(self._paths, 'Gauges.pdf')
 
-#___________________________________________________________________________________________________ _plotTrackwayGauges
+#_______________________________________________________________________________
     def _plotTrackwayGauges(self, points, color, unit, heading):
 
         histData = []

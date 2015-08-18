@@ -17,14 +17,14 @@ from cadence.views.home.CadenceMayaStatusElement import CadenceMayaStatusElement
 from cadence.views.home.CadenceNimbleStatusElement import CadenceNimbleStatusElement
 
 
-#___________________________________________________________________________________________________ CadenceHomeWidget
+#_______________________________________________________________________________
 class CadenceHomeWidget(PyGlassWidget):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, **kwargs):
         """Creates a new instance of CadenceHomeWidget."""
         super(CadenceHomeWidget, self).__init__(parent, widgetFile=False, **kwargs)
@@ -53,24 +53,24 @@ class CadenceHomeWidget(PyGlassWidget):
 
         self._populateTools()
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ refreshMayaStatus
+#_______________________________________________________________________________
     def refreshMayaStatus(self):
         self._mayaStatus.refresh()
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _activateWidgetDisplayImpl
+#_______________________________________________________________________________
     def _activateWidgetDisplayImpl(self, **kwargs):
         if self._firstView:
             self.refreshMayaStatus()
             self._nimbleStatus.refresh()
             self._firstView = False
 
-#___________________________________________________________________________________________________ _addTool
+#_______________________________________________________________________________
     def _addTool(self, definition):
         widget, layout = self._createElementWidget(self._toolBox, QtGui.QVBoxLayout, True)
         layout.setContentsMargins(0, 0, 0, 6)
@@ -109,7 +109,7 @@ class CadenceHomeWidget(PyGlassWidget):
         widget.userData    = data
         return widget
 
-#___________________________________________________________________________________________________ _populateTools
+#_______________________________________________________________________________
     def _populateTools(self):
         """Doc..."""
 
@@ -128,10 +128,10 @@ class CadenceHomeWidget(PyGlassWidget):
 
         self._toolBox.layout().addStretch()
 
-#===================================================================================================
+#===============================================================================
 #                                                                                 H A N D L E R S
 
-#___________________________________________________________________________________________________ _handleOpenTool
+#_______________________________________________________________________________
     def _handleOpenTool(self):
         # From the pushbutton get the element
         element = self.sender().parent().parent()

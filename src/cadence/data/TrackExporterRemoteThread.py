@@ -10,14 +10,14 @@ from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
 from cadence.data.TrackExporter import TrackExporter
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
-#___________________________________________________________________________________________________ TrackExporterRemoteThread
+#_______________________________________________________________________________
 class TrackExporterRemoteThread(RemoteExecutionThread):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, path, session =None, **kwargs):
         """Creates a new instance of TrackImporterRemoteThread."""
         self._pretty = ArgsUtils.extract('pretty', False, kwargs)
@@ -29,10 +29,10 @@ class TrackExporterRemoteThread(RemoteExecutionThread):
         self._path = path
         self._session = session
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _runImpl
+#_______________________________________________________________________________
     def _runImpl(self):
         model   = Tracks_Track.MASTER
         session = self._session if self._session else model.createSession()

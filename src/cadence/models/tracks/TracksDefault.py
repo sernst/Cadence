@@ -13,11 +13,11 @@ from pyglass.sqlalchemy.PyGlassModelsDefault import PyGlassModelsDefault
 from pyglass.sqlalchemy.ConcretePyGlassModelsMeta import ConcretePyGlassModelsMeta
 
 
-#___________________________________________________________________________________________________ TracksDefault
+#_______________________________________________________________________________
 @six.add_metaclass(ConcretePyGlassModelsMeta)
 class TracksDefault(PyGlassModelsDefault):
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     __abstract__  = True
@@ -30,15 +30,15 @@ class TracksDefault(PyGlassModelsDefault):
     _importFlags         = sqla.Column(sqla.Integer,     default=0)
     _analysisFlags       = sqla.Column(sqla.Integer,     default=0)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: analysisPair
+#_______________________________________________________________________________
     @property
     def analysisPair(self):
         return self.fetchTransient(self._ANALYSIS_PAIR_KEY)
 
-#___________________________________________________________________________________________________ GS: cache
+#_______________________________________________________________________________
     @property
     def cache(self):
         """ Caching object used during analysis to store transient data related to this track. """
@@ -48,17 +48,17 @@ class TracksDefault(PyGlassModelsDefault):
             self.putTransient('cache', out)
         return out
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ echoForVerification
+#_______________________________________________________________________________
     def echoForVerification(self):
         """echoAnalysis doc..."""
         return '    * %s%s [#%s] [%s] -> [%s] (%s, %s)' % (
             '' if self.isComplete else '[INCOMPLETE] ',
             self.fingerprint, self.index, self.uid, self.next, self.xValue.label, self.zValue.label)
 
-#___________________________________________________________________________________________________ getAnalysisPair
+#_______________________________________________________________________________
     def getAnalysisPair(self, analysisSession, createIfMissing =True):
         """getAnalysisPair doc..."""
 
@@ -73,10 +73,10 @@ class TracksDefault(PyGlassModelsDefault):
         self.putTransient(self._ANALYSIS_PAIR_KEY, result)
         return result
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _getAnalysisPair
+#_______________________________________________________________________________
     def _getAnalysisPair(self, session, createIfMissing):
         """_getAnalysisPair doc..."""
         return None

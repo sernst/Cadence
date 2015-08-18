@@ -21,7 +21,7 @@ session   = twModel.createSession()
 asmModel = Analysis_Sitemap.MASTER
 aSession = asmModel.createSession()
 
-#___________________________________________________________________________________________________
+#_______________________________________________________________________________
 # SITEMAP QUERY
 query = session.query(smModel)
 if SITEMAP_NAME:
@@ -30,7 +30,7 @@ if SITEMAP_LEVEL:
     query = query.filter(smModel.level == SITEMAP_LEVEL)
 siteMaps = query.all()
 
-#___________________________________________________________________________________________________
+#_______________________________________________________________________________
 # TRACK ITERATOR
 for siteMap in siteMaps:
     query = session.query(twModel).filter(twModel.siteMapIndex == siteMap.index)
@@ -63,7 +63,7 @@ for siteMap in siteMaps:
                     NumericUtils.roundToSigFigs(aTrack.curvePosition, 4)))
                 print('        snapshot: %s\n' % DictUtils.prettyPrint(track.snapshotData))
 
-#___________________________________________________________________________________________________
+#_______________________________________________________________________________
 # CLEANUP
 session.close()
 aSession.close()

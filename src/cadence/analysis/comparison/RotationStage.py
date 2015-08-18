@@ -22,12 +22,12 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 class RotationStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     DRAWING_FOLDER_NAME = 'Rotation-Comparison-Maps'
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of RotationStage."""
         super(RotationStage, self).__init__(
@@ -42,18 +42,18 @@ class RotationStage(AnalysisStage):
 
         self._currentDrawing = None
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: trackDeviations
+#_______________________________________________________________________________
     @property
     def deviations(self):
         return self.cache.get('trackDeviations')
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         """_preAnalyze doc..."""
         self.cache.set('trackDeviations', {})
@@ -75,7 +75,7 @@ class RotationStage(AnalysisStage):
             ('axisPairing', 'Axis Pairing'))
         self._csv = csv
 
-#___________________________________________________________________________________________________ _analyzeSitemap
+#_______________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
 
         # start a drawing for the SVG and PDF files
@@ -96,7 +96,7 @@ class RotationStage(AnalysisStage):
         if self._currentDrawing:
             self._currentDrawing.save()
 
-#___________________________________________________________________________________________________ _analyzeTrackSeries
+#_______________________________________________________________________________
     def _analyzeTrackSeries(self, series, trackway, sitemap):
 
         # At least two tracks are required to make the comparison
@@ -233,7 +233,7 @@ class RotationStage(AnalysisStage):
                 fill_opacity='0.5')
 
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         """_postAnalyze doc..."""
         self._csv.save()
@@ -291,7 +291,7 @@ class RotationStage(AnalysisStage):
         self.mergePdfs(self._paths)
         self._paths = []
 
-#___________________________________________________________________________________________________ _makePlot
+#_______________________________________________________________________________
     def _makePlot(self, label, data, isLog =False, histRange =None, color ='r', binCount = 72):
         """_makePlot doc..."""
 

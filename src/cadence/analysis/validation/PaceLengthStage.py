@@ -14,6 +14,7 @@ from pyaid.string.StringUtils import StringUtils
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
+from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum
 from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
 from cadence.svg.CadenceDrawing import CadenceDrawing
 
@@ -23,12 +24,12 @@ class PaceLengthStage(AnalysisStage):
     """ The primary analysis stage for validating the stride lengths between the digitally entered
         data and the catalog data measured in the field. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     MAPS_FOLDER_NAME = 'Pace-Lengths'
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of PaceLengthStage."""
         super(PaceLengthStage, self).__init__(
@@ -45,10 +46,10 @@ class PaceLengthStage(AnalysisStage):
         self._csv       = None
         self._errorCsv  = None
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preDeviations
+#_______________________________________________________________________________
     def _preAnalyze(self):
         """_preDeviations doc..."""
         self.noData = 0
@@ -80,7 +81,7 @@ class PaceLengthStage(AnalysisStage):
             ('measured', 'Measured (m)') )
         self._errorCsv = csv
 
-#___________________________________________________________________________________________________ _analyzeSitemap
+#_______________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
 
@@ -97,7 +98,7 @@ class PaceLengthStage(AnalysisStage):
 
         super(PaceLengthStage, self)._analyzeSitemap(sitemap)
 
-#___________________________________________________________________________________________________ _analyzeTrackSeries
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         bundle = self.owner.getSeriesBundle(trackway)
 
@@ -119,13 +120,14 @@ class PaceLengthStage(AnalysisStage):
                 continue
 
             for t in l.tracks + r.tracks:
-                # Check all tracks in skipped series for pace measurements and log any tracks
-                # with such measurements as errors
-                if t.snapshotData.get(SnapshotDataEnum.PACE) is not None:
+                # Check all tracks in skipped series for pace measurements and
+                # log any tracks with such measurements as errors
+                if self.hasPace(t):
                     self._logUnresolvableTrack(
-                        t, sitemap, 'Pace field measurement exists invalid series')
+                        t, sitemap,
+                        'Pace field measurement exists invalid series')
 
-#___________________________________________________________________________________________________ _logUnresolvableTrack
+#_______________________________________________________________________________
     def _logUnresolvableTrack(self, track, sitemap, message):
         """_logUnresolvableTrack doc..."""
         measured = NumericUtils.toValueUncertainty(
@@ -146,19 +148,28 @@ class PaceLengthStage(AnalysisStage):
             track.positionValue.toMayaTuple(), 10,
             stroke='none', fill='red', fill_opacity=0.5)
 
-#___________________________________________________________________________________________________ _analyzeSeriesPair
+#_______________________________________________________________________________
     def _analyzeSeriesPair(self, sitemap, series, pairSeries):
         """_analyzeSeriesPair doc..."""
 
         for index in ListUtils.range(series.count):
-            track       = series.tracks[index]
-            data        = track.snapshotData
-            measured    = data.get(SnapshotDataEnum.PACE)
-            if measured is None:
+            track = series.tracks[index]
+            data = track.snapshotData
+
+            aTrack = track.getAnalysisPair(self.analysisSession)
+
+            if not self.hasPace(track):
+                # Skip tracks that either have no measurement or have been
+                # flagged not to have a pace (because the value from the
+                # spreadsheet is incorrect)
+                aTrack.paceLength = 0.0
+                aTrack.paceLengthUnc = 0.0
                 self.noData += 1
                 continue
 
-            measured = NumericUtils.toValueUncertainty(measured, 0.06)
+            measured = NumericUtils.toValueUncertainty(
+                value=data.get(SnapshotDataEnum.PACE),
+                uncertainty=0.06)
 
             pairTrack = self._getPairedTrack(track, series, pairSeries)
             if pairTrack is None:
@@ -203,7 +214,7 @@ class PaceLengthStage(AnalysisStage):
             # self._drawPaceLine(sitemap, paceLine, )
             track.cache.set('paceData', entry)
 
-#___________________________________________________________________________________________________ _drawSeries
+#_______________________________________________________________________________
     @classmethod
     def _drawSeries(cls, sitemap, series):
         """_drawSeries doc..."""
@@ -226,18 +237,26 @@ class PaceLengthStage(AnalysisStage):
                 nextTrack.positionValue.toMayaTuple(),
                 stroke=color, stroke_width=1, stroke_opacity='0.1')
 
-            hasPace = bool(track.snapshotData.get(SnapshotDataEnum.PACE) is not None)
             drawing.circle(
                 track.positionValue.toMayaTuple(), 5,
-                stroke='none', fill=color, fill_opacity='0.75' if hasPace else '0.1')
+                stroke='none', fill=color,
+                fill_opacity='0.75' if cls.hasPace(track) else '0.1')
 
         track = series.tracks[-1]
-        hasPace = bool(track.snapshotData.get(SnapshotDataEnum.PACE) is not None)
         drawing.circle(
             track.positionValue.toMayaTuple(), 5,
-            stroke='none', fill=color, fill_opacity='0.75' if hasPace else '0.1')
+            stroke='none', fill=color,
+            fill_opacity='0.75' if cls.hasPace(track) else '0.1')
 
-#___________________________________________________________________________________________________ _drawPaceLine
+#_______________________________________________________________________________
+    @classmethod
+    def hasPace(cls, track):
+        """hasPace doc..."""
+        if track.analysisFlags & AnalysisFlagsEnum.IGNORE_PACE:
+            return False
+        return bool(track.snapshotData.get(SnapshotDataEnum.PACE) is not None)
+
+#_______________________________________________________________________________
     @classmethod
     def _drawPaceLine(cls, sitemap, line, color):
         """_drawPaceLine doc..."""
@@ -254,28 +273,34 @@ class PaceLengthStage(AnalysisStage):
         drawing.circle(
             line.start.toMayaTuple(), 3, stroke='none', fill=color, fill_opacity='0.25')
 
-#___________________________________________________________________________________________________ _getPairedTrack
+#_______________________________________________________________________________
     def _getPairedTrack(self, track, trackSeries, pairSeries):
         """_getPairedTrack doc..."""
 
         analysisTrack = track.getAnalysisPair(self.analysisSession)
 
         index = trackSeries.tracks.index(track)
-        nextTrack = trackSeries.tracks[index + 1] if index < (trackSeries.count - 1) else None
-        nextAnalysisTrack = nextTrack.getAnalysisPair(self.analysisSession) if nextTrack else None
+        nextTrack = trackSeries.tracks[index + 1] \
+            if index < (trackSeries.count - 1) \
+            else None
+        nextAnalysisTrack = nextTrack.getAnalysisPair(self.analysisSession) \
+            if nextTrack \
+            else None
 
         for pt in pairSeries.tracks:
-            # Iterate through all the tracks in the pair series and find the one that comes
-            # immediately after the target track, and before the next track in the target series if
-            # such a track exists
+            # Iterate through all the tracks in the pair series and find the
+            # one that comes immediately after the target track, and before
+            # the next track in the target series if such a track exists
 
             apt = pt.getAnalysisPair(self.analysisSession)
             if apt.curvePosition < analysisTrack.curvePosition:
-                # If the pair track appears before the target track, skip to the next track
+                # If the pair track appears before the target track, skip to
+                # the next track
                 continue
 
             if nextAnalysisTrack and apt.curvePosition > nextAnalysisTrack.curvePosition:
-                # If the pair track is past the next track position there is no pair track for this
+                # If the pair track is past the next track position there is
+                # no pair track for this
                 # pace segment
                 return None
 
@@ -283,23 +308,24 @@ class PaceLengthStage(AnalysisStage):
 
         return None
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         """_postAnalyze doc..."""
         self._paths = []
 
-        self.logger.write('%s\nFRACTIONAL ERROR (Measured vs Entered)' % ('='*80))
+        self.logger.write(
+            '%s\nFRACTIONAL ERROR (Measured vs Entered)' % ('='*80))
         self._process()
 
         self.mergePdfs(self._paths)
 
-#___________________________________________________________________________________________________ _getFooterArgs
+#_______________________________________________________________________________
     def _getFooterArgs(self):
         return [
             'Processed %s tracks' % len(self.entries),
             '%s tracks with no pace data' % self.noData]
 
-#___________________________________________________________________________________________________ _process
+#_______________________________________________________________________________
     def _process(self):
         """_processDeviations doc..."""
         errors  = []
@@ -375,7 +401,7 @@ class PaceLengthStage(AnalysisStage):
             self.logger.write(
                 '[WARNING]: Large deviation count exceeds normal distribution expectations.')
 
-#___________________________________________________________________________________________________ _makePlot
+#_______________________________________________________________________________
     def _makePlot(self, label, data, color ='b', isLog =False, histRange =None):
         """_makePlot doc..."""
 

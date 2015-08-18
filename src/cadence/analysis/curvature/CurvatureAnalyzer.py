@@ -13,14 +13,14 @@ from cadence.analysis.curvature.CurveProjectionLinkStage import CurveProjectionL
 from cadence.analysis.curvature.CurveProjectionStage import CurveProjectionStage
 from cadence.analysis.curvature.CurveSparsenessStage import CurveSparsenessStage
 
-#___________________________________________________________________________________________________ CurvatureAnalyzer
+#_______________________________________________________________________________
 class CurvatureAnalyzer(AnalyzerBase):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, **kwargs):
         """Creates a new instance of CurvatureAnalyzer."""
         super(CurvatureAnalyzer, self).__init__(**kwargs)
@@ -32,6 +32,6 @@ class CurvatureAnalyzer(AnalyzerBase):
 ####################################################################################################
 ####################################################################################################
 
-#___________________________________________________________________________________________________ RUN MAIN
+#_______________________________________________________________________________
 if __name__ == '__main__':
     CurvatureAnalyzer().run()

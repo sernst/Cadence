@@ -8,7 +8,7 @@ from collections import namedtuple
 
 from pyaid.reflection.Reflection import Reflection
 
-#___________________________________________________________________________________________________ TRACK_PROP_NT
+#_______________________________________________________________________________
 # A custom data type for track property enumerations that contain the following information:
 #   * name      | Key for the track property in both the database and in Maya
 #   * type      | The type of attribute for the track property within Maya
@@ -17,13 +17,13 @@ from pyaid.reflection.Reflection import Reflection
 #                 identified tracks within the database
 TRACK_PROP_NT = namedtuple('TRACK_PROP_NT', ['name', 'type', 'maya', 'unique' ])
 
-#___________________________________________________________________________________________________ TrackPropEnum
+#_______________________________________________________________________________
 class TrackPropEnum(object):
     """ A class for all track properties encoded either as additional attributes of the Maya
         transform nodeName which represents a track (of type string or float) or computed from other
         'intrinsic' transform attributes such as scale, rotation, or translation. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     # the depth of a given track (in cm) as originally measured
@@ -138,11 +138,11 @@ class TrackPropEnum(object):
     # loaded during analysis or visualization.
     HIDDEN = TRACK_PROP_NT('hidden', 'bool', None, False)
 
-#___________________________________________________________________________________________________ TrackPropEnumOps
+#_______________________________________________________________________________
 class TrackPropEnumOps(object):
     """ Support class for helper operations related to the TrackPropEnum class. """
 
-#___________________________________________________________________________________________________ _getTrackPropEnum
+#_______________________________________________________________________________
     @classmethod
     def getTrackPropEnumByName(cls, name):
         """ Retrieves the TrackPropEnum enumerated value based on the name attribute. """

@@ -9,7 +9,7 @@ from cadence.plot.gait.GaitPlot import GaitPlot
 
 gp = GaitPlot(3, 8, 8)
 
-#___________________________________________________________________________________________________ loadData test
+#_______________________________________________________________________________
 #if gp.loadGait("GaitGenerator/PH-50_F-50_H-50.cadence"):
 if gp.loadGait("GaitGenerator/PH-0_F-50_H-50.cadence"):
 #if gp.loadGait("GaitGenerator/PH-20_F-70_H-70.cadence"):
@@ -24,7 +24,7 @@ else:
 gp.setColorMap('gray') # choose a monochrome color siteMap
 
 gp.setPlotInterval(0.0, 24.0)
-#___________________________________________________________________________________________________ plotGait test
+#_______________________________________________________________________________
 
 # plotGait creates a gait plot without colorizing for support; use plotGait2 to show colors
 if gp.plotGait2(1):
@@ -33,7 +33,7 @@ else:
     print 'FAILED: GaitPlot.plotGait()'
     sys.exit(1)
 
-#___________________________________________________________________________________________________ plotCurve test
+#_______________________________________________________________________________
 # this data series has x values 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, and 0.9, and is piecewise-linearly plotted
 # between these data values:
 

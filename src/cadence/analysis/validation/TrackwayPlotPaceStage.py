@@ -4,22 +4,19 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import re
-
 from pyaid.color.ColorValue import ColorValue
 
 from cadence.analysis.AnalysisStage import AnalysisStage
-
 
 
 #*************************************************************************************************** TrackwayPlotPaceStage
 class TrackwayPlotPaceStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of TrackwayPlotPaceStage."""
         super(TrackwayPlotPaceStage, self).__init__(
@@ -28,10 +25,10 @@ class TrackwayPlotPaceStage(AnalysisStage):
             **kwargs)
         self._paths = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _analyzeTrackway
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         pl = self.plot
 
@@ -47,7 +44,7 @@ class TrackwayPlotPaceStage(AnalysisStage):
             self._paths.append(self.owner.saveFigure(trackway.uid))
         self.owner.closeFigure(trackway.uid)
 
-#___________________________________________________________________________________________________ _analyzeTrackSeries
+#_______________________________________________________________________________
     def _analyzeTrackSeries(self, series, trackway, sitemap):
         """_analyzeTrackSeries doc..."""
 
@@ -88,6 +85,6 @@ class TrackwayPlotPaceStage(AnalysisStage):
 
         pl.errorbar(x, y, yerr=error, fmt='o', color=color.web)
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         self.mergePdfs(self._paths)

@@ -13,10 +13,10 @@ from cadence.analysis.shared.CsvWriter import CsvWriter
 class TrackwayStatsStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of TrackwayStatsStage."""
         super(TrackwayStatsStage, self).__init__(
@@ -27,10 +27,10 @@ class TrackwayStatsStage(AnalysisStage):
         self._trackways = []
         self._csv = None
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         self._trackways = []
 
@@ -55,7 +55,7 @@ class TrackwayStatsStage(AnalysisStage):
             ('manusWidthUnc', 'Manus Width Uncertainty') )
         self._csv = csv
 
-#___________________________________________________________________________________________________ _analyzeTrackway
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         aTrackway = trackway.getAnalysisPair(self.analysisSession)
         bundle = self.owner.getSeriesBundle(trackway)
@@ -93,7 +93,7 @@ class TrackwayStatsStage(AnalysisStage):
             manusWidth=manusWidth.value,
             manusWidthUnc=manusWidth.uncertainty)
 
-#___________________________________________________________________________________________________ _analyzeTrack
+#_______________________________________________________________________________
     def _analyzeTrack(self, track, series, trackway, sitemap):
         data = trackway.cache.get('data')
         aTrack = track.getAnalysisPair(self.analysisSession)
@@ -110,7 +110,7 @@ class TrackwayStatsStage(AnalysisStage):
             data['paces'].append(aTrack.paceLengthValue)
 
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         self.logger.write('TRACKWAY COUNT: %s' % self._csv.count)
         self._csv.save()

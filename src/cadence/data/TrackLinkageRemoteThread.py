@@ -9,24 +9,24 @@ from pyglass.threading.RemoteExecutionThread import RemoteExecutionThread
 from cadence.data.TrackLinkConnector import TrackLinkConnector
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 
-#___________________________________________________________________________________________________ TrackLinkageRemoteThread
+#_______________________________________________________________________________
 class TrackLinkageRemoteThread(RemoteExecutionThread):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, session =None, tracks =None, **kwargs):
         """Creates a new instance of TrackLinkageRemoteThread."""
         RemoteExecutionThread.__init__(self, parent, **kwargs)
         self._session = session
         self._tracks  = tracks
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _runImpl
+#_______________________________________________________________________________
     def _runImpl(self):
         model   = Tracks_Track.MASTER
         session = self._session if self._session else model.createSession()

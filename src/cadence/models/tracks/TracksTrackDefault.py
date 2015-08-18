@@ -18,16 +18,18 @@ from pyaid.string.StringUtils import StringUtils
 
 from cadence.CadenceEnvironment import CadenceEnvironment
 from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum
 from cadence.enums.ImportFlagsEnum import ImportFlagsEnum
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
+from cadence.enums.SourceFlagsEnum import SourceFlagsEnumOps
 from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.TracksDefault import TracksDefault
 
-#___________________________________________________________________________________________________ TracksTrackDefault
+#_______________________________________________________________________________
 # noinspection PyAttributeOutsideInit
 class TracksTrackDefault(TracksDefault):
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     __abstract__  = True
@@ -85,25 +87,25 @@ class TracksTrackDefault(TracksDefault):
     # Entry is dead for deletion during cleanup/export
     _dead                = sqla.Column(sqla.Boolean,     default=False)
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, **kwargs):
         super(TracksTrackDefault, self).__init__(**kwargs)
         self.uid = CadenceEnvironment.createUniqueId('track')
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: widthValue
+#_______________________________________________________________________________
     @property
     def widthValue(self):
         return NumericUtils.toValueUncertainty(self.width, self.widthUncertainty)
 
-#___________________________________________________________________________________________________ GS: lengthValue
+#_______________________________________________________________________________
     @property
     def lengthValue(self):
         return NumericUtils.toValueUncertainty(self.length, self.lengthUncertainty)
 
-#___________________________________________________________________________________________________ GS: trackSeries
+#_______________________________________________________________________________
     @property
     def trackSeries(self):
         """ Used in analysis, this transient data stores a reference to the track series object
@@ -113,7 +115,7 @@ class TracksTrackDefault(TracksDefault):
     def trackSeries(self, value):
         self.putTransient('trackSeries', value)
 
-#___________________________________________________________________________________________________ GS: positionValue
+#_______________________________________________________________________________
     @property
     def positionValue(self):
         """ Returns a PositionValue2D instance for the position of this track using the 2D RHS
@@ -123,7 +125,7 @@ class TracksTrackDefault(TracksDefault):
         p2d.yFromUncertaintyValue(self.xValue)
         return p2d
 
-#___________________________________________________________________________________________________ GS: xValue
+#_______________________________________________________________________________
     @property
     def xValue(self):
         """ Returns the x value as an uncertainty named tuple in units of meters """
@@ -136,7 +138,7 @@ class TracksTrackDefault(TracksDefault):
 
         return NumericUtils.toValueUncertainty(0.01*float(self.x), xUnc)
 
-#___________________________________________________________________________________________________ GS: zValue
+#_______________________________________________________________________________
     @property
     def zValue(self):
         """ Returns the z value as an uncertainty named tuple in units of meters """
@@ -149,24 +151,24 @@ class TracksTrackDefault(TracksDefault):
 
         return NumericUtils.toValueUncertainty(0.01*float(self.z), zUnc)
 
-#___________________________________________________________________________________________________ GS: rotationAngle
+#_______________________________________________________________________________
     @property
     def rotationAngle(self):
         """ Returns a Angle instance containing the rotation value and uncertainty information
             for the track based off the Cadence data values (not the measured ones). """
         return Angle(degrees=self.rotation, uncertaintyDegrees=self.rotationUncertainty)
 
-#___________________________________________________________________________________________________ GS: isComplete
+#_______________________________________________________________________________
     @property
     def isComplete(self):
-        return SourceFlagsEnum.get(self.sourceFlags, SourceFlagsEnum.COMPLETED)
+        return SourceFlagsEnumOps.get(self.sourceFlags, SourceFlagsEnum.COMPLETED)
 
-#___________________________________________________________________________________________________ GS: id
+#_______________________________________________________________________________
     @property
     def id(self):
         return Base64.to64(self.i)
 
-#___________________________________________________________________________________________________ GS: name
+#_______________________________________________________________________________
     @property
     def name(self):
         """ Human-readable display name for the track, based of its properties. """
@@ -184,7 +186,7 @@ class TracksTrackDefault(TracksDefault):
             self.pes  = value[1].upper() == 'P'
         self.number = value[2:].upper()
 
-#___________________________________________________________________________________________________ GS: shortFingerprint
+#_______________________________________________________________________________
     @property
     def shortFingerprint(self):
         return ''.join([
@@ -192,7 +194,7 @@ class TracksTrackDefault(TracksDefault):
             'P' if getattr(self, TrackPropEnum.PES.name, False) else 'M',
             StringUtils.toText(getattr(self, TrackPropEnum.NUMBER.name, '0')).replace('-', 'N') ])
 
-#___________________________________________________________________________________________________ GS: fingerprint
+#_______________________________________________________________________________
     @property
     def fingerprint(self):
         """ String created from the uniquely identifying track properties. """
@@ -207,7 +209,7 @@ class TracksTrackDefault(TracksDefault):
             'P' if getattr(self, TrackPropEnum.PES.name, False) else 'M',
             StringUtils.toText(getattr(self, TrackPropEnum.NUMBER.name, '0')).replace('-', 'N') ])
 
-#___________________________________________________________________________________________________ GS: trackSeriesFingerprint
+#_______________________________________________________________________________
     @property
     def trackSeriesFingerprint(self):
         return '-'.join([
@@ -215,7 +217,7 @@ class TracksTrackDefault(TracksDefault):
             'L' if getattr(self, TrackPropEnum.LEFT.name, False) else 'R',
             'P' if getattr(self, TrackPropEnum.PES.name, False) else 'M' ])
 
-#___________________________________________________________________________________________________ GS: trackwayFingerprint
+#_______________________________________________________________________________
     @property
     def trackwayFingerprint(self):
         out = '-'.join([
@@ -231,7 +233,7 @@ class TracksTrackDefault(TracksDefault):
             out = 'TCH-1000-2006-12-S-13'
         return out
 
-#___________________________________________________________________________________________________ GS: sitemapLabel
+#_______________________________________________________________________________
     @property
     def sitemapDisplayLabel(self):
         """ Returns the display label used for annotating tracks on sitemap drawings
@@ -241,13 +243,14 @@ class TracksTrackDefault(TracksDefault):
             getattr(self, TrackPropEnum.TRACKWAY_NUMBER.name, '0'),
             self.name)
 
-#___________________________________________________________________________________________________ GS: snapshotData
+#_______________________________________________________________________________
     @property
     def snapshotData(self):
         try:
-            return JSON.fromString(self.snapshot)
+            out = JSON.fromString(self.snapshot)
+            return out if out is not None else dict()
         except Exception:
-            return None
+            return dict()
     @snapshotData.setter
     def snapshotData(self, value):
         if not value:
@@ -255,10 +258,20 @@ class TracksTrackDefault(TracksDefault):
         else:
             self.snapshot = JSON.asString(value)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ echoImportFlags
+#_______________________________________________________________________________
+    def echoAnalysisFlags(self, separator =' | '):
+        """echoAnalysisFlags doc..."""
+        out = []
+        enums = Reflection.getReflectionDict(AnalysisFlagsEnum)
+        for key, value in DictUtils.iter(enums):
+            if value & self.analysisFlags:
+                out.append(key)
+        return ('[%s]' % separator.join(out)) if out else '--'
+
+#_______________________________________________________________________________
     def echoImportFlags(self, separator =' | '):
         """echoImportFlags doc..."""
         out = []
@@ -267,7 +280,7 @@ class TracksTrackDefault(TracksDefault):
                 out.append(key)
         return ('[%s]' % separator.join(out)) if out else '--'
 
-#___________________________________________________________________________________________________ getPreviousTrack
+#_______________________________________________________________________________
     def getPreviousTrack(self, session =None, getAll =False):
         """ Returns the previous track in the series if such a track exists.  It is found by
             querying to find that other model instance whose 'next' matches this uid. If getAll
@@ -285,7 +298,7 @@ class TracksTrackDefault(TracksDefault):
         except Exception:
             return None
 
-#___________________________________________________________________________________________________ getNextTrack
+#_______________________________________________________________________________
     def getNextTrack(self, session =None):
         """ Returns the next track in the series if such a track exists.  Unlike getPreviousTrack,
             the next track's uid is explicitly stored in the attribute next, waiting to be used.  A
@@ -297,7 +310,7 @@ class TracksTrackDefault(TracksDefault):
             return None
         return self.getByUid(self.next, session=session)
 
-#___________________________________________________________________________________________________ fromDict
+#_______________________________________________________________________________
     def fromDict(self, data):
         """ Populates the track with the values specified by data dictionary argument. The keys of
             the data object should be valid names of the enumerated values in the TrackPropEnum
@@ -310,7 +323,7 @@ class TracksTrackDefault(TracksDefault):
             if enum.name in data:
                 setattr(self, enum.name, data[enum.name])
 
-#___________________________________________________________________________________________________ toDict
+#_______________________________________________________________________________
     def toDict(self, uniqueOnly =False):
         """ Returns a dictionary containing the keys and current values of the track object
             with no dependency on a database session object. """
@@ -322,7 +335,7 @@ class TracksTrackDefault(TracksDefault):
             out[enum.name] = getattr(self, enum.name)
         return self._createDict(**out)
 
-#___________________________________________________________________________________________________ toMayaNodeDict
+#_______________________________________________________________________________
     def toMayaNodeDict(self):
         """ Creates a dictionary representation of those properties required for a Maya node. """
         out = dict()
@@ -347,7 +360,7 @@ class TracksTrackDefault(TracksDefault):
             out[TrackPropEnum.LENGTH.maya] = 0.1 if w == 0.0 else w
         return out
 
-#___________________________________________________________________________________________________ findExistingTracks
+#_______________________________________________________________________________
     def findExistingTracks(self, session =None):
         """ Searches the database for an existing track that matches the current values of the UID
             in this track instance and returns a result list of any duplicates found. """
@@ -360,7 +373,7 @@ class TracksTrackDefault(TracksDefault):
                 query = query.filter(getattr(model, enum.name) == getattr(self, enum.name))
         return query.all()
 
-#___________________________________________________________________________________________________ equivalentProps
+#_______________________________________________________________________________
     def equivalentProps(self, **kwargs):
         """ Iterates through the kwargs and checks whether or not the values for each kwarg
             property to see if it matches the value for this track instance. """
@@ -369,7 +382,7 @@ class TracksTrackDefault(TracksDefault):
                 return False
         return True
 
-#___________________________________________________________________________________________________ getByUid
+#_______________________________________________________________________________
     @classmethod
     def getByUid(cls, uid, session):
         """ Returns the Tracks_Track model instance for the given UID (universally unique id). """
@@ -378,7 +391,7 @@ class TracksTrackDefault(TracksDefault):
         except Exception:
             return None
 
-#___________________________________________________________________________________________________ getByProperties
+#_______________________________________________________________________________
     @classmethod
     def getByProperties(cls, session, **kwargs):
         """ Loads based on the current values set for the track. This form of loading is useful
@@ -388,7 +401,7 @@ class TracksTrackDefault(TracksDefault):
             query = query.filter(getattr(cls, key) == value)
         return query.all()
 
-#___________________________________________________________________________________________________ getByName
+#_______________________________________________________________________________
     @classmethod
     def getByName(cls, name, session, **kwargs):
         """ Returns the Tracks_Track model instance for the specified name (e.g., 'LM3').  Note
@@ -412,18 +425,18 @@ class TracksTrackDefault(TracksDefault):
         results = cls.getByProperties(session, **kwargs)
         return results
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _createDict
+#_______________________________________________________________________________
     def _createDict(self, **kwargs):
         kwargs['id'] = self.id
         return kwargs
 
-#===================================================================================================
+#===============================================================================
 #                                                                               I N T R I N S I C
 
-#___________________________________________________________________________________________________ __unicode__
+#_______________________________________________________________________________
     def __str__(self):
         return StringUtils.toStr2('<%s[%s] uid[%s] %s>' % (
             self.__class__.__name__,

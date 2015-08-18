@@ -16,30 +16,30 @@ from cadence.analysis.shared.PositionValue2D import PositionValue2D
 class LineSegment2D(object):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, start =None, end =None):
         """Creates a new instance of LineSegment2D."""
         self.start = start if start else PositionValue2D()
         self.end   = end if end else PositionValue2D()
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: isValid
+#_______________________________________________________________________________
     @property
     def isValid(self):
         return bool(abs(self.end.x - self.start.x) + abs(self.end.y - self.start.y))
 
-#___________________________________________________________________________________________________ GS: length
+#_______________________________________________________________________________
     @property
     def length(self):
         """ The length of the line segment. """
         return self.start.distanceTo(self.end)
 
-#___________________________________________________________________________________________________ GS: angle
+#_______________________________________________________________________________
     @property
     def angle(self):
         v = self.end.clone()
@@ -52,7 +52,7 @@ class LineSegment2D(object):
         unc = abs(v.y/lengthSqr)*vxUnc + abs(v.x/lengthSqr)*vyUnc
         return Angle(radians=value, uncertainty=unc)
 
-#___________________________________________________________________________________________________ GS: slope
+#_______________________________________________________________________________
     @property
     def slope(self):
         """ Returns the slope of the line as a ValueUncertainty named tuple. """
@@ -68,7 +68,7 @@ class LineSegment2D(object):
         except Exception:
             return None
 
-#___________________________________________________________________________________________________ GS: midpoint
+#_______________________________________________________________________________
     @property
     def midpoint(self):
         """ Returns the midpoint of the line as a PositionValue2D instance. """
@@ -80,10 +80,10 @@ class LineSegment2D(object):
 
         return PositionValue2D(x=x, y=y, xUnc=xUnc, yUnc=yUnc)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ echo
+#_______________________________________________________________________________
     def echo(self, asciiLabel =False):
         """echo doc..."""
         return '[%s %s -> %s]' % (
@@ -91,7 +91,7 @@ class LineSegment2D(object):
             self.start.echo(asciiLabel=asciiLabel),
             self.end.echo(asciiLabel=asciiLabel) )
 
-#___________________________________________________________________________________________________ addOffset
+#_______________________________________________________________________________
     def addOffset(self, point):
         """addOffset doc..."""
         self.start.x += point.x
@@ -99,7 +99,7 @@ class LineSegment2D(object):
         self.end.x   += point.x
         self.end.y   += point.y
 
-#___________________________________________________________________________________________________ getParametricPosition
+#_______________________________________________________________________________
     def getParametricPosition(self, value, clamp =True):
         """getParametricPosition doc..."""
         if clamp:
@@ -113,7 +113,7 @@ class LineSegment2D(object):
 
         return PositionValue2D(x=x, y=y, xUnc=xUnc, yUnc=yUnc)
 
-#___________________________________________________________________________________________________ adjustPointAlongLine
+#_______________________________________________________________________________
     def adjustPointAlongLine(self, point, delta, inPlace =False):
         """adjustPointAlongLine doc..."""
 
@@ -132,20 +132,20 @@ class LineSegment2D(object):
 
         return point
 
-#___________________________________________________________________________________________________ rotate
+#_______________________________________________________________________________
     def rotate(self, angle, origin =None):
         """rotate doc..."""
         self.start.rotate(angle, origin=origin)
         self.end.rotate(angle, origin=origin)
 
-#___________________________________________________________________________________________________ angleBetween
+#_______________________________________________________________________________
     def angleBetween(self, line):
         """ Returns an Angle instance that represents the angle between this line segment and the
             one specified in the arguments. """
 
         return self.angle.differenceBetween(line.angle)
 
-#___________________________________________________________________________________________________ angleBetweenPoint
+#_______________________________________________________________________________
     def angleBetweenPoint(self, position):
         """angleBetweenPoint doc..."""
         a = self.end.clone()
@@ -155,7 +155,7 @@ class LineSegment2D(object):
 
         return b.angleBetween(a)
 
-#___________________________________________________________________________________________________ clone
+#_______________________________________________________________________________
     def clone(self):
         """ Returns a new LineSegment2D that is a clone of this instance. The start and end
             points are cloned as well making a completely separate copy with no reference
@@ -165,7 +165,7 @@ class LineSegment2D(object):
             start=self.start.clone(),
             end=self.end.clone())
 
-#___________________________________________________________________________________________________ distanceToPoint
+#_______________________________________________________________________________
     def distanceToPoint(self, point):
         """ Calculates the smallest distance between the specified point and this line segment
             using the standard formulation as described in:
@@ -205,7 +205,7 @@ class LineSegment2D(object):
 
         return NumericUtils.toValueUncertainty(distance, error)
 
-#___________________________________________________________________________________________________ closestPointOnLine
+#_______________________________________________________________________________
     def closestPointOnLine(self, point, contained =True):
         """ Finds the closest point on a line to the specified point using the formulae
             discussed in the "another formula" section of:
@@ -275,7 +275,7 @@ class LineSegment2D(object):
 
         return pos
 
-#___________________________________________________________________________________________________ extendLine
+#_______________________________________________________________________________
     def postExtendLine(self, lengthAdjust, replace =True):
         """extendLine doc..."""
         newX, newY = self._extrapolateByLength(lengthAdjust, pre=False)
@@ -284,7 +284,7 @@ class LineSegment2D(object):
         self.end.x = newX
         self.end.y = newY
 
-#___________________________________________________________________________________________________ preExtendLine
+#_______________________________________________________________________________
     def preExtendLine(self, lengthAdjust, replace =True):
         """preExtendLine doc..."""
         newX, newY = self._extrapolateByLength(lengthAdjust, pre=True)
@@ -293,7 +293,7 @@ class LineSegment2D(object):
         self.start.x = newX
         self.start.y = newY
 
-#___________________________________________________________________________________________________ createNextLineSegment
+#_______________________________________________________________________________
     def createNextLineSegment(self, length =None):
         """ Creates a line segment using this line segment as a guide that starts where this segment
             ends and has the same slope and orientation. The new line segment will be of the
@@ -306,7 +306,7 @@ class LineSegment2D(object):
         target.start = self.end.clone()
         return target
 
-#___________________________________________________________________________________________________ createPreviousLineSegment
+#_______________________________________________________________________________
     def createPreviousLineSegment(self, length =None):
         """ Creates a line segment using this line segment as a guide that ends where this segment
             begins and has the same slope and orientation. The new line segment will be of the
@@ -319,10 +319,10 @@ class LineSegment2D(object):
         target.end = self.start.clone()
         return target
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _extrapolateByLength
+#_______________________________________________________________________________
     def _extrapolateByLength(self, lengthAdjust, pre =False):
         """_extrapolateByLength doc..."""
 
@@ -371,14 +371,14 @@ class LineSegment2D(object):
 
         raise ValueError('Unable to extrapolate line segment to specified length')
 
-#===================================================================================================
+#===============================================================================
 #                                                                               I N T R I N S I C
 
-#___________________________________________________________________________________________________ __repr__
+#_______________________________________________________________________________
     def __repr__(self):
         return self.__str__()
 
-#___________________________________________________________________________________________________ __str__
+#_______________________________________________________________________________
     def __str__(self):
         return '<%s>' % self.__class__.__name__
 

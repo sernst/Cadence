@@ -14,7 +14,7 @@ from pyaid.file.FileUtils import FileUtils
 from pyaid.system.SystemUtils import SystemUtils
 from pyaid.OsUtils import OsUtils
 
-#___________________________________________________________________________________________________ CadenceDrawing
+#_______________________________________________________________________________
 class CadenceDrawing(object):
     """ A class for writing Scalable Vector Graphics (SVG) files, tailored to create overlays for
         site maps. Each site map has a marker that indicates a reference point in Swiss Federal
@@ -75,10 +75,10 @@ class CadenceDrawing(object):
         The use of groups, while convenient, requires that all map coordinates be converted to px.
         For more detail, see the use function and grid, which produces a 10 m grid. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(
             self,
             fileName,
@@ -140,24 +140,24 @@ class CadenceDrawing(object):
                 showUncertainty=showUncertainty,
                 showCenters=showCenters)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: pixelWidth
+#_______________________________________________________________________________
     @property
     def pixelWidth(self):
         return math.ceil(self.siteMap.width*self.pxPerMm)
 
-#___________________________________________________________________________________________________ GS: pixelHeight
+#_______________________________________________________________________________
     @property
     def pixelHeight(self):
         return math.ceil(self.siteMap.height*self.pxPerMm)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
 
-#___________________________________________________________________________________________________ circle
+#_______________________________________________________________________________
     def circle(self, center, radius, scene =True, groupId =None, **extra):
         """ Adds a circle object to the SVG file. All coordinates are explicitly labled with 'mm'
             and passed to svgwrite. """
@@ -188,7 +188,7 @@ class CadenceDrawing(object):
         else:
             self._drawing.add(obj)
 
-#___________________________________________________________________________________________________ createGroup
+#_______________________________________________________________________________
     def createGroup(self, id, **extra):
         """ Creates an SVG group, so that subsequent SVG fragments can be added to the group.  When
             the group is subsequently used (by the use function) an instance is created, and placed
@@ -209,7 +209,7 @@ class CadenceDrawing(object):
         # and keep track of the id so it can be used to refer to the group
         self.groups[id] = group
 
-#___________________________________________________________________________________________________ ellipse
+#_______________________________________________________________________________
     def ellipse(self, center, radii, scene =True, groupId =None, **extra):
         """ Adds an ellipse object to the SVG file, based on a center point and two radii.  All
             coordinates are explicitly labled with 'mm' and passed to svgwrite. """
@@ -240,7 +240,7 @@ class CadenceDrawing(object):
         else:
             self._drawing.add(obj)
 
-#___________________________________________________________________________________________________ federalCoordinates
+#_______________________________________________________________________________
     def federalCoordinates(self, deltaX =-4, deltaZ =-2.5, diskRadius =2):
         """ Place the coordinates as a text string at the specified offset from the fiducial
             marker. """
@@ -264,7 +264,7 @@ class CadenceDrawing(object):
             stroke='green',
             stroke_width=1)
 
-#___________________________________________________________________________________________________ grid
+#_______________________________________________________________________________
     def grid(self, size =2, diagonals =True, dx =200, dy =200, **extra):
         """ This is a group-based version of grid.  It creates a rectangular grid of marks.
             The grid marks on a site map are separated by 10 m in the real world, or 200 units
@@ -330,7 +330,7 @@ class CadenceDrawing(object):
                     font_size='12', fill='black', fill_opacity='0.15', stroke='none')
                 self._drawing.add(obj)
 
-#___________________________________________________________________________________________________ labelTracks
+#_______________________________________________________________________________
     def labelTracks(
             self,
             color ='black',
@@ -390,12 +390,12 @@ class CadenceDrawing(object):
         if not session:
             s.close()
 
-#___________________________________________________________________________________________________ lineSegment
+#_______________________________________________________________________________
     def lineSegment(self, line, groupId =None, **extra):
         """ Adds a line object to the svg file based on a LineSegment2D instance. """
         self.line(line.start.toMayaTuple(), line.end.toMayaTuple(), groupId=groupId, **extra)
 
-#___________________________________________________________________________________________________ line
+#_______________________________________________________________________________
     def line(self, p1, p2, scene =True, groupId =None, **extra):
         """ Adds a line object to the svg file based on two scene points. It first converts from
             scene to siteMap coordinates if necessary, then concatenates the units suffix 'mm' to
@@ -427,7 +427,7 @@ class CadenceDrawing(object):
         else:
             self._drawing.add(obj)
 
-#___________________________________________________________________________________________________ mark
+#_______________________________________________________________________________
     def mark(self, size, scene =True, groupId =None, **extra):
         """ Adds an axis-aligned '+' mark of given size at the origin. If scene=True, the size is
             transformed to map coordinates, else it is presumed to already be in map coordinates. If
@@ -440,14 +440,14 @@ class CadenceDrawing(object):
         self.line([-size, 0], [size, 0], scene=scene, groupId=groupId, **extra)
         self.line([0, -size], [0, size], scene=scene, groupId=groupId, **extra)
 
-#___________________________________________________________________________________________________ mm
+#_______________________________________________________________________________
     def mm(self, p):
         """ Appends the units label 'mm' to each value.  Too many cases where svgwrite will not
             allow this suffix, so not currently used. """
 
         return (p[0]*mm, p[1]*mm)
 
-#___________________________________________________________________________________________________ polyLine
+#_______________________________________________________________________________
     def polyLine(self, points, scene =True, groupId =None, **extra):
         """ Adds a polyline object to the SVG file, based on a list of scene points. If canvas is
             specified, this permits adding this object to a """
@@ -483,7 +483,7 @@ class CadenceDrawing(object):
         else:
             self._drawing.add(obj)
 
-#___________________________________________________________________________________________________ projectToScene
+#_______________________________________________________________________________
     def projectToScene(self, p):
         """ The given siteMap location p is projected to the corresponding scene point and returned.
             In the scene, x is positive to the left, and z is positive upwards.  In the siteMap, x
@@ -499,7 +499,7 @@ class CadenceDrawing(object):
 
         return (xScene, zScene)
 
-#___________________________________________________________________________________________________ projectToMap
+#_______________________________________________________________________________
     def projectToMap(self, p):
         """ The given 2D scene point p, comprised of scene cooordinates (xScene, zScene), is
             projected to the corresponding 2D siteMap location (xMap, yMap) and returned. xScene
@@ -516,7 +516,7 @@ class CadenceDrawing(object):
 
         return (xMap, yMap)
 
-#___________________________________________________________________________________________________ rect
+#_______________________________________________________________________________
     def rect(self, center, width, height, scene =True, groupId =None, rx =None, ry =None, **extra):
         """ Adds a rect object to the SVG file, based on center and dimensions. If the boolean
             scene is True, the arguments are converted to
@@ -557,7 +557,7 @@ class CadenceDrawing(object):
         else:
             self._drawing.add(obj)
 
-#___________________________________________________________________________________________________ save
+#_______________________________________________________________________________
     def save(self, toPDF=False):
         """ Writes the current _drawing in SVG format to the file specified at initialization. If
             one wishes to have create a PDF file (same file name as used for the .SVG, but with
@@ -593,7 +593,7 @@ class CadenceDrawing(object):
         if response['error']:
             print('response[error]=%s'%response['error'])
 
-#___________________________________________________________________________________________________ scaleToMap
+#_______________________________________________________________________________
     def scaleToMap(self, v):
         """ Converts from scene coordinates (in cm) to siteMap coordinates ('scaled mm'). The
             siteMap is usually drawn in 50:1 scale. """
@@ -603,7 +603,7 @@ class CadenceDrawing(object):
 
         return v/(0.1*self.siteMap.scale)
 
-#___________________________________________________________________________________________________ scaleToScene
+#_______________________________________________________________________________
     def scaleToScene(self, value):
         """ Site maps (Adobe Illustrator .ai files) are typically in 50:1 scale, and use mm as their
             units.  Consequently a single unit in the site map corresponds to 50 mm in the 'real
@@ -616,7 +616,7 @@ class CadenceDrawing(object):
 
         return 0.1*self.siteMap.scale*value
 
-#___________________________________________________________________________________________________ text
+#_______________________________________________________________________________
     def text(self, textString, insert, scene =True, groupId =None, **extra):
         """ Adds a text of a given fill at the given insertion point. """
 
@@ -645,7 +645,7 @@ class CadenceDrawing(object):
 
             self._drawing.add(obj)
 
-#___________________________________________________________________________________________________ use
+#_______________________________________________________________________________
     def use(self, id, center,
             scene =True, rotation =None, rotationCenter =None, scale =None, scaleY =None, **extra):
         """ Groups are given an id when created.  This id is used to create instances that are

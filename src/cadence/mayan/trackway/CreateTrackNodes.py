@@ -9,20 +9,20 @@ from cadence.enums.TrackPropEnum import TrackPropEnum
 
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 
-#___________________________________________________________________________________________________ CreateTrackNodes
+#_______________________________________________________________________________
 class CreateTrackNodes(NimbleScriptBase):
     """ This is the core script for creating first the TrackSet node then all the individual
         track nodes based on the list that is passed in. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     NO_TRACKLIST = u'noTrackList'
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ run
+#_______________________________________________________________________________
     def run(self, *args, **kwargs):
         trackList     = self.fetch('trackList', None)
         if not trackList:

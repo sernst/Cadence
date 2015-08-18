@@ -16,7 +16,7 @@ depends_on = None
 from alembic import op
 import sqlalchemy as sa
 
-#___________________________________________________________________________________________________
+#_______________________________________________________________________________
 def upgrade():
     try:
         op.add_column('tracks', sa.Column('strideLength', sa.Float, default=0.0))
@@ -26,7 +26,7 @@ def upgrade():
     except Exception:
         pass
 
-#___________________________________________________________________________________________________
+#_______________________________________________________________________________
 def downgrade():
     try:
         op.drop_column('tracks', 'strideLength')

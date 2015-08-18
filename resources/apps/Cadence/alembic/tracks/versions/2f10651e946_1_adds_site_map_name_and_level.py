@@ -14,12 +14,12 @@ down_revision = '28c48155ac2'
 from alembic import op
 import sqlalchemy as sqla
 
-#___________________________________________________________________________________________________ upgrade
+#_______________________________________________________________________________
 def upgrade():
     op.add_column('sitemaps', sqla.Column('name', sqla.Unicode, default=''))
     op.add_column('sitemaps', sqla.Column('level', sqla.Unicode, default=''))
 
-#___________________________________________________________________________________________________ downgrade
+#_______________________________________________________________________________
 def downgrade():
     op.drop_column('sitemaps', sqla.Column('name', sqla.Unicode, default=''))
     op.drop_column('sitemaps', sqla.Column('level', sqla.Unicode, default=''))

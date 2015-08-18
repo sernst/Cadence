@@ -15,7 +15,7 @@ from cadence.models.tracks.TracksDefault import TracksDefault
 # AS NEEDED: from cadence.models.tracks.Tracks_Track import Tracks_Track
 # AS NEEDED: from cadence.models.tracks.Tracks_Trackway import Tracks_Trackway
 
-#___________________________________________________________________________________________________ Tracks_SiteMap
+#_______________________________________________________________________________
 class Tracks_SiteMap(TracksDefault):
     """ A database model class containing coordinate information for trackway excavation site maps.
         The following public methods assist in mapping from scene coordinates to siteMap
@@ -34,7 +34,7 @@ class Tracks_SiteMap(TracksDefault):
         this value is not hard-coded, but rather regarded a parameter, scale.  The site map has a
         federal coordinates marker, the location of which is given by xFederal and yFederal."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     __tablename__ = u'sitemaps'
@@ -82,27 +82,27 @@ class Tracks_SiteMap(TracksDefault):
     _importFlags   = sqla.Column(sqla.Integer, default=0)
     _analysisFlags = sqla.Column(sqla.Integer, default=0)
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, **kwargs):
         super(Tracks_SiteMap, self).__init__(**kwargs)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: isReady
+#_______________________________________________________________________________
     @property
     def isReady(self):
         return False if self.scale == 0.0 else True
 
-#___________________________________________________________________________________________________ GS: uid
+#_______________________________________________________________________________
     @property
     def uid(self):
         return Base36.to36(self.index)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ getFederalCoordinates
+#_______________________________________________________________________________
     def getFederalCoordinates(self):
         """ The Swiss federal coordinates associated with the siteMap is returned.  The coordinates
             are in meters relative to a geographical reference point in SE France.  The values of
@@ -112,7 +112,7 @@ class Tracks_SiteMap(TracksDefault):
 
         return [self.federalEast, self.federalNorth]
 
-#___________________________________________________________________________________________________ getTracksQuery
+#_______________________________________________________________________________
     def getTracksQuery(self, session =None):
         """ This method returns an SQLAlchemy query object within the specified session, or a new
             session if none is specified, that can be used to retrieve all tracks within this
@@ -133,7 +133,7 @@ class Tracks_SiteMap(TracksDefault):
 
         return session.query(model).filter(model.site == site).filter(model.level == level)
 
-#___________________________________________________________________________________________________ getAllTracks
+#_______________________________________________________________________________
     def getAllTracks(self, session =None):
         """ This operates on the current siteMap, which is populated with the specifics for a given
             track site.  The three-letter site abbreviation (e.g., BSY, TCH) and the level can be
@@ -142,7 +142,7 @@ class Tracks_SiteMap(TracksDefault):
 
         return self.getTracksQuery(session=session).all()
 
-#___________________________________________________________________________________________________ getTrackways
+#_______________________________________________________________________________
     def getTrackways(self):
         """getTrackways doc..."""
 
@@ -153,21 +153,21 @@ class Tracks_SiteMap(TracksDefault):
             tw.sitemap = self
         return trackways
 
-#___________________________________________________________________________________________________ GS: getNameFromFilename
+#_______________________________________________________________________________
     @classmethod
     def getNameFromFilename(cls, filename):
         """ Name of the sitemap as determined by its filename """
         return filename[0:3]
 
-#___________________________________________________________________________________________________ GS: getLevelFromFilename
+#_______________________________________________________________________________
     @classmethod
     def getLevelFromFilename(cls, filename):
         return filename.split('_')[-1].split(' ')[0]
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _getAnalysisPair
+#_______________________________________________________________________________
     def _getAnalysisPair(self, session, createIfMissing):
         """_getAnalysisPair doc..."""
 
@@ -184,10 +184,10 @@ class Tracks_SiteMap(TracksDefault):
 
         return result
 
-#===================================================================================================
+#===============================================================================
 #                                                                               I N T R I N S I C
 
-#___________________________________________________________________________________________________ __str__
+#_______________________________________________________________________________
     def __str__(self):
         """__str__ doc..."""
         return '<Sitemap[%s | %s] "%s">' % (self.i, self.index, self.filename)

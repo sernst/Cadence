@@ -16,16 +16,16 @@ from cadence.util.maya.MayaUtils import MayaUtils
 from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
 from cadence.util.shading.ShadingUtils import ShadingUtils
 
-#___________________________________________________________________________________________________ TrackSceneUtils
+#_______________________________________________________________________________
 class TrackSceneUtils(object):
     """ A class for supporting Maya-side operations such as creating visual representations of Track
         nodes (createTrackNode), and getting and setting those values.  Used by remote scripts that
         extend NimbleScriptBase. """
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ createTrackNode
+#_______________________________________________________________________________
     @classmethod
     def createTrackNode(cls, uid, trackSetNode =None, props =None):
         """ A track node consists of a triangular pointer (left = red, right = green) which is
@@ -385,7 +385,7 @@ class TrackSceneUtils(object):
         return node
 
 #
-#___________________________________________________________________________________________________ getTrackNode
+#_______________________________________________________________________________
     @classmethod
     def getTrackNode(cls, uid, trackSetNode =None):
         trackSetNode = cls.getTrackSetNode() if not trackSetNode else trackSetNode
@@ -404,7 +404,7 @@ class TrackSceneUtils(object):
 
         return None
 
-#___________________________________________________________________________________________________ getUid
+#_______________________________________________________________________________
     @classmethod
     def getUid(cls, node, trackSetNode =None):
         """ This returns the UID (or None if the nodeName is not a track nodeName). """
@@ -421,7 +421,7 @@ class TrackSceneUtils(object):
         except Exception as err:
             return None
 
-#___________________________________________________________________________________________________ checkNodeUidMatch
+#_______________________________________________________________________________
     @classmethod
     def checkNodeUidMatch(cls, uid, node):
         try:
@@ -429,7 +429,7 @@ class TrackSceneUtils(object):
         except Exception as err:
             return False
 
-#___________________________________________________________________________________________________ getTrackProps
+#_______________________________________________________________________________
     @classmethod
     def getTrackProps(cls, node):
         out = dict()
@@ -439,7 +439,7 @@ class TrackSceneUtils(object):
             out[enum.name] = cmds.getAttr(node + '.' + enum.maya)
         return out
 
-#___________________________________________________________________________________________________ setTrackProps
+#_______________________________________________________________________________
     @classmethod
     def setTrackProps(cls, node, props):
         for enum in Reflection.getReflectionList(TrackPropEnum):
@@ -449,7 +449,7 @@ class TrackSceneUtils(object):
                 else:
                     cmds.setAttr(node + '.' + enum.maya, props[enum.maya])
 
-#___________________________________________________________________________________________________ colorNode
+#_______________________________________________________________________________
     @classmethod
     def colorNode(cls, node, props):
         # Save state of selected nodes to restore at end of this function
@@ -484,7 +484,7 @@ class TrackSceneUtils(object):
 
         MayaUtils.setSelection(priorSelection)
 
-#___________________________________________________________________________________________________ getTrackManagerNode
+#_______________________________________________________________________________
     @classmethod
     def getTrackManagerNode(cls, trackSetNode =None, createIfMissing =False):
         """ Returns the name of the track manager nodeName for the current Cadence scene.
@@ -512,7 +512,7 @@ class TrackSceneUtils(object):
 
         return None
 
-#___________________________________________________________________________________________________ getTrackSetNode
+#_______________________________________________________________________________
     @classmethod
     def getTrackSetNode(cls, createIfMissing =False):
         for node in cmds.ls(exactType='objectSet'):

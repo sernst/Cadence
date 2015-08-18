@@ -16,12 +16,12 @@ from cadence.analysis.AnalysisStage import AnalysisStage
 class KMeansClusterStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     COLORS = ['#CCCCCC', 'red', 'orange', 'green', 'blue', 'purple']
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of KMeansClusterStage."""
         super(KMeansClusterStage, self).__init__(
@@ -31,10 +31,10 @@ class KMeansClusterStage(AnalysisStage):
 
         self._frame = None
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         self._frame = None
 
@@ -46,7 +46,7 @@ class KMeansClusterStage(AnalysisStage):
 
         self._frame = pd.read_csv(path)
 
-#___________________________________________________________________________________________________ _analyzeSitemap
+#_______________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
         if self._frame is None:
             return
@@ -55,7 +55,7 @@ class KMeansClusterStage(AnalysisStage):
         super(KMeansClusterStage, self)._analyzeSitemap(sitemap)
         self._saveDrawing(sitemap)
 
-#___________________________________________________________________________________________________ _analyzeTrack
+#_______________________________________________________________________________
     def _analyzeTrack(self, track, series, trackway, sitemap):
         color = self.COLORS[0]
         try:

@@ -15,11 +15,11 @@ from cadence.analysis.shared.plotting.AutoCorrelationPlot import AutoCorrelation
 class CurveCorrelationStage(CurveOrderedAnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of CurveCorrelationStage."""
         super(CurveCorrelationStage, self).__init__(
@@ -30,14 +30,14 @@ class CurveCorrelationStage(CurveOrderedAnalysisStage):
         self._paths = []
         self._pesPaths = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         self._paths = []
 
-#___________________________________________________________________________________________________ _analyzeTrackway
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
 
         trackway.cache.set('curvePoints', {'x':[], 'y':[]})
@@ -80,7 +80,7 @@ class CurveCorrelationStage(CurveOrderedAnalysisStage):
             yLabel='Auto-Correlation')
         self._pesPaths.append(plot.save(self.getTempFilePath(extension='pdf')))
 
-#___________________________________________________________________________________________________ interpConstant
+#_______________________________________________________________________________
     @classmethod
     def interpConstant(cls, data, xValues):
         """_interpConstant doc..."""
@@ -97,7 +97,7 @@ class CurveCorrelationStage(CurveOrderedAnalysisStage):
 
         return out
 
-#___________________________________________________________________________________________________ _analyzeTrack
+#_______________________________________________________________________________
     def _analyzeTrack(self, track, series, trackway, sitemap):
         """_analyzeTrack doc..."""
 
@@ -117,7 +117,7 @@ class CurveCorrelationStage(CurveOrderedAnalysisStage):
 
         data['y'].append(signal)
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         self.mergePdfs(self._paths, 'Phase-Coherence.pdf')
         self.mergePdfs(self._pesPaths, 'Pes-Phase-Coherence.pdf')

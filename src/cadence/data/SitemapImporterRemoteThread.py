@@ -18,14 +18,14 @@ from cadence.enums.SitemapCsvColumnEnum import SitemapCsvColumnEnum
 
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 
-#___________________________________________________________________________________________________ SitemapImporterRemoteThread
+#_______________________________________________________________________________
 class SitemapImporterRemoteThread(RemoteExecutionThread):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, parent, path, session =None, **kwargs):
         """Creates a new instance of TrackImporterRemoteThread."""
         RemoteExecutionThread.__init__(self, parent, **kwargs)
@@ -33,10 +33,10 @@ class SitemapImporterRemoteThread(RemoteExecutionThread):
         self._session    = session
         self._verbose    = ArgsUtils.get('verbose', True, kwargs)
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _runImpl
+#_______________________________________________________________________________
     def _runImpl(self):
         model   = Tracks_SiteMap.MASTER
         session = self._session if self._session else model.createSession()
@@ -102,7 +102,7 @@ class SitemapImporterRemoteThread(RemoteExecutionThread):
         self._log.write(u'<h1>Sitemap Import Complete</h1>')
         return 0
 
-#___________________________________________________________________________________________________ _fromSpreadsheetEntry
+#_______________________________________________________________________________
     def _fromSpreadsheetEntry(self, data, session):
         model = Tracks_SiteMap.MASTER
         sitemap = model()
@@ -133,7 +133,7 @@ class SitemapImporterRemoteThread(RemoteExecutionThread):
         self._log.write(u'<div>CREATED: %s "%s"</div>' % (sitemap.index, sitemap.filename))
         return sitemap
 
-#___________________________________________________________________________________________________ _writeError
+#_______________________________________________________________________________
     def _writeError(self, data):
         """ Writes import error data to the logger, formatting it for human readable display. """
         source = {}

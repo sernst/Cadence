@@ -7,40 +7,40 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from pyglass.compile.PyGlassApplicationCompiler import PyGlassApplicationCompiler
 from pyglass.compile.SiteLibraryEnum import SiteLibraryEnum
 
-#___________________________________________________________________________________________________ CadenceCompiler
+#_______________________________________________________________________________
 class CadenceCompiler(PyGlassApplicationCompiler):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: siteLibraries
+#_______________________________________________________________________________
     @property
     def siteLibraries(self):
         return [SiteLibraryEnum.PYSIDE, SiteLibraryEnum.SQL_ALCHEMY]
 
-#___________________________________________________________________________________________________ GS: binPath
+#_______________________________________________________________________________
     @property
     def binPath(self):
         return ['..', '..', 'bin']
 
-#___________________________________________________________________________________________________ GS: appFilename
+#_______________________________________________________________________________
     @property
     def appFilename(self):
         return 'Cadence'
 
-#___________________________________________________________________________________________________ GS: appDisplayName
+#_______________________________________________________________________________
     @property
     def appDisplayName(self):
         return 'Cadence'
 
-#___________________________________________________________________________________________________ GS: applicationClass
+#_______________________________________________________________________________
     @property
     def applicationClass(self):
         from cadence.CadenceApplication import CadenceApplication
         return CadenceApplication
 
-#___________________________________________________________________________________________________ GS: iconPath
+#_______________________________________________________________________________
     @property
     def iconPath(self):
         return ['apps', 'Cadence']

@@ -18,10 +18,10 @@ from cadence.analysis.shared.plotting.Histogram import Histogram
 class CurveSparsenessStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of CurveSparsenessStage."""
         super(CurveSparsenessStage, self).__init__(
@@ -31,22 +31,22 @@ class CurveSparsenessStage(AnalysisStage):
 
         self._paths = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: trackwaySparseness
+#_______________________________________________________________________________
     @property
     def data(self):
         return self.cache.getOrAssign('data', {})
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         self._paths = []
 
-#___________________________________________________________________________________________________ _analyzeTrackway
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         pesSpacings     = []
         manusSpacings   = []
@@ -91,7 +91,7 @@ class CurveSparsenessStage(AnalysisStage):
             pes=pesSpacings,
             dense=denseSeries)
 
-#___________________________________________________________________________________________________ _calculateSparseness
+#_______________________________________________________________________________
     @classmethod
     def _calculateSparseness(cls, spacings, reference):
         """ Calculates the relative sparseness from the series spacings list and the reference
@@ -113,7 +113,7 @@ class CurveSparsenessStage(AnalysisStage):
 
         return ListUtils.sortObjectList(out, 'value')
 
-#___________________________________________________________________________________________________ _calculateAverageSpacing
+#_______________________________________________________________________________
     @classmethod
     def _calculateAverageSpacing(cls, series):
         """ Determines the average spacing of the tracks in the track series for use as a
@@ -154,7 +154,7 @@ class CurveSparsenessStage(AnalysisStage):
             value=length/float(len(tracks)),
             uncertainty=unc/float(len(tracks)) )
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         """_postAnalyze doc..."""
 
@@ -195,7 +195,7 @@ class CurveSparsenessStage(AnalysisStage):
             result = trackway.getAnalysisPair(self.analysisSession, createIfMissing=True)
             result.curveSeries = data['dense'].firstTrackUid if data['dense'] else ''
 
-#___________________________________________________________________________________________________ _processSparsenessResults
+#_______________________________________________________________________________
     def _processSparsenessResults(self, key):
         """_processSparsenessResults doc..."""
 
@@ -246,7 +246,7 @@ class CurveSparsenessStage(AnalysisStage):
 
         return lows, mids, highs, tsValues, twValues, totals
 
-#___________________________________________________________________________________________________ _scatterSparseness
+#_______________________________________________________________________________
     def _scatterSparseness(self, label, *plots):
         """_scatterSparseness doc..."""
 
@@ -271,7 +271,7 @@ class CurveSparsenessStage(AnalysisStage):
             pl.scatter(x=item['x'], y=item['y'], s=12, c=item['color'], linewidths=0.0)
         return self.owner.saveFigure('items')
 
-#___________________________________________________________________________________________________ _histogramSeriesSparseness
+#_______________________________________________________________________________
     def _histogramSeriesSparseness(self, label, values):
         """_histogramSeriesSparseness doc..."""
 
@@ -286,7 +286,7 @@ class CurveSparsenessStage(AnalysisStage):
         h.save(path=path)
         return path
 
-#___________________________________________________________________________________________________ _histogramTrackwaySparseness
+#_______________________________________________________________________________
     def _histogramTrackwaySparseness(self, label, values):
         """ Creates a histogram for each trackway entry in the values list. """
 

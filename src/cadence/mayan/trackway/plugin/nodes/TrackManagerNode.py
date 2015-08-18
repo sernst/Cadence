@@ -16,11 +16,11 @@ from elixir.nodes.ElixirNode import ElixirNode
 from elixir.nodes.attrs.MessageNodeAttribute import MessageNodeAttribute
 from elixir.nodes.attrs.NumericNodeAttribute import NumericNodeAttribute
 
-#___________________________________________________________________________________________________ TrackManagerNode
+#_______________________________________________________________________________
 class TrackManagerNode(ElixirNode):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     NODE_NAME       = 'trackManager'
@@ -34,15 +34,15 @@ class TrackManagerNode(ElixirNode):
         'o', 'output', 0, OpenMaya.MFnNumericData.kInt, compute='outputCompute')
     tracks = MessageNodeAttribute('ts', 'trackSet')
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self):
         """Creates a new instance of TrackManagerNode."""
         ElixirNode.__init__(self)
 
-#===================================================================================================
+#===============================================================================
 #                                                                                     P U B L I C
 
-#___________________________________________________________________________________________________ outputCompute
+#_______________________________________________________________________________
     # noinspection PyMethodMayBeStatic
     def outputCompute(self, data):
         value = data.inHandles.input.asInt()

@@ -16,12 +16,12 @@ from cadence.svg.CadenceDrawing import CadenceDrawing
 class CurveProjectionStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
     CURVE_MAP_FOLDER_NAME = 'Projection-Maps'
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of CurveProjectionStage."""
         super(CurveProjectionStage, self).__init__(
@@ -31,24 +31,24 @@ class CurveProjectionStage(AnalysisStage):
 
         self._paths = []
 
-#===================================================================================================
+#===============================================================================
 #                                                                                   G E T / S E T
 
-#___________________________________________________________________________________________________ GS: orderData
+#_______________________________________________________________________________
     @property
     def data(self):
         return self.cache.getOrAssign('data', {})
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         self._paths = []
 
         self.initializeFolder(self.CURVE_MAP_FOLDER_NAME)
 
-#___________________________________________________________________________________________________ _analyzeSitemap
+#_______________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
 
@@ -56,7 +56,7 @@ class CurveProjectionStage(AnalysisStage):
         super(CurveProjectionStage, self)._analyzeSitemap(sitemap)
         self._saveDrawing(sitemap)
 
-#___________________________________________________________________________________________________ _analyzeTrackway
+#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
 
         analysisTrackway = trackway.getAnalysisPair(self.analysisSession)
@@ -99,7 +99,7 @@ class CurveProjectionStage(AnalysisStage):
         curve.draw(sitemap.cache.get('drawing'))
         #print(curve.getDebugReport())
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         """_postAnalyze doc..."""
 

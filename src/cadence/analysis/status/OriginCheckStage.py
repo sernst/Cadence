@@ -13,10 +13,10 @@ from cadence.analysis.shared.CsvWriter import CsvWriter
 class OriginCheckStage(AnalysisStage):
     """A class for..."""
 
-#===================================================================================================
+#===============================================================================
 #                                                                                       C L A S S
 
-#___________________________________________________________________________________________________ __init__
+#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of OriginCheckStage."""
         super(OriginCheckStage, self).__init__(
@@ -27,10 +27,10 @@ class OriginCheckStage(AnalysisStage):
         self._tracks = []
         self._csv = None
 
-#===================================================================================================
+#===============================================================================
 #                                                                               P R O T E C T E D
 
-#___________________________________________________________________________________________________ _preAnalyze
+#_______________________________________________________________________________
     def _preAnalyze(self):
         self._tracks = []
 
@@ -42,13 +42,13 @@ class OriginCheckStage(AnalysisStage):
             ('fingerprint', 'Fingerprint') )
         self._csv = csv
 
-#___________________________________________________________________________________________________ _analyzeTrack
+#_______________________________________________________________________________
     def _analyzeTrack(self, track, series, trackway, sitemap):
         if NumericUtils.equivalent(track.x, 0.0) and NumericUtils.equivalent(track.z, 0.0):
             self._tracks.append(track)
             self._csv.addRow({'uid':track.uid, 'fingerprint':track.fingerprint})
 
-#___________________________________________________________________________________________________ _postAnalyze
+#_______________________________________________________________________________
     def _postAnalyze(self):
         self.logger.write('ORIGIN TRACK COUNT: %s' % len(self._tracks))
         for t in self._tracks:
