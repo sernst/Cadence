@@ -20,6 +20,10 @@ class Analysis_Track(AnalysisDefault):
 
     _uid                = sqla.Column(sqla.Unicode, default='')
 
+    #--- Status Analyzer ---#
+    _trackwayIndex      = sqla.Column(sqla.Integer, default=0)
+    _trackwayName       = sqla.Column(sqla.Unicode, default='')
+
     #--- Curvature Analyzer ---#
     _curveSegment       = sqla.Column(sqla.Integer, default=-2)
     _curveIndex         = sqla.Column(sqla.Integer, default=-1)

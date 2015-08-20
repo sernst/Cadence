@@ -16,6 +16,7 @@ from pyaid.string.StringUtils import StringUtils
 from pyaid.system.SystemUtils import SystemUtils
 from pyaid.time.TimeUtils import TimeUtils
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+from cadence.analysis.shared import DataLoadUtils
 
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
@@ -88,10 +89,9 @@ class AnalyzerBase(object):
                 removeIfExists=True,
                 timestampFileSuffix=False)
 
-        self._defaultRootPath = PyGlassEnvironment.getRootLocalResourcePath('analysis', isDir=True)
-
-        self._settings = SettingsConfig(
-            FileUtils.makeFilePath(self._defaultRootPath, 'analysis.json'), pretty=True)
+        self._defaultRootPath = PyGlassEnvironment.getRootLocalResourcePath(
+            'analysis', isDir=True)
+        self._settings = DataLoadUtils.getAnalysisSettings()
 
 #===============================================================================
 #                                                                                   G E T / S E T

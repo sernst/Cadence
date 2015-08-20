@@ -5,8 +5,9 @@
 
 from nimble import cmds
 
+from cadence.config import CadenceConfigs
 from cadence.enums.TrackPropEnum import TrackPropEnum
-from cadence.CadenceEnvironment import CadenceEnvironment
+
 
 #_______________________________________________________________________________
 class TrackNodeUtils(object):
@@ -19,7 +20,7 @@ class TrackNodeUtils(object):
         """ Get the TrackSet from the Maya scene so we can map from UID to track nodes """
 
         for node in cmds.ls(exactType='objectSet'):
-            if node == CadenceEnvironment.TRACKWAY_SET_NODE_NAME:
+            if node == CadenceConfigs.TRACKWAY_SET_NODE_NAME:
                 return node
         return None
 

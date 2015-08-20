@@ -5,6 +5,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from cadence.analysis.AnalyzerBase import AnalyzerBase
+from cadence.analysis.status.AnalysisAnnotationStage import AnalysisAnnotationStage
 from cadence.analysis.status.OriginCheckStage import OriginCheckStage
 from cadence.analysis.status.RotationalUncertaintyStage import RotationalUncertaintyStage
 from cadence.analysis.status.SpatialUncertaintyStage import SpatialUncertaintyStage
@@ -22,6 +23,7 @@ class StatusAnalyzer(AnalyzerBase):
         """Creates a new instance of StatusAnalyzer."""
         super(StatusAnalyzer, self).__init__(**kwargs)
         self.addStage(TrackwayLoadStage('load', self))
+        self.addStage(AnalysisAnnotationStage('annotation', self))
         self.addStage(OriginCheckStage('origin', self))
         self.addStage(SpatialUncertaintyStage('spatial-unc', self))
         self.addStage(RotationalUncertaintyStage('rotation-unc', self))

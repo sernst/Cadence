@@ -2,6 +2,13 @@
 # (C)2015
 # Scott Ernst
 
+from __future__ import \
+    print_function, absolute_import, \
+    unicode_literals, division
+
+from pyaid.config.SettingsConfig import SettingsConfig
+from pyaid.file.FileUtils import FileUtils
+
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
@@ -11,6 +18,19 @@ import pandas as pd
 import sqlalchemy as sqla
 
 from cadence.CadenceEnvironment import CadenceEnvironment
+
+#_______________________________________________________________________________
+def getTrackWithAnalysis():
+    """ Loads the tracks table from both the tracks.vdb and analysis.vdb and
+        merges them together into a single DataFrame.
+    @return: DataFrame
+    """
+    return pd.merge(
+        left=readTable('tracks'),
+        right=readTable('tracks', analysis=True),
+        how='inner',
+        on='uid',
+        suffixes=('', '_analysis'))
 
 #_______________________________________________________________________________
 def createEngine(analysis =False):
@@ -51,3 +71,14 @@ def getSafeColumnName(name):
     if re.compile('^[^a-zA-Z_]+').match(name):
         return 'X%s' % name
     return name
+
+#_______________________________________________________________________________
+def getAnalysisSettings():
+    """ Retrieves the analysis configuration settings file as a SettingsConfig
+        instance that can be modified and saved as needed.
+        @return: SettingsConfig """
+    return SettingsConfig(
+            FileUtils.makeFilePath(
+                PyGlassEnvironment.getRootLocalResourcePath(
+                    'analysis', isDir=True),
+                'analysis.json'), pretty=True)

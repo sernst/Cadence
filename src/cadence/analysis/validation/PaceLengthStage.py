@@ -173,6 +173,7 @@ class PaceLengthStage(AnalysisStage):
 
             pairTrack = self._getPairedTrack(track, series, pairSeries)
             if pairTrack is None:
+                self._getPairedTrack(track, series, pairSeries)
                 self._logUnresolvableTrack(track, sitemap, 'Unable to determine pairSeries track')
                 continue
 

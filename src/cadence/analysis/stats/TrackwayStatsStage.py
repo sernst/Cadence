@@ -9,12 +9,12 @@ from pyaid.number.NumericUtils import NumericUtils
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 
-#*************************************************************************************************** TrackwayStatsStage
+#******************************************************************************* TrackwayStatsStage
 class TrackwayStatsStage(AnalysisStage):
     """A class for..."""
 
 #===============================================================================
-#                                                                                       C L A S S
+#                                                                   C L A S S
 
 #_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
@@ -28,7 +28,7 @@ class TrackwayStatsStage(AnalysisStage):
         self._csv = None
 
 #===============================================================================
-#                                                                               P R O T E C T E D
+#                                                           P R O T E C T E D
 
 #_______________________________________________________________________________
     def _preAnalyze(self):

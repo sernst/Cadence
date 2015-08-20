@@ -13,7 +13,12 @@ from pyaid.string.StringUtils import StringUtils
 from pyaid.radix.Base64 import Base64
 from pyaid.time.TimeUtils import TimeUtils
 
-from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+try:
+    from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+except Exception:
+    # Handles the in-maya case where PyGlassEnvironment cannot be
+    # successfully imported
+    PyGlassEnvironment = None
 
 #_______________________________________________________________________________
 class CadenceEnvironment(object):
@@ -23,8 +28,6 @@ class CadenceEnvironment(object):
 #                                                                   C L A S S
 
     APP_ID = 'Cadence'
-
-    TRACKWAY_SET_NODE_NAME = 'cadenceTrackSet'
 
     # Whether or not the Maya ENV files have been properly initialized with
     # source paths for Cadence's dependent libraries

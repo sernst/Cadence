@@ -7,10 +7,9 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import math
 
 from nimble import cmds
-
 from pyaid.reflection.Reflection import Reflection
 
-from cadence.CadenceEnvironment import CadenceEnvironment
+from cadence.config import CadenceConfigs
 from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.util.maya.MayaUtils import MayaUtils
 from cadence.config.TrackwayShaderConfig import TrackwayShaderConfig
@@ -516,11 +515,11 @@ class TrackSceneUtils(object):
     @classmethod
     def getTrackSetNode(cls, createIfMissing =False):
         for node in cmds.ls(exactType='objectSet'):
-            if node == CadenceEnvironment.TRACKWAY_SET_NODE_NAME:
+            if node == CadenceConfigs.TRACKWAY_SET_NODE_NAME:
                 return node
 
         if createIfMissing:
-            return cmds.sets(name=CadenceEnvironment.TRACKWAY_SET_NODE_NAME, empty=True)
+            return cmds.sets(name=CadenceConfigs.TRACKWAY_SET_NODE_NAME, empty=True)
 
         return None
 

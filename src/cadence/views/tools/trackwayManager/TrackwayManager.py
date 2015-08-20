@@ -5,20 +5,15 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import nimble
-
 from nimble import cmds
-
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 
-from cadence.CadenceEnvironment import CadenceEnvironment
+from cadence.config import CadenceConfigs
 from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
-
 from cadence.models.tracks.Tracks_Track import Tracks_Track
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
-
 from cadence.util.maya.MayaUtils import MayaUtils
-
 from cadence.mayan.trackway import GetSelectedUidList
 from cadence.mayan.trackway import GetUidList
 from cadence.mayan.trackway import GetTrackNodeData
@@ -309,11 +304,11 @@ class TrackwayManager(object):
 
 #_______________________________________________________________________________
     def getTrackSetNode(cls):
-        """ This is redundunt with the version in TrackSceneUtils, but running locally. Note that
+        """ This is redundant with the version in TrackSceneUtils, but running locally. Note that
             if no TrackSetNode is found, it does not create one. """
 
         for node in cmds.ls(exactType='objectSet'):
-            if node == CadenceEnvironment.TRACKWAY_SET_NODE_NAME:
+            if node == CadenceConfigs.TRACKWAY_SET_NODE_NAME:
                 return node
 
         return None

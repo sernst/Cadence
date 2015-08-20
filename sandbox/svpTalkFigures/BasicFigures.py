@@ -8,33 +8,16 @@ from __future__ import \
 
 import math
 
+import numpy as np
 from plotly import plotly
 from plotly import graph_objs as plotlyGraph
 from plotly import tools as plotlyTools
 from pyaid.number.NumericUtils import NumericUtils
 
 from cadence.analysis.shared import DataLoadUtils
+from cadence.analysis.shared import PlotConfigs
 
-SITE_SPECS = dict(
-    CRO=dict(
-        color='rgb(141,211,199)'),
-    CRT=dict(
-        color='rgb(188,128,189)'),
-    BEB=dict(
-        color='rgb(190,186,218)'),
-    BSY=dict(
-        color='rgb(251,128,114)'),
-    PMM=dict(
-        color='rgb(128,177,211)'),
-    SCR=dict(
-        color='rgb(253,180,98)'),
-    TCH=dict(
-        color='rgb(179,222,105)'),
-    CPP=dict(
-        color='rgb(252,205,229)'),
-    OFF=dict(
-        color='rgb(217,217,217)'))
-
+#_______________________________________________________________________________
 def makePlot(label, tracks):
     tracks = tracks.copy()
 
@@ -47,11 +30,12 @@ def makePlot(label, tracks):
 
     fig = plotlyTools.make_subplots(
         rows=1, cols=2,
-        subplot_titles=('Length vs Width','Aspect Ratios'))
+        subplot_titles=('Length vs Width','Aspect Ratios'),
+        print_grid=False)
 
     traces = []
     for site in tracks.site.unique():
-        color = SITE_SPECS[site]['color']
+        color = PlotConfigs.SITE_SPECS[site]['color']
         siteSlice = tracks[tracks.site == site]
         traces.append(plotlyGraph.Scatter(
             name=site,
@@ -81,13 +65,114 @@ def makePlot(label, tracks):
 
     url = plotly.plot(
         filename='A16/%s-Length-Width' % label,
-        figure_or_data=fig)
-    print('PLOT:', url)
+        figure_or_data=fig,
+        auto_open=False)
+    print('PLOT[%s]:' % label, url)
 
-tracks = DataLoadUtils.readTable('tracks')
-tracks = tracks[(tracks.length > 0) & (tracks.width > 0)]
+#_______________________________________________________________________________
+def makeHistograms(label, tracks):
+    fig = plotlyTools.make_subplots(
+        rows=8, cols=1,
+        shared_xaxes=True,
+        print_grid=False)
 
-makePlot('Pes', tracks[tracks.pes])
-makePlot('Manus', tracks[~tracks.pes])
+    index = 0
+    traces = []
+    xStart = tracks.width.min()
+    xEnd = tracks.width.max()
+    for site in tracks.site.unique():
+        index += 1
+        color = PlotConfigs.SITE_SPECS[site]['color']
+        siteSlice = tracks[tracks.site == site]
+        traces.append(plotlyGraph.Histogram(
+            name=site,
+            x=siteSlice.width,
+            autobinx=False,
+            xbins=plotlyGraph.XBins(
+                start=xStart,
+                end=xEnd,
+                size=0.01),
+            xaxis='x1',
+            yaxis='y%s' % int(index),
+            marker=plotlyGraph.Marker(color=color) ))
+
+    fig['data'] += plotlyGraph.Data(traces)
+
+    fig['layout'].update(title='%s Width Distributions by Tracksite' % label)
+
+    url = plotly.plot(
+        filename='A16/%s-Width-Distributions' % label,
+        figure_or_data=fig,
+        auto_open=False)
+    print('HISTOGRAM[%s]:' % label, url)
+
+#_______________________________________________________________________________
+def makeStackedBars(label, tracks):
+    traces = []
+    xStart = tracks.width.min()
+    xEnd = tracks.width.max()
+    binDelta = 0.01
+    bins = [xStart]
+
+    while bins[-1] < xEnd:
+        bins.append(min(xEnd, bins[-1] + binDelta))
+
+    for site in tracks.site.unique():
+        color = PlotConfigs.SITE_SPECS[site]['color']
+        siteSlice = tracks[tracks.site == site]
+        data = np.histogram(a=siteSlice.width.values, bins=bins)
+        traces.append(plotlyGraph.Bar(
+            name=site,
+            x=data[1],
+            y=data[0],
+            marker=plotlyGraph.Marker(color=color) ))
+
+    data = plotlyGraph.Data(traces)
+    layout = plotlyGraph.Layout(
+        title='%s Width Distributions by Tracksite' % label,
+        barmode='stack',
+        xaxis=plotlyGraph.XAxis(
+            title='Track Width (m)',
+            range=[xStart - 0.01, xEnd + 0.01],
+            autorange=False ),
+        yaxis=plotlyGraph.YAxis(
+            title='Count',
+            autorange=True))
+
+    url = plotly.plot(
+        filename='A16/%s-Stacked-Width-Distributions' % label,
+        figure_or_data=plotlyGraph.Figure(data=data, layout=layout),
+        auto_open=False)
+    print('STACK[%s]:' % label, url)
+
+################################################################################
+################################################################################
+
+#_______________________________________________________________________________ _main_
+def _main_(args):
+    tracks = DataLoadUtils.getTrackWithAnalysis()
+    tracks = tracks[(tracks.length > 0) & (tracks.width > 0)]
+
+    pesTracks = tracks[tracks.pes]
+    makePlot('Pes', pesTracks)
+    makeHistograms('Pes', pesTracks)
+    makeStackedBars('Pes', pesTracks)
+
+    manusTracks = tracks[~tracks.pes]
+    makePlot('Manus', manusTracks)
+    makeHistograms('Manus', manusTracks)
+    makeStackedBars('Manus', manusTracks)
+
+#_______________________________________________________________________________ RUN MAIN
+if __name__ == '__main__':
+    import argparse
+    import textwrap
+    dedent = textwrap.dedent
+    parser = argparse.ArgumentParser()
+
+    parser.description = dedent("""
+        Plots basic figures for SVP talk.""")
+    _main_(parser.parse_args())
+
 
 
