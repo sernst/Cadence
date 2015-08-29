@@ -17,6 +17,10 @@ from pyaid.number.NumericUtils import NumericUtils
 from cadence.analysis.shared import DataLoadUtils
 from cadence.analysis.shared import PlotConfigs
 
+
+from cadence.analysis.stats.StatisticsAnalyzer import StatisticsAnalyzer
+from cadence.analysis.stats.TrackwayStatsStage import TrackwayStatsStage
+
 #_______________________________________________________________________________
 def makePlot(label, tracks):
     tracks = tracks.copy()
@@ -162,6 +166,7 @@ def _main_(args):
     makePlot('Manus', manusTracks)
     makeHistograms('Manus', manusTracks)
     makeStackedBars('Manus', manusTracks)
+
 
 #_______________________________________________________________________________ RUN MAIN
 if __name__ == '__main__':

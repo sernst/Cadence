@@ -55,6 +55,22 @@ class TrackSeriesBundle(object):
 
 #_______________________________________________________________________________
     @property
+    def pesCount(self):
+        out = 0
+        for series in [self.leftPes, self.rightPes]:
+            out += series.count
+        return out
+
+#_______________________________________________________________________________
+    @property
+    def manusCount(self):
+        out = 0
+        for series in [self.leftManus, self.rightManus]:
+            out += series.count
+        return out
+
+#_______________________________________________________________________________
+    @property
     def trackway(self):
         return self._trackway
 

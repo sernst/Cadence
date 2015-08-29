@@ -12,12 +12,42 @@ from pyaid.file.FileUtils import FileUtils
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
+import os
 import re
 
 import pandas as pd
 import sqlalchemy as sqla
 
 from cadence.CadenceEnvironment import CadenceEnvironment
+
+class __LOCALS__(object):
+    SETTINGS_CONFIG = None
+
+#_______________________________________________________________________________
+def getAnalysisPath(*args, **kwargs):
+    config = getAnalysisSettings()
+    rootPath = config.get('OUTPUT_PATH')
+    if not rootPath or not os.path.exists(rootPath):
+        rootPath = CadenceEnvironment.getLocalAppResourcePath(
+        '..', '..', 'analysis', isDir=True)
+    return FileUtils.createPath(rootPath, *args, **kwargs)
+
+#_______________________________________________________________________________
+def getAnalysisData(analyzerClass, filename, analysisRootPath =None):
+    """ Using the analyzer class and CSV filename, return a Pandas DataFrame
+        containing that data.
+
+    @param analyzerClass: Class
+    @param filename: str
+    @param analysisRootPath: str
+    @return: DataFrame
+    """
+    folderName = analyzerClass.__name__
+    path = FileUtils.makeFilePath(analysisRootPath, folderName, filename) \
+        if analysisRootPath \
+        else getAnalysisPath(folderName, filename, isFile=True)
+
+    return pd.read_csv(path)
 
 #_______________________________________________________________________________
 def getTrackWithAnalysis():
@@ -77,8 +107,10 @@ def getAnalysisSettings():
     """ Retrieves the analysis configuration settings file as a SettingsConfig
         instance that can be modified and saved as needed.
         @return: SettingsConfig """
-    return SettingsConfig(
+    if not __LOCALS__.SETTINGS_CONFIG:
+        __LOCALS__.SETTINGS_CONFIG = SettingsConfig(
             FileUtils.makeFilePath(
                 PyGlassEnvironment.getRootLocalResourcePath(
                     'analysis', isDir=True),
                 'analysis.json'), pretty=True)
+    return __LOCALS__.SETTINGS_CONFIG
