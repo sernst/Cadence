@@ -3,8 +3,10 @@
 # Scott Ernst
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-from pyaid.dict.DictUtils import DictUtils
 
+import numpy as np
+
+from pyaid.dict.DictUtils import DictUtils
 from pyaid.number.NumericUtils import NumericUtils
 
 from refined_stats.density import DensityDistribution
@@ -12,7 +14,7 @@ from refined_stats.density import DensityDistribution
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 
-#******************************************************************************* TrackwayStatsStage
+#*******************************************************************************
 class TrackwayStatsStage(AnalysisStage):
     """A class for..."""
 
@@ -88,6 +90,10 @@ class TrackwayStatsStage(AnalysisStage):
             csv.autoIndexFieldName = 'Index'
             csv.addFields(
                 ('name', 'Name'),
+
+                ('normality', 'Normality'),
+                ('unweightedNormality', 'Unweighted Normality'),
+
                 ('unweightedLowerBound', 'Unweighted Lower Bound'),
                 ('unweightedLowerQuart', 'Unweighted Lower Quartile'),
                 ('unweightedMedian',     'Unweighted Median'),
@@ -112,9 +118,38 @@ class TrackwayStatsStage(AnalysisStage):
         unweighted = dd.getUnweightedTukeyBoxBoundaries()
         weighted = dd.getTukeyBoxBoundaries()
 
+        #-----------------------------------------------------------------------
+        # NORMALITY
+        #       Calculate the normality of the weighted and unweighted
+        #       distributions as a test against how well they conform to
+        #       the Normal distribution calculated from the unweighted data.
+        #
+        #       The unweighted Normality test uses a basic bandwidth detection
+        #       algorithm to create a uniform Gaussian kernel to populate the
+        #       DensityDistribution. It is effectively a density kernel
+        #       estimation, but is aggressive in selecting the bandwidth to
+        #       prevent over-smoothing multi-modal distributions.
+        if len(data) < 8:
+            normality = -1.0
+            unweightedNormality = -1.0
+        else:
+            result = NumericUtils.getMeanAndDeviation(data)
+            mean = result.raw
+            std = result.rawUncertainty
+            normality = dd.compareAgainstGaussian(mean, std)
+
+            rawValues = []
+            for value in data:
+                rawValues.append(value.value)
+            ddRaw = DensityDistribution.fromValuesOnly(values=rawValues)
+            unweightedNormality = ddRaw.compareAgainstGaussian(mean, std)
+
         csv.addRow({
             'index':trackway.index,
             'name':trackway.name,
+
+            'normality':normality,
+            'unweightedNormality':unweightedNormality,
 
             'unweightedLowerBound':unweighted[0],
             'unweightedLowerQuart':unweighted[1],
@@ -161,7 +196,9 @@ class TrackwayStatsStage(AnalysisStage):
     def _populateCsvData(self, target, trackway, data, isWeighted =True):
         aTrackway = trackway.getAnalysisPair(self.analysisSession)
         bundle = self.owner.getSeriesBundle(trackway)
-        density = bundle.count/aTrackway.curveLength if aTrackway.curveLength else 0.0
+        density = bundle.count/aTrackway.curveLength \
+            if aTrackway.curveLength \
+            else 0.0
 
         getValue = NumericUtils.weightedAverage \
             if isWeighted \
