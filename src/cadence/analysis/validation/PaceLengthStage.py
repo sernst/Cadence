@@ -2,11 +2,15 @@
 # (C)2014-2015
 # Scott Ernst
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import \
+    print_function, absolute_import, \
+    unicode_literals, division
 
+import math
 import functools
 
 import numpy as np
+
 from pyaid.list.ListUtils import ListUtils
 from pyaid.number.NumericUtils import NumericUtils
 from pyaid.string.StringUtils import StringUtils
@@ -19,17 +23,17 @@ from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
 from cadence.svg.CadenceDrawing import CadenceDrawing
 
 
-#*************************************************************************************************** PaceLengthStage
+#*******************************************************************************
 class PaceLengthStage(AnalysisStage):
-    """ The primary analysis stage for validating the stride lengths between the digitally entered
-        data and the catalog data measured in the field. """
+    """ The primary analysis stage for validating the stride lengths between
+        the digitally entered data and the catalog data measured in the field.
+    """
 
-#===============================================================================
-#                                                                                       C L A S S
+    MEASURED_UNCERTAINTY = 0.01
 
     MAPS_FOLDER_NAME = 'Pace-Lengths'
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of PaceLengthStage."""
         super(PaceLengthStage, self).__init__(
@@ -46,10 +50,10 @@ class PaceLengthStage(AnalysisStage):
         self._csv       = None
         self._errorCsv  = None
 
-#===============================================================================
-#                                                                               P R O T E C T E D
+    #===========================================================================
+    #                                                         P R O T E C T E D
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _preAnalyze(self):
         """_preDeviations doc..."""
         self.noData = 0
@@ -64,10 +68,10 @@ class PaceLengthStage(AnalysisStage):
         csv.addFields(
             ('uid', 'UID'),
             ('fingerprint', 'Fingerprint'),
-            ('entered', 'Entered (m)'),
-            ('measured', 'Measured (m)'),
-            ('dev', 'Deviation (sigma)'),
-            ('delta', 'Fractional Error (%)'),
+            ('entered', 'Field'),
+            ('measured', 'Measured'),
+            ('dev', 'Deviation'),
+            ('delta', 'Fractional Error'),
             ('pairedFingerprint', 'Track Pair Fingerprint'),
             ('pairedUid', 'Track Pair UID') )
         self._csv = csv
@@ -78,10 +82,10 @@ class PaceLengthStage(AnalysisStage):
         csv.addFields(
             ('uid', 'UID'),
             ('fingerprint', 'Fingerprint'),
-            ('measured', 'Measured (m)') )
+            ('measured', 'Measured') )
         self._errorCsv = csv
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
 
@@ -98,7 +102,7 @@ class PaceLengthStage(AnalysisStage):
 
         super(PaceLengthStage, self)._analyzeSitemap(sitemap)
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         bundle = self.owner.getSeriesBundle(trackway)
 
@@ -127,11 +131,12 @@ class PaceLengthStage(AnalysisStage):
                         t, sitemap,
                         'Pace field measurement exists invalid series')
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _logUnresolvableTrack(self, track, sitemap, message):
         """_logUnresolvableTrack doc..."""
         measured = NumericUtils.toValueUncertainty(
-            track.snapshotData.get(SnapshotDataEnum.PACE), 0.06)
+            value=track.snapshotData.get(SnapshotDataEnum.PACE),
+            uncertainty=self.MEASURED_UNCERTAINTY)
 
         self.ignored += 1
         self.logger.write([
@@ -148,7 +153,7 @@ class PaceLengthStage(AnalysisStage):
             track.positionValue.toMayaTuple(), 10,
             stroke='none', fill='red', fill_opacity=0.5)
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _analyzeSeriesPair(self, sitemap, series, pairSeries):
         """_analyzeSeriesPair doc..."""
 
@@ -157,24 +162,25 @@ class PaceLengthStage(AnalysisStage):
             data = track.snapshotData
 
             aTrack = track.getAnalysisPair(self.analysisSession)
+            aTrack.paceLength = 0.0
+            aTrack.paceLengthUnc = 0.0
 
-            if not self.hasPace(track):
-                # Skip tracks that either have no measurement or have been
-                # flagged not to have a pace (because the value from the
-                # spreadsheet is incorrect)
-                aTrack.paceLength = 0.0
-                aTrack.paceLengthUnc = 0.0
-                self.noData += 1
-                continue
-
-            measured = NumericUtils.toValueUncertainty(
-                value=data.get(SnapshotDataEnum.PACE),
-                uncertainty=0.06)
+            if self.hasPace(track):
+                measured = NumericUtils.toValueUncertainty(
+                    value=data.get(SnapshotDataEnum.PACE),
+                    uncertainty=self.MEASURED_UNCERTAINTY)
+            else:
+                self.noData +=1
+                measured = None
 
             pairTrack = self._getPairedTrack(track, series, pairSeries)
             if pairTrack is None:
-                self._getPairedTrack(track, series, pairSeries)
-                self._logUnresolvableTrack(track, sitemap, 'Unable to determine pairSeries track')
+                if measured is None:
+                    continue
+                self._logUnresolvableTrack(
+                    track=track,
+                    sitemap=sitemap,
+                    message='Unable to determine pairSeries track')
                 continue
 
             position = track.positionValue
@@ -183,29 +189,37 @@ class PaceLengthStage(AnalysisStage):
 
             if not paceLine.isValid:
                 self._logUnresolvableTrack(
-                    track, sitemap, 'Invalid track separation of 0.0. Ignoring track')
+                    track=track,
+                    sitemap=sitemap,
+                    message='Invalid track separation of 0.0. Ignoring track')
                 continue
 
-            entered    = paceLine.length
-            delta      = entered.raw - measured.raw
-            deviation  = delta/(measured.rawUncertainty + entered.rawUncertainty)
-            fractional = delta/measured.raw
-            self.count += 1
-
+            entered = paceLine.length
             entry = dict(
                 track=track,
-                    # Absolute difference between calculated and measured distance
-                delta=delta,
-                    # Calculated distance from AI-based data entry
-                entered=entered,
-                    # Measured distance from the catalog
-                measured=measured,
-                    # Fractional error between calculated and measured distance
-                fractional=fractional,
-                    # Sigma trackDeviations between
-                deviation=deviation,
                 pairTrack=pairTrack,
-                drawFunc=functools.partial(self._drawPaceLine, sitemap, paceLine))
+                drawFunc=functools.partial(
+                    self._drawPaceLine, sitemap, paceLine),
+                # Calculated distance from AI-based data entry
+                entered=entered)
+
+            if measured:
+                # Measured distance from the catalog
+                entry['measured'] = measured
+
+                # Absolute difference between calculated and measured distance
+                delta = entered.raw - measured.raw
+                entry['delta'] = delta
+
+                # Fractional error between calculated and measured distance
+                entry['fractional'] = delta/measured.raw
+
+                # Sigma trackDeviations between
+                entry['deviation'] = abs(delta/math.sqrt(
+                    measured.rawUncertainty**2 +
+                    entered.rawUncertainty**2))
+
+            self.count += 1
 
             aTrack = track.getAnalysisPair(self.analysisSession)
             aTrack.paceLength = entered.raw
@@ -215,7 +229,7 @@ class PaceLengthStage(AnalysisStage):
             # self._drawPaceLine(sitemap, paceLine, )
             track.cache.set('paceData', entry)
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     @classmethod
     def _drawSeries(cls, sitemap, series):
         """_drawSeries doc..."""
@@ -249,7 +263,7 @@ class PaceLengthStage(AnalysisStage):
             stroke='none', fill=color,
             fill_opacity='0.75' if cls.hasPace(track) else '0.1')
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     @classmethod
     def hasPace(cls, track):
         """hasPace doc..."""
@@ -257,7 +271,7 @@ class PaceLengthStage(AnalysisStage):
             return False
         return bool(track.snapshotData.get(SnapshotDataEnum.PACE) is not None)
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     @classmethod
     def _drawPaceLine(cls, sitemap, line, color):
         """_drawPaceLine doc..."""
@@ -269,12 +283,18 @@ class PaceLengthStage(AnalysisStage):
             stroke=color, stroke_width=1, stroke_opacity='1.0')
 
         drawing.circle(
-            line.end.toMayaTuple(), 3, stroke='none', fill=color, fill_opacity='0.25')
+            line.end.toMayaTuple(), 3,
+            stroke='none',
+            fill=color,
+            fill_opacity='0.25')
 
         drawing.circle(
-            line.start.toMayaTuple(), 3, stroke='none', fill=color, fill_opacity='0.25')
+            line.start.toMayaTuple(), 3,
+            stroke='none',
+            fill=color,
+            fill_opacity='0.25')
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _getPairedTrack(self, track, trackSeries, pairSeries):
         """_getPairedTrack doc..."""
 
@@ -299,7 +319,8 @@ class PaceLengthStage(AnalysisStage):
                 # the next track
                 continue
 
-            if nextAnalysisTrack and apt.curvePosition > nextAnalysisTrack.curvePosition:
+            nat = nextAnalysisTrack
+            if nat and apt.curvePosition > nat.curvePosition:
                 # If the pair track is past the next track position there is
                 # no pair track for this
                 # pace segment
@@ -309,7 +330,7 @@ class PaceLengthStage(AnalysisStage):
 
         return None
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _postAnalyze(self):
         """_postAnalyze doc..."""
         self._paths = []
@@ -320,70 +341,85 @@ class PaceLengthStage(AnalysisStage):
 
         self.mergePdfs(self._paths)
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _getFooterArgs(self):
         return [
             'Processed %s tracks' % len(self.entries),
             '%s tracks with no pace data' % self.noData]
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _process(self):
         """_processDeviations doc..."""
         errors  = []
 
         for entry in self.entries:
-            errors.append(entry['fractional'])
+            if 'fractional' in entry:
+                errors.append(entry['fractional'])
 
         res = NumericUtils.getMeanAndDeviation(errors)
         self.logger.write('Fractional Pace Error %s' % res.label)
 
         label = 'Fractional Pace Errors'
         d     = errors
-        self._paths.append(self._makePlot(label, d, histRange=(-1.0, 1.0)))
-        self._paths.append(self._makePlot(label, d, isLog=True, histRange=(-1.0, 1.0)))
+        self._paths.append(self._makePlot(
+            label=label,
+            data=d,
+            histRange=(-1.0, 1.0)))
+        self._paths.append(self._makePlot(
+            label=label,
+            data=d,
+            isLog=True,
+            histRange=(-1.0, 1.0)))
 
         # noinspection PyUnresolvedReferences
         d = np.absolute(np.array(d))
-        self._paths.append(self._makePlot('Absolute %s' % label, d, histRange=(0.0, 1.0)))
-        self._paths.append(self._makePlot('Absolute %s' % label, d, isLog=True, histRange=(0.0, 1.0)))
+        self._paths.append(self._makePlot(
+            label='Absolute %s' % label,
+            data=d,
+            histRange=(0.0, 1.0) ))
+        self._paths.append(self._makePlot(
+            label='Absolute %s' % label,
+            data=d,
+            isLog=True,
+            histRange=(0.0, 1.0) ))
 
         highDeviationCount = 0
 
         for entry in self.entries:
-            sigmaMag = 0.03 + res.uncertainty
-            sigmaCount = NumericUtils.roundToOrder(abs(entry['delta']/sigmaMag), -2)
-            entry['meanDeviation'] = sigmaCount
-            entry['highMeanDeviation'] = False
+            if 'measured' not in entry:
+                entry['drawFunc']('purple')
+                continue
 
-            if sigmaCount < 2.0:
-                entry['drawFunc']('black' if abs(entry['deviation']) < 2.0 else '#FFAAAA')
-            else:
+            if entry['deviation'] > 2.0:
                 entry['drawFunc']('red')
-                entry['highMeanDeviation'] = True
                 highDeviationCount += 1
-                track = entry['track']
-                delta = NumericUtils.roundToSigFigs(100.0*abs(entry['delta']), 3)
+            else:
+                entry['drawFunc'](
+                    'black' if abs(entry['deviation']) < 2.0 else '#FFAAAA')
 
-                pairTrack = entry.get('pairTrack')
-                if pairTrack:
-                    pairedFingerprint = pairTrack.fingerprint
-                    pairedUid         = pairTrack.uid
-                else:
-                    pairedFingerprint = ''
-                    pairedUid         = ''
+            track = entry['track']
+            delta = NumericUtils.roundToSigFigs(100.0*abs(entry['delta']), 3)
 
-                self._csv.addRow({
-                    'fingerprint':track.fingerprint,
-                    'uid':track.uid,
-                    'measured':entry['measured'].label,
-                    'entered':entry['entered'].label,
-                    'dev':sigmaCount,
-                    'delta':delta,
-                    'pairedUid':pairedUid,
-                    'pairedFingerprint':pairedFingerprint})
+            pairTrack = entry.get('pairTrack')
+            if pairTrack:
+                pairedFingerprint = pairTrack.fingerprint
+                pairedUid         = pairTrack.uid
+            else:
+                pairedFingerprint = ''
+                pairedUid         = ''
+
+            self._csv.addRow({
+                'fingerprint':track.fingerprint,
+                'uid':track.uid,
+                'measured':entry['measured'].label,
+                'entered':entry['entered'].label,
+                'dev':entry['deviation'],
+                'delta':delta,
+                'pairedUid':pairedUid,
+                'pairedFingerprint':pairedFingerprint})
 
         for sitemap in self.owner.getSitemaps():
-            # Remove the drawing from the sitemap cache and save the drawing file
+            # Remove drawing from the sitemap cache and save the drawing file
             try:
                 sitemap.cache.extract('drawing').save()
             except Exception:
@@ -391,25 +427,37 @@ class PaceLengthStage(AnalysisStage):
                     sitemap.name, sitemap.level))
 
         if not self._csv.save():
-            self.logger.write('[ERROR]: Failed to save CSV file %s' % self._csv.path)
+            self.logger.write(
+                '[ERROR]: Failed to save CSV file %s' % self._csv.path)
 
         if not self._errorCsv.save():
-            self.logger.write('[ERROR]: Failed to save CSV file %s' % self._errorCsv.path)
+            self.logger.write(
+                '[ERROR]: Failed to save CSV file %s' % self._errorCsv.path)
 
-        percentage = NumericUtils.roundToOrder(100.0*float(highDeviationCount)/float(len(self.entries)), -2)
-        self.logger.write('%s significant %s (%s%%)' % (highDeviationCount, label.lower(), percentage))
+        percentage = NumericUtils.roundToOrder(
+            100.0*float(highDeviationCount)/float(len(self.entries)), -2)
+        self.logger.write('%s significant %s (%s%%)' % (
+            highDeviationCount,
+            label.lower(),
+            percentage))
         if percentage > (100.0 - 95.45):
             self.logger.write(
-                '[WARNING]: Large deviation count exceeds normal distribution expectations.')
+                '[WARNING]: Large deviation count exceeds normal ' +
+                'distribution expectations.')
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _makePlot(self, label, data, color ='b', isLog =False, histRange =None):
         """_makePlot doc..."""
 
         pl = self.plot
         self.owner.createFigure('makePlot')
 
-        pl.hist(data, 31, range=histRange, log=isLog, facecolor=color, alpha=0.75)
+        pl.hist(
+            data, 31,
+            range=histRange,
+            log=isLog,
+            facecolor=color,
+            alpha=0.75)
         pl.title('%s Distribution%s' % (label, ' (log)' if isLog else ''))
         pl.xlabel('Fractional Deviation')
         pl.ylabel('Frequency')
@@ -419,7 +467,9 @@ class PaceLengthStage(AnalysisStage):
         xlims = axis.get_xlim()
         pl.xlim((max(histRange[0], xlims[0]), min(histRange[1], xlims[1])))
 
-        path = self.getTempPath('%s.pdf' % StringUtils.getRandomString(16), isFile=True)
+        path = self.getTempPath(
+            '%s.pdf' % StringUtils.getRandomString(16),
+            isFile=True)
         self.owner.saveFigure('makePlot', path)
         return path
 

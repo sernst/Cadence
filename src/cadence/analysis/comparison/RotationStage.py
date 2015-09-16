@@ -18,16 +18,16 @@ from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.svg.CadenceDrawing import CadenceDrawing
 
 
-#*************************************************************************************************** RotationStage
+#*******************************************************************************
 class RotationStage(AnalysisStage):
-    """A class for..."""
-
-#===============================================================================
-#                                                                                       C L A S S
+    """ Compares the rotational values from the field measurements, where they
+        exist, with the measurements entered digitally determine the level of
+        equivalence between the data sets.
+    """
 
     DRAWING_FOLDER_NAME = 'Rotation-Comparison-Maps'
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of RotationStage."""
         super(RotationStage, self).__init__(
@@ -42,18 +42,18 @@ class RotationStage(AnalysisStage):
 
         self._currentDrawing = None
 
-#===============================================================================
-#                                                                                   G E T / S E T
+    #===========================================================================
+    #                                                             G E T / S E T
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     @property
     def deviations(self):
         return self.cache.get('trackDeviations')
 
-#===============================================================================
-#                                                                               P R O T E C T E D
+    #===========================================================================
+    #                                                         P R O T E C T E D
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _preAnalyze(self):
         """_preAnalyze doc..."""
         self.cache.set('trackDeviations', {})
@@ -69,13 +69,13 @@ class RotationStage(AnalysisStage):
             ('delta', 'Discrepancy'),
             ('entered', 'Entered'),
             ('measured', 'Measured'),
-            ('deviation', 'Deviation (sigmas)'),
+            ('deviation', 'Deviation'),
             ('relative', 'Relative'),
             ('axis', 'Axis'),
             ('axisPairing', 'Axis Pairing'))
         self._csv = csv
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
 
         # start a drawing for the SVG and PDF files
@@ -85,7 +85,11 @@ class RotationStage(AnalysisStage):
 
         # create a group to be instanced for the map annotations
         self._currentDrawing.createGroup('pointer')
-        self._currentDrawing.line((0, 0), (0, -10), scene=False, groupId='pointer')
+        self._currentDrawing.line(
+            p1=(0, 0),
+            p2=(0, -10),
+            scene=False,
+            groupId='pointer')
 
         # and place a grid and the federal coordinates in the drawing file
         self._currentDrawing.grid()
@@ -96,15 +100,18 @@ class RotationStage(AnalysisStage):
         if self._currentDrawing:
             self._currentDrawing.save()
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _analyzeTrackSeries(self, series, trackway, sitemap):
 
-        # At least two tracks are required to make the comparison
         if len(series.tracks) < 2:
+            # At least two tracks are required to make the comparison
             return
 
         for track in series.tracks:
-            fieldAngle = Angle(degrees=track.rotationMeasured if track.rotationMeasured else  0.0)
+            fieldAngle = Angle(
+                degrees=track.rotationMeasured \
+                    if track.rotationMeasured \
+                    else  0.0)
             dataAngle  = Angle(degrees=track.rotation)
             strideLine = StrideLine(track=track, series=series)
 
@@ -141,8 +148,11 @@ class RotationStage(AnalysisStage):
                 fieldAngle.degrees -= 360.0
 
             fieldAngleUnc = Angle(degrees=5.0)
-            fieldAngleUnc.radians += 0.03/math.sqrt(1.0 - math.pow(strideLine.vector.x, 2))
-            fieldDeg = NumericUtils.toValueUncertainty(fieldAngle.degrees, fieldAngleUnc.degrees)
+            fieldAngleUnc.radians += \
+                0.03/math.sqrt(1.0 - math.pow(strideLine.vector.x, 2))
+            fieldDeg = NumericUtils.toValueUncertainty(
+                value=fieldAngle.degrees,
+                uncertainty=fieldAngleUnc.degrees)
 
             # Adjust data angle into range [-180, 180]
             dataAngle.constrainToRevolution()
@@ -150,15 +160,18 @@ class RotationStage(AnalysisStage):
                 dataAngle.degrees -= 360.0
 
             dataAngleUnc = Angle(degrees=track.rotationUncertainty)
-            dataDeg = NumericUtils.toValueUncertainty(dataAngle.degrees, dataAngleUnc.degrees)
+            dataDeg = NumericUtils.toValueUncertainty(
+                value=dataAngle.degrees,
+                uncertainty=dataAngleUnc.degrees)
 
             angle1 = Angle(degrees=dataDeg.value)
             angle2 = Angle(degrees=fieldDeg.value)
 
-            # the fill color for the disks to be added to the map are based on diffDeg
+            # fill color for the disks to be added to the map are based on
+            # diffDeg
             diffDeg = NumericUtils.toValueUncertainty(
-                angle1.differenceBetween(angle2).degrees,
-                min(90.0, math.sqrt(
+                value=angle1.differenceBetween(angle2).degrees,
+                uncertainty=min(90.0, math.sqrt(
                     math.pow(dataAngleUnc.degrees, 2) +
                     math.pow(fieldAngleUnc.degrees, 2))) )
 
@@ -168,7 +181,8 @@ class RotationStage(AnalysisStage):
             self.deviations[track.uid] = diffDeg
 
             # for now, convert +/- 180 headings to 0-360, using e and m
-            # comment the next four lines toggle comments for entered and measured below to revert
+            # comment the next four lines toggle comments for entered and
+            # measured below to revert
             e = dataDeg.value
             m = fieldDeg.value
             if e < 0.0:
@@ -180,11 +194,9 @@ class RotationStage(AnalysisStage):
                 uid=track.uid,
                 fingerprint=track.fingerprint,
                 entered=str(e),
-    #           entered=dataDeg.label,
                 measured=str(m),
-    #           measured=fieldDeg.label,
-                delta=abs(NumericUtils.roundToOrder(diffDeg.value, -2)),
-                deviation=NumericUtils.roundToSigFigs(deviation, 3),
+                delta=abs(diffDeg.value),
+                deviation=deviation,
                 relative=NumericUtils.roundToOrder(track.rotationMeasured, -2),
                 axis=NumericUtils.roundToOrder(axisAngle.degrees, -2),
                 axisPairing='NEXT' if strideLine.isNext else 'PREV')
@@ -221,7 +233,8 @@ class RotationStage(AnalysisStage):
                 stroke_width=1,
                 stroke='red')
 
-            # place a translucent disk of radius proportional to the difference in degrees
+            # place a translucent disk of radius proportional to the difference
+            # in degrees
             radius = 100.0*diffDeg.value/180.0
             self._currentDrawing.circle(
                 (track.x, track.z),
@@ -268,9 +281,10 @@ class RotationStage(AnalysisStage):
             diffs.append(abs(diffDeg.value))
             diffsUnc.append(diffDeg.uncertainty)
 
-            # Compute the circularity of the track from its aspect ratio. If the aspect is less
-            # than or equal to 1.0 use the aspect value directly. However, if the value is greater
-            # than one, take the reciprocal so that large and small aspect ratios can be compared
+            # Compute the circularity of the track from its aspect ratio. If
+            # the aspect is less than or equal to 1.0 use the aspect value
+            # directly. However, if the value is greater than one, take the
+            # reciprocal so that large and small aspect ratios can be compared
             # equally.
             aspect = entry['aspect']
             if aspect.value > 1.0:

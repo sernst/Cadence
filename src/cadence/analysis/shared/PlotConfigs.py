@@ -6,22 +6,51 @@ from __future__ import \
     print_function, absolute_import, \
     unicode_literals, division
 
+COLORS = [
+    'rgb(141,211,199)',
+    'rgb(188,128,189)',
+    'rgb(190,186,218)',
+    'rgb(251,128,114)',
+    'rgb(128,177,211)',
+    'rgb(253,180,98)',
+    'rgb(179,222,105)',
+    'rgb(252,205,229)',
+    'rgb(217,217,217)' ]
+
+SIZE_CLASSES = [
+    dict(
+        range=(0, 0.25),
+        name='Tiny',
+        color=COLORS[0]),
+    dict(
+        range=(0.25, 0.50),
+        name='Small',
+        color=COLORS[1]),
+    dict(
+        range=(0.5, 0.75),
+        name='Medium',
+        color=COLORS[2]),
+    dict(
+        range=(0.75, 100.0),
+        name='Large',
+        color=COLORS[3]) ]
+
 SITE_SPECS = dict(
     CRO=dict(
-        color='rgb(141,211,199)'),
+        color=COLORS[0]),
     CRT=dict(
-        color='rgb(188,128,189)'),
+        color=COLORS[1]),
     BEB=dict(
-        color='rgb(190,186,218)'),
+        color=COLORS[2]),
     BSY=dict(
-        color='rgb(251,128,114)'),
+        color=COLORS[3]),
     PMM=dict(
-        color='rgb(128,177,211)'),
+        color=COLORS[4]),
     SCR=dict(
-        color='rgb(253,180,98)'),
+        color=COLORS[5]),
     TCH=dict(
-        color='rgb(179,222,105)'),
+        color=COLORS[6]),
     CPP=dict(
-        color='rgb(252,205,229)'),
+        color=COLORS[7]),
     OFF=dict(
-        color='rgb(217,217,217)'))
+        color=COLORS[8]))

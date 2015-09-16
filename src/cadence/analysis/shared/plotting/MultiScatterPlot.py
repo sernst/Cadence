@@ -2,16 +2,18 @@
 # (C)2015
 # Scott Ernst
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import \
+    print_function, absolute_import, \
+    unicode_literals, division
 
 from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
 
-#*************************************************************************************************** MultiScatterPlot
+#*******************************************************************************
 class MultiScatterPlot(ScatterPlot):
     """A class for..."""
 
 #===============================================================================
-#                                                                                       C L A S S
+#                                                                     C L A S S
 
 #_______________________________________________________________________________
     def __init__(self, *args, **kwargs):
@@ -49,5 +51,16 @@ class MultiScatterPlot(ScatterPlot):
 #_______________________________________________________________________________
     def _plotImpl(self):
         """_plotImpl doc..."""
+        plotHandles = []
         for item in self._plotData:
-            self._plotScatterSeries(**item)
+            if 'label' not in item:
+                item['label'] = 'Series %s' % (len(plotHandles) + 1)
+            plotHandles.append(self._plotScatterSeries(**item))
+
+        if len(plotHandles) < 2:
+            return
+
+        handles = []
+        for ph in plotHandles:
+            handles.append(ph[-1])
+            self.pl.legend(handles)

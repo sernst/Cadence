@@ -2,7 +2,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
-from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from pyaid.number.PositionValue2D import PositionValue2D
 
 p1 = PositionValue2D(0.0, 0.0, 0.1, 0.1)
 p2 = PositionValue2D(4.0, 0.0, 0.1, 0.1)

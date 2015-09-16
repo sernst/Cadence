@@ -10,8 +10,8 @@ from cadence.models.analysis.Analysis_Sitemap import Analysis_Sitemap
 from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 from cadence.models.tracks.Tracks_Trackway import Tracks_Trackway
 
-SITEMAP_NAME = 'TCH'
-SITEMAP_LEVEL = '1000'
+SITEMAP_NAME = 'BEB'
+SITEMAP_LEVEL = '500'
 TRACKWAY_NAME = '' #'BSY-1040-2008-20-S-19' #'CRO-500-2004-1-S-3'
 
 smModel   = Tracks_SiteMap.MASTER
@@ -33,6 +33,7 @@ siteMaps = query.all()
 #_______________________________________________________________________________
 # TRACK ITERATOR
 for siteMap in siteMaps:
+    print('SITEMAP:', siteMap.isReady)
     query = session.query(twModel).filter(twModel.siteMapIndex == siteMap.index)
     if TRACKWAY_NAME:
         query = query.filter(twModel.name == TRACKWAY_NAME)

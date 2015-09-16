@@ -13,15 +13,16 @@ from plotly import plotly
 from plotly import graph_objs as plotlyGraph
 from plotly import tools as plotlyTools
 from pyaid.number.NumericUtils import NumericUtils
+from refined_stats.density import DensityDistribution
 
 from cadence.analysis.shared import DataLoadUtils
 from cadence.analysis.shared import PlotConfigs
 
 
-from cadence.analysis.stats.StatisticsAnalyzer import StatisticsAnalyzer
-from cadence.analysis.stats.TrackwayStatsStage import TrackwayStatsStage
-
 #_______________________________________________________________________________
+from cadence.analysis.shared.plotting import PlotlyUtils
+
+
 def makePlot(label, tracks):
     tracks = tracks.copy()
 
@@ -71,26 +72,23 @@ def makePlot(label, tracks):
         filename='A16/%s-Length-Width' % label,
         figure_or_data=fig,
         auto_open=False)
-    print('PLOT[%s]:' % label, url)
+    print('PLOT[%s]:' % label, PlotlyUtils.toEmbedUrl(url))
 
 #_______________________________________________________________________________
-def makeHistograms(label, tracks):
-    fig = plotlyTools.make_subplots(
-        rows=8, cols=1,
-        shared_xaxes=True,
-        print_grid=False)
-
+def makeHistograms(label, columnName, errorColumnName, tracks):
     index = 0
-    traces = []
-    xStart = tracks.width.min()
-    xEnd = tracks.width.max()
-    for site in tracks.site.unique():
+    histTraces = []
+    densityTraces = []
+    xStart = tracks[columnName].min()
+    xEnd = tracks[columnName].max()
+    sites = tracks.site.unique()
+    for site in sites:
         index += 1
         color = PlotConfigs.SITE_SPECS[site]['color']
         siteSlice = tracks[tracks.site == site]
-        traces.append(plotlyGraph.Histogram(
+        histTraces.append(plotlyGraph.Histogram(
             name=site,
-            x=siteSlice.width,
+            x=siteSlice[columnName],
             autobinx=False,
             xbins=plotlyGraph.XBins(
                 start=xStart,
@@ -100,21 +98,61 @@ def makeHistograms(label, tracks):
             yaxis='y%s' % int(index),
             marker=plotlyGraph.Marker(color=color) ))
 
-    fig['data'] += plotlyGraph.Data(traces)
+        distributionValues = []
+        for i, row in siteSlice.iterrows():
+            distributionValues.append(NumericUtils.toValueUncertainty(
+                value=row[columnName],
+                uncertainty=row[errorColumnName]))
 
-    fig['layout'].update(title='%s Width Distributions by Tracksite' % label)
+        dd = DensityDistribution(values=distributionValues)
+        xValues = dd.getAdaptiveRange(10)
+        yValues = dd.createDistribution(xValues=xValues, scaled=True)
+
+        densityTraces.append(plotlyGraph.Scatter(
+            name=site,
+            x=xValues,
+            y=yValues,
+            xaxis='x1',
+            yaxis='y%s' % int(index),
+            mode='lines',
+            fill='tozeroy',
+            marker=plotlyGraph.Marker(color=color) ))
+
+    fig = plotlyTools.make_subplots(
+        rows=len(sites), cols=1,
+        shared_xaxes=True,
+        print_grid=False)
+    fig['data'] += plotlyGraph.Data(histTraces)
+    fig['layout'].update(title='%s Distributions by Tracksite' % label)
 
     url = plotly.plot(
-        filename='A16/%s-Width-Distributions' % label,
+        filename='A16/%s-Distributions' % label.replace(' ', '-'),
         figure_or_data=fig,
         auto_open=False)
-    print('HISTOGRAM[%s]:' % label, url)
+    print('HISTOGRAM[%s]:' % label, PlotlyUtils.toEmbedUrl(url))
+
+    fig = plotlyTools.make_subplots(
+        rows=len(sites), cols=1,
+        shared_xaxes=True,
+        print_grid=False)
+    fig['data'] += plotlyGraph.Data(densityTraces)
+    fig['layout'].update(
+        title='%s Distributions by Tracksite' % label,
+        xaxis1=plotlyGraph.XAxis(
+            autorange=False,
+            range=[xStart, xEnd]))
+
+    url = plotly.plot(
+        filename='A16/%s-Kernel-Distributions' % label.replace(' ', '-'),
+        figure_or_data=fig,
+        auto_open=False)
+    print('KERNEL-DENSITY[%s]:' % label, PlotlyUtils.toEmbedUrl(url))
 
 #_______________________________________________________________________________
-def makeStackedBars(label, tracks):
+def makeStackedBars(label, columnName, tracks):
     traces = []
-    xStart = tracks.width.min()
-    xEnd = tracks.width.max()
+    xStart = tracks[columnName].min()
+    xEnd = tracks[columnName].max()
     binDelta = 0.01
     bins = [xStart]
 
@@ -124,7 +162,7 @@ def makeStackedBars(label, tracks):
     for site in tracks.site.unique():
         color = PlotConfigs.SITE_SPECS[site]['color']
         siteSlice = tracks[tracks.site == site]
-        data = np.histogram(a=siteSlice.width.values, bins=bins)
+        data = np.histogram(a=siteSlice[columnName].values, bins=bins)
         traces.append(plotlyGraph.Bar(
             name=site,
             x=data[1],
@@ -133,10 +171,10 @@ def makeStackedBars(label, tracks):
 
     data = plotlyGraph.Data(traces)
     layout = plotlyGraph.Layout(
-        title='%s Width Distributions by Tracksite' % label,
+        title='%s Distributions by Tracksite' % label,
         barmode='stack',
         xaxis=plotlyGraph.XAxis(
-            title='Track Width (m)',
+            title='Track %s' % label,
             range=[xStart - 0.01, xEnd + 0.01],
             autorange=False ),
         yaxis=plotlyGraph.YAxis(
@@ -144,10 +182,10 @@ def makeStackedBars(label, tracks):
             autorange=True))
 
     url = plotly.plot(
-        filename='A16/%s-Stacked-Width-Distributions' % label,
+        filename='A16/%s-Stacked-Distributions' % label,
         figure_or_data=plotlyGraph.Figure(data=data, layout=layout),
         auto_open=False)
-    print('STACK[%s]:' % label, url)
+    print('STACK[%s]:' % label, PlotlyUtils.toEmbedUrl(url))
 
 ################################################################################
 ################################################################################
@@ -159,14 +197,40 @@ def _main_(args):
 
     pesTracks = tracks[tracks.pes]
     makePlot('Pes', pesTracks)
-    makeHistograms('Pes', pesTracks)
-    makeStackedBars('Pes', pesTracks)
+
+    df = pesTracks
+    makeHistograms(
+        label='Pes Width',
+        columnName='width',
+        errorColumnName='widthUncertainty',
+        tracks=df)
+    makeStackedBars('Pes Width', 'width', df)
+
+    df = pesTracks[pesTracks['strideLength'] > 0]
+    makeHistograms(
+        label='Stride Length',
+        columnName='strideLength',
+        errorColumnName='strideLengthUnc',
+        tracks=df)
+    makeStackedBars('Stride Length', 'strideLength', df)
+
+    df = pesTracks[pesTracks['paceLength'] > 0]
+    makeHistograms(
+        label='Pace Length',
+        columnName='paceLength',
+        errorColumnName='paceLengthUnc',
+        tracks=df)
+    makeStackedBars('Pace Length', 'paceLength', df)
 
     manusTracks = tracks[~tracks.pes]
     makePlot('Manus', manusTracks)
-    makeHistograms('Manus', manusTracks)
-    makeStackedBars('Manus', manusTracks)
 
+    makeHistograms(
+        label='Manus Width',
+        columnName='width',
+        errorColumnName='widthUncertainty',
+        tracks=manusTracks)
+    makeStackedBars('Manus Width', 'width', manusTracks)
 
 #_______________________________________________________________________________ RUN MAIN
 if __name__ == '__main__':

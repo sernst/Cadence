@@ -2,7 +2,11 @@
 # (C)2014
 # Scott Ernst
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import \
+    print_function, absolute_import, \
+    unicode_literals, division
+
+import math
 
 import numpy as np
 from pyaid.number.NumericUtils import NumericUtils
@@ -11,21 +15,24 @@ from pyaid.string.StringUtils import StringUtils
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum
+from cadence.enums.ImportFlagsEnum import ImportFlagsEnum
 from cadence.enums.SnapshotDataEnum import SnapshotDataEnum
 from cadence.svg.CadenceDrawing import CadenceDrawing
 
 
-#*************************************************************************************************** StrideLengthStage
+#*******************************************************************************
 class StrideLengthStage(AnalysisStage):
-    """ The primary analysis stage for validating the stride lengths between the digitally entered
-        data and the catalog data measured in the field. """
+    """ The primary analysis stage for validating the stride lengths between
+        the digitally entered
+        data and the catalog data measured in the field.
+    """
 
-#===============================================================================
-#                                                                                       C L A S S
+    MEASURED_UNCERTAINTY = 0.01
+    HIGH_MEASURED_UNCERTAINTY = 0.03
 
     MAPS_FOLDER_NAME = 'Stride-Lengths'
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of StrideLengthStage."""
         super(StrideLengthStage, self).__init__(
@@ -37,10 +44,10 @@ class StrideLengthStage(AnalysisStage):
         self.noData  = 0
         self.entries = []
 
-#===============================================================================
-#                                                                               P R O T E C T E D
+    #===========================================================================
+    #                                                         P R O T E C T E D
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _preAnalyze(self):
         """_preDeviations doc..."""
         self.noData = 0
@@ -53,13 +60,13 @@ class StrideLengthStage(AnalysisStage):
         csv.addFields(
             ('uid', 'UID'),
             ('fingerprint', 'Fingerprint'),
-            ('entered', 'Entered (m)'),
-            ('measured', 'Measured (m)'),
-            ('dev', 'Deviation (sigma)'),
-            ('delta', 'Fractional Error (%)'))
+            ('entered', 'Entered'),
+            ('measured', 'Measured'),
+            ('dev', 'Deviation'),
+            ('delta', 'Fractional Error'))
         self._csv = csv
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
 
         drawing = CadenceDrawing(
@@ -81,7 +88,7 @@ class StrideLengthStage(AnalysisStage):
             self.logger.write('[WARNING]: No sitemap saved for %s-%s' % (
                 sitemap.name, sitemap.level))
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _analyzeTrackSeries(self, series, trackway, sitemap):
 
         for index in range(series.count):
@@ -92,17 +99,19 @@ class StrideLengthStage(AnalysisStage):
             aTrack.strideLengthUnc = 0.0
 
             if stride is None:
+                # Count tracks with no measured stride
                 self.noData += 1
-                continue
 
             if series.count < 2:
                 # Series of length 1 should not have a measured stride length
-                self.logger.write([
-                    '[ERROR]: Stride information on a single track series',
-                    'TRACK: %s (%s)' % (track.fingerprint, track.uid) ])
+                if stride:
+                    # Check for a stride to make sure data is consistent
+                    # instead of assuming that is not true.
+                    self.logger.write([
+                        '[ERROR]: Stride information on a single track series',
+                        'TRACK: %s (%s)' % (track.fingerprint, track.uid) ])
                 continue
 
-            stride    = float(stride)
             isLastTrack = (index == (series.count - 1))
             pairTrack = series.tracks[index + (-1 if isLastTrack else 1)]
 
@@ -124,32 +133,49 @@ class StrideLengthStage(AnalysisStage):
                 entered = posTrack.distanceTo(posPair)
             except Exception:
                 self.logger.write([
-                    '[WARNING]: Invalid track separation of 0.0. Ignoring track',
+                    '[WARNING]: Invalid track separation of 0.0.',
                     'TRACK: %s [%s]' % (track.fingerprint, track.uid),
                     'NEXT: %s [%s]' % (pairTrack.fingerprint, track.uid)])
                 continue
 
-            measured   = NumericUtils.toValueUncertainty(stride, 0.06)
-            delta      = entered.value - measured.value
-            deviation  = delta/(measured.uncertainty + entered.uncertainty)
-            fractional = delta/measured.value
-
             entry = dict(
                 track=track,
-                    # Absolute difference between calculated and measured distance
-                delta=delta,
-                    # Calculated distance from AI-based data entry
-                entered=entered,
+                # Calculated distance from AI-based data entry
+                entered=entered)
+
+            if stride and stride > 0.0:
+                highDeviation = track.hasImportFlag(
+                    ImportFlagsEnum.HIGH_STRIDE_UNCERTAINTY)
+                # If stride measurement exists do comparison
+                meas = NumericUtils.toValueUncertainty(
+                    value=float(stride),
+                    uncertainty=self.HIGH_MEASURED_UNCERTAINTY
+                        if highDeviation
+                        else self.MEASURED_UNCERTAINTY)
+                delta = entered.value - meas.value
+
+                deviation = abs(delta/math.sqrt(
+                    meas.uncertainty**2 +
+                    entered.uncertainty**2))
+                if highDeviation and deviation > 3:
+                    styles = ('orange', 10)
+                else:
                     # Measured distance from the catalog
-                measured=measured,
-                    # Fractional error between calculated and measured distance
-                fractional=fractional,
+                    entry['measured'] = meas
+                    # Absolute difference between calculated and measured distance
+                    entry['delta'] = delta
                     # Sigma trackDeviations between
-                deviation=deviation)
+                    entry['deviation'] = deviation
+                    # Fractional error between calculated and measured distance
+                    entry['fractional'] = delta/meas.value
+
+                    styles = ('red', 10) \
+                        if entry['deviation'] > 2.0 \
+                        else ('green', 5)
+            else:
+                styles = ('purple', 5)
 
             drawing = sitemap.cache.get('drawing')
-
-            styles = ('red', 10) if deviation > 2.0 else ('green', 5)
 
             if not isLastTrack:
                 aTrack.strideLength = entered.raw
@@ -166,82 +192,108 @@ class StrideLengthStage(AnalysisStage):
             self.entries.append(entry)
             track.cache.set('strideData', entry)
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _postAnalyze(self):
         """_postAnalyze doc..."""
         self._paths = []
 
-        self.logger.write('%s\nFRACTIONAL ERROR (Measured vs Entered)' % ('='*80))
+        self.logger.write(
+            '%s\nFRACTIONAL ERROR (Measured vs Entered)' % ('='*80))
         self._process()
 
         self.mergePdfs(self._paths)
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _getFooterArgs(self):
         return [
             'Processed %s tracks' % len(self.entries),
             '%s tracks with no stride data' % self.noData]
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _process(self):
         """_processDeviations doc..."""
         errors  = []
 
         for entry in self.entries:
-            errors.append(entry['fractional'])
+            if 'fractional' in entry:
+                errors.append(entry['fractional'])
 
         res = NumericUtils.getMeanAndDeviation(errors)
         self.logger.write('Fractional Stride Error %s' % res.label)
 
         label = 'Fractional Stride Errors'
-        d     = errors
-        self._paths.append(self._makePlot(label, d, histRange=(-1.0, 1.0)))
-        self._paths.append(self._makePlot(label, d, isLog=True, histRange=(-1.0, 1.0)))
+        self._paths.append(self._makePlot(
+            label=label,
+            data=errors,
+            histRange=(-1.0, 1.0) ))
+        self._paths.append(self._makePlot(
+            label=label,
+            data=errors,
+            isLog=True,
+            histRange=(-1.0, 1.0) ))
 
         # noinspection PyUnresolvedReferences
-        d = np.absolute(np.array(d))
-        self._paths.append(self._makePlot('Absolute %s' % label, d, histRange=(0.0, 1.0)))
-        self._paths.append(self._makePlot('Absolute %s' % label, d, isLog=True, histRange=(0.0, 1.0)))
+        d = np.absolute(np.array(errors))
+        self._paths.append(self._makePlot(
+            label='Absolute %s' % label,
+            data=d, histRange=(0.0, 1.0) ))
+        self._paths.append(self._makePlot(
+            label='Absolute %s' % label,
+            data=d,
+            isLog=True,
+            histRange=(0.0, 1.0) ))
 
         highDeviationCount = 0
 
         for entry in self.entries:
-            sigmaMag = 0.03 + res.uncertainty
-            sigmaCount = NumericUtils.roundToOrder(abs(entry['delta']/sigmaMag), -2)
-            entry['meanDeviation'] = sigmaCount
-            entry['highMeanDeviation'] = False
+            if 'measured' not in entry:
+                # Skip tracks that have no measured stride value for comparison
+                continue
 
-            if sigmaCount >= 2.0:
-                entry['highMeanDeviation'] = True
+            if entry['deviation'] > 2.0:
                 highDeviationCount += 1
-                track = entry['track']
-                delta = NumericUtils.roundToSigFigs(100.0*abs(entry['delta']), 3)
 
-                self._csv.addRow({
-                    'fingerprint':track.fingerprint,
-                    'uid':track.uid,
-                    'measured':entry['measured'].label,
-                    'entered':entry['entered'].label,
-                    'dev':sigmaCount,
-                    'delta':delta})
+            track = entry['track']
+            delta = NumericUtils.roundToSigFigs(100.0*abs(entry['delta']), 3)
+
+            self._csv.addRow({
+                'fingerprint':track.fingerprint,
+                'uid':track.uid,
+                'measured':entry['measured'].label,
+                'entered':entry['entered'].label,
+                'dev':entry['deviation'],
+                'delta':delta})
 
         if not self._csv.save():
-            self.logger.write('[ERROR]: Failed to save CSV file %s' % self._csv.path)
+            self.logger.write(
+                '[ERROR]: Failed to save CSV file %s' % self._csv.path)
 
-        percentage = NumericUtils.roundToOrder(100.0*float(highDeviationCount)/float(len(self.entries)), -2)
-        self.logger.write('%s significant %s (%s%%)' % (highDeviationCount, label.lower(), percentage))
+        percentage = NumericUtils.roundToOrder(
+            100.0*float(highDeviationCount)/float(len(self.entries)), -2)
+        self.logger.write(
+            '%s significant %s (%s%%)' % (
+                highDeviationCount,
+                label.lower(),
+                percentage))
+
         if percentage > (100.0 - 95.45):
             self.logger.write(
-                '[WARNING]: Large deviation count exceeds normal distribution expectations.')
+                '[WARNING]: Large deviation count exceeds normal ' +
+                'distribution expectations.')
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _makePlot(self, label, data, color ='b', isLog =False, histRange =None):
         """_makePlot doc..."""
 
         pl = self.plot
         self.owner.createFigure('makePlot')
 
-        pl.hist(data, 31, range=histRange, log=isLog, facecolor=color, alpha=0.75)
+        pl.hist(
+            data, 31,
+            range=histRange,
+            log=isLog,
+            facecolor=color,
+            alpha=0.75)
         pl.title('%s Distribution%s' % (label, ' (log)' if isLog else ''))
         pl.xlabel('Fractional Deviation')
         pl.ylabel('Frequency')
@@ -256,10 +308,12 @@ class StrideLengthStage(AnalysisStage):
         self.owner.saveFigure('makePlot', path)
         return path
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     @classmethod
     def getStride(cls, track):
-        """hasPace doc..."""
+        """ Returns the field stride measurement for the specified track if
+            the track recorded a stride length """
         if track.analysisFlags & AnalysisFlagsEnum.IGNORE_STRIDE:
             return None
-        return track.snapshotData.get(SnapshotDataEnum.STRIDE_LENGTH)
+        out = track.snapshotData.get(SnapshotDataEnum.STRIDE_LENGTH)
+        return out if out and out > 0.0 else None

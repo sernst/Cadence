@@ -10,7 +10,7 @@ import unittest
 
 from pyaid.number.Angle import Angle
 
-from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from pyaid.number.PositionValue2D import PositionValue2D
 
 #*************************************************************************************************** test_PositionValue2D
 class test_PositionValue2D(unittest.TestCase):

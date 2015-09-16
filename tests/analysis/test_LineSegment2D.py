@@ -12,7 +12,7 @@ from pyaid.dict.DictUtils import DictUtils
 from pyaid.number.Angle import Angle
 
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
-from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from pyaid.number.PositionValue2D import PositionValue2D
 
 #*************************************************************************************************** test_LineSegment2D
 class test_LineSegment2D(unittest.TestCase):

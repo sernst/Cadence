@@ -39,8 +39,8 @@ class Analysis_Track(AnalysisDefault):
     _paceLengthUnc      = sqla.Column(sqla.Float, default=0.0)
 
     #--- Direction Analyzer ---#
-    _headingAngle       = sqla.Column(sqla.Float, default=0.0)
-    _headingAngleUnc    = sqla.Column(sqla.Float, default=0.0)
+    _headingAngle         = sqla.Column(sqla.Float, default=0.0)
+    _headingAngleUnc      = sqla.Column(sqla.Float, default=0.0)
 
     #--- Gauge Analyzer ---#
     _simpleGauge        = sqla.Column(sqla.Float, default=0.0)
@@ -49,12 +49,20 @@ class Analysis_Track(AnalysisDefault):
 #===============================================================================
 #                                                                                   G E T / S E T
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     @property
     def paceLengthValue(self):
-        return NumericUtils.toValueUncertainty(self.paceLength, self.paceLengthUnc)
+        return NumericUtils.toValueUncertainty(
+            self.paceLength, self.paceLengthUnc)
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     @property
     def strideLengthValue(self):
-        return NumericUtils.toValueUncertainty(self.strideLength, self.strideLengthUnc)
+        return NumericUtils.toValueUncertainty(
+            self.strideLength, self.strideLengthUnc)
+
+    #___________________________________________________________________________
+    @property
+    def gaugeValue(self):
+        return NumericUtils.toValueUncertainty(
+            self.simpleGauge, self.simpleGaugeUnc)

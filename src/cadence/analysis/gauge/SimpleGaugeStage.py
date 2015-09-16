@@ -13,7 +13,7 @@ from pyaid.string.StringUtils import StringUtils
 from cadence.analysis.CurveOrderedAnalysisStage import CurveOrderedAnalysisStage
 from cadence.analysis.curvature.CurveSeries import CurveSeries
 from cadence.analysis.shared.CsvWriter import CsvWriter
-from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from pyaid.number.PositionValue2D import PositionValue2D
 from cadence.analysis.shared.plotting.Histogram import Histogram
 from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
 

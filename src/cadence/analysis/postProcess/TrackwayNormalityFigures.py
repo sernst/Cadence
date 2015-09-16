@@ -6,9 +6,14 @@ from __future__ import \
     print_function, absolute_import, \
     unicode_literals, division
 
+import re
+
+import numpy as np
+
 from pyaid.number.NumericUtils import NumericUtils
 from plotly import plotly
 from plotly import graph_objs as plotlyGraph
+from plotly import tools as plotlyTools
 from pyaid.color.ColorValue import ColorValue
 from pyaid.string.StringUtils import StringUtils
 
@@ -36,6 +41,11 @@ def getNormalityColor(normality, goodChannel, badChannel):
 
 #_______________________________________________________________________________
 def makeNormalityScatter(label, trackwayData):
+    fig = plotlyTools.make_subplots(
+        rows=2, cols=2,
+        print_grid=False,
+        specs=[[{'rowspan':2}, {}], [None, {}]])
+
     key = 'Normality'
     unweightedKey = 'Unweighted Normality'
 
@@ -44,6 +54,14 @@ def makeNormalityScatter(label, trackwayData):
     df[key] = df[key].map(lambda x: min(1.0, max(0.0, x)))
     df[unweightedKey] = df[unweightedKey].map(lambda x: min(1.0, max(0.0, x)))
 
+    xStart = min(df[key].min(), df[unweightedKey].min())
+    xEnd = min(df[key].max(), df[unweightedKey].max())
+    binDelta = 0.01
+    bins = [xStart]
+
+    while bins[-1] < xEnd:
+        bins.append(min(xEnd, bins[-1] + binDelta))
+
     traces = []
     for site in df['Sitemap Name'].unique():
         dataSlice = df[df['Sitemap Name'] == site]
@@ -51,25 +69,57 @@ def makeNormalityScatter(label, trackwayData):
 
         traces.append(plotlyGraph.Scatter(
             name=site,
-            x=dataSlice['Unweighted Normality'].values,
-            y=dataSlice['Normality'].values,
+            x=dataSlice[unweightedKey].values,
+            y=dataSlice[key].values,
+            xaxis='x1',
+            yaxis='y1',
             mode='markers',
             marker=plotlyGraph.Marker(color=color),
             text=dataSlice['Name']))
 
-    data = plotlyGraph.Data(traces)
-    layout = plotlyGraph.Layout(
-        yaxis=plotlyGraph.YAxis(
+
+        data = np.histogram(a=dataSlice[unweightedKey].values, bins=bins)
+        traces.append(plotlyGraph.Bar(
+            name=site,
+            x=data[1],
+            y=data[0],
+            xaxis='x2',
+            yaxis='y2',
+            marker=plotlyGraph.Marker(color=color) ))
+
+        data = np.histogram(a=dataSlice[key].values, bins=bins)
+        traces.append(plotlyGraph.Bar(
+            name=site,
+            x=data[1],
+            y=data[0],
+            xaxis='x3',
+            yaxis='y3',
+            marker=plotlyGraph.Marker(color=color) ))
+
+    fig['data'] += plotlyGraph.Data(traces)
+    fig['layout'].update(
+        barmode='stack',
+        yaxis1=plotlyGraph.YAxis(
             title='Weighted Normality (AU)',
+            autorange=False,
             range=[0.0, 1.0]),
-        xaxis=plotlyGraph.XAxis(
+        yaxis2=plotlyGraph.YAxis(title='Unweighted'),
+        yaxis3=plotlyGraph.YAxis(title='Weighted'),
+        xaxis1=plotlyGraph.XAxis(
             title='Unweighted Normality (AU)',
+            autorange=False,
+            range=[0.0, 1.0]),
+        xaxis2=plotlyGraph.XAxis(
+            autorange=False,
+            range=[0.0, 1.0]),
+        xaxis3=plotlyGraph.XAxis(
+            autorange=False,
             range=[0.0, 1.0]),
         title='%s Trackway Normality Comparison' % label)
 
     url = plotly.plot(
         filename='A16/%s-normality-comparison' % label.replace(' ', '-'),
-        figure_or_data=plotlyGraph.Figure(data=data, layout=layout),
+        figure_or_data=fig,
         auto_open=False)
     print('COMPARISON[%s]:' % label, url)
 
@@ -126,11 +176,20 @@ def makeTrackwayWeightedBoxTrace(trackwayRow, values, uncertainties, **kwargs):
             size=1,
             color=color.webRGBA) )
 
+first_cap_re = re.compile('(.)([A-Z][a-z]+)')
+all_cap_re = re.compile('([a-z0-9])([A-Z])')
+
+#_______________________________________________________________________________
+def getColumnLabel(columnName):
+    s1 = first_cap_re.sub(r'\1_\2', columnName)
+    return all_cap_re.sub(r'\1_\2', s1).lower().replace('_', ' ')
+
 #_______________________________________________________________________________
 def makeTrackwayBox(
         site, data, columnName, errorColumnName, trackwayData, **kwargs
 ):
 
+    label = getColumnLabel(columnName)
     traces = []
     for trackway in data.trackwayName.unique():
         dataSlice = data[data.trackwayName == trackway]
@@ -156,7 +215,7 @@ def makeTrackwayBox(
     if not traces:
         return
 
-    label = StringUtils.capitalizeWords(columnName)
+    title = StringUtils.capitalizeWords(columnName)
 
     data = plotlyGraph.Data(traces)
     layout = plotlyGraph.Layout(
@@ -166,10 +225,10 @@ def makeTrackwayBox(
         xaxis=plotlyGraph.XAxis(
             title='Trackway',
             showticklabels=False ),
-        title='%s Trackway "%s" Distributions' % (site, label))
+        title='%s Trackway "%s" Distributions' % (site, title))
 
     url = plotly.plot(
-        filename='A16/%s-%s-distributions' % (site, columnName),
+        filename='A16/%s-%s-distributions' % (site, label),
         figure_or_data=plotlyGraph.Figure(data=data, layout=layout),
         auto_open=False)
     print('TRACKWAY_BOX[%s]:' % site, url)
@@ -192,6 +251,15 @@ def _main_(args):
         filename='Pace-Length-Quartiles.csv')
     makeNormalityScatter('Pace Length', df)
 
+    for site in tracks.site.unique():
+        dataSlice = tracks[(tracks.site == site) & tracks.pes]
+        makeTrackwayBox(
+            site=site,
+            data=dataSlice,
+            columnName='paceLength',
+            errorColumnName='paceLengthUnc',
+            trackwayData=df)
+
     df = DataLoadUtils.getAnalysisData(
         analyzerClass=StatisticsAnalyzer,
         filename='Manus-Width-Quartiles.csv')
@@ -206,6 +274,11 @@ def _main_(args):
         analyzerClass=StatisticsAnalyzer,
         filename='Pes-Length-Quartiles.csv')
     makeNormalityScatter('Pes Length', df)
+
+    df = DataLoadUtils.getAnalysisData(
+        analyzerClass=StatisticsAnalyzer,
+        filename='Gauge-Quartiles.csv')
+    makeNormalityScatter('Gauge', df)
 
     widthDFrame = DataLoadUtils.getAnalysisData(
         analyzerClass=StatisticsAnalyzer,

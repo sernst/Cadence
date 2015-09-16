@@ -2,29 +2,32 @@
 # (C)2015
 # Scott Ernst
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import numpy as np
+from __future__ import \
+    print_function, absolute_import, \
+    unicode_literals, division
 
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.number.NumericUtils import NumericUtils
-
 from refined_stats.density import DensityDistribution
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 
+
 #*******************************************************************************
+from cadence.analysis.shared.plotting.MultiScatterPlot import MultiScatterPlot
+
+
 class TrackwayStatsStage(AnalysisStage):
     """A class for..."""
 
 #===============================================================================
-#                                                                   C L A S S
+#                                                                     C L A S S
 
     TRACKWAY_STATS_CSV = 'Trackway-Stats.csv'
     UNWEIGHTED_TRACKWAY_STATS_CSV = 'Unweighted-Trackway-Stats.csv'
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of TrackwayStatsStage."""
         super(TrackwayStatsStage, self).__init__(
@@ -36,19 +39,23 @@ class TrackwayStatsStage(AnalysisStage):
         self._weightedStats = None
         self._unweightedStats = None
         self._quartileStats = dict()
+        self._densityPlots = dict()
 
 #===============================================================================
-#                                                           P R O T E C T E D
+#                                                             P R O T E C T E D
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _preAnalyze(self):
         self._trackways = []
+        self._densityPlots = dict()
 
         fields = [
             ('name', 'Name'),
             ('length', 'Length'),
             ('gauge', 'Gauge'),
             ('gaugeUnc', 'Gauge Uncertainty'),
+            ('widthNormGauge', 'Width Normalized Gauge'),
+            ('widthNormGaugeUnc', 'Width Normalized Gauge Uncertainty'),
             ('strideLength', 'Stride Length'),
             ('strideLengthUnc', 'Stride Length Uncertainty'),
             ('paceLength', 'Pace Length'),
@@ -119,6 +126,40 @@ class TrackwayStatsStage(AnalysisStage):
         weighted = dd.getTukeyBoxBoundaries()
 
         #-----------------------------------------------------------------------
+        # PLOT DENSITY
+        #   Create a density plot for each value
+        p = MultiScatterPlot(
+            title='%s %s Density Distribution' % (trackway.name, label),
+            xLabel=label,
+            yLabel='Probability (AU)')
+
+        p.addPlotSeries(
+            line=True,
+            markers=False,
+            label='Weighted',
+            color='blue',
+            data=dd.createDistribution(
+                xValues=dd.getAdaptiveRange(10.0),
+                scaled=True,
+                asPoints=True) )
+
+        temp = DensityDistribution.fromValuesOnly(dd.getNumericValues(raw=True))
+        p.addPlotSeries(
+            line=True,
+            markers=False,
+            label='Unweighted',
+            color='red',
+            data=temp.createDistribution(
+                xValues=temp.getAdaptiveRange(10.0),
+                scaled=True,
+                asPoints=True) )
+
+        if label not in self._densityPlots:
+            self._densityPlots[label] = []
+        self._densityPlots[label].append(
+            p.save(self.getTempFilePath(extension='pdf')))
+
+        #-----------------------------------------------------------------------
         # NORMALITY
         #       Calculate the normality of the weighted and unweighted
         #       distributions as a test against how well they conform to
@@ -177,7 +218,9 @@ class TrackwayStatsStage(AnalysisStage):
             manusWidth='Manus Width',
             manusLength='Manus Length',
             strideLength='Stride Length',
-            paceLength='Pace Length')
+            paceLength='Pace Length',
+            gauge='Gauge',
+            widthNormGauge='Width Normalized Gauge')
 
         data = {}
         for key, label in DictUtils.iter(spec):
@@ -214,6 +257,14 @@ class TrackwayStatsStage(AnalysisStage):
 
         strideLengths = getValue(data['strideLength'])
         paceLengths = getValue(data['paceLength'])
+        gauge = getValue(data['gauge'])
+
+        temp = data['widthNormGauge']
+        for g in data['gauge']:
+            # Generate the width normalized gauge values after the best
+            # estimate for the pes width has been determined.
+            temp.append(g/pesWidth)
+        widthNormGauge = getValue(temp)
 
         target.createRow(
             name=trackway.name,
@@ -225,8 +276,11 @@ class TrackwayStatsStage(AnalysisStage):
             paceLength=paceLengths.value,
             paceLengthUnc=paceLengths.uncertainty,
 
-            gauge=aTrackway.simpleGauge,
-            gaugeUnc=aTrackway.simpleGaugeUnc,
+            gauge=gauge.value,
+            gaugeUnc=gauge.uncertainty,
+
+            widthNormGauge=widthNormGauge.value,
+            widthNormGaugeUnc=widthNormGauge.uncertainty,
 
             density=density,
             densityNorm=density*pesWidth.value,
@@ -250,22 +304,21 @@ class TrackwayStatsStage(AnalysisStage):
         aTrack = track.getAnalysisPair(self.analysisSession)
 
         if track.width > 0:
-            if track.pes:
-                data['pesWidth'].append(track.widthValue)
-            else:
-                data['manusWidth'].append(track.widthValue)
+            w = track.widthValue
+            data['pesWidth' if track.pes else 'manusWidth'].append(w)
 
         if track.length > 0:
-            if track.pes:
-                data['pesLength'].append(track.lengthValue)
-            else:
-                data['manusLength'].append(track.lengthValue)
+            l = track.lengthValue
+            data['pesLength' if track.pes else 'manusLength'].append(l)
 
         if aTrack.strideLength:
             data['strideLength'].append(aTrack.strideLengthValue)
 
         if aTrack.paceLength:
             data['paceLength'].append(aTrack.paceLengthValue)
+
+        if track.pes and aTrack.simpleGauge:
+            data['gauge'].append(aTrack.gaugeValue)
 
 #_______________________________________________________________________________
     def _postAnalyze(self):
@@ -275,3 +328,6 @@ class TrackwayStatsStage(AnalysisStage):
 
         for key, csv in DictUtils.iter(self._quartileStats):
             csv.save()
+
+        for label, paths in DictUtils.iter(self._densityPlots):
+            self.mergePdfs(paths, '%s-Densities.pdf' % label.replace(' ', '-'))

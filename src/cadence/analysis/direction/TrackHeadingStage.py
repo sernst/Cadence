@@ -12,26 +12,28 @@ from pyaid.list.ListUtils import ListUtils
 from cadence.analysis.CurveOrderedAnalysisStage import CurveOrderedAnalysisStage
 from cadence.analysis.StrideLine import StrideLine
 
-from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from pyaid.number.PositionValue2D import PositionValue2D
 from cadence.analysis.shared.plotting.BarPlot import BarPlot
 from cadence.analysis.shared.plotting.Histogram import Histogram
 from cadence.analysis.shared.plotting.MultiScatterPlot import MultiScatterPlot
 from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
 
-#*************************************************************************************************** TrackHeadingStage
+#*******************************************************************************
 class TrackHeadingStage(CurveOrderedAnalysisStage):
-    """A class for..."""
-
-#===============================================================================
-#                                                                                       C L A S S
+    """ Analysis stage in the direction analyzer for determining the headings
+        of the tracks within a trackway. The heading is defined"""
 
     TRACK_HEADING_DATA_NT = namedtuple('TRACK_HEADING_DATA_NT', [
-        'track', # The Tracks_Track instance for the entry
-        'deviation', # Angular deviation between this track's heading and the first track's heading
-        'point', # Point representation of the data (curvePosition, angle.degrees)
-        'headingAngle' ]) # The heading angle for the track
+        'track',            # Tracks_Track instance for the entry
+        'deviation',        # Angular deviation between this track's heading
+                            #   and the first track's heading
+        'point',            # Point representation of the data
+                            #   (curvePosition, angle.degrees)
+        'headingAngle'      # Absolute heading angle for the track
+        'relativeAngle' ])  # Heading angle relative to the previous track
+                            #   value, or zero if no previous track
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of TrackHeadingStage."""
         super(TrackHeadingStage, self).__init__(
@@ -41,21 +43,21 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
         self._paths  = []
 
 #===============================================================================
-#                                                                                   G E T / S E T
+#                                                                 G E T / S E T
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     @property
     def trackwaysData(self):
         return self.cache.get('trackwaysData')
 
 #===============================================================================
-#                                                                               P R O T E C T E D
+#                                                             P R O T E C T E D
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _preAnalyze(self):
         self.cache.set('trackwaysData', {})
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         entries = []
         data = {'entries':entries}
@@ -96,12 +98,12 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
             xLabel='Trackway Curve Position (m)')
         self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _analyzeTrack(self, track, series, trackway, sitemap):
 
         if len(series.tracks) < 2:
-            # Don't analyze trackways that have no direction extent because a stride line is
-            # necessary to compute a heading
+            # Don't analyze trackways that have no direction extent because a
+            # stride line is necessary to compute a heading
             return
 
         analysisTrack = track.getAnalysisPair(self.analysisSession)
@@ -116,8 +118,9 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
             denom = abs(referenceAngle.uncertainty) + abs(angle.uncertainty)
             deviation = abs(angle.radians - referenceAngle.radians)/denom
 
-            # Find the angle representation closest to the previous angle value to prevent
-            # rotations near the polar-angular axis from causing revolution jumps in the tracks
+            # Find the angle representation closest to the previous angle value
+            # to prevent rotations near the polar-angular axis from causing
+            # revolution jumps in the tracks
             lastAngle = data[-1].headingAngle
             higherAngle = angle.clone()
             higherAngle.degrees += 360.0
@@ -144,14 +147,15 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
                 yUnc=angle.uncertaintyDegrees),
             headingAngle=angle ))
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _postAnalyze(self):
         """_postAnalyze doc..."""
 
         self._processCurveDeviations('max', 'Meandering')
         self._processCurveDeviations('global', 'Globally Curved')
 
-        d = [100.0*data['deviations']['fraction'] for k, data in DictUtils.iter(self.trackwaysData)]
+        d = [100.0*data['deviations']['fraction']
+                for k, data in DictUtils.iter(self.trackwaysData)]
         d.sort()
 
         plot = BarPlot(
@@ -163,11 +167,12 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
 
         self.mergePdfs(self._paths, 'Trackway-Headings.pdf')
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _processCurveDeviations(self, key, label):
         """_processCurveDeviations doc..."""
 
-        d = [data['deviations'][key] for k, data in DictUtils.iter(self.trackwaysData)]
+        d = [data['deviations'][key]
+                for k, data in DictUtils.iter(self.trackwaysData)]
         dCurved = []
         dStraight = []
         for item in d:

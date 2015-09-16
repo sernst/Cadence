@@ -15,39 +15,41 @@ from cadence.mayan.trackway import UpdateTrackNode
 from cadence.mayan.trackway import CreateTrackNode
 from cadence.models.tracks.TracksTrackDefault import TracksTrackDefault
 
-
 # AS NEEDED: from cadence.models.analysis.Analysis_Track import Analysis_Track
 
-#_______________________________________________________________________________
+#*******************************************************************************
 # noinspection PyAttributeOutsideInit
 class Tracks_Track(TracksTrackDefault):
-    """ Database model representation of a track with all the attributes and information for a
-        specific track as well connectivity information for the track within its series. """
-
-#===============================================================================
-#                                                                                       C L A S S
+    """ Database model representation of a track with all the attributes and
+        information for a specific track as well connectivity information for
+        the track within its series.
+    """
 
     __tablename__  = 'tracks'
 
-#===============================================================================
-#                                                                                   G E T / S E T
+    #===========================================================================
+    #                                                             G E T / S E T
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     @property
     def nodeName(self):
-        """ A cached value for the name of the Maya nodeName representing this track if one exists,
-            which is updated each time a create/update operation on the nodeName occurs. Can be
-            incorrect if the nodeName was renamed between such operations. """
+        """ A cached value for the name of the Maya nodeName representing this
+            track if one exists, which is updated each time a create/update
+            operation on the nodeName occurs. Can be incorrect if the nodeName
+            was renamed between such operations.
+        """
 
         return self.fetchTransient('nodeName')
     @nodeName.setter
     def nodeName(self, value):
         self.putTransient('nodeName', value)
 
-#___________________________________________________________________________________________________ GS: completed
+    #___________________________________________________________________________
     @property
     def completed(self):
-        """ Getter returns a boolean indicating whether the 'completed' source flag is set. """
+        """ Getter returns a boolean indicating whether the 'completed' source
+            flag is set.
+        """
         flags = self.sourceFlags & ~SourceFlagsEnum.COMPLETED
 
         return SourceFlagsEnumOps.get(flags, SourceFlagsEnum.COMPLETED)

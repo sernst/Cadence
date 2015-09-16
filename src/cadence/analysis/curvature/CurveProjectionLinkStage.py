@@ -6,10 +6,10 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from pyaid.list.ListUtils import ListUtils
 from pyaid.number.NumericUtils import NumericUtils
+from pyaid.number.PositionValue2D import PositionValue2D
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
-from cadence.analysis.shared.PositionValue2D import PositionValue2D
 from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
 
 

@@ -11,7 +11,7 @@ from pyaid.number.NumericUtils import NumericUtils
 
 from cadence.analysis.CurveOrderedAnalysisStage import CurveOrderedAnalysisStage
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
-from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from pyaid.number.PositionValue2D import PositionValue2D
 from cadence.analysis.shared.plotting.MultiScatterPlot import MultiScatterPlot
 from cadence.svg.CadenceDrawing import CadenceDrawing
 

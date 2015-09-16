@@ -9,7 +9,7 @@ import math
 from pyaid.number.Angle import Angle
 from pyaid.number.NumericUtils import NumericUtils
 
-from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from pyaid.number.PositionValue2D import PositionValue2D
 
 
 #*************************************************************************************************** LineSegment2D

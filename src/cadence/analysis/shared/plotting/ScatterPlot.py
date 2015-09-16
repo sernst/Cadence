@@ -2,9 +2,11 @@
 # (C)2015
 # Scott Ernst
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import \
+    print_function, absolute_import, \
+    unicode_literals, division
 
-from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from pyaid.number.PositionValue2D import PositionValue2D
 from cadence.analysis.shared.plotting.SinglePlotBase import SinglePlotBase
 
 #*************************************************************************************************** ScatterPlot
@@ -18,10 +20,10 @@ class ScatterPlot(SinglePlotBase):
     def __init__(self, **kwargs):
         """Creates a new instance of ScatterPlot."""
         super(ScatterPlot, self).__init__(**kwargs)
-        self.color      = kwargs.get('color', 'b')
-        self.format     = kwargs.get('format', 'o')
-        self.data       = kwargs.get('data', [])
-        self.size       = kwargs.get('size', 6)
+        self.color = kwargs.get('color', 'b')
+        self.format = kwargs.get('format', 'o')
+        self.data = kwargs.get('data', [])
+        self.size = kwargs.get('size', 6)
 
 #===============================================================================
 #                                                                                     P U B L I C
@@ -56,7 +58,10 @@ class ScatterPlot(SinglePlotBase):
 #_______________________________________________________________________________
     def _plotImpl(self):
         """_plotImpl doc..."""
-        self._plotScatterSeries(data=self.data, format=self.format, color=self.color)
+        self._plotScatterSeries(
+            data=self.data,
+            format=self.format,
+            color=self.color)
 
 #_______________________________________________________________________________
     def _plotScatterSeries(self, data, **kwargs):
@@ -65,7 +70,9 @@ class ScatterPlot(SinglePlotBase):
         y = []
         xUnc = []
         yUnc = []
+        handles = []
 
+        label = kwargs.get('label')
         color = kwargs.get('color', 'black')
 
         for value in data:
@@ -74,12 +81,19 @@ class ScatterPlot(SinglePlotBase):
             y.append(item['y'])
             xUnc.append(item['xUnc'])
             yUnc.append(item['yUnc'])
-        self.pl.errorbar(
-            x=x, y=y, xerr=xUnc, yerr=yUnc,
-            fmt=kwargs.get('format', 'o'), markersize=kwargs.get('size', 6), color=color)
+        if kwargs.get('markers', True):
+            h, = self.pl.errorbar(
+                x=x, y=y, xerr=xUnc, yerr=yUnc,
+                fmt=kwargs.get('format', 'o'),
+                markersize=kwargs.get('size', 6),
+                label=label,
+                color=color)
+            handles.append(h)
 
         if kwargs.get('line'):
-            self.pl.plot(x, y, '-', color=color)
+            h, = self.pl.plot(x, y, '-', color=color, label=label)
+            handles.append(h)
+        return handles
 
 #_______________________________________________________________________________
     @classmethod
@@ -105,7 +119,8 @@ class ScatterPlot(SinglePlotBase):
             return dict(
                 x=value[0], y=value[1],
                 xUnc=0.0 if len(value) < 4 else value[2],
-                yUnc=0.0 if len(value) < 3 else (value[2] if len(value) < 4 else value[3]))
+                yUnc=0.0 if len(value) < 3 \
+                    else (value[2] if len(value) < 4 else value[3]))
 
         if isinstance(value, PositionValue2D):
             return value.toDict()

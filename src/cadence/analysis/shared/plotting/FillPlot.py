@@ -6,7 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from pyaid.ArgsUtils import ArgsUtils
 
-from cadence.analysis.shared.PositionValue2D import PositionValue2D
+from pyaid.number.PositionValue2D import PositionValue2D
 from cadence.analysis.shared.plotting.SinglePlotBase import SinglePlotBase
 
 #*************************************************************************************************** FillPlot

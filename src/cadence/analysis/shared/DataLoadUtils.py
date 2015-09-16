@@ -63,6 +63,15 @@ def getTrackWithAnalysis():
         suffixes=('', '_analysis'))
 
 #_______________________________________________________________________________
+def getTrackwaysWithAnalysis():
+    return pd.merge(
+        left=readTable('trackways'),
+        right=readTable('trackways', analysis=True),
+        how='inner',
+        on='name',
+        suffixes=('', '_analysis'))
+
+#_______________________________________________________________________________
 def createEngine(analysis =False):
     """ Creates the SqlAlchemy engine to connect to the database and returns
         that engine.
