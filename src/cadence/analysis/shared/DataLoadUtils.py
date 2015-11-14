@@ -10,6 +10,9 @@ from pyaid.config.SettingsConfig import SettingsConfig
 from pyaid.file.FileUtils import FileUtils
 
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+
+from cadence.analysis.shared import PlotConfigs
+
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
 import os
@@ -17,6 +20,8 @@ import re
 
 import pandas as pd
 import sqlalchemy as sqla
+
+import pandops as pops
 
 from cadence.CadenceEnvironment import CadenceEnvironment
 
@@ -33,13 +38,19 @@ def getAnalysisPath(*args, **kwargs):
     return FileUtils.createPath(rootPath, *args, **kwargs)
 
 #_______________________________________________________________________________
-def getAnalysisData(analyzerClass, filename, analysisRootPath =None):
+def getAnalysisData(
+        analyzerClass, filename, analysisRootPath =None, renames =None
+):
     """ Using the analyzer class and CSV filename, return a Pandas DataFrame
         containing that data.
 
     @param analyzerClass: Class
     @param filename: str
     @param analysisRootPath: str
+    @param renames: dict
+        A dictionary containing columns to rename. The old column names are the
+        keys and the new column names the values.
+
     @return: DataFrame
     """
     folderName = analyzerClass.__name__
@@ -47,7 +58,9 @@ def getAnalysisData(analyzerClass, filename, analysisRootPath =None):
         if analysisRootPath \
         else getAnalysisPath(folderName, filename, isFile=True)
 
-    return pd.read_csv(path)
+    df = pd.read_csv(path)
+    pops.rename.columns(df, renames)
+    return df
 
 #_______________________________________________________________________________
 def getTrackWithAnalysis():
@@ -55,12 +68,26 @@ def getTrackWithAnalysis():
         merges them together into a single DataFrame.
     @return: DataFrame
     """
-    return pd.merge(
+    df = pd.merge(
         left=readTable('tracks'),
         right=readTable('tracks', analysis=True),
         how='inner',
         on='uid',
         suffixes=('', '_analysis'))
+    df['sizeClass'] = df['width'].map(_widthToSizeClassMapping)
+    return df
+
+#_______________________________________________________________________________
+def _widthToSizeClassMapping(value):
+    """ Returns the size class mapping for the specified
+    @param value:
+    @return:
+    """
+    for sizeClass in PlotConfigs.SIZE_CLASSES:
+        if value >= sizeClass['range'][1]:
+            continue
+        return sizeClass['index']
+    return -1
 
 #_______________________________________________________________________________
 def getTrackwaysWithAnalysis():

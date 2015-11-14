@@ -13,3 +13,4 @@ def getProjectPath(*args, **kwargs):
     return FileUtils.createPath(
         FileUtils.getDirectoryOf(__file__),
         '..', '..', *args, **kwargs)
+

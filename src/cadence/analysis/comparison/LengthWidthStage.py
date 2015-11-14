@@ -14,10 +14,9 @@ from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 from cadence.analysis.shared.plotting.Histogram import Histogram
 
-#*******************************************************************************
 from cadence.enums.ImportFlagsEnum import ImportFlagsEnum
 
-
+#*******************************************************************************
 class LengthWidthStage(AnalysisStage):
     """ Analysis stage for comparison of length and width between the field
         measurements for length and width track parameters and the map measured

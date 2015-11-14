@@ -5,3 +5,8 @@ bin
 /statistics/input
 /statistics/output
 .Rproj.user
+*.h5
+*.log
+
+/venv_py27
+*.metadata.json

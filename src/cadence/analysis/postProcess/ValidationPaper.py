@@ -2,9 +2,10 @@
 # (C)2015
 # Scott Ernst
 
-from __future__ import \
-    print_function, absolute_import, \
-    unicode_literals, division
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import locale
 
@@ -77,7 +78,6 @@ def plotComparison(df, key, label, binCount):
                 color=color) ))
 
         index += 1
-
 
     countLabel = locale.format('%d', count, grouping=True)
 

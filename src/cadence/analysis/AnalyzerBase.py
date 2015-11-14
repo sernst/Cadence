@@ -34,7 +34,8 @@ from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 from cadence.models.analysis.Analysis_Sitemap import Analysis_Sitemap
 
 try:
-    import matplotlib.pyplot as plt
+    # TODO: Working with Matplotlib in Virtual environments' in the Matplotlib FAQ
+    from matplotlib import pyplot as plt
 except Exception:
     plt = None
     print('WARNING: Matplotlib failed to import.')

@@ -19,18 +19,26 @@ COLORS = [
 
 SIZE_CLASSES = [
     dict(
+        id='t',
+        index=0,
         range=(0, 0.25),
         name='Tiny',
         color=COLORS[0]),
     dict(
+        id='s',
+        index=1,
         range=(0.25, 0.50),
         name='Small',
         color=COLORS[1]),
     dict(
+        id='m',
+        index=2,
         range=(0.5, 0.75),
         name='Medium',
         color=COLORS[2]),
     dict(
+        id='l',
+        index=3,
         range=(0.75, 100.0),
         name='Large',
         color=COLORS[3]) ]
