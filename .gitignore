@@ -9,4 +9,4 @@ bin
 *.log
 
 /venv_py27
-*.metadata.json
+/papers/*/data

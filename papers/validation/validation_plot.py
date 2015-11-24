@@ -28,8 +28,20 @@ OUT_PATH = FileUtils.makeFilePath(DATA_DIR, 'deviation.h5')
 METADATA_FILE = FileUtils.makeFilePath(DATA_DIR, 'deviation.metadata.json')
 
 #_______________________________________________________________________________
-def _getLayout(metadata, title, fixed = False, **kwargs):
-    xAxis = plotlyGraph.XAxis(title='Deviation (%)')
+def _getLayout(
+        metadata, title, fixed = False, xAxis =None, yAxis =None, **kwargs
+):
+    if not xAxis:
+        xAxis = {}
+    xAxis.setdefault('title', 'Deviation (%)')
+
+    if not yAxis:
+        yAxis = {}
+    yAxis.setdefault('title', 'Frequency')
+    yAxis.setdefault('autorange', True)
+
+    xAxis = plotlyGraph.XAxis(**xAxis)
+    yAxis = plotlyGraph.YAxis(**yAxis)
 
     if fixed:
         xAxis['range'] = [
@@ -37,16 +49,10 @@ def _getLayout(metadata, title, fixed = False, **kwargs):
             100.0*min(4.0, metadata['xMax']) ]
         xAxis['autorange'] = False
 
-    return plotlyGraph.Layout(
-        title=title,
-        xaxis=xAxis,
-        yaxis=plotlyGraph.YAxis(
-            title='Frequency',
-            autorange=True),
-        **kwargs)
+    return plotlyGraph.Layout(title=title, xaxis=xAxis, yaxis=yAxis, **kwargs)
 
 #_______________________________________________________________________________
-def _makeRemainder(key, sizeClass, areaValues, countLabel, color, isFirst):
+def _makeRemainder(key, sizeClass, areaValues, countLabel, isFirst):
     cdfDf = pd.read_hdf(OUT_PATH, key + 'cumulative')
     areaValues = np.add(areaValues, 100.0*cdfDf['y'][:-1])
     scatter = plotlyGraph.Scatter(
@@ -57,17 +63,36 @@ def _makeRemainder(key, sizeClass, areaValues, countLabel, color, isFirst):
         fill='tozeroy' if isFirst else 'tonexty',
         line=plotlyGraph.Line(
             width=1.0,
-            color=color))
+            color=sizeClass['color']))
     return areaValues, scatter
 
 #_______________________________________________________________________________
-def _makeHistogram(key, sizeClass, color, countLabel):
+def _makeHistogram(key, sizeClass, countLabel):
     df = pd.read_hdf(OUT_PATH, key + 'histogram')
     return plotlyGraph.Bar(
         name='%s (%s)' % (sizeClass['name'], countLabel),
         x=100.0*df['x'],
         y=df['y'],
-        marker=plotlyGraph.Marker(color=color) )
+        marker=plotlyGraph.Marker(color=sizeClass['color']) )
+
+#_______________________________________________________________________________
+def plotTraces(
+        plotType, label, traces, title, metadata, layoutOptions, suffix =None
+):
+    suffix = '' if not suffix else ('-' + suffix)
+
+    url = plotly.plot(
+        filename=PlotlyUtils.getPlotlyFilename(
+            filename='{}{}'.format(label.replace(' ', '-'), suffix),
+            folder=PLOTLY_FOLDER),
+        figure_or_data=plotlyGraph.Figure(
+            data=plotlyGraph.Data(traces),
+            layout=_getLayout(
+                metadata=metadata,
+                title=title, **layoutOptions)),
+        auto_open=False)
+
+    print('{}[{}]: {}'.format(plotType, label, PlotlyUtils.toEmbedUrl(url)))
 
 #_______________________________________________________________________________
 def plotComparison(label, name, tracks, metadata):
@@ -75,48 +100,31 @@ def plotComparison(label, name, tracks, metadata):
     metadata = metadata[name]
     expectedDf = pd.read_hdf(OUT_PATH, '{}/expected'.format(name))
     areaValues = np.zeros(len(expectedDf['x']) - 1)
+
     areaTraces = []
+    areaPercentageTraces = []
     histTraces = []
+    histPercentageTraces = []
 
     for sizeClass in PlotConfigs.SIZE_CLASSES:
-        color = sizeClass['color']
-        key = '{}/{}/'.format(name, sizeClass['id'])
         dataSlice = tracks.query('sizeClass == {}'.format(sizeClass['index']))
+        options = {
+            'sizeClass': sizeClass,
+            'key': '{}/{}/'.format(name, sizeClass['id']),
+            'countLabel': locale.format(
+                '%d', int(dataSlice.shape[0]), grouping=True)
+        }
 
-        sliceCountLabel = locale.format(
-            '%d', int(dataSlice.shape[0]), grouping=True)
-
-        histTrace = _makeHistogram(key, sizeClass, color, sliceCountLabel)
+        histTrace = _makeHistogram(**options)
         histTraces.append(histTrace)
 
         areaValues, areaTrace = _makeRemainder(
-            key=key,
-            sizeClass=sizeClass,
             areaValues=areaValues,
-            countLabel=sliceCountLabel,
-            color=color,
-            isFirst=PlotConfigs.SIZE_CLASSES.index(sizeClass) < 1)
+            isFirst=PlotConfigs.SIZE_CLASSES.index(sizeClass) < 1,
+            **options)
         areaTraces.append(areaTrace)
 
     countLabel = locale.format('%d', metadata['count'], grouping=True)
-
-    url = plotly.plot(
-        filename=PlotlyUtils.getPlotlyFilename(
-            filename='%s' % label.replace(' ', '-'),
-            folder=PLOTLY_FOLDER),
-        figure_or_data=plotlyGraph.Figure(
-            data=plotlyGraph.Data(histTraces),
-            layout=_getLayout(
-                barmode='stack',
-                metadata=metadata,
-                title='Distribution of Track {} Deviations ({} Tracks)'.format(
-                    label, countLabel ))),
-        auto_open=False)
-
-    print(
-        'COMPARE|HIST[%s]' % label,
-        'x:(%s, %s)' % (metadata['xMin'], metadata['xMax']),
-        PlotlyUtils.toEmbedUrl(url))
 
     areaTraces.append(plotlyGraph.Scatter(
         name='Normal Threshold',
@@ -128,23 +136,49 @@ def plotComparison(label, name, tracks, metadata):
             dash='dash',
             width=1.0) ))
 
-    url = plotly.plot(
-        filename=PlotlyUtils.getPlotlyFilename(
-            filename='%s-cdf-remainder' % label.replace(' ', '-'),
-            folder=PLOTLY_FOLDER),
-        figure_or_data=plotlyGraph.Figure(
-            data=plotlyGraph.Data(areaTraces),
-            layout=_getLayout(
-                fixed=True,
-                metadata=metadata,
-                title=('Inverse Cumulative Distribution of Track ' +
-                    '{} Deviations ({} Tracks)').format(label, countLabel))),
-        auto_open=False)
+    doPlotTraces = functools.partial(
+        plotTraces,
+        label=label,
+        metadata=metadata)
 
-    print(
-        'COMPARE|AREA[%s]' % label,
-        'x:(%s, %s)' % (metadata['xMin'], metadata['xMax']),
-        PlotlyUtils.toEmbedUrl(url))
+    doPlotTraces(
+        plotType='HISTOGRAM',
+        traces=histTraces,
+        title='Distribution of Track {} Deviations ({} Measurements)'.format(
+            label, countLabel),
+        layoutOptions={'barmode': 'stack'} )
+
+    doPlotTraces(
+        plotType='HIST-LOG',
+        suffix='histogram-log',
+        traces=histTraces,
+        title='Distribution of Track {} Deviations ({} Measurements)'.format(
+            label, countLabel),
+        layoutOptions={
+            'barmode': 'stack',
+            'yAxis':{
+                'title': 'Frequency (log)',
+                'type':'log' }} )
+
+    doPlotTraces(
+        plotType='REMAINDER',
+        suffix='cdf-remainder',
+        traces=areaTraces,
+        layoutOptions={'fixed':True},
+        title=('Inverse Cumulative Distribution of Track ' +
+                    '{} Deviations ({} Tracks)').format(label, countLabel) )
+
+    doPlotTraces(
+        plotType='REMAINDER-LOG',
+        suffix='cdf-remainder-log',
+        traces=areaTraces,
+        layoutOptions={
+            'fixed':True,
+            'yAxis': {
+                'title': 'Frequency (log)',
+                'type': 'log' }},
+        title=('Inverse Cumulative Distribution of Track ' +
+                    '{} Deviations ({} Tracks)').format(label, countLabel) )
 
 ################################################################################
 

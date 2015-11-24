@@ -2,20 +2,22 @@
 # (C)2014-2015
 # Scott Ernst
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
-import os
-
-from pyglass.alembic.AlembicUtils import AlembicUtils
-import sqlalchemy as sqla
 from pyaid.config.ConfigsDict import ConfigsDict
-from pyaid.config.SettingsConfig import SettingsConfig
 from pyaid.debug.Logger import Logger
 from pyaid.file.FileUtils import FileUtils
 from pyaid.string.StringUtils import StringUtils
 from pyaid.system.SystemUtils import SystemUtils
 from pyaid.time.TimeUtils import TimeUtils
+from pyglass.alembic.AlembicUtils import AlembicUtils
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+
+import os
+import sqlalchemy as sqla
 from cadence.analysis.shared import DataLoadUtils
 
 PyGlassEnvironment.initializeFromInternalPath(__file__)
