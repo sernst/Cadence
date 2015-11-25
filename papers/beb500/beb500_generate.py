@@ -3,10 +3,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from collections import namedtuple
+
 from pyaid.file.CsvWriter import CsvWriter
 from pyaid.file.FileUtils import FileUtils
 
-from collections import namedtuple
 import six
 from cadence import reporting
 from cadence.analysis.shared import DataLoadUtils
@@ -67,10 +68,48 @@ CONVERSIONS = [
     ENTRY('LM rotation degree*', TCCE.LEFT_MANUS_ROTATION_GUESS, ''),
     ENTRY('RM rotation degree', TCCE.RIGHT_MANUS_ROTATION, ''),
     ENTRY('RM rotation degree*', TCCE.RIGHT_MANUS_ROTATION_GUESS, ''),
-    ENTRY('P stride cm', TCCE.PES_STRIDE, ''),
+    ENTRY('P stride cm', TCCE.PES_STRIDE, {'name':'strideLength'}),
     ENTRY('P stride cm*', TCCE.PES_STRIDE_GUESS, ''),
     ENTRY('P stride factor', TCCE.PES_STRIDE_FACTOR, ''),
-    ENTRY('P stride factor', TCCE.PES_STRIDE_FACTOR, '')
+    ENTRY('P stride factor', TCCE.PES_STRIDE_FACTOR, ''),
+    ENTRY(
+        'width P angulation pattern cm',
+        TCCE.WIDTH_PES_ANGULATION_PATTERN, ''),
+    ENTRY(
+        'width P angulation pattern cm*',
+        TCCE.WIDTH_PES_ANGULATION_PATTERN_GUESS, ''),
+    ENTRY('LP pace cm', TCCE.LEFT_PES_PACE, {'name':'paceLength'}),
+    ENTRY('LP pace cm*', TCCE.LEFT_PES_PACE_GUESS, ''),
+    ENTRY('LP progression cm', TCCE.LEFT_PES_PROGRESSION, ''),
+    ENTRY('LP progression cm*', TCCE.LEFT_PES_PROGRESSION_GUESS, ''),
+    ENTRY('RP pace cm', TCCE.RIGHT_PES_PACE, {'name':'paceLength'}),
+    ENTRY('RP pace cm*', TCCE.RIGHT_PES_PACE_GUESS, ''),
+    ENTRY('RP progression cm', TCCE.RIGHT_PES_PROGRESSION, ''),
+    ENTRY('RP progression cm*', TCCE.RIGHT_PES_PROGRESSION_GUESS, ''),
+    ENTRY('P pace angulation degree', TCCE.PES_PACE_ANGULATION, ''),
+    ENTRY('P pace angulation degree*', TCCE.PES_PACE_ANGULATION_GUESS, ''),
+    ENTRY('M stride cm', TCCE.MANUS_STRIDE, {'name':'strideLength'}),
+    ENTRY('M stride cm*', TCCE.MANUS_STRIDE_GUESS, ''),
+    ENTRY('M stride factor', TCCE.MANUS_STRIDE_FACTOR, ''),
+    ENTRY('M stride factor', TCCE.MANUS_STRIDE_FACTOR, ''),
+    ENTRY('width M angulation pattern cm',
+          TCCE.WIDTH_MANUS_ANGULATION_PATTERN, ''),
+    ENTRY('width M angulation pattern cm*',
+          TCCE.WIDTH_MANUS_ANGULATION_PATTERN_GUESS, ''),
+    ENTRY('LM pace cm', TCCE.LEFT_MANUS_PACE, {'name':'paceLength'}),
+    ENTRY('LM pace cm*', TCCE.LEFT_MANUS_PACE_GUESS, ''),
+    ENTRY('LM progression cm', TCCE.LEFT_MANUS_PROGRESSION, ''),
+    ENTRY('LM progression cm*', TCCE.LEFT_MANUS_PROGRESSION_GUESS, ''),
+    ENTRY('RM pace cm', TCCE.RIGHT_MANUS_PACE, {'name':'paceLength'}),
+    ENTRY('RM pace cm*', TCCE.RIGHT_MANUS_PACE_GUESS, ''),
+    ENTRY('RM progression cm', TCCE.RIGHT_MANUS_PROGRESSION, ''),
+    ENTRY('RM progression cm*', TCCE.RIGHT_MANUS_PROGRESSION_GUESS, ''),
+    ENTRY('M pace angulation degree', TCCE.MANUS_PACE_ANGULATION, ''),
+    ENTRY('M pace angulation degree*', TCCE.MANUS_PACE_ANGULATION_GUESS, ''),
+    ENTRY('Gleno-acetabular Distance cm', TCCE.GLENO_ACETABULAR_DISTANCE, ''),
+    ENTRY('Gleno-acetabular Distance cm*',
+          TCCE.GLENO_ACETABULAR_DISTANCE_GUESS, ''),
+    ENTRY('Anatomical details visible', TCCE.ANATOMICAL_DETAILS, '')
 ]
 
 #_______________________________________________________________________________
@@ -99,15 +138,39 @@ def convert_value(spec, track, tracks):
             'P' if is_pes else 'M',
             track[TPE.NUMBER.name])
 
+    if spec.src == TCCE.PES_STRIDE:
+        v = round(100.0*track[get_key(spec.dest)])
+        return v if v > 0 and is_pes else ''
+
+    if spec.src == TCCE.MANUS_STRIDE:
+        v = round(100.0*track[get_key(spec.dest)])
+        return v if v > 0 and not is_pes else ''
+
+    if spec.src == TCCE.LEFT_PES_PACE:
+        v = round(100.0*track[get_key(spec.dest)])
+        return v if v > 0 and is_pes and is_left else ''
+
+    if spec.src == TCCE.RIGHT_PES_PACE:
+        v = round(100.0*track[get_key(spec.dest)])
+        return v if v > 0 and is_pes and not is_left else ''
+
+    if spec.src == TCCE.LEFT_MANUS_PACE:
+        v = round(100.0*track[get_key(spec.dest)])
+        return v if v > 0 and not is_pes and is_left else ''
+
+    if spec.src == TCCE.RIGHT_MANUS_PACE:
+        v = round(100.0*track[get_key(spec.dest)])
+        return v if v > 0 and not is_pes and not is_left else ''
+
     if spec.src in [TCCE.PES_WIDTH, TCCE.PES_LENGTH]:
         if not is_pes:
             return ''
-        return 100.0*track[get_key(spec.dest)]
+        return round(100.0*track[get_key(spec.dest)])
 
     if spec.src in [TCCE.MANUS_WIDTH, TCCE.MANUS_LENGTH]:
         if is_pes:
             return ''
-        return 100.0*track[get_key(spec.dest)]
+        return round(100.0*track[get_key(spec.dest)])
 
     if not spec.dest:
         return ''
@@ -162,7 +225,7 @@ def run(args):
     reporting.initialize(__file__)
     metadata = reporting.create_metadata_dict()
 
-    tracks = DataLoadUtils.readTable('tracks')
+    tracks = DataLoadUtils.getTrackWithAnalysis()
     tracks = tracks.query('site == "BEB" and level == "500"').copy()
     tracks['number'] = tracks['number'].str.zfill(4)
 
