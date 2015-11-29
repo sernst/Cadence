@@ -2,30 +2,32 @@
 # (C)2015
 # Scott Ernst
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
+
 PyGlassEnvironment.initializeFromInternalPath(__file__)
 
-from cadence.analysis.stats.KMeansClusterStage import KMeansClusterStage
+from cadence.analysis.stats.LocalRotationsStage import LocalRotationsStage
 from cadence.analysis.stats.TrackPriorityStage import TrackPriorityStage
 from cadence.analysis.stats.TrackwayStatsStage import TrackwayStatsStage
 from cadence.analysis.AnalyzerBase import AnalyzerBase
 
-#_______________________________________________________________________________
 class StatisticsAnalyzer(AnalyzerBase):
     """A class for..."""
 
-#===============================================================================
-#                                                                                       C L A S S
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def __init__(self, **kwargs):
         """Creates a new instance of StatisticsAnalyzer."""
         super(StatisticsAnalyzer, self).__init__(**kwargs)
+        self.addStage(LocalRotationsStage('localRotations', self))
         self.addStage(TrackPriorityStage('priority', self))
         self.addStage(TrackwayStatsStage('trackwayStats', self))
-        self.addStage(KMeansClusterStage('kmeans', self))
+        #self.addStage(KMeansClusterStage('kmeans', self))
 
 ####################################################################################################
 ####################################################################################################

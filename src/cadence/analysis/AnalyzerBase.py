@@ -38,8 +38,9 @@ from cadence.models.analysis.Analysis_Sitemap import Analysis_Sitemap
 try:
     # TODO: Working with Matplotlib in Virtual environments' in the Matplotlib FAQ
     from matplotlib import pyplot as plt
-except Exception:
+except Exception as err:
     plt = None
+    print(err)
     print('WARNING: Matplotlib failed to import.')
 
 #*************************************************************************************************** AnalyzerBase

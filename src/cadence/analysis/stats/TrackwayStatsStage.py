@@ -12,17 +12,11 @@ from refined_stats.density import DensityDistribution
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
-
-
-#*******************************************************************************
 from cadence.analysis.shared.plotting.MultiScatterPlot import MultiScatterPlot
 
 
 class TrackwayStatsStage(AnalysisStage):
     """A class for..."""
-
-#===============================================================================
-#                                                                     C L A S S
 
     TRACKWAY_STATS_CSV = 'Trackway-Stats.csv'
     UNWEIGHTED_TRACKWAY_STATS_CSV = 'Unweighted-Trackway-Stats.csv'
@@ -41,8 +35,8 @@ class TrackwayStatsStage(AnalysisStage):
         self._quartileStats = dict()
         self._densityPlots = dict()
 
-#===============================================================================
-#                                                             P R O T E C T E D
+    #===========================================================================
+    #                                                         P R O T E C T E D
 
     #___________________________________________________________________________
     def _preAnalyze(self):
@@ -210,7 +204,7 @@ class TrackwayStatsStage(AnalysisStage):
             'diffUpperQuart':abs(unweighted[3] - weighted[3])/unweighted[3],
             'diffUpperBound':abs(unweighted[4] - weighted[4])/unweighted[4] })
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         spec = dict(
             pesWidth='Pes Width',
@@ -235,7 +229,7 @@ class TrackwayStatsStage(AnalysisStage):
         for key, label in DictUtils.iter(spec):
             self._addQuartileEntry(label, trackway, data[key])
 
-#_______________________________________________________________________________
+    #___________________________________________________________________________
     def _populateCsvData(self, target, trackway, data, isWeighted =True):
         aTrackway = trackway.getAnalysisPair(self.analysisSession)
         bundle = self.owner.getSeriesBundle(trackway)
