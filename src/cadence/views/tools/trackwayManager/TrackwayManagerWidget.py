@@ -356,7 +356,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         pace   = AnalysisFlagsEnumOps.get(analysisFlags, AnalysisFlagsEnum.IGNORE_PACE)
         stride = AnalysisFlagsEnumOps.get(analysisFlags, AnalysisFlagsEnum.IGNORE_STRIDE)
         self.ignorePaceCkbx.setChecked(pace)
-        self.ignorePaceCkbx.setChecked(stride)
+        self.ignoreStrideCkbx.setChecked(stride)
 
         # finish off a few more fields
         self.hiddenCkbx.setChecked(hidden)
