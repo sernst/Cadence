@@ -29,8 +29,8 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
                             #   and the first track's heading
         'point',            # Point representation of the data
                             #   (curvePosition, angle.degrees)
-        'headingAngle'      # Absolute heading angle for the track
-        'relativeAngle' ])  # Heading angle relative to the previous track
+        'headingAngle' ])      # Absolute heading angle for the track
+        #'relativeAngle' ])  # Heading angle relative to the previous track
                             #   value, or zero if no previous track
 
     #___________________________________________________________________________
@@ -141,11 +141,12 @@ class TrackHeadingStage(CurveOrderedAnalysisStage):
         data.append(self.TRACK_HEADING_DATA_NT(
             track=track,
             deviation=deviation,
+            headingAngle=angle,
             point=PositionValue2D(
                 x=analysisTrack.curvePosition,
                 y=strideLine.angle.degrees,
-                yUnc=angle.uncertaintyDegrees),
-            headingAngle=angle ))
+                yUnc=angle.uncertaintyDegrees)
+        ))
 
     #___________________________________________________________________________
     def _postAnalyze(self):

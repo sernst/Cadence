@@ -53,9 +53,19 @@ class MultiScatterPlot(ScatterPlot):
         """_plotImpl doc..."""
         plotHandles = []
         for item in self._plotData:
+            if not item.get('data'):
+                # Skip plots with no points
+                continue
+
             if 'label' not in item:
                 item['label'] = 'Series %s' % (len(plotHandles) + 1)
-            plotHandles.append(self._plotScatterSeries(**item))
+            try:
+                new_handles = self._plotScatterSeries(**item)
+                plotHandles.append(new_handles)
+            except Exception as err:
+                print('PLOT ERROR')
+                new_handles = self._plotScatterSeries(**item)
+                raise err
 
         if len(plotHandles) < 2:
             return

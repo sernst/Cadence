@@ -82,17 +82,19 @@ class ScatterPlot(SinglePlotBase):
             xUnc.append(item['xUnc'])
             yUnc.append(item['yUnc'])
         if kwargs.get('markers', True):
-            h, = self.pl.errorbar(
+            new_handles = self.pl.errorbar(
                 x=x, y=y, xerr=xUnc, yerr=yUnc,
                 fmt=kwargs.get('format', 'o'),
                 markersize=kwargs.get('size', 6),
                 label=label,
                 color=color)
-            handles.append(h)
+            for h in new_handles:
+                handles.append(h)
 
         if kwargs.get('line'):
-            h, = self.pl.plot(x, y, '-', color=color, label=label)
-            handles.append(h)
+            new_handles = self.pl.plot(x, y, '-', color=color, label=label)
+            for h in new_handles:
+                handles.append(h)
         return handles
 
 #_______________________________________________________________________________
