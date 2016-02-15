@@ -216,12 +216,24 @@ class AnalyzerBase(object):
         stage.owner = self
         self.stages.append(stage)
 
-#_______________________________________________________________________________
     def getPath(self, *args, **kwargs):
-        """ Convenience method for creating paths relative to the output root path for this
-            Analyzer. """
+        """ Convenience method for creating paths relative to the output root
+            path for this Analyzer.
+
+        @return:
+        """
 
         return FileUtils.createPath(self.outputRootPath, *args, **kwargs)
+
+    def getLocalPath(self, *args, **kwargs):
+        """
+
+        @param args:
+        @param kwargs:
+        @return:
+        """
+
+        return FileUtils.createPath(self._defaultRootPath, *args, **kwargs)
 
 #_______________________________________________________________________________
     def getTempFilePath(self, name =None, extension =None, *args):

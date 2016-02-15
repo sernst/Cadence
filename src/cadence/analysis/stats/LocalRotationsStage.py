@@ -9,9 +9,11 @@ from __future__ import unicode_literals
 
 from pyaid.file.CsvWriter import CsvWriter
 from pyaid.number.Angle import Angle
+from pyaid.number.NumericUtils import NumericUtils
 
 from cadence.analysis.CurveOrderedAnalysisStage import CurveOrderedAnalysisStage
 from cadence.analysis.shared.LineSegment2D import LineSegment2D
+from cadence.enums.ImportFlagsEnum import ImportFlagsEnum
 
 
 class LocalRotationsStage(CurveOrderedAnalysisStage):
@@ -26,14 +28,18 @@ class LocalRotationsStage(CurveOrderedAnalysisStage):
         self._csv = None
 
 
-    #_______________________________________________________________________________
+    #___________________________________________________________________________
     def _preAnalyze(self):
         self._csv = CsvWriter(
             path=self.getPath('Local_Rotations.csv'),
             autoIndexFieldName='index',
             fields=[
                 ('uid', 'UID'),
-                ('localRotation', 'Local Rotation')
+                ('fingerprint', 'Fingerprint'),
+                ('localRotation', 'Local Rotation'),
+                ('measuredRotation', 'Measured Rotation'),
+                ('difference', 'Difference'),
+                ('deviation', 'Deviation')
             ]
         )
 
@@ -52,14 +58,33 @@ class LocalRotationsStage(CurveOrderedAnalysisStage):
             abs_angle = Angle(degrees=prev_track.rotation)
 
 
-            if prev_track.left:
+            if not prev_track.left:
                 local_angle = stride_angle.differenceBetween(abs_angle)
             else:
                 local_angle = abs_angle.differenceBetween(stride_angle)
 
+            has_field_measurements = not prev_track.hasImportFlag(
+                ImportFlagsEnum.NO_FIELD_MEASUREMENTS
+            )
+
+            if has_field_measurements:
+                measuredRotation = prev_track.rotationMeasured
+                difference = round(abs(measuredRotation - local_angle.degrees))
+                deviation = NumericUtils.roundToOrder(
+                    value=difference/prev_track.rotationUncertainty,
+                    orderOfMagnitude=-2)
+            else:
+                measuredRotation = ''
+                difference = ''
+                deviation = ''
+
             self._csv.createRow(
                 uid=prev_track.uid,
-                localRotation=local_angle.degrees)
+                fingerprint=prev_track.fingerprint,
+                difference=difference,
+                deviation=deviation,
+                localRotation=round(local_angle.degrees),
+                measuredRotation=measuredRotation)
             prev_track = track
 
     #___________________________________________________________________________

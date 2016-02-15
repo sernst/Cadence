@@ -387,7 +387,7 @@ class PaceLengthStage(AnalysisStage):
 
         for entry in self.entries:
             if 'measured' not in entry:
-                entry['drawFunc']('purple')
+                # entry['drawFunc']('purple')
                 continue
 
             if entry['deviation'] > 2.0:

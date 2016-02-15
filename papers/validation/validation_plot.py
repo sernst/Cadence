@@ -102,17 +102,15 @@ def plotComparison(label, name, tracks, metadata):
     areaValues = np.zeros(len(expectedDf['x']) - 1)
 
     areaTraces = []
-    areaPercentageTraces = []
     histTraces = []
-    histPercentageTraces = []
 
     for sizeClass in PlotConfigs.SIZE_CLASSES:
-        dataSlice = tracks.query('sizeClass == {}'.format(sizeClass['index']))
+        track_count = int(metadata['size_counts'][sizeClass['id']])
+
         options = {
             'sizeClass': sizeClass,
             'key': '{}/{}/'.format(name, sizeClass['id']),
-            'countLabel': locale.format(
-                '%d', int(dataSlice.shape[0]), grouping=True)
+            'countLabel': locale.format('%d', track_count, grouping=True)
         }
 
         histTrace = _makeHistogram(**options)
@@ -164,7 +162,9 @@ def plotComparison(label, name, tracks, metadata):
         plotType='REMAINDER',
         suffix='cdf-remainder',
         traces=areaTraces,
-        layoutOptions={'fixed':True},
+        layoutOptions={
+            'fixed':True,
+            'yAxis': {'title':'Remaining Population (%)'}},
         title=('Inverse Cumulative Distribution of Track ' +
                     '{} Deviations ({} Tracks)').format(label, countLabel) )
 
@@ -175,7 +175,7 @@ def plotComparison(label, name, tracks, metadata):
         layoutOptions={
             'fixed':True,
             'yAxis': {
-                'title': 'Frequency (log)',
+                'title':'Log Remaining Population (%)',
                 'type': 'log' }},
         title=('Inverse Cumulative Distribution of Track ' +
                     '{} Deviations ({} Tracks)').format(label, countLabel) )

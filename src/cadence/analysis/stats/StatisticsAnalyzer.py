@@ -19,7 +19,6 @@ from cadence.analysis.AnalyzerBase import AnalyzerBase
 class StatisticsAnalyzer(AnalyzerBase):
     """A class for..."""
 
-
     #___________________________________________________________________________
     def __init__(self, **kwargs):
         """Creates a new instance of StatisticsAnalyzer."""
@@ -27,10 +26,9 @@ class StatisticsAnalyzer(AnalyzerBase):
         self.addStage(LocalRotationsStage('localRotations', self))
         self.addStage(TrackPriorityStage('priority', self))
         self.addStage(TrackwayStatsStage('trackwayStats', self))
-        #self.addStage(KMeansClusterStage('kmeans', self))
 
-####################################################################################################
-####################################################################################################
+################################################################################
+################################################################################
 
 #_______________________________________________________________________________
 if __name__ == '__main__':

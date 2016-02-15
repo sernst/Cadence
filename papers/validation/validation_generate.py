@@ -51,6 +51,7 @@ def generateData(name, df, key, binCount):
         'xMin':xMin,
         'xMax':xMax,
         'count':count,
+        'size_counts':{},
         'bins':list(bins),
         'structure':structure
     }
@@ -72,6 +73,7 @@ def generateData(name, df, key, binCount):
             dataSlice = df.query('sizeClass == {}'.format(sizeClass['index']))
         else:
             dataSlice = df
+        metadata['size_counts'][sizeClass['id']] = dataSlice.shape[0]
 
         sizeCount = dataSlice.shape[0]
         dataSlice = dataSlice.query('{} <= {}'.format(key, xMax))
