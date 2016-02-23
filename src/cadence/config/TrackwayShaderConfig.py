@@ -2,7 +2,8 @@
 # (C)2013
 # Kent A. Stevens
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import \
+    print_function, absolute_import, unicode_literals, division
 
 #_______________________________________________________________________________
 class TrackwayShaderConfig(object):
@@ -23,7 +24,7 @@ class TrackwayShaderConfig(object):
     }
 
     BLUE_COLOR = {
-        'uid':   'CadenceRedLambert',
+        'uid':   'CadenceBlueLambert',
         'type':  'lambert',
         'color': [0.0, 0.0, 1.0]
     }

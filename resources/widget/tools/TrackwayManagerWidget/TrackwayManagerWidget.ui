@@ -28,19 +28,7 @@
   <property name="windowTitle">
    <string>Trackway Manager</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0">
-   <property name="leftMargin">
-    <number>8</number>
-   </property>
-   <property name="topMargin">
-    <number>8</number>
-   </property>
-   <property name="rightMargin">
-    <number>8</number>
-   </property>
-   <property name="bottomMargin">
-    <number>8</number>
-   </property>
+  <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
     <widget class="QWidget" name="trackwayWidget" native="true">
      <property name="font">
@@ -298,7 +286,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="trackEditorTab">
       <property name="sizePolicy">
@@ -313,7 +301,7 @@
       <attribute name="title">
        <string>Tracks</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -796,7 +784,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="coordsWidget" native="true">
+           <widget class="QWidget" name="lengthRatioWidget" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1761,7 +1749,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QComboBox" name="selectionMethod1Cmbx">
+              <widget class="QComboBox" name="selectBy1Cmbx">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -1838,7 +1826,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QComboBox" name="selectionMethod2Cmbx">
+              <widget class="QComboBox" name="selectBy2Cmbx">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -2120,6 +2108,1036 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="proxyTrackEditorTab">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <attribute name="title">
+       <string>Proxy Tracks</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_31">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QWidget" name="coordinatesWidget" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_15" stretch="0,0,0,0,0,0">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QWidget" name="longitudeWidget" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Lucida Grande</family>
+              <pointsize>13</pointsize>
+             </font>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="0,0,0,0">
+             <property name="spacing">
+              <number>-1</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="lbl_17">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>13</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
+               </property>
+               <property name="text">
+                <string>Longitude</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDoubleSpinBox" name="longitudeSbx">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>14</pointsize>
+                </font>
+               </property>
+               <property name="layoutDirection">
+                <enum>Qt::LeftToRight</enum>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="buttonSymbols">
+                <enum>QAbstractSpinBox::PlusMinus</enum>
+               </property>
+               <property name="accelerated">
+                <bool>true</bool>
+               </property>
+               <property name="decimals">
+                <number>0</number>
+               </property>
+               <property name="maximum">
+                <double>100.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbl_15">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <weight>50</weight>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Longitudinal Uncertainty:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDoubleSpinBox" name="longitudeUncertaintySbx">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>14</pointsize>
+                </font>
+               </property>
+               <property name="contextMenuPolicy">
+                <enum>Qt::NoContextMenu</enum>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="decimals">
+                <number>0</number>
+               </property>
+               <property name="maximum">
+                <double>10.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="latitudeWidget" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Lucida Grande</family>
+              <pointsize>13</pointsize>
+             </font>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="0,0,0,0">
+             <property name="spacing">
+              <number>-1</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="lbl_18">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>13</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Latitude</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDoubleSpinBox" name="latitudeSbx">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="sizeIncrement">
+                <size>
+                 <width>0</width>
+                 <height>12</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>14</pointsize>
+                </font>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="accelerated">
+                <bool>true</bool>
+               </property>
+               <property name="decimals">
+                <number>0</number>
+               </property>
+               <property name="maximum">
+                <double>150.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbl_16">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <weight>50</weight>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Latitudinal Uncertainty:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDoubleSpinBox" name="latitudeUncertaintySbx">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>14</pointsize>
+                </font>
+               </property>
+               <property name="contextMenuPolicy">
+                <enum>Qt::NoContextMenu</enum>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="decimals">
+                <number>0</number>
+               </property>
+               <property name="maximum">
+                <double>10.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="proxyPullBtn">
+            <property name="font">
+             <font>
+              <family>Abadi MT Condensed Extra Bold</family>
+             </font>
+            </property>
+            <property name="text">
+             <string>Pull Proxy Data</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="rowWidget" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Abadi MT Condensed Extra Bold</family>
+             </font>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_32">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="Line" name="line_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="navigationWidget_2" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lucida Grande</family>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_17">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QWidget" name="controlsWidget_2" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>2</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Lucida Grande</family>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_34">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QWidget" name="firstWidget_2" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_19">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QPushButton" name="firstProxyBtn">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Lucida Grande</family>
+                    <pointsize>12</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="acceptDrops">
+                   <bool>false</bool>
+                  </property>
+                  <property name="toolTipDuration">
+                   <number>3</number>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>mediaIcons/first.png</normaloff>mediaIcons/first.png</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>24</width>
+                    <height>24</height>
+                   </size>
+                  </property>
+                  <property name="flat">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_19">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Abadi MT Condensed Light</family>
+                    <pointsize>13</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="contextMenuPolicy">
+                   <enum>Qt::DefaultContextMenu</enum>
+                  </property>
+                  <property name="text">
+                   <string>First Proxy</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="prevWIdget_2" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_20" stretch="0,0">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QPushButton" name="prevProxyBtn">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Lucida Grande</family>
+                    <pointsize>12</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="acceptDrops">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>mediaIcons/prev.png</normaloff>mediaIcons/prev.png</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>24</width>
+                    <height>24</height>
+                   </size>
+                  </property>
+                  <property name="flat">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_20">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Abadi MT Condensed Light</family>
+                    <pointsize>13</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>Prev Proxy</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="nextWidget_2" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_21">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QPushButton" name="nextProxyBtn">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Lucida Grande</family>
+                    <pointsize>12</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="acceptDrops">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>mediaIcons/next.png</normaloff>mediaIcons/next.png</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>24</width>
+                    <height>24</height>
+                   </size>
+                  </property>
+                  <property name="flat">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_21">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Abadi MT Condensed Light</family>
+                    <pointsize>13</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>Next Proxy</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="lastWidget_2" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_22">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QPushButton" name="lastProxyBtn">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Lucida Grande</family>
+                    <pointsize>12</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="acceptDrops">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>mediaIcons/next.png</normaloff>mediaIcons/next.png</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>24</width>
+                    <height>24</height>
+                   </size>
+                  </property>
+                  <property name="flat">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lastLbl_2">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Abadi MT Condensed Light</family>
+                    <pointsize>13</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="layoutDirection">
+                   <enum>Qt::LeftToRight</enum>
+                  </property>
+                  <property name="text">
+                   <string>Last Proxy</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="camWidget_2" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Abadi MT Condensed Extra Bold</family>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="contextMenuPolicy">
+             <enum>Qt::DefaultContextMenu</enum>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="1,1,1">
+             <property name="spacing">
+              <number>-1</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QPushButton" name="selectCadenceCamBtn_2">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>13</pointsize>
+                 <weight>75</weight>
+                 <italic>false</italic>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Cadence Cam</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="selectPerspectiveBtn_2">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>13</pointsize>
+                 <weight>75</weight>
+                 <italic>false</italic>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Persp Cam</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pullBtn_2">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>12</pointsize>
+                 <weight>75</weight>
+                 <italic>true</italic>
+                 <bold>true</bold>
+                 <underline>false</underline>
+                 <stylestrategy>PreferDefault</stylestrategy>
+                </font>
+               </property>
+               <property name="autoFillBackground">
+                <bool>true</bool>
+               </property>
+               <property name="text">
+                <string>Pull Data</string>
+               </property>
+               <property name="checkable">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="initializeProxiesBtn">
+            <property name="font">
+             <font>
+              <family>Abadi MT Condensed Extra Bold</family>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Initialize Proxy Tracks</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="saveProxiesBtn">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Abadi MT Condensed Extra Bold</family>
+              <pointsize>12</pointsize>
+              <weight>50</weight>
+              <italic>false</italic>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Save Proxy Tracks</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_8">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="trackwayEditorTab">
       <property name="enabled">
        <bool>true</bool>
@@ -2132,10 +3150,7 @@
       <attribute name="title">
        <string>Trackways</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_16">
-       <property name="spacing">
-        <number>0</number>
-       </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_33">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -2151,6 +3166,18 @@
        <item>
         <widget class="QWidget" name="widget_8" native="true">
          <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
            <spacer name="horizontalSpacer_3">
             <property name="orientation">
@@ -2167,6 +3194,18 @@
           <item>
            <widget class="QWidget" name="AllTrackwaysWidget" native="true">
             <layout class="QVBoxLayout" name="verticalLayout_6">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
              <item>
               <widget class="QWidget" name="widget_9" native="true">
                <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -2317,7 +3356,13 @@
              </sizepolicy>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_18" stretch="1,0,0,0,0,0,0,0">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
              <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
               <number>0</number>
              </property>
              <property name="bottomMargin">
@@ -2477,6 +3522,18 @@
        <string>Tracksites</string>
       </attribute>
       <layout class="QHBoxLayout" name="horizontalLayout_22">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QWidget" name="trackSiteSelectorWidget" native="true">
          <property name="sizePolicy">

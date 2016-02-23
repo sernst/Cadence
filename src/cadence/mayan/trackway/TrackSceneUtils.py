@@ -1,8 +1,9 @@
 # TrackSceneUtils.py
-# (C)2014
+# (C)2014-2016
 # Scott Ernst and Kent A. Stevens
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import \
+    print_function, absolute_import, unicode_literals, division
 
 import math
 
@@ -17,23 +18,25 @@ from cadence.util.shading.ShadingUtils import ShadingUtils
 
 #_______________________________________________________________________________
 class TrackSceneUtils(object):
-    """ A class for supporting Maya-side operations such as creating visual representations of Track
-        nodes (createTrackNode), and getting and setting those values.  Used by remote scripts that
-        extend NimbleScriptBase. """
+    """ A class for supporting Maya-side operations such as creating visual
+        representations of Track nodes (createTrackNode), and getting/setting
+        those values.  Used by remote scripts that extend NimbleScriptBase. """
 
 #===============================================================================
-#                                                                                       C L A S S
+#                                                                      C L A S S
 
 #_______________________________________________________________________________
     @classmethod
     def createTrackNode(cls, uid, trackSetNode =None, props =None):
-        """ A track node consists of a triangular pointer (left = red, right = green) which is
-            selectable but only allows rotateY, translateX, and translateZ. The node has a child, a
-            transform called inverter, which serves to counteract the scaling in x and z that is
-            applied to the triangular node.  There are two orthogonal rulers (width and length).
-            Width and length uncertainty is represented by rectangular bars at the ends of the
-            rulers.  In Maya one can directly adjust track position (translateX and translateZ) and
-            orientation (rotationY); other attributes are adjusted only through the UI. """
+        """ A track node consists of a triangular pointer (left = red, right =
+            green) which is selectable but only allows rotateY, translateX, and
+            translateZ. The node has a child, a transform called inverter, which
+            serves to counteract the scaling in x and z that is applied to the
+            triangular node.  There are two orthogonal rulers (width and
+            length).  Width and length uncertainty is represented by rectangular
+            bars at the ends of the rulers.  In Maya one can directly adjust
+            track position (translateX and translateZ) and orientation
+            (rotationY); other attributes are adjusted only through the UI. """
 
         if not trackSetNode:
             trackSetNode = TrackSceneUtils.getTrackSetNode()
@@ -55,11 +58,13 @@ class TrackSceneUtils(object):
         rulerThickness = 0.25
         epsilon        = 1.0
 
-        # Create an isoceles triangle pointer, with base aligned with X, and scaled by node.width
-        # The midpoint of the base is centered on the 'track center' and the altitude extends from
-        # that center of the track 'anteriorly' to the perimeter of the track's profile (if
-        # present, else estimated).  The node is scaled longitudinally (in z) based on the distance
-        # zN (the 'anterior' length of the track, in cm).  The triangle initially 1 cm on a side.
+        # Create an isoceles triangle pointer, with base aligned with X, and
+        # scaled by node.width.  The midpoint of the base is centered on the
+        # 'track center' and the altitude extends from that center of the track
+        # 'anteriorly' to the perimeter of the track's profile (if present, else
+        # estimated).  The node is scaled longitudinally (in z) based on the
+        # distance zN (the 'anterior' length of the track, in cm).  The triangle
+        #  initially 1 cm on a side.
         sideLength = 1.0
         node = cmds.polyPrism(
             length=nodeThickness,
@@ -75,12 +80,15 @@ class TrackSceneUtils(object):
         # Point the triangle down the +Z axis
         cmds.rotate(0.0, -90.0, 0.0)
 
-        # push it down below ground level so that the two rulers are just submerged, and
-        # scale the triangle in Z to match its width (1 cm) so it is ready to be scaled
+        # push it down below ground level so that the two rulers are just
+        # submerged, and scale the triangle in Z to match its width (1 cm) so it
+        # is ready to be scaled
         cmds.move(0, -(nodeThickness/2.0 + rulerThickness), math.sqrt(3.0)/6.0)
 
-        # move the node's pivot to the 'base' of the triangle so it scales outward from that point
-        cmds.move(0, 0, 0, node + ".scalePivot", node + ".rotatePivot", absolute=True)
+        # move the node's pivot to the 'base' of the triangle so it scales
+        # outward from that point
+        cmds.move(
+            0, 0, 0, node + ".scalePivot", node + ".rotatePivot", absolute=True)
         cmds.scale(2.0/math.sqrt(3.0), 1.0, 100.0)
         cmds.makeIdentity(
             apply=True,
@@ -120,8 +128,9 @@ class TrackSceneUtils(object):
              dataType='string',
              niceName='Unique ID')
 
-        # Construct a ruler representing track width, then push it down just below ground level, and
-        # make it non-selectable.  Drive its scale by the node's width attribute.
+        # Construct a ruler representing track width, then push it down just
+        # below ground level, and ake it non-selectable.  Drive its scale by the
+        # node's width attribute.
         widthRuler = cmds.polyCube(
             axis=(0,1,0),
             width=100.0,
@@ -133,14 +142,16 @@ class TrackSceneUtils(object):
             constructionHistory=1,
             name='WidthRuler')[0]
 
-        # Push it down so it is just resting on the triangular node (which is already submerged by
-        # the thickness of the ruler and half the node thickness.
+        # Push it down so it is just resting on the triangular node (which is
+        # already submerged by the thickness of the ruler and half the node
+        # thickness.
         cmds.move(0.0, -rulerThickness/2.0, 0.0)
         cmds.setAttr(widthRuler + '.overrideEnabled', 1)
         cmds.setAttr(widthRuler + '.overrideDisplayType', 2)
 
-        # Construct a ruler representing track length and push it down the same as the width ruler,
-        # and make it non-selectable.  Its length will be driven by the node's length attribute.
+        # Construct a ruler representing track length and push it down the same
+        # as the width ruler, and make it non-selectable.  Its length will be
+        # driven by the node's length attribute.
         lengthRuler = cmds.polyCube(
             axis=(0,1,0),
             width=rulerBreadth,
@@ -155,9 +166,10 @@ class TrackSceneUtils(object):
         cmds.setAttr(lengthRuler + '.overrideEnabled', 1)
         cmds.setAttr(lengthRuler + '.overrideDisplayType', 2)
 
-        # Now construct 'error bars' to the North, South, West, and East of the node, to represent
-        # visualize uncertainty in width (West and East bars) and length (North and South bars),
-        # and push them just below ground level, and make them non-selectable.
+        # Now construct 'error bars' to the North, South, West, and East of the
+        # node, to visualize uncertainty in width (West and East bars) and
+        # length (North and South bars), and push them just below ground level,
+        # and make them non-selectable.
         barN = cmds.polyCube(
             axis=(0,1,0),
             width=barBreadth,
@@ -214,9 +226,10 @@ class TrackSceneUtils(object):
         cmds.setAttr(barE + '.overrideEnabled', 1)
         cmds.setAttr(barE + '.overrideDisplayType', 2)
 
-        # Create two diverging lines that indicate rotation uncertainty (plus and minus), with
-        # their pivots placed so they extend from the node center, and each is made non-selectable.
-        # First make the indicator of maximum (counterclockwise) estimated track rotation
+        # Create two diverging lines that indicate rotation uncertainty (plus
+        # and minus), with their pivots placed so they extend from the node
+        # center, and each is made non-selectable.  First make the indicator of
+        # maximum (counterclockwise) estimated track rotation
         thetaPlus = cmds.polyCube(
             axis=(0,1,0),
             width=thetaBreadth,
@@ -230,7 +243,8 @@ class TrackSceneUtils(object):
         cmds.setAttr(thetaPlus + '.overrideEnabled',     1)
         cmds.setAttr(thetaPlus + '.overrideDisplayType', 2)
 
-        # Next, construct the indicator of the minimum (clockwise) estimate of track rotation
+        # Next, construct the indicator of the minimum (clockwise) estimate of
+        # track rotation
         thetaMinus = cmds.polyCube(
             axis=(0,1,0),
             width=thetaBreadth,
@@ -244,13 +258,15 @@ class TrackSceneUtils(object):
         cmds.setAttr(thetaMinus + '.overrideEnabled',     1)
         cmds.setAttr(thetaMinus + '.overrideDisplayType', 2)
 
-        # The two width 'error bars' will be translated outward from the node center.  First, the
-        # width attribute is converted from meters (as it comes from the database) to
-        # centimeters; the computation is available in the output of the node 'width'.
+        # The two width 'error bars' will be translated outward from the node
+        # center.  First, the width attribute is converted from meters (as it
+        # comes from the database) to centimeters; the computation is available
+        # in the output of the node 'width'.
         width = cmds.createNode('multiplyDivide', name='width')
         cmds.setAttr(width + '.operation', 1)
         cmds.setAttr(width + '.input1X', 100.0)
-        cmds.connectAttr(node + '.' + TrackPropEnum.WIDTH.maya, width + '.input2X')
+        cmds.connectAttr(
+            node + '.' + TrackPropEnum.WIDTH.maya, width + '.input2X')
 
         # Translate barW in x by width/2.0; output is in xW.outputX
         xW = cmds.createNode('multiplyDivide', name = 'xW')
@@ -266,25 +282,31 @@ class TrackSceneUtils(object):
         cmds.setAttr(xE + '.input2X', -2.0)
         cmds.connectAttr(xE + '.outputX', barE + '.translateX')
 
-        # Now regarding length, first convert the node.length attribute from meters to centimeters.
-        # This computation is available in the output of the node 'length'
+        # Now regarding length, first convert the node.length attribute from
+        # meters to centimeters. This computation is available in the output of
+        # the node 'length'
         length = cmds.createNode('multiplyDivide', name='length')
         cmds.setAttr(length + '.operation', 1)
         cmds.setAttr(length + '.input1X', 100.0)
-        cmds.connectAttr(node + '.' + TrackPropEnum.LENGTH.maya, length + '.input2X')
+        cmds.connectAttr(
+            node + '.' + TrackPropEnum.LENGTH.maya, length + '.input2X')
 
-        # scale thetaPlus and thetaMinus by length (since they are 1 cm, multiply by length in cm)
+        # scale thetaPlus and thetaMinus by length (since they are 1 cm,
+        # multiply by length in cm)
         cmds.connectAttr(length + '.outputX', thetaPlus  + '.scaleZ')
         cmds.connectAttr(length + '.outputX', thetaMinus + '.scaleZ')
 
-        # Then barN is translated forward in z by zN = lengthRatio*length (centimeters)
+        # Then barN is translated forward in z by zN = lengthRatio*length
+        # (centimeters)
         zN = cmds.createNode('multiplyDivide', name='zN')
         cmds.setAttr(zN + '.operation', 1)
-        cmds.connectAttr(node + '.' + TrackPropEnum.LENGTH_RATIO.maya, zN + '.input1X')
+        cmds.connectAttr(
+            node + '.' + TrackPropEnum.LENGTH_RATIO.maya, zN + '.input1X')
         cmds.connectAttr(length + '.outputX',  zN + '.input2X')
         cmds.connectAttr(zN + '.outputX', barN + '.translateZ')
 
-        # Next, translate barS backward in z by (zN - length); output is in zS.output1D
+        # Next, translate barS backward in z by (zN - length); output is in
+        # zS.output1D
         zS = cmds.createNode('plusMinusAverage', name='sZ')
         cmds.setAttr(zS + '.operation', 2)
         cmds.connectAttr(zN + '.outputX',     zS + '.input1D[0]')
@@ -304,17 +326,28 @@ class TrackSceneUtils(object):
         cmds.connectAttr(hl + '.outputX',  zL + '.input1D[1]')
         cmds.connectAttr(zL + '.output1D', lengthRuler + '.translateZ')
 
-        # Scale the four 'error bars' to represent the width and length uncertainties (centimeters)
-        cmds.connectAttr(node + "." + TrackPropEnum.WIDTH_UNCERTAINTY.maya,  barW + '.scaleX')
-        cmds.connectAttr(node + "." + TrackPropEnum.WIDTH_UNCERTAINTY.maya,  barE + '.scaleX')
-        cmds.connectAttr(node + "." + TrackPropEnum.LENGTH_UNCERTAINTY.maya, barN + '.scaleZ')
-        cmds.connectAttr(node + "." + TrackPropEnum.LENGTH_UNCERTAINTY.maya, barS + '.scaleZ')
+        # Scale the four 'error bars' to represent the width and length
+        # uncertainties (centimeters)
+        cmds.connectAttr(
+            node + "." + TrackPropEnum.WIDTH_UNCERTAINTY.maya,
+            barW + '.scaleX')
+        cmds.connectAttr(
+            node + "." + TrackPropEnum.WIDTH_UNCERTAINTY.maya,
+            barE + '.scaleX')
+        cmds.connectAttr(
+            node + "." + TrackPropEnum.LENGTH_UNCERTAINTY.maya,
+            barN + '.scaleZ')
+        cmds.connectAttr(
+            node + "." + TrackPropEnum.LENGTH_UNCERTAINTY.maya,
+            barS + '.scaleZ')
 
-        # Create an 'inverter' transform under which all the other parts are hung as children,
-        # which counteracts scaling applied to its parent triangular node.
+        # Create an 'inverter' transform under which all the other parts are
+        # hung as children, which counteracts scaling applied to its parent
+        # triangular node.
         inverter = cmds.createNode('transform', name='inverter')
 
-        # drive the inverter's .scaleX and .scaleZ as the inverse of the parent node's scale values
+        # drive the inverter's .scaleX and .scaleZ as the inverse of the parent
+        # node's scale values
         sx = cmds.createNode('multiplyDivide', name='sx')
         cmds.setAttr(sx + '.operation', 2)
         cmds.setAttr(sx + '.input1X', 1.0)
@@ -338,7 +371,8 @@ class TrackSceneUtils(object):
         cmds.parent(thetaMinus,  inverter)
         cmds.parent(inverter,    node)
 
-        # Rotate thetaPlus and thetaMinus about the Y axis to indicate rotational uncertainty
+        # Rotate thetaPlus and thetaMinus about the Y axis to indicate
+        # rotational uncertainty
         cmds.connectAttr(
             node + '.' + TrackPropEnum.ROTATION_UNCERTAINTY.maya,
             node + '|' + inverter + '|' + thetaPlus + '.rotateY')
@@ -346,8 +380,12 @@ class TrackSceneUtils(object):
         neg = cmds.createNode('multiplyDivide', name='negative')
         cmds.setAttr(neg + '.operation', 1)
         cmds.setAttr(neg + '.input1X',  -1.0)
-        cmds.connectAttr(node + '.' + TrackPropEnum.ROTATION_UNCERTAINTY.maya, neg + '.input2X')
-        cmds.connectAttr(neg + '.outputX', node + '|' + inverter + '|' + thetaMinus + '.rotateY')
+        cmds.connectAttr(
+            node + '.' + TrackPropEnum.ROTATION_UNCERTAINTY.maya,
+            neg + '.input2X')
+        cmds.connectAttr(
+            neg + '.outputX',
+            node + '|' + inverter + '|' + thetaMinus + '.rotateY')
 
         # Disable some transforms of the node
         cmds.setAttr(node + '.rotateX',    lock=True)
@@ -355,19 +393,23 @@ class TrackSceneUtils(object):
         cmds.setAttr(node + '.scaleY',     lock=True)
         cmds.setAttr(node + '.translateY', lock=True)
 
-        # Now, the width of the triangle will be driven by its width attribute (driving .scaleX)
+        # Now, the width of the triangle will be driven by its width attribute
+        # (driving .scaleX)
         cmds.connectAttr(node + '.width',  node + '.scaleX')
 
         # The quantity zN is used to scale length of the triangle
         cmds.connectAttr(zN + '.outputX',  node + '.scaleZ')
 
         # Scale the 'length' (in x) of the width ruler
-        cmds.connectAttr(node + '.width',  node + '|' + inverter + '|WidthRuler.scaleX')
+        cmds.connectAttr(
+            node + '.width',  node + '|' + inverter + '|WidthRuler.scaleX')
 
         # Scale the length of the length ruler
-        cmds.connectAttr(node + '.length', node + '|' + inverter + '|LengthRuler.scaleZ')
+        cmds.connectAttr(
+            node + '.length', node + '|' + inverter + '|LengthRuler.scaleZ')
 
-        # Translate the track node epsilon below ground level (to reveal the overlaid track siteMap)
+        # Translate the track node epsilon below ground level (to reveal the
+        # overlaid track siteMap)
         cmds.move(0, -epsilon, 0, node)
 
         # Initialize all the properties from the dictionary
@@ -378,7 +420,8 @@ class TrackSceneUtils(object):
             return node
 
 
-        # Add the new nodeName to the Cadence track scene set, color it, and we're done
+        # Add the new nodeName to the Cadence track scene set, color it, and
+        # we're done
         cmds.sets(node, add=trackSetNode)
         cls.colorNode(node, props)
         return node
@@ -387,7 +430,8 @@ class TrackSceneUtils(object):
 #_______________________________________________________________________________
     @classmethod
     def getTrackNode(cls, uid, trackSetNode =None):
-        trackSetNode = cls.getTrackSetNode() if not trackSetNode else trackSetNode
+        trackSetNode = cls.getTrackSetNode() if not trackSetNode \
+            else trackSetNode
         if not trackSetNode:
             return None
 
@@ -406,7 +450,7 @@ class TrackSceneUtils(object):
 #_______________________________________________________________________________
     @classmethod
     def getUid(cls, node, trackSetNode =None):
-        """ This returns the UID (or None if the nodeName is not a track nodeName). """
+        """ This returns the UID (or None if nodeName not a track nodeName). """
 
         if not trackSetNode:
             trackSetNode = cls.getTrackSetNode()
@@ -432,6 +476,7 @@ class TrackSceneUtils(object):
     @classmethod
     def getTrackProps(cls, node):
         out = dict()
+
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if enum.maya is None:
                 continue
@@ -444,7 +489,9 @@ class TrackSceneUtils(object):
         for enum in Reflection.getReflectionList(TrackPropEnum):
             if enum.maya and enum.maya in props:
                 if enum.type == 'string':
-                    cmds.setAttr(node + '.' + enum.maya, props[enum.maya], type=enum.type)
+                    cmds.setAttr(
+                        node + '.' + enum.maya, props[enum.maya],
+                        type=enum.type)
                 else:
                     cmds.setAttr(node + '.' + enum.maya, props[enum.maya])
 
@@ -454,7 +501,8 @@ class TrackSceneUtils(object):
         # Save state of selected nodes to restore at end of this function
         priorSelection = MayaUtils.getSelectedTransforms()
 
-        # Use red for left, green for right, in accordance with international maritime convention
+        # Use red for left, green for right, in accordance with international
+        # maritime convention
         left = props[TrackPropEnum.LEFT.name]
         pes  = props[TrackPropEnum.PES.name]
 
@@ -466,39 +514,52 @@ class TrackSceneUtils(object):
         # Next, get a shortcut to the components of the track node
         root = node + '|inverter'
 
-        # Make the width and length rulers either light gray (for manus) or dark gray (for pes) and
-        # the 'error bars' white.
-        c = TrackwayShaderConfig.DARK_GRAY_COLOR if pes else TrackwayShaderConfig.LIGHT_GRAY_COLOR
+        # Make the width and length rulers either light gray (for manus) or
+        # dark gray (for pes) and the 'error bars' white.
+        c = TrackwayShaderConfig.DARK_GRAY_COLOR if pes else \
+            TrackwayShaderConfig.LIGHT_GRAY_COLOR
         ShadingUtils.applyShader(c, root + '|WidthRuler')
         ShadingUtils.applyShader(c, root + '|LengthRuler')
 
-        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR,  root + '|BarN')
-        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR,  root + '|BarS')
-        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR,  root + '|BarW')
-        ShadingUtils.applyShader(TrackwayShaderConfig.WHITE_COLOR,  root + '|BarE')
+        ShadingUtils.applyShader(
+            TrackwayShaderConfig.WHITE_COLOR,  root + '|BarN')
+        ShadingUtils.applyShader(
+            TrackwayShaderConfig.WHITE_COLOR,  root + '|BarS')
+        ShadingUtils.applyShader(
+            TrackwayShaderConfig.WHITE_COLOR,  root + '|BarW')
+        ShadingUtils.applyShader(
+            TrackwayShaderConfig.WHITE_COLOR,  root + '|BarE')
 
         # And finish up with other details
-        ShadingUtils.applyShader(TrackwayShaderConfig.YELLOW_COLOR, root + '|ThetaPlus')
-        ShadingUtils.applyShader(TrackwayShaderConfig.YELLOW_COLOR, root + '|ThetaMinus')
+        ShadingUtils.applyShader(
+            TrackwayShaderConfig.YELLOW_COLOR, root + '|ThetaPlus')
+        ShadingUtils.applyShader(
+            TrackwayShaderConfig.YELLOW_COLOR, root + '|ThetaMinus')
 
         MayaUtils.setSelection(priorSelection)
-
 #_______________________________________________________________________________
+
     @classmethod
     def getTrackManagerNode(cls, trackSetNode =None, createIfMissing =False):
-        """ Returns the name of the track manager nodeName for the current Cadence scene.
+        """ Returns the name of the track manager nodeName for the current
+            Cadence scene.
 
-            trackSetNode: The track set nodeName on which to find the track manager nodeName.
-                    If no nodeName is specified the method will look it up internally.
+            trackSetNode: The track set nodeName on which to find the track
+            manager nodeName.  If no nodeName is specified the method will look
+            it up internally.
 
-            createIfMissing: If true and no track manager nodeName is found one will be created and
-                    connected to the track set nodeName, which will also be created if one does
-                    not exist. """
+            createIfMissing: If true and no track manager nodeName is found one
+            will be created and connected to the track set nodeName, which will
+            also be created if one does not exist. """
 
         if not trackSetNode:
-            trackSetNode = cls.getTrackSetNode(createIfMissing=createIfMissing)
+            trackSetNode = cls.getTrackSetNode(cls=createIfMissing,
+                                               createIfMissing=createIfMissing)
 
-        connects = cmds.listConnections(trackSetNode + '.usedBy', source=True, destination=False)
+        connects = cmds.listConnections(
+                trackSetNode + '.usedBy',
+                source=True,
+                destination=False)
         if connects:
             for node in connects:
                 if cmds.nodeType(node) == 'trackManager':
@@ -506,7 +567,8 @@ class TrackSceneUtils(object):
 
         if createIfMissing:
             node = cmds.createNode('trackManager')
-            cmds.connectAttr(node + '.trackSet', trackSetNode + '.usedBy', force=True)
+            cmds.connectAttr(
+                node + '.trackSet', trackSetNode + '.usedBy', force=True)
             return node
 
         return None
@@ -519,7 +581,88 @@ class TrackSceneUtils(object):
                 return node
 
         if createIfMissing:
-            return cmds.sets(name=CadenceConfigs.TRACKWAY_SET_NODE_NAME, empty=True)
+            return cmds.sets(
+                name=CadenceConfigs.TRACKWAY_SET_NODE_NAME, empty=True)
 
         return None
 
+#_______________________________________________________________________________
+    @classmethod
+    def createProxyNode(cls, props =None):
+        """ A proxy node is created and placed at a given (x, z). """
+
+        print('just entered createProxyNode')
+        print('createProxyNode:  props = %s' % props)
+
+        uid = props['uid']
+        print('createProxyNode:  uid = %s' % uid)
+
+
+        trackSetNode = TrackSceneUtils.getTrackSetNode()
+
+        if not trackSetNode:
+            return None
+
+        node = cls.getTrackNode(uid, trackSetNode=trackSetNode)
+        if node:
+            return node
+
+        height = 10.0
+        node = cmds.polyCylinder(
+            radius=0.5,
+            height=height,
+            subdivisionsX=20,
+            subdivisionsY=1,
+            subdivisionsZ=1,
+            subdivisionsCaps=0,
+            axis=(0, 1, 0),
+            createUVs=3,
+            constructionHistory=1,
+            name='Proxy1')[0]
+
+        cmds.addAttr(
+             longName='cadence_proxy_dx',
+             shortName=TrackPropEnum.WIDTH_UNCERTAINTY.maya,
+             niceName='dx')
+        cmds.addAttr(
+             longName='cadence_proxy_dy',
+             shortName=TrackPropEnum.LENGTH_UNCERTAINTY.maya,
+             niceName='dy')
+        cmds.addAttr(
+             longName='cadence_uniqueId',
+             shortName=TrackPropEnum.UID.maya,
+             dataType='string',
+             niceName='Unique ID')
+
+        # raise the bottom of the cylinder to ground level
+        cmds.move(0, 0.5*height, 0)
+
+        # Disable some transforms of the node
+        cmds.setAttr(node + '.rotateX',    lock=True)
+        cmds.setAttr(node + '.rotateZ',    lock=True)
+        cmds.setAttr(node + '.scaleY',     lock=True)
+        cmds.setAttr(node + '.translateY', lock=True)
+
+        # Scale the cylinder in x and z to represent 'dy' and 'dx' uncertainties
+        # in centimeters.  Note that dx is an uncertainty in longitude and dy is
+        # an uncertainty in latitude, to be free of Cartesian coordinate names.
+        # cmds.connectAttr(
+        #     node + "." + TrackPropEnum.LENGTH_UNCERTAINTY.maya,
+        #     node + '.scaleX')
+        # cmds.connectAttr(
+        #     node + "." + TrackPropEnum.WIDTH_UNCERTAINTY.maya,
+        #     node + '.scaleZ')
+        cmds.setAttr(node + ".scaleX", 10.0)
+        cmds.setAttr(node + ".scaleZ", 10.0)
+
+        # color the node blue (saving and restoring state of selected nodes)
+        priorSelection = MayaUtils.getSelectedTransforms()
+        ShadingUtils.applyShader(TrackwayShaderConfig.BLUE_COLOR, node)
+        MayaUtils.setSelection(priorSelection)
+
+        x = int(props['x'])
+        z = int(props['z'])
+        cmds.setAttr(node + ".translateX", x)
+        cmds.setAttr(node + ".translateZ", z)
+
+        #cmds.sets(node, add=trackSetNode)

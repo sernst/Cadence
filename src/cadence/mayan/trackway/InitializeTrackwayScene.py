@@ -29,7 +29,8 @@ class InitializeTrackwayScene(NimbleScriptBase):
         cmds.loadPlugin(CadenceTrackwayPlugin.__file__)
 
         # Create the track set nodeName
-        trackSetNode = TrackSceneUtils.getTrackSetNode(createIfMissing=True)
+        trackSetNode = TrackSceneUtils.getTrackSetNode(cls=True,
+                                                       createIfMissing=True)
         self.put('trackSet', trackSetNode)
 
         trackManagerNode = TrackSceneUtils.getTrackManagerNode(

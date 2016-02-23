@@ -2,7 +2,8 @@
 # (C)2013-2014
 # Scott Ernst
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import\
+    print_function, absolute_import, unicode_literals, division
 
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.string.StringUtils import StringUtils
@@ -21,8 +22,8 @@ from cadence.util.threading.RunPythonModuleThread import RunPythonModuleThread
 
 #_______________________________________________________________________________
 class TrackwayLoaderWidget(PyGlassWidget):
-    """ User interface class for handling track data IO from any of the possible sources and
-        saving them to, or loading them from the database. """
+    """ User interface class for handling track data IO from any of the possible
+        sources and saving them to, or loading them from the database. """
 
 #===============================================================================
 #                                                                                       C L A S S
@@ -53,7 +54,8 @@ class TrackwayLoaderWidget(PyGlassWidget):
 
         index = 0
         for f in filterDefs:
-            flBox, flBoxLayout = self._createWidget(self.filterBox, QtGui.QVBoxLayout, True)
+            flBox, flBoxLayout = self._createWidget(
+                self.filterBox, QtGui.QVBoxLayout, True)
 
             label = QtGui.QLabel(flBox)
             label.setText(f['label'])
@@ -71,7 +73,7 @@ class TrackwayLoaderWidget(PyGlassWidget):
             index += 1
 
 #===============================================================================
-#                                                                               P R O T E C T E D
+#                                                              P R O T E C T E D
 
 #_______________________________________________________________________________
     def _activateWidgetDisplayImpl(self, **kwargs):
@@ -84,7 +86,8 @@ class TrackwayLoaderWidget(PyGlassWidget):
 #_______________________________________________________________________________
     def _updateFilterList(self, filterDef, session, filterDict =None):
         model = Tracks_Track.MASTER
-        query = session.query(sqla.distinct(getattr(model, filterDef['enum'].name)))
+        query = session.query(sqla.distinct(
+            getattr(model, filterDef['enum'].name)))
 
         if filterDict:
             for key,value in DictUtils.iter(filterDict):
@@ -115,15 +118,17 @@ class TrackwayLoaderWidget(PyGlassWidget):
             items = filterDef['widget'].selectedItems()
             if not items or items[0].itemData is None:
                 continue
-            query = query.filter(getattr(model, filterDef['enum'].name) == items[0].itemData)
+            query = query.filter(
+                getattr(model, filterDef['enum'].name) == items[0].itemData)
 
-        # Prevents tracks that have been "hidden" from being loaded into the scene
+        # Prevents tracks that have been "hidden" from being loaded into the
+        # scene.
         # query = query.filter(model.hidden == False)
 
         return query.all()
 
 #===============================================================================
-#                                                                                 H A N D L E R S
+#                                                                H A N D L E R S
 
 #_______________________________________________________________________________
     def _handleLoadTracks(self):
@@ -152,10 +157,13 @@ class TrackwayLoaderWidget(PyGlassWidget):
 
         if not result.success:
             PyGlassBasicDialogManager.openOk(
-                parent=self, header=u'Load Error', message=u'Unable to load tracks')
+                parent=self,
+                header=u'Load Error',
+                message=u'Unable to load tracks')
         else:
             PyGlassBasicDialogManager.openOk(
-                parent=self, header=str(event.target.userData['count']) + ' Tracks Created')
+                parent=self,
+                header=str(event.target.userData['count']) + ' Tracks Created')
 
         self.mainWindow.hideLoading(self)
 
@@ -179,7 +187,8 @@ class TrackwayLoaderWidget(PyGlassWidget):
             u'Resetting Linkages',
             u'Updating linkages to their default values')
 
-        thread = TrackLinkageRemoteThread(parent=self, session=session, tracks=entries)
+        thread = TrackLinkageRemoteThread(
+            parent=self, session=session, tracks=entries)
         thread.userData = session
         thread.execute(
             callback=self._handleLinkagesComplete,

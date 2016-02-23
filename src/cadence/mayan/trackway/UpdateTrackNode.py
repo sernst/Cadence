@@ -2,7 +2,8 @@
 # (C)2014
 # Scott Ernst
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import\
+    print_function, absolute_import, unicode_literals, division
 
 from nimble import cmds
 from nimble import NimbleScriptBase
@@ -16,7 +17,7 @@ class UpdateTrackNode(NimbleScriptBase):
 
 
 #===============================================================================
-#                                                                                     P U B L I C
+#                                                                   P U B L I C
 
 #_______________________________________________________________________________
     def run(self, *args, **kwargs):
@@ -25,7 +26,8 @@ class UpdateTrackNode(NimbleScriptBase):
         props = self.fetch('props', dict())
 
         if not uid:
-            self.puts(success=False, error=True, message='Invalid or missing UID')
+            self.puts(
+                success=False, error=True, message='Invalid or missing UID')
             return
 
         if node and TrackSceneUtils.checkNodeUidMatch(uid, node):
@@ -35,7 +37,10 @@ class UpdateTrackNode(NimbleScriptBase):
 
         trackSetNode = TrackSceneUtils.getTrackSetNode()
         if not trackSetNode:
-            self.puts(success=False, error=True, message='Scene not initialized for Cadence')
+            self.puts(
+                success=False,
+                error=True,
+                message='Scene not initialized for Cadence')
             return
 
         for node in cmds.sets(trackSetNode, query=True):
@@ -47,5 +52,3 @@ class UpdateTrackNode(NimbleScriptBase):
                 return
 
         self.response.puts(success=False)
-
-

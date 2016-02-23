@@ -2,7 +2,8 @@
 # (C)2014-2015
 # Scott Ernst and Kent A. Stevens
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import\
+    print_function, absolute_import, unicode_literals, division
 
 from pyaid.debug.Logger import Logger
 from pyaid.radix.Base36 import Base36
@@ -32,7 +33,8 @@ class Tracks_Trackway(TracksDefault):
     # Index of the sitemap in which this trackway resides
     _siteMapIndex        = sqla.Column(sqla.Integer,     default=0)
 
-    # UID of the first track in the specified series or an empty string if no such series exists
+    # UID of the first track in the specified series or an empty string if no
+    # such series exists
     _firstLeftPes        = sqla.Column(sqla.Unicode,     default='')
     _firstRightPes       = sqla.Column(sqla.Unicode,     default='')
     _firstLeftManus      = sqla.Column(sqla.Unicode,     default='')
@@ -43,7 +45,7 @@ class Tracks_Trackway(TracksDefault):
         super(Tracks_Trackway, self).__init__(**kwargs)
 
 #===============================================================================
-#                                                                                   G E T / S E T
+#                                                                  G E T / S E T
 
 #_______________________________________________________________________________
     @property
@@ -81,13 +83,14 @@ class Tracks_Trackway(TracksDefault):
         self.putTransient('sitemap', value)
 
 #===============================================================================
-#                                                                                     P U B L I C
+#                                                                    P U B L I C
 
 #_______________________________________________________________________________
     def getTrackwaySeriesBundle(self):
-        """ Creates an ordered dictionary containing the track series for each series in the
-            trackway, even if one of the series has no tracks. The keys of the dictionary match
-            the key value of the track series instance, i.e. TrackSeries.key.
+        """ Creates an ordered dictionary containing the track series for each
+            series in the trackway, even if one of the series has no tracks. The
+            keys of the dictionary match the key value of the track series
+            instance, i.e. TrackSeries.key.
 
             @return: TrackSeriesBundle """
 
@@ -105,15 +108,17 @@ class Tracks_Trackway(TracksDefault):
 
         from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
         model = Tracks_SiteMap.MASTER
-        return self.mySession.query(model).filter(model.index == self.siteMapIndex).first()
+        return self.mySession.query(model).filter(
+            model.index == self.siteMapIndex).first()
 
 #_______________________________________________________________________________
     @classmethod
     def populateTrackwaysTable(cls, session =None, logger =None):
-        """ Populate the trackways table by removing all existing rows and attempting to calculate
-            trackways from the implicit track series defined by the linkages of tracks. This
-            operation should only be carried out for initial population purposes as it will
-            dispose of all existing data and changes made by users. """
+        """ Populate the trackways table by removing all existing rows and
+            attempting to calculate trackways from the implicit track series
+            defined by the linkages of tracks. This operation should only be
+            carried out for initial population purposes as it will dispose of
+            all existing data and changes made by users. """
 
         from cadence.models.tracks.Tracks_Track import Tracks_Track
         from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
@@ -133,7 +138,8 @@ class Tracks_Trackway(TracksDefault):
             session = model.createSession()
 
         # Get all tracks that have no next (end of a track series)
-        endTracks = session.query(trackModel).filter(trackModel.next == '').all()
+        endTracks = session.query(trackModel).filter(
+            trackModel.next == '').all()
 
         index     = 0
         trackways = dict()
@@ -165,8 +171,8 @@ class Tracks_Trackway(TracksDefault):
             if name in trackways:
                 tw = trackways[name]
             else:
-                # If the trackway name isn't in the list of existing trackways create a new
-                # trackway model instance for that trackway
+                # If the trackway name isn't in the list of existing trackways,
+                # create a new trackway model instance for that trackway
 
                 tw       = Tracks_Trackway()
                 tw.index = index
@@ -177,7 +183,8 @@ class Tracks_Trackway(TracksDefault):
                     sitemapModel.level == prev.level).first()
                 if not sitemap:
                     missingSitemaps.append(sitemapStamp)
-                    logger.write('[WARNING]: No site map found for name "%s" and level "%s"' % (
+                    logger.write(
+                        '[WARNING]: No site map found for "%s" level "%s"' % (
                         prev.site, prev.level))
                 else:
                     tw.siteMapIndex = sitemap.index
@@ -217,7 +224,7 @@ class Tracks_Trackway(TracksDefault):
             session.close()
 
 #===============================================================================
-#                                                                               P R O T E C T E D
+#                                                              P R O T E C T E D
 
 #_______________________________________________________________________________
     def _getAnalysisPair(self, session, createIfMissing):
@@ -237,11 +244,10 @@ class Tracks_Trackway(TracksDefault):
         return result
 
 #===============================================================================
-#                                                                               I N T R I N S I C
+#                                                              I N T R I N S I C
 
 #_______________________________________________________________________________
     def __str__(self):
         """__str__ doc..."""
         return StringUtils.toStr2(
             '<Trackway[%s] %s "%s">' % (self.i, self.index, self.name))
-

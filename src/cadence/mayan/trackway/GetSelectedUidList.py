@@ -2,7 +2,8 @@
 # (C)2013
 # Kent A. Stevens
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import\
+    print_function, absolute_import, unicode_literals, division
 
 from nimble import cmds
 from nimble import NimbleScriptBase
@@ -12,15 +13,16 @@ from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 
 #_______________________________________________________________________________
 class GetSelectedUidList(NimbleScriptBase):
-    """ A remote script class for returning a list of the UIDs for the track nodes currently
-     selected in Maya.
+    """ A remote script class for returning a list of the UIDs for the track
+        nodes currently selected in Maya.
          --- RETURNS ---
-        success:           True if at least one valid track nodeName selected, else False
-        selectedUidList:   (string[]) (default: []) The UIDs of the selected nodes. """
+        success:           True if at least one valid track nodeName selected,
+                           else False
+        selectedUidList:   (string[]) (default: []) The UIDs of the selected
+                           nodes. """
 
 #===============================================================================
-#                                                                                     P U B L I C
-
+#                                                                   P U B L I C
 
 #_______________________________________________________________________________
     def run(self, *args, **kwargs):
