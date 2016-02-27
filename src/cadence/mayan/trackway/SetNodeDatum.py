@@ -17,10 +17,9 @@ class SetNodeDatum(NimbleScriptBase):
         success:    True if at least one track node is processed else False """
 
 #===============================================================================
-#                                                                                     P U B L I C
+#                                                                   P U B L I C
 #
 #_______________________________________________________________________________
-
     def run(self, *args, **kwargs):
         """ Sets the prev and next links for a list of node-value pairs that
             provide information about the prev and next to each specified

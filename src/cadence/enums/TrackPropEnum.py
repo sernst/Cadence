@@ -29,7 +29,7 @@ class TrackPropEnum(object):
         as scale, rotation, or translation. """
 
 #===============================================================================
-#                                                                      C L A S S
+#                                                                     C L A S S
 
     # the depth of a given track (in cm) as originally measured
     DEPTH_MEASURED    = TRACK_PROP_NT('depthMeasured',    'float', None, False)

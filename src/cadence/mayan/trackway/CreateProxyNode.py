@@ -17,12 +17,19 @@ class CreateProxyNode(NimbleScriptBase):
 
 #===============================================================================
 #                                                                   P U B L I C
-
+#
 #_______________________________________________________________________________
     def run(self, *args, **kwargs):
         """ This script first gets the UID and the property list for the given
             proxy node to be created in Maya. """
 
-        props = self.fetch('props')
-        TrackSceneUtils.createProxyNode(props)
+        uid = self.fetch('uid', None)
+        props = self.fetch('props', None)
+
+        if uid is None:
+            self.putErrorResult(
+                u'Invalid or missing UID. Unable to create track nodeName.')
+            return
+
+        node = TrackSceneUtils.createProxyNode(uid, props)
         self.puts(nodeName=node, props=props)

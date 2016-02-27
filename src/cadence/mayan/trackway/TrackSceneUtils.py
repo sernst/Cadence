@@ -2,7 +2,7 @@
 # (C)2014-2016
 # Scott Ernst and Kent A. Stevens
 
-from __future__ import \
+from __future__ import\
     print_function, absolute_import, unicode_literals, division
 
 import math
@@ -64,7 +64,7 @@ class TrackSceneUtils(object):
         # 'anteriorly' to the perimeter of the track's profile (if present, else
         # estimated).  The node is scaled longitudinally (in z) based on the
         # distance zN (the 'anterior' length of the track, in cm).  The triangle
-        #  initially 1 cm on a side.
+        # is initially 1 cm on a side.
         sideLength = 1.0
         node = cmds.polyPrism(
             length=nodeThickness,
@@ -153,7 +153,7 @@ class TrackSceneUtils(object):
         # as the width ruler, and make it non-selectable.  Its length will be
         # driven by the node's length attribute.
         lengthRuler = cmds.polyCube(
-            axis=(0,1,0),
+            axis=(0, 1, 0),
             width=rulerBreadth,
             height=rulerThickness,
             depth=100.0,
@@ -416,9 +416,8 @@ class TrackSceneUtils(object):
         if props:
             cls.setTrackProps(node, props)
         else:
-            print('in createTrackNode:  no properties provided')
+            print('in createTrackNode:  properties not provided')
             return node
-
 
         # Add the new nodeName to the Cadence track scene set, color it, and
         # we're done
@@ -426,11 +425,10 @@ class TrackSceneUtils(object):
         cls.colorNode(node, props)
         return node
 
-#
 #_______________________________________________________________________________
     @classmethod
     def getTrackNode(cls, uid, trackSetNode =None):
-        trackSetNode = cls.getTrackSetNode() if not trackSetNode \
+        trackSetNode = cls.getTrackSetNode() if not trackSetNode\
             else trackSetNode
         if not trackSetNode:
             return None
@@ -538,7 +536,6 @@ class TrackSceneUtils(object):
 
         MayaUtils.setSelection(priorSelection)
 #_______________________________________________________________________________
-
     @classmethod
     def getTrackManagerNode(cls, trackSetNode =None, createIfMissing =False):
         """ Returns the name of the track manager nodeName for the current
@@ -553,8 +550,7 @@ class TrackSceneUtils(object):
             also be created if one does not exist. """
 
         if not trackSetNode:
-            trackSetNode = cls.getTrackSetNode(cls=createIfMissing,
-                                               createIfMissing=createIfMissing)
+            trackSetNode = cls.getTrackSetNode(createIfMissing=createIfMissing)
 
         connects = cmds.listConnections(
                 trackSetNode + '.usedBy',
@@ -588,22 +584,18 @@ class TrackSceneUtils(object):
 
 #_______________________________________________________________________________
     @classmethod
-    def createProxyNode(cls, props =None):
-        """ A proxy node is created and placed at a given (x, z). """
+    def createProxyNode(cls, uid, trackSetNode =None, props =None):
+        """ A proxy node is created, provided with some additional Maya
+            attributes, and placed in the scene. """
 
-        print('just entered createProxyNode')
-        print('createProxyNode:  props = %s' % props)
-
-        uid = props['uid']
-        print('createProxyNode:  uid = %s' % uid)
-
-
-        trackSetNode = TrackSceneUtils.getTrackSetNode()
+        if not trackSetNode:
+            trackSetNode = TrackSceneUtils.getTrackSetNode()
 
         if not trackSetNode:
             return None
 
         node = cls.getTrackNode(uid, trackSetNode=trackSetNode)
+
         if node:
             return node
 
@@ -618,51 +610,63 @@ class TrackSceneUtils(object):
             axis=(0, 1, 0),
             createUVs=3,
             constructionHistory=1,
-            name='Proxy1')[0]
+            name='Proxy0')[0]
 
+        # Set up the basic cadence attributes
         cmds.addAttr(
-             longName='cadence_proxy_dx',
-             shortName=TrackPropEnum.WIDTH_UNCERTAINTY.maya,
-             niceName='dx')
+             longName='cadence_width',
+             shortName=TrackPropEnum.WIDTH.maya,
+             niceName='Width')
         cmds.addAttr(
-             longName='cadence_proxy_dy',
-             shortName=TrackPropEnum.LENGTH_UNCERTAINTY.maya,
-             niceName='dy')
+             longName='cadence_length',
+             shortName=TrackPropEnum.LENGTH.maya,
+             niceName='Length')
         cmds.addAttr(
              longName='cadence_uniqueId',
              shortName=TrackPropEnum.UID.maya,
              dataType='string',
              niceName='Unique ID')
 
+
         # raise the bottom of the cylinder to ground level
         cmds.move(0, 0.5*height, 0)
 
-        # Disable some transforms of the node
+        # Disable some transform attributes
         cmds.setAttr(node + '.rotateX',    lock=True)
         cmds.setAttr(node + '.rotateZ',    lock=True)
         cmds.setAttr(node + '.scaleY',     lock=True)
         cmds.setAttr(node + '.translateY', lock=True)
 
         # Scale the cylinder in x and z to represent 'dy' and 'dx' uncertainties
-        # in centimeters.  Note that dx is an uncertainty in longitude and dy is
-        # an uncertainty in latitude, to be free of Cartesian coordinate names.
-        # cmds.connectAttr(
-        #     node + "." + TrackPropEnum.LENGTH_UNCERTAINTY.maya,
-        #     node + '.scaleX')
-        # cmds.connectAttr(
-        #     node + "." + TrackPropEnum.WIDTH_UNCERTAINTY.maya,
-        #     node + '.scaleZ')
-        cmds.setAttr(node + ".scaleX", 10.0)
-        cmds.setAttr(node + ".scaleZ", 10.0)
+        # in centimeters. There is a change of coordinates between Maya (X, Z)
+        # and the simulator (X, Y) space. For example, for the right manus:
+        #    x = int(100*float(entry['rm_y']))
+        #    z = int(100*float(entry['rm_x']))
+        # and likewise for dx and dy.
+
+        # the LENGTH attribute represents dx (and affects scaleZ in the node).
+        cmds.connectAttr(
+            node + '.' + TrackPropEnum.LENGTH.maya, node + '.scaleZ')
+
+        # use the WIDTH attribute for dy (affecting scaleX)
+        cmds.connectAttr(
+            node + '.' + TrackPropEnum.WIDTH.maya, node + '.scaleX')
 
         # color the node blue (saving and restoring state of selected nodes)
+
+
         priorSelection = MayaUtils.getSelectedTransforms()
         ShadingUtils.applyShader(TrackwayShaderConfig.BLUE_COLOR, node)
         MayaUtils.setSelection(priorSelection)
 
-        x = int(props['x'])
-        z = int(props['z'])
-        cmds.setAttr(node + ".translateX", x)
-        cmds.setAttr(node + ".translateZ", z)
+        # Initialize all the properties from the dictionary
+        if props:
+            cls.setTrackProps(node, props)
+        else:
+            print('in createProxyNode:  properties not provided')
+            return node
 
-        #cmds.sets(node, add=trackSetNode)
+        # add the new node to the Cadence track scene set
+        cmds.sets(node, add=trackSetNode)
+        # and we're done
+        return node

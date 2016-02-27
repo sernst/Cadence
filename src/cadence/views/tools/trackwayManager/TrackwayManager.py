@@ -612,10 +612,20 @@ class TrackwayManager(object):
 #                                                P R O X Y  O P E R A T I O N S
 #
 #_______________________________________________________________________________
-    def createProxyNode(self, props):
-        conn   = nimble.getConnection()
+    def createProxyNode(self, uid, props =None):
+        conn = nimble.getConnection()
+        print("in createProxyNode, props = %s" % props)
         result = conn.runPythonModule(
-            CreateProxyNode, runInMaya=False, props=props)
+            CreateProxyNode,
+            uid=uid,
+            props=props,
+            runInMaya=False)
+
+        if result.payload.get('error'):
+            print('Error in createProxyNode:', result.payload.get('message'))
+            return False
+
+        return result.payload.get('nodeName')
 
 #===============================================================================
 #                                               C U R V E S   A N D   P A T H S
@@ -675,7 +685,6 @@ class TrackwayManager(object):
         cmds.move(0, 100, 0, self.CADENCE_CAM, absolute=True)
 
         MayaUtils.setSelection(priorSelection)
-
 
 #_______________________________________________________________________________
     def selectCadenceCam(self):

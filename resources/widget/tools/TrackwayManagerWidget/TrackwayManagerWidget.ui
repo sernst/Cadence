@@ -315,7 +315,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QWidget" name="dimensionsWidget" native="true">
+        <widget class="QWidget" name="widget_40" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -341,7 +341,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QWidget" name="widthWidget" native="true">
+           <widget class="QWidget" name="widget_18" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -637,7 +637,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="rotationWidget" native="true">
+           <widget class="QWidget" name="widget_17" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -784,7 +784,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="lengthRatioWidget" native="true">
+           <widget class="QWidget" name="widget_16" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -897,7 +897,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="countsWidget" native="true">
+           <widget class="QWidget" name="widget_15" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -1014,7 +1014,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="navigationWidget" native="true">
+        <widget class="QWidget" name="widget_19" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1041,7 +1041,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QWidget" name="controlsWidget" native="true">
+           <widget class="QWidget" name="widget_21" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1077,7 +1077,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QWidget" name="firstWidget" native="true">
+              <widget class="QWidget" name="widget_41" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -1143,7 +1143,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="firstTrackLbl">
+                 <widget class="QLabel" name="lbl_36">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1173,7 +1173,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QWidget" name="prevWIdget" native="true">
+              <widget class="QWidget" name="wIdget" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -1239,7 +1239,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="prevTrackLbl">
+                 <widget class="QLabel" name="lbl_35">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1269,7 +1269,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QWidget" name="nextWidget" native="true">
+              <widget class="QWidget" name="widget_43" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -1335,7 +1335,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="nextTrackLabel">
+                 <widget class="QLabel" name="lbl_38">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1365,7 +1365,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QWidget" name="lastWidget" native="true">
+              <widget class="QWidget" name="widget_42" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -1431,7 +1431,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="lastTrackLbl">
+                 <widget class="QLabel" name="lbl_37">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1467,7 +1467,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="flagsWidget_1" native="true">
+           <widget class="QWidget" name="widget_11" native="true">
             <layout class="QHBoxLayout" name="horizontalLayout_29">
              <property name="leftMargin">
               <number>0</number>
@@ -1609,7 +1609,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="camWidget" native="true">
+           <widget class="QWidget" name="widget_20" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1720,7 +1720,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="selectionWidget_1" native="true">
+           <widget class="QWidget" name="widget_25" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -1797,7 +1797,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="selectionWidget_2" native="true">
+           <widget class="QWidget" name="widget_26" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -1873,7 +1873,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="operation1Widget" native="true">
+           <widget class="QWidget" name="widget_22" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -1952,7 +1952,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="operation2Widget" native="true">
+           <widget class="QWidget" name="widget_23" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -2028,7 +2028,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="operation3Widget" native="true">
+           <widget class="QWidget" name="widget_24" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -2132,9 +2132,9 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QWidget" name="coordinatesWidget" native="true">
+        <widget class="QWidget" name="widget_12" native="true">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -2144,7 +2144,7 @@
            <pointsize>12</pointsize>
           </font>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_15" stretch="0,0,0,0,0,0">
+         <layout class="QVBoxLayout" name="verticalLayout_15" stretch="2,2,2,0">
           <property name="leftMargin">
            <number>0</number>
           </property>
@@ -2158,7 +2158,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QWidget" name="longitudeWidget" native="true">
+           <widget class="QWidget" name="xWidget" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -2171,7 +2171,7 @@
               <pointsize>13</pointsize>
              </font>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="0,0,0,0">
+            <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="1,4,1,4">
              <property name="spacing">
               <number>-1</number>
              </property>
@@ -2207,7 +2207,7 @@
                 <enum>QFrame::NoFrame</enum>
                </property>
                <property name="text">
-                <string>Longitude</string>
+                <string>x</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -2215,7 +2215,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="longitudeSbx">
+              <widget class="QDoubleSpinBox" name="xSbx">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -2266,16 +2266,19 @@
                  <bold>false</bold>
                 </font>
                </property>
+               <property name="lineWidth">
+                <number>1</number>
+               </property>
                <property name="text">
-                <string>Longitudinal Uncertainty:</string>
+                <string>dx</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="longitudeUncertaintySbx">
+              <widget class="QDoubleSpinBox" name="dxSbx">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -2309,9 +2312,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="latitudeWidget" native="true">
+           <widget class="QWidget" name="yWidget" native="true">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -2322,7 +2325,7 @@
               <pointsize>13</pointsize>
              </font>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="0,0,0,0">
+            <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="10,40,10,40">
              <property name="spacing">
               <number>-1</number>
              </property>
@@ -2355,7 +2358,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Latitude</string>
+                <string>y</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -2363,7 +2366,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="latitudeSbx">
+              <widget class="QDoubleSpinBox" name="ySbx">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -2412,15 +2415,15 @@
                 </font>
                </property>
                <property name="text">
-                <string>Latitudinal Uncertainty:</string>
+                <string>dy</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="latitudeUncertaintySbx">
+              <widget class="QDoubleSpinBox" name="dySbx">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -2466,35 +2469,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="rowWidget" native="true">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <family>Abadi MT Condensed Extra Bold</family>
-             </font>
-            </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_32">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-            </layout>
-           </widget>
-          </item>
-          <item>
            <spacer name="verticalSpacer_7">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -2507,18 +2481,11 @@
             </property>
            </spacer>
           </item>
-          <item>
-           <widget class="Line" name="line_4">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
          </layout>
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="navigationWidget_2" native="true">
+        <widget class="QWidget" name="widget_14" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -2531,7 +2498,7 @@
            <pointsize>12</pointsize>
           </font>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_17">
+         <layout class="QVBoxLayout" name="verticalLayout_16">
           <property name="leftMargin">
            <number>0</number>
           </property>
@@ -2545,7 +2512,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QWidget" name="controlsWidget_2" native="true">
+           <widget class="QWidget" name="widget_7" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -2581,7 +2548,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QWidget" name="firstWidget_2" native="true">
+              <widget class="QWidget" name="widget" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -2610,7 +2577,7 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QPushButton" name="firstProxyBtn">
+                 <widget class="QPushButton" name="firstBtn2">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -2669,7 +2636,7 @@
                    <enum>Qt::DefaultContextMenu</enum>
                   </property>
                   <property name="text">
-                   <string>First Proxy</string>
+                   <string>First Track</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
@@ -2680,7 +2647,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QWidget" name="prevWIdget_2" native="true">
+              <widget class="QWidget" name="widget_2" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -2709,7 +2676,7 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QPushButton" name="prevProxyBtn">
+                 <widget class="QPushButton" name="prevBtn2">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -2762,7 +2729,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Prev Proxy</string>
+                   <string>Prev Track</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
@@ -2776,7 +2743,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QWidget" name="nextWidget_2" native="true">
+              <widget class="QWidget" name="widget_3" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -2805,7 +2772,7 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QPushButton" name="nextProxyBtn">
+                 <widget class="QPushButton" name="nextBtn2">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -2858,7 +2825,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Next Proxy</string>
+                   <string>Next Track</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
@@ -2872,7 +2839,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QWidget" name="lastWidget_2" native="true">
+              <widget class="QWidget" name="widget_4" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -2901,7 +2868,7 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QPushButton" name="lastProxyBtn">
+                 <widget class="QPushButton" name="lastBtn2">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -2957,7 +2924,7 @@
                    <enum>Qt::LeftToRight</enum>
                   </property>
                   <property name="text">
-                   <string>Last Proxy</string>
+                   <string>Last Track</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
@@ -2974,7 +2941,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="camWidget_2" native="true">
+           <widget class="QWidget" name="widget_5" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -3008,7 +2975,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QPushButton" name="selectCadenceCamBtn_2">
+              <widget class="QPushButton" name="selectCadenceCamBtn2">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -3030,7 +2997,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="selectPerspectiveBtn_2">
+              <widget class="QPushButton" name="selectPerspectiveBtn2">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -3052,7 +3019,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pullBtn_2">
+              <widget class="QPushButton" name="pullBtn2">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -3118,6 +3085,83 @@
             <property name="text">
              <string>Save Proxy Tracks</string>
             </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget_10" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Lucida Grande</family>
+             </font>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_35" stretch="5,1">
+             <property name="spacing">
+              <number>-1</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QComboBox" name="proxyOpCmbx">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>12</pointsize>
+                 <weight>50</weight>
+                 <italic>false</italic>
+                 <bold>false</bold>
+                 <kerning>true</kerning>
+                </font>
+               </property>
+               <property name="currentIndex">
+                <number>-1</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="select1Btn_2">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                 <pointsize>12</pointsize>
+                 <weight>50</weight>
+                 <italic>false</italic>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>OK</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
           <item>
@@ -3192,7 +3236,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QWidget" name="AllTrackwaysWidget" native="true">
+           <widget class="QWidget" name="widget_27" native="true">
             <layout class="QVBoxLayout" name="verticalLayout_6">
              <property name="leftMargin">
               <number>0</number>
@@ -3535,7 +3579,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QWidget" name="trackSiteSelectorWidget" native="true">
+        <widget class="QWidget" name="widget_28" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -3556,7 +3600,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QWidget" name="trackSiteIndexWidget" native="true">
+           <widget class="QWidget" name="widget_44" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -3577,7 +3621,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QLabel" name="tracksiteIndexLbl">
+              <widget class="QLabel" name="lbl_25">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -3646,7 +3690,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="trackSiteNameWidget" native="true">
+           <widget class="QWidget" name="widget_34" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -3667,7 +3711,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QLabel" name="nameLbl">
+              <widget class="QLabel" name="lbl_44">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -3723,7 +3767,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="FederalCoordinatesWidget" native="true">
+           <widget class="QWidget" name="widget_33" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -3744,7 +3788,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QLabel" name="fedCoordLbl">
+              <widget class="QLabel" name="lbl_31">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -3841,7 +3885,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QWidget" name="mapSetupWidget_4" native="true">
+           <widget class="QWidget" name="widget_31" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -3875,7 +3919,7 @@
               </spacer>
              </item>
              <item>
-              <widget class="QLabel" name="tracksiteLbl">
+              <widget class="QLabel" name="lbl_42">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -3896,7 +3940,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QWidget" name="mapParamWidget" native="true">
+              <widget class="QWidget" name="widget_37" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Ignored" vsizetype="MinimumExpanding">
                  <horstretch>0</horstretch>
@@ -4105,7 +4149,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QWidget" name="federalMarkerWidget" native="true">
+              <widget class="QWidget" name="widget_36" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -4126,7 +4170,7 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QLabel" name="federalMarkerLbl">
+                 <widget class="QLabel" name="lbl_26">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                     <horstretch>0</horstretch>
@@ -4229,7 +4273,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QWidget" name="sceneSetupWidget" native="true">
+           <widget class="QWidget" name="widget_32" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -4274,7 +4318,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QWidget" name="sceneTransWidget" native="true">
+              <widget class="QWidget" name="widget_39" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -4398,7 +4442,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QWidget" name="sceneRotScaleWidget" native="true">
+              <widget class="QWidget" name="widget_38" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -4625,7 +4669,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="trackSiteWidthWidget" native="true">
+           <widget class="QWidget" name="widget_35" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -4652,7 +4696,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="tracksiteOpWidget" native="true">
+        <widget class="QWidget" name="widget_30" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -4666,7 +4710,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_14">
           <item>
-           <widget class="QWidget" name="drawingNameWidget" native="true">
+           <widget class="QWidget" name="widget_29" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -4694,7 +4738,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QLabel" name="drawingNameLbl">
+              <widget class="QLabel" name="lbl_34">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -4722,7 +4766,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="fileOpWidget" native="true">
+           <widget class="QWidget" name="widget_45" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>

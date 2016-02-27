@@ -73,7 +73,7 @@ class TrackwayLoaderWidget(PyGlassWidget):
             index += 1
 
 #===============================================================================
-#                                                              P R O T E C T E D
+#                                                             P R O T E C T E D
 
 #_______________________________________________________________________________
     def _activateWidgetDisplayImpl(self, **kwargs):
@@ -128,7 +128,7 @@ class TrackwayLoaderWidget(PyGlassWidget):
         return query.all()
 
 #===============================================================================
-#                                                                H A N D L E R S
+#                                                               H A N D L E R S
 
 #_______________________________________________________________________________
     def _handleLoadTracks(self):
@@ -138,6 +138,7 @@ class TrackwayLoaderWidget(PyGlassWidget):
         entries   = self._getFilteredTracks(session)
         count     = len(entries)
         trackList = []
+
         for entry in entries:
             trackList.append(entry.toMayaNodeDict())
         session.close()

@@ -32,8 +32,7 @@ class CreateTrackNodes(NimbleScriptBase):
                 code=self.NO_TRACKLIST)
             return
 
-        trackSetNode = TrackSceneUtils.getTrackSetNode(
-            cls=True, createIfMissing=True)
+        trackSetNode = TrackSceneUtils.getTrackSetNode(createIfMissing=True)
         trackNodeList = dict()
         for track in trackList:
             uid = track.get(TrackPropEnum.UID.maya)

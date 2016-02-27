@@ -17,13 +17,17 @@ class CreateTrackNode(NimbleScriptBase):
 
 #===============================================================================
 #                                                                    P U B L I C
-
+#
 #_______________________________________________________________________________
     def run(self, *args, **kwargs):
-        uid  = self.fetch('uid', None)
+        """ This script first gets the UID, from which it creates a track node
+            in Maya. """
+
+        uid = self.fetch('uid', None)
         if uid is None:
             self.putErrorResult(
                 u'Invalid or missing UID. Unable to create track nodeName.')
             return
+
         node = TrackSceneUtils.createTrackNode(uid)
         self.puts(nodeName=node, props=TrackSceneUtils.getTrackProps(node))

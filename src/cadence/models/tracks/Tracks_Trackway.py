@@ -33,7 +33,7 @@ class Tracks_Trackway(TracksDefault):
     # Index of the sitemap in which this trackway resides
     _siteMapIndex        = sqla.Column(sqla.Integer,     default=0)
 
-    # UID of the first track in the specified series or an empty string if no
+    # UID of the first track in the specified series, or an empty string if no
     # such series exists
     _firstLeftPes        = sqla.Column(sqla.Unicode,     default='')
     _firstRightPes       = sqla.Column(sqla.Unicode,     default='')
@@ -45,7 +45,7 @@ class Tracks_Trackway(TracksDefault):
         super(Tracks_Trackway, self).__init__(**kwargs)
 
 #===============================================================================
-#                                                                  G E T / S E T
+#                                                                 G E T / S E T
 
 #_______________________________________________________________________________
     @property
@@ -83,7 +83,7 @@ class Tracks_Trackway(TracksDefault):
         self.putTransient('sitemap', value)
 
 #===============================================================================
-#                                                                    P U B L I C
+#                                                                   P U B L I C
 
 #_______________________________________________________________________________
     def getTrackwaySeriesBundle(self):
@@ -224,7 +224,7 @@ class Tracks_Trackway(TracksDefault):
             session.close()
 
 #===============================================================================
-#                                                              P R O T E C T E D
+#                                                             P R O T E C T E D
 
 #_______________________________________________________________________________
     def _getAnalysisPair(self, session, createIfMissing):

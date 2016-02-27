@@ -134,10 +134,10 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self.pullBtn.clicked.connect(self.handlePullBtn)
 
-        self.firstBtn.clicked.connect(self.handleFirstTrackBtn)
+        self.firstBtn.clicked.connect(self.handleFirstBtn)
         self.prevBtn.clicked.connect(self.handlePrevBtn)
         self.nextBtn.clicked.connect(self.handleNextBtn)
-        self.lastBtn.clicked.connect(self.handleLastTrackBtn)
+        self.lastBtn.clicked.connect(self.handleLastBtn)
 
         self.selectCadenceCamBtn.clicked.connect(
             self.handleSelectCadenceCamBtn)
@@ -230,39 +230,34 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         # set up the UI and support data structures for the proxy tracks
 
-        # in the Proxy Track tab:
-        self.firstProxyBtn.setIcon(QtGui.QIcon(
+        # and clone the original navigation in the tracks tab:
+        self.firstBtn2.setIcon(QtGui.QIcon(
             self.getResourcePath('mediaIcons', 'first.png')))
-        self.prevProxyBtn.setIcon( QtGui.QIcon(
+        self.prevBtn2.setIcon( QtGui.QIcon(
             self.getResourcePath('mediaIcons', 'prev.png')))
-        self.nextProxyBtn.setIcon( QtGui.QIcon(
+        self.nextBtn2.setIcon( QtGui.QIcon(
             self.getResourcePath('mediaIcons', 'next.png')))
-        self.lastProxyBtn.setIcon( QtGui.QIcon(
+        self.lastBtn2.setIcon( QtGui.QIcon(
             self.getResourcePath('mediaIcons', 'last.png')))
 
-        self.longitudeSbx.valueChanged.connect(self.handleLongitudeSbx)
-        self.longitudeSbx.setAccelerated(True)
+        self.firstBtn2.clicked.connect(self.handleFirstBtn)
+        self.prevBtn2.clicked.connect(self.handlePrevBtn)
+        self.nextBtn2.clicked.connect(self.handleNextBtn)
+        self.lastBtn2.clicked.connect(self.handleLastBtn)
 
-        self.latitudeSbx.valueChanged.connect(self.handleLatitudeSbx)
-        self.latitudeSbx.setAccelerated(True)
-
-        self.longitudeUncertaintySbx.valueChanged.connect(
-            self.handleLongitudeUncertaintySbx)
-        self.latitudeUncertaintySbx.valueChanged.connect(
-            self.handleLatitudeUncertaintySbx)
+        self.xSbx.valueChanged.connect(self.handleXSbx)
+        self.xSbx.setAccelerated(True)
+        self.ySbx.valueChanged.connect(self.handleYSbx)
+        self.ySbx.setAccelerated(True)
+        self.dxSbx.valueChanged.connect(self.handleDxSbx)
+        self.dySbx.valueChanged.connect(self.handleDySbx)
 
         self.proxyPullBtn.clicked.connect(self.handleProxyPullBtn)
-
-        self.firstProxyBtn.clicked.connect(self.handleFirstProxyBtn)
-        self.prevProxyBtn.clicked.connect(self.handlePrevProxyBtn)
-        self.nextProxyBtn.clicked.connect(self.handleNextProxyBtn)
-        self.lastProxyBtn.clicked.connect(self.handleLastProxyBtn)
-
-        self.selectCadenceCamBtn_2.clicked.connect(
+        self.selectCadenceCamBtn2.clicked.connect(
             self.handleSelectCadenceCamBtn)
-        self.selectPerspectiveBtn_2.clicked.connect(
+        self.selectPerspectiveBtn2.clicked.connect(
             self.handleSelectPerspectiveBtn)
-        self.pullBtn_2.clicked.connect(self.handlePullBtn)
+        self.pullBtn2.clicked.connect(self.handlePullBtn)
 
         self.initializeProxiesBtn.clicked.connect(
             self.handleInitializeProxiesBtn)
@@ -271,7 +266,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.currentTrackwayDictionary = None
 
 #===============================================================================
-#                                                                    P U B L I C
+#                                                                   P U B L I C
 #
 #_______________________________________________________________________________
     def enableTrackUI(self, enable =True):
@@ -302,10 +297,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.trackNameLE.setEnabled(enable)
         self.indexLE.setEnabled(enable)
 
-#
 #===============================================================================
-#                                              T R A C K  U I  U T I L I T I E S
-
+#                                             T R A C K  U I  U T I L I T I E S
+#
 #_______________________________________________________________________________
     def clearTrackUI(self):
         """ Clears out the text fields associated with the track parameters in
@@ -560,7 +554,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         return props
 
 #===============================================================================
-#                                                                H A N D L E R S
+#                                                               H A N D L E R S
 #_______________________________________________________________________________
     def handleCompletedCkbx(self):
         """ The COMPLETED source flag for the selected track (or tracks) is set
@@ -930,8 +924,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         track = tracks[0]
 
-        # if track length or width (or both) were not measured originally, posit
-        # high uncertainties
+        # if track length or width (or both) were not measured originally,
+        # posit high uncertainties
         if track.widthMeasured == 0.0 or track.lengthMeasured == 0.0:
             track.widthUncertainty    = self.DIMENSION_UNCERTAINTY_MODERATE
             track.lengthUncertainty   = self.DIMENSION_UNCERTAINTY_MODERATE
@@ -991,7 +985,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._unlock()
 
 #_______________________________________________________________________________
-    def handleFirstTrackBtn(self):
+    def handleFirstBtn(self):
         """ Get the first track, select the corresponding node, and focus the
             camera on it. """
 
@@ -1185,7 +1179,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._unlock()
 
 #_______________________________________________________________________________
-    def handleLastTrackBtn(self):
+    def handleLastBtn(self):
         """ Get the last track, select the corresponding node, focus the camera
             on it, and update the UIs"""
 
@@ -1467,46 +1461,32 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         if op == self.EXTRAPOLATE_NEXT:
             self.handleExtrapolateNext()
-
         if op == self.EXTRAPOLATE_PREVIOUS:
             self.handleExtrapolatePrevious()
-
         elif op == self.INTERPOLATE_TRACK:
             self.handleInterpolate()
-
         elif op == self.SET_TO_MEASURED:
             self.handleSetToMeasuredDimensions()
-
         elif op == self.SET_UNCERTAINTY_LOW:
             self.handleSetUncertaintyLow()
-
         elif op == self.SET_UNCERTAINTY_MODERATE:
             self.handleSetUncertaintyModerate()
-
         elif op == self.SET_UNCERTAINTY_HIGH:
             self.handleSetUncertaintyHigh()
-
         elif op == self.REDUCE_ROT_UNCERTAINTY:
             self.handleReduceRotationalUncertainty()
-
         elif op == self.LINK_SELECTED:
             self.handleLink()
-
         elif op == self.UNLINK_SELECTED:
             self.handleUnlink()
-
         elif op == self.SET_DATUM:
             self.handleSetDatum()
-
         elif op == self.SET_LINKS:
             self.handleSetNodeLinks()
-
         elif op == self.SET_COMPLETED:
             self.handleSetCompleted()
-
         elif op == self.SET_ALL_INCOMPLETE:
             self.handleSetAllIncompleted()
-
         elif op == self.SET_COMPLETE:
             self.handleSetTrackCompleted()
 
@@ -1717,7 +1697,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         elif self.selectBy1Cmbx.currentText() ==\
                 self.FETCH_TRACK_BY_INDEX:
             self.handleFetchByIndex()
-
         elif self.selectBy1Cmbx.currentText() ==\
                 self.SELECT_TRACK_BY_INDEX:
             self.handleSelectByIndex()
@@ -1727,7 +1706,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         elif self.selectBy1Cmbx.currentText() ==\
                 self.SELECT_TRACK_BY_UID:
             self.handleSelectByUid()
-
         elif self.selectBy1Cmbx.currentText() ==\
                 self.SELECT_SERIES:
             self.handleSelectSeries()
@@ -1737,7 +1715,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         elif self.selectBy1Cmbx.currentText() ==\
                 self.SELECT_SERIES_BEFORE:
             self.handleSelectSeriesBefore()
-
         elif self.selectBy1Cmbx.currentText() ==\
                 self.SELECT_ALL_COMPLETED:
             self.handleSelectCompleted(True)
@@ -1762,21 +1739,18 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.handleFetchByName()
         elif self.selectBy2Cmbx.currentText() == self.FETCH_TRACK_BY_INDEX:
             self.handleFetchByIndex()
-
         elif self.selectBy2Cmbx.currentText() == self.SELECT_TRACK_BY_INDEX:
             self.handleSelectByIndex()
         elif self.selectBy2Cmbx.currentText() == self.SELECT_TRACK_BY_NAME:
             self.handleSelectByName()
         elif self.selectBy2Cmbx.currentText() == self.SELECT_TRACK_BY_UID:
             self.handleSelectByUid()
-
         elif self.selectBy2Cmbx.currentText() == self.SELECT_SERIES:
             self.handleSelectSeries()
         elif self.selectBy2Cmbx.currentText() == self.SELECT_SERIES_AFTER:
             self.handleSelectSeriesAfter()
         elif self.selectBy2Cmbx.currentText() == self.SELECT_SERIES_BEFORE:
             self.handleSelectSeriesBefore()
-
         elif self.selectBy2Cmbx.currentText() == self.SELECT_ALL_COMPLETED:
             self.handleSelectCompleted(True)
         elif self.selectBy2Cmbx.currentText() == self.SELECT_ALL_INCOMPLETE:
@@ -2769,71 +2743,72 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
+
+
+
+
 #===============================================================================
-#                                          P R O X Y  T R A C K  H A N D L E R S
-
+#                                         P R O X Y  T R A C K  H A N D L E R S
+#
 #_______________________________________________________________________________
-    def refreshProxyUI(self, props):
-        """ The properties for the proxy UI display is updated based on props, a
-            dictionary compiling the properies for a given track model
-            instance. """
+    def addEntry(self, e):
+        """ A dictionary is created by parsing out the 6 components of the list
+            e (the ordered list of strings representating of a track entry that
+            is read in from the CSV file). Coming in directly from a csv file,
+            the list e might correspond to an empty entry (i.e., consist of 6
+            empty lists).  That would occur when a trackway has not yet been
+            assigned proxies for the missing tracks.  Once the trackway has been
+            assigned proxies, and saved as a csv simulation file, and re-read,
+            then each track entry will represent either a track or a proxy track
+            created to fill in for missing tracks. A proxy entry is signified by
+            a uid which is the name concantenated with '_proxy'.  An
+            entry consists of a dictionary with keys name, uid, x, dx, y, and
+            dy. If e corresponds to a non-empty entry, that information is
+            converted to a dictionary-based entry which is then added to
+            entries, itself a dictionary with 4 keys corresponding to the 4
+            possible combinations of foot and side (lp, rp, lm, and rm). """
 
-        width               = props[TrackPropEnum.WIDTH.name]
-        widthMeasured       = props[TrackPropEnum.WIDTH_MEASURED.name]
-        length              = props[TrackPropEnum.LENGTH.name]
-
-#_______________________________________________________________________________
-    def handleFirstProxyBtn(self):
-        """ Get the first proxy for this trackway. """
-
-        if not self._lock():
+        (name, uid, x, dx, y, dy) = e
+        if not name:
             return
 
-        print('in handleFirstProxyBtn')
-        self._unlock()
+        # next decompose the name into its parts
+        (site,
+         layer,
+         year,
+         section,
+         trackwayType,
+         trackwawyNumber,
+         side,
+         foot,
+         number) = name.split("-")
+
+        # and now make the entry, which is a dictionary
+        entry = dict(
+            [('name', name),
+             ('uid',  uid),
+             ('x',    float(x)),
+             ('dx',   float(dx)),
+             ('y',    float(y)),
+             ('dy',   float(dy)),
+             ('n',    int(number))])
+
+        side = side.lower()
+        foot = foot.lower()
+        limb_id = side + foot
+        self.entries[limb_id].append(entry)
+        return entry
 
 #_______________________________________________________________________________
-    def handleNextProxyBtn(self):
-        """ Get the next proxy for this trackway. """
+    def getEntry(self, limb_id, trackNumber):
+        """ For the entries for a given limb_id (e.g., 'lm') this either
+            returns the corresponding entry (as a dictionary) for that track
+            number, or None. """
 
-        if not self._lock():
-            return
-
-        print('in handleNextProxyBtn')
-
-        self._unlock()
-
-#_______________________________________________________________________________
-    def handleLastProxyBtn(self):
-        """ Get the last proxy for this trackway. """
-
-        if not self._lock():
-            return
-
-        print('in handleLastProxyBtn')
-
-        self._unlock()
-
-#_______________________________________________________________________________
-    def handlePrevProxyBtn(self):
-        """ Get the previous proxy for this trackway. """
-
-        if not self._lock():
-            return
-
-        print('in handlePrevProxyBtn')
-
-        self._unlock()
-#_______________________________________________________________________________
-    def handleProxyPullBtn(self):
-        """ Pull data from the proxy nodes and update the UI. """
-
-        if not self._lock():
-            return
-
-        print('in handleProxyPullBtn')
-
-        self._unlock()
+        for entry in self.entries[limb_id]:
+            if entry['n'] == trackNumber:
+                return entry
+        return None
 
 #_______________________________________________________________________________
     def handleInitializeProxiesBtn(self):
@@ -2849,105 +2824,222 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         # set up a trackway fingerprint (same as track fingerprint up to the
-        # track number, e.g., CRO-500-2004-1-S-6)
+        # track number), e.g., CRO-500-2004-1-S-6.
+        trackwayFingerprint = self.siteLE.text() + '-' +\
+                              self.levelLE.text() + '-' +\
+                              self.yearLE.text() + '-' +\
+                              self.sectorLE.text() + '-' +\
+                              self.trackwayLE.text()[0] + '-' +\
+                              self.trackwayLE.text()[1:]
+        trackwayFingerprint = trackwayFingerprint.upper()
 
-        self.trackwayFingerprint = self.siteLE.text()        + '-' + \
-                                   self.levelLE.text()       + '-' + \
-                                   self.yearLE.text()        + '-' + \
-                                   self.sectorLE.text()      + '-' + \
-                                   self.trackwayLE.text()[0] + '-' + \
-                                   self.trackwayLE.text()[1:]
-
-        path = '~/Dropbox/A16/Simulation/data/' + self.trackwayFingerprint +\
+        path   = '~/Dropbox/A16/Simulation/data/' +\
+                 trackwayFingerprint +\
                  '/source.csv'
-        file = open(os.path.expanduser(path))
+        file   = open(os.path.expanduser(path))
         reader = csv.reader(file)
 
         # open the source file and skip over the header row
         reader.next()
         # these will accumulate the numbers of the first and last tracks
-        nMin = 10000
-        nMax = -10000
+        self.nMin = 10000
+        self.nMax = -10000
 
         # entries is a dictionary with key limb_id ('lp', 'rp', 'lm' or 'rm')
-        # and a corresponding list of entries
-
+        # each with a corresponding list of entries.  All keys are lowercase.
         self.entries = dict(lp=[], rp=[], lm=[], rm=[])
 
         for row in reader:
-            # each row is list of 24 strings, with the first six strings
-            # corresponding to the left pes, the next six to the right pes, and
+            # each incoming row is a list of 24 strings, with the first 6
+            # corresponding to the left pes, the next 6 to the right pes, and
             # so forth.  Note that a missing track is represented by six empty
             # strings.
-            lp = row[1:7]
-            rp = row[7:13]
-            lm = row[13:19]
-            rm = row[19:25]
 
             # add each non-empty entry (lp, rp, lm, or rm) to entries, and
-            # update nMin and nMax
-            if lp[0]:
-                (name, uid, x, dx, y, dy) = lp
-                entry = self.createEntry(
-                    'lp', name=name, uid=uid, x=x, y=y, dx=dx, dy=dy)
-                self.entries['lp'].append(entry)
-                n = self.getTrackNumber(name)
-                nMin = min(nMin, n)
-                nMax = max(nMax, n)
-            if rp[0]:
-                (name, uid, x, dx, y, dy) = rp
-                entry = self.createEntry(
-                    'rp', name=name, uid=uid, x=x, y=y, dx=dx, dy=dy)
-                self.entries['rp'].append(entry)
-                n = self.getTrackNumber(name)
-                nMin = min(nMin, n)
-                nMax = max(nMax, n)
-            if lm[0]:
-                (name, uid, x, dx, y, dy) = lm
-                entry = self.createEntry(
-                    'lm', name=name, uid=uid, x=x, y=y, dx=dx, dy=dy)
-                self.entries['lm'].append(entry)
-                n = self.getTrackNumber(name)
-                nMin = min(nMin, n)
-                nMax = max(nMax, n)
-            if rm[0]:
-                (name, uid, x, dx, y, dy) = rm
-                entry = self.createEntry(
-                    'rm', name=name, uid=uid, x=x, y=y, dx=dx, dy=dy)
-                self.entries['rm'].append(entry)
-                n = self.getTrackNumber(name)
-                nMin = min(nMin, n)
-                nMax = max(nMax, n)
+            # update nMin and nMax on the fly. These are the existing tracks.
+
+            for e in [row[1:7], row[7:13], row[13:19], row[19:25]]:
+                entry = self.addEntry(e)
+                # if a valid new entry was jsut created, update nMin and nMax
+                if entry:
+                    name = entry['name']
+                    n = int(name.split("-")[-1]) if name else None
+                    self.nMin = min(self.nMin, n)
+                    self.nMax = max(self.nMax, n)
+
+        # check them out
+        for l in ['lp', 'rp', 'lm', 'rm']:
+            print('%s' % l)
+            for entry in self.entries[l]:
+                print(entry)
+            print()
+        print("nMin = %s and nMax = %s" % (self.nMin, self.nMax))
 
         # now add the proxy entries as needed to fill out each list from nMin to
-        # nMax
+        # nMax.
 
-        for n in range(nMin, nMax + 1):
+        # in this first version, locate the first left pes track in this
+        # trackway and put the others just to the side of it.
+        x0 = 0.0
+        y0 = 0.0
+        for n in range(self.nMin, self.nMax + 1):
             entry = self.getEntry('lp', n)
-            if not entry:
-                 name = format("%s-L-P-%s" % (self.trackwayFingerprint, n))
-                 self.entries['lp'].append(self.createEntry('lp', name=name))
+            if entry:
+                x0 = entry['x']
+                y0 = entry['y']
+            break
 
-        # next, the right pes tracks
-        for n in range(nMin, nMax + 1):
-            entry = self.getEntry('rp', n)
-            if not entry:
-                 name = format("%s-R-P-%s" % (self.trackwayFingerprint, n))
-                 self.entries['rp'].append(self.createEntry('rp', name=name))
+        # now place the proxies at (x0, y0) plus an offset based on n
+        limb_id = 'lp'
+        for limb_id in ['lp', 'rp', 'lm', 'rm']:
+            for n in range(self.nMin, self.nMax + 1):
+                entry = self.getEntry(limb_id, n)
+                # see if we need to make a proxy
+                if not entry:
+                    # first compose the name with and ending of '_proxy'
+                    side = limb_id[0].upper()
+                    limb = limb_id[1].upper()
+                    name = format('%s-%s-%s-%s' %
+                                  (trackwayFingerprint, side, limb, n))
+                    uid = name + '_proxy'
+                    x = x0 + n*1.0
+                    y = y0 + n*1.0
+                    dx = 10
+                    dy = 10
+                    e = (name, uid, x, dx, y, dy)
+                    proxy = self.addEntry(e)
+                    print('added proxy = %s' % proxy)
 
-        # then the left manus tracks:
-        for n in range(nMin, nMax + 1):
-            entry = self.getEntry('lm', n)
-            if not entry:
-                 name = format("%s-L-M-%s" % (self.trackwayFingerprint, n))
-                 self.entries['lm'].append(self.createEntry('lm', name=name))
+        # now create proxy nodes
+        for limb_id in ['lp', 'rp', 'lm', 'rm']:
+            for n in range(self.nMin, self.nMax + 1):
+                entry = self.getEntry(limb_id, n)
+                if not entry:
+                    continue
+                if entry['uid'].endswith('_proxy'):
+                    print("found a proxy %s" % entry)
 
-        # finally, the right manus tracks
-        for n in range(nMin, nMax + 1):
-            entry = self.getEntry('rm', n)
-            if not entry:
-                 name = format("%s-R-M-%s" % (self.trackwayFingerprint, n))
-                 self.entries['rm'].append(self.createEntry('rm', name=name))
+                props = dict()
+                TPE = TrackPropEnum
+                props[TPE.UID.maya]    = uid
+                props[TPE.WIDTH.maya]  = 10.0
+                props[TPE.LENGTH.maya] = 10.0
+                # change coordinates from CSV (X, Y) to Maya (X, Z)
+                props[TPE.X.maya] = 0.0
+                props[TPE.Z.maya] = 0.0
+
+                self._trackwayManager.createProxyNode(uid, props)
+
+
+        self._unlock()
+
+#_______________________________________________________________________________
+    def handleProxyPullBtn(self):
+        """ Pull data from the proxy nodes and update the UI. """
+
+        if not self._lock():
+            return
+
+        print('in handleProxyPullBtn')
+
+        # load up a dictionary with everything for proxy including track
+        # number and etc. from fingerprint.
+
+        self._unlock()
+
+#_______________________________________________________________________________
+    def handleXSbx(self):
+        """ This spinbox displays the X coordiante of the given track proxy.
+            Note that the X coordinate for the simulator corresponds to Z in
+            Maya. """
+
+        print('in handleXSbx')
+
+#_______________________________________________________________________________
+    def handleYSbx(self):
+        """ This spinbox displays the Y coordiante of the given track proxy.
+            Note that the X coordinate for the simulator corresponds to X in
+            Maya. """
+
+        print('in handleYbx')
+#_______________________________________________________________________________
+    def handleDxSbx(self):
+        """ This spinbox shows dx, the uncertainty in x, of the given track
+            proxy. """
+
+        print('in handleDxSbx')
+
+#_______________________________________________________________________________
+    def handleDySbx(self):
+        """ This spinbox shows dy, the uncertainty in y, of the given track
+            proxy. """
+
+        print('in handleDySbx')
+
+#_______________________________________________________________________________
+    def handlePullProxyBtn(self):
+        """ The transform data in the selected proxy node(s) is used to populate
+            the trackway UI and the proxy UI. Note that if multiple track nodes
+            are selected, the last such node is used to extract data for the
+            trackway UI(but the fields of the track UI are cleared). """
+
+        if not self._lock():
+            return
+
+        selectedTracks = self._trackwayManager.getSelectedTracks()
+        if not selectedTracks:
+            self.clearTrackwayUI()
+            self.clearTrackUI()
+            self._unlock()
+            return
+
+        track = selectedTracks[-1]
+
+        # once a proxy is selected in Maya, get it's properties from the
+        # track set, then fill out a dictionary from the proxy's fingerprint.
+
+        props = track.toDict()
+        self.refreshTrackwayUI(props)
+
+        if len(selectedTracks) == 1:
+            self.refreshTrackUI(props)
+        else:
+            self.clearTrackUI()
+
+        self._trackwayManager.closeSession(commit=True)
+        self._unlock()
+
+#_______________________________________________________________________________
+    def ProxyFingerprintFromUI(self):
+        """ Returns a dictionary of trackway properties, extracted from the UI.
+            The trackway type and number are included only if the trackway line
+            edit field is non-empty.  Note that a proxy track's uid is based on
+            the proxy track's fingerprint. """
+
+        fingerprint = (
+            self.siteLE.text() + '-' +
+            self.yearLE.text() + '-' +
+            self.sectorLE.text() + '-' +
+            self.levelLE.text() + '-' +
+            self.trackwayLE.text()[0] + '-' +
+            self.trackwayLE.text()[1:])
+        return fingerprint
+
+#_______________________________________________________________________________
+    def refreshProxyUI(self, props):
+        """ The proxy track properties are taken from the dictionary props and
+            used to update the UI. """
+
+        self.xSbx.setValue(100.0*props[TrackPropEnum.Z.maya])
+        self.dxSbx.setValue(100.0*props[TrackPropEnum.X.maya])
+        self.ySbx.setValue(100.0*props[TrackPropEnum.LENGTH.maya])
+        self.dySbx.setValue(100.0*props[TrackPropEnum.WIDTH.maya])
+
+#_______________________________________________________________________________
+    def handleSaveProxiesBtn(self):
+        """ This writes the cvs file into the same folder, but as
+            'modified.csv' """
+
 
         # path2  = '~/Dropbox/A16/Simulation/data/' + fileName + '/modified.csv'
         # file2  = open(os.path.expanduser(path2),'w')
@@ -2962,79 +3054,18 @@ class TrackwayManagerWidget(PyGlassWidget):
         # print('now reading back again')
         # for row in reader2:
         #     print(row)
-
-        for limb_id in ['lp', 'rp', 'lm', 'rm']:
-            for entry in self.entries[limb_id]:
-                print(entry)
-            print()
-
-        # now create the proxy nodes in Maya
-        for entry in self.entries['lp']:
-            if entry['lp_uid'] !=  'proxy':
-                uid = entry['lp_name'] + '_test'
-                x   = int(100*float(entry['lp_y']))
-                z   = int(100*float(entry['lp_x']))
-                props = dict(uid=uid, x=x, z=z)
-                self._trackwayManager.createProxyNode(props)
-
-        # for entry in self.entries['rp']:
-        #     if entry['rp_uid'] ==  'proxy':
-        #         uid = entry['rp_name'] + '_proxy'
-        #         x   = int(100*float(entry['rp_y']))
-        #         z   = int(100*float(entry['rp_x']))
-        #         props = dict(uid=uid, x=x, z=z)
-        #         self._trackwayManager.createProxyNode(props)
         #
-        # for entry in self.entries['lm']:
-        #     if entry['lm_uid'] ==  'proxy':
-        #         uid = entry['lm_name'] + '_proxy'
-        #         x   = int(100*float(entry['lm_y']))
-        #         z   = int(100*float(entry['lm_x']))
-        #         props = dict(uid=uid, x=x, z=z)
-        #         self._trackwayManager.createProxyNode(props)
 
-
-        for entry in self.entries['rm']:
-            if entry['rm_uid'] != 'proxy':
-
-                # uid = entry['rm_name'] + '_proxy'
-
-
-                x   = int(100*float(entry['rm_y']))
-                z   = int(100*float(entry['rm_x']))
-                props = dict(uid=uid, x=x, z=z)
-                print('props = %s' % props)
-                # self._trackwayManager.createProxyNode(props)
-
-
-        self._unlock()
-
-#_______________________________________________________________________________
-    def handleLatitudeSbx(self):
-        """ This spinbox shows the latitude of the given track proxy.  Note that
-            latitude refers to X in Maya and Y in the simulator. """
-
-        print('in handleLatitudeSbx')
-
-#_______________________________________________________________________________
-    def handleLatitudeUncertaintySbx(self):
-        """ This spinbox shows the latitude of the given track proxy.  Note that
-            latitude refers to X in Maya and Y in the simulator. """
-
-        print('in handleLatitudeUncertaintySbx')
-
-#_______________________________________________________________________________
-    def handleSaveProxiesBtn(self):
-        """ This writes the cvs file into the same folder, but as
-            'modified.csv' """
         pass
 
 #_______________________________________________________________________________
-    def writeSimfile(self, entries):
+    def writeSimFile(self, entries):
         """ Saves the CSV-format simulation file for a given trackway, after
             editing the proxies in that trackway.  It creates an instance of a
             CsvWriter, matching the format used in reading csv simulation files.
             Based on SimulationExporterStage. """
+
+        ################## note:
 
         csv = CsvWriter(
             autoIndexFieldName='Index',
@@ -3042,16 +3073,16 @@ class TrackwayManagerWidget(PyGlassWidget):
                 'lp_name', 'lp_uid', 'lp_x', 'lp_dx', 'lp_y', 'lp_dy',
                 'rp_name', 'rp_uid', 'rp_x', 'rp_dx', 'rp_y', 'rp_dy',
                 'lm_name', 'lm_uid', 'lm_x', 'lm_dx', 'lm_y', 'lm_dy',
-                'rm_name', 'rm_uid', 'rm_x', 'rm_dx', 'rm_y', 'rm_dy'
-            ]
-        )
+                'rm_name', 'rm_uid', 'rm_x', 'rm_dx', 'rm_y', 'rm_dy'])
 
         length = max(
             len(self.entries['lp']),
             len(self.entries['rp']),
             len(self.entries['lm']),
-            len(self.entries['rm']),
-        )
+            len(self.entries['rm']))
+
+        # this has to compose the limb_id and pre-pend it to
+
 
         for index in range(length):
             items = []
@@ -3062,7 +3093,8 @@ class TrackwayManagerWidget(PyGlassWidget):
                     items += self._create_entry(limb_id).items()
             csv.addRow(dict(items))
 
-        path = '~/Dropbox/A16/Simulation/data/' + self.trackwayFingerprint +\
+        path = '~/Dropbox/A16/Simulation/data/' +\
+               self.trackwayFingerprint +\
                '/modified.csv'
         if csv.save(path):
             print('writeSimFile:  Successfully wrote:', path)
@@ -3070,52 +3102,24 @@ class TrackwayManagerWidget(PyGlassWidget):
             print('writeSimFile:  Unable to save CSV at "{}"'.format(path))
 
 #_______________________________________________________________________________
-    def getTrackNumber(self, name):
-        """ returns the track number from a given track name (i.e.,
-            fingerprint), else None. """
-
-        return int(name.split("-")[-1]) if name else None
-
+    def PropsToFingerprint(self, props):
+        pass
 #_______________________________________________________________________________
-    def createFingerprint(self, limb_id, trackNumber):
+    def createFingerprint(self, trackwayFingerprint, limb_id, trackNumber):
         """ Given a limb_id (e.g., 'lp'), and a track number (e.g., 2), returns
             a string based on the trackway fingerprint (e.g.,
             'CRO-500-2004-1-S-6'), returns a complete fingerprint, e.g.,
             CRO-500-2004-1-S-6-L-P-2. """
 
-        return self.trackwayFingerprint + '-' + limb_id[0] + '-' +\
+        return trackwayFingerprint + '-' +\
+               limb_id[0] + '-' +\
                limb_id[1] + '-' + trackNumber
 
-#_______________________________________________________________________________
-    def createEntry(
-            self, limb_id, name, uid ='proxy', x ='', dx ='', y ='', dy =''):
-        """  A dictionary is created for a given limb_id (either lp, rp, lm, or
-            rm). If creating the dictionary for a proxy, note that it is given a
-            complete fingerprint for the name, but the uid is simply
-            'proxy'. """
-        return dict([
-            (limb_id + '_name', name),
-            (limb_id + '_uid',  uid),
-            (limb_id + '_x',    x),
-            (limb_id + '_dx',   dx),
-            (limb_id + '_y',    y),
-            (limb_id + '_dy',   dy)])
 
-#_______________________________________________________________________________
-    def getEntry(self, limb_id, trackNumber):
-        """ For the entries for a given limb_id (e.g., self.leftPesTracks),
-            this returns the either the entry (dictionary) corresponding to the
-            specified track number, or None. """
-
-        for entry in self.entries[limb_id]:
-            n = self.getTrackNumber(entry[limb_id + '_name'])
-            if n == trackNumber:
-                return entry
-        return None
 
 #===============================================================================
-#                                                                  P R I V A T E
-
+#                                                                 P R I V A T E
+#
 #_______________________________________________________________________________
     def _activateWidgetDisplayImpl(self, **kwargs):
         if not CadenceEnvironment.NIMBLE_IS_ACTIVE:
