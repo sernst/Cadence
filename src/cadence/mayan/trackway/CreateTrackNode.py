@@ -16,7 +16,7 @@ class CreateTrackNode(NimbleScriptBase):
         createTrackNode in TrackSceneUtils. """
 
 #===============================================================================
-#                                                                    P U B L I C
+#                                                                   P U B L I C
 #
 #_______________________________________________________________________________
     def run(self, *args, **kwargs):

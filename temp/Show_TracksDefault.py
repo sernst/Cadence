@@ -1,4 +1,5 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import\
+    print_function, absolute_import, unicode_literals, division
 
 import sqlalchemy as sqla
 
@@ -36,8 +37,10 @@ class Track(ModelsBase):
     def getPreviousTrack(self):
         model = self.__class__
 
-        return self.mySession.query(model).filter(model.next == self.uid).first()
+        return self.mySession.query(model).filter(
+            model.next == self.uid).first()
 
     def getNextTrack(self):
         model = self.__class__
-        return self.mySession.query(self).filter(model.uid == self.next).first()
+        return self.mySession.query(self).filter(
+            model.uid == self.next).first()

@@ -20,11 +20,15 @@ from cadence.util.shading.ShadingUtils import ShadingUtils
 class TrackSceneUtils(object):
     """ A class for supporting Maya-side operations such as creating visual
         representations of Track nodes (createTrackNode), and getting/setting
-        those values.  Used by remote scripts that extend NimbleScriptBase. """
+        those values.  Used by remote scripts that extend NimbleScriptBase.
+
+        While originally designed for track nodes, a simplified token has been
+        introduced, and while it uses the uid and trackSetNode, the attributes
+        are different. """
 
 #===============================================================================
-#                                                                      C L A S S
-
+#                                             T R A C K  N O D E  S U P P O R T
+#
 #_______________________________________________________________________________
     @classmethod
     def createTrackNode(cls, uid, trackSetNode =None, props =None):
@@ -132,7 +136,7 @@ class TrackSceneUtils(object):
         # below ground level, and ake it non-selectable.  Drive its scale by the
         # node's width attribute.
         widthRuler = cmds.polyCube(
-            axis=(0,1,0),
+            axis=(0, 1, 0),
             width=100.0,
             height=rulerThickness,
             depth=rulerBreadth,
@@ -142,9 +146,8 @@ class TrackSceneUtils(object):
             constructionHistory=1,
             name='WidthRuler')[0]
 
-        # Push it down so it is just resting on the triangular node (which is
-        # already submerged by the thickness of the ruler and half the node
-        # thickness.
+        # Push it down to just rest on the triangular node (which is already
+        # submerged by the thickness of the ruler and half the node thickness.
         cmds.move(0.0, -rulerThickness/2.0, 0.0)
         cmds.setAttr(widthRuler + '.overrideEnabled', 1)
         cmds.setAttr(widthRuler + '.overrideDisplayType', 2)
@@ -185,7 +188,7 @@ class TrackSceneUtils(object):
         cmds.setAttr(barN + '.overrideDisplayType', 2)
 
         barS = cmds.polyCube(
-            axis=(0,1,0),
+            axis=(0, 1, 0),
             width=barBreadth,
             height=barThickness,
             depth=100.0,
@@ -199,7 +202,7 @@ class TrackSceneUtils(object):
         cmds.setAttr(barS + '.overrideDisplayType', 2)
 
         barW = cmds.polyCube(
-            axis=(0,1,0),
+            axis=(0, 1, 0),
             width=100.0,
             height=barThickness,
             depth=barBreadth,
@@ -213,7 +216,7 @@ class TrackSceneUtils(object):
         cmds.setAttr(barW + '.overrideDisplayType', 2)
 
         barE = cmds.polyCube(
-            axis=(0,1,0),
+            axis=(0, 1, 0),
             width=100.0,
             height=barThickness,
             depth=barBreadth,
@@ -231,7 +234,7 @@ class TrackSceneUtils(object):
         # center, and each is made non-selectable.  First make the indicator of
         # maximum (counterclockwise) estimated track rotation
         thetaPlus = cmds.polyCube(
-            axis=(0,1,0),
+            axis=(0, 1, 0),
             width=thetaBreadth,
             height=thetaThickness,
             depth=1.0,
@@ -246,7 +249,7 @@ class TrackSceneUtils(object):
         # Next, construct the indicator of the minimum (clockwise) estimate of
         # track rotation
         thetaMinus = cmds.polyCube(
-            axis=(0,1,0),
+            axis=(0, 1, 0),
             width=thetaBreadth,
             height=thetaThickness,
             depth=1.0,
@@ -422,7 +425,7 @@ class TrackSceneUtils(object):
         # Add the new nodeName to the Cadence track scene set, color it, and
         # we're done
         cmds.sets(node, add=trackSetNode)
-        cls.colorNode(node, props)
+        cls.colorTrackNode(node, props)
         return node
 
 #_______________________________________________________________________________
@@ -455,8 +458,10 @@ class TrackSceneUtils(object):
 
         if not trackSetNode:
             return None
+
         if not cmds.sets(node, isMember=trackSetNode):
             return None
+
         try:
             return cmds.getAttr(node + '.' + TrackPropEnum.UID.maya)
         except Exception as err:
@@ -495,7 +500,7 @@ class TrackSceneUtils(object):
 
 #_______________________________________________________________________________
     @classmethod
-    def colorNode(cls, node, props):
+    def colorTrackNode(cls, node, props):
         # Save state of selected nodes to restore at end of this function
         priorSelection = MayaUtils.getSelectedTransforms()
 
@@ -516,17 +521,18 @@ class TrackSceneUtils(object):
         # dark gray (for pes) and the 'error bars' white.
         c = TrackwayShaderConfig.DARK_GRAY_COLOR if pes else \
             TrackwayShaderConfig.LIGHT_GRAY_COLOR
+
         ShadingUtils.applyShader(c, root + '|WidthRuler')
         ShadingUtils.applyShader(c, root + '|LengthRuler')
 
         ShadingUtils.applyShader(
-            TrackwayShaderConfig.WHITE_COLOR,  root + '|BarN')
+            TrackwayShaderConfig.WHITE_COLOR, root + '|BarN')
         ShadingUtils.applyShader(
-            TrackwayShaderConfig.WHITE_COLOR,  root + '|BarS')
+            TrackwayShaderConfig.WHITE_COLOR, root + '|BarS')
         ShadingUtils.applyShader(
-            TrackwayShaderConfig.WHITE_COLOR,  root + '|BarW')
+            TrackwayShaderConfig.WHITE_COLOR, root + '|BarW')
         ShadingUtils.applyShader(
-            TrackwayShaderConfig.WHITE_COLOR,  root + '|BarE')
+            TrackwayShaderConfig.WHITE_COLOR, root + '|BarE')
 
         # And finish up with other details
         ShadingUtils.applyShader(
@@ -582,11 +588,16 @@ class TrackSceneUtils(object):
 
         return None
 
+
+#===============================================================================
+#                                                      T O K E N  S U P P O R T
+#
 #_______________________________________________________________________________
     @classmethod
-    def createProxyNode(cls, uid, trackSetNode =None, props =None):
-        """ A proxy node is created, provided with some additional Maya
-            attributes, and placed in the scene. """
+    def createToken(cls, uid, trackSetNode =None, props =None):
+        """ A token scene graph node is created, provided with some additional
+            Maya attributes, and placed in the scene. Tokens are functtionally
+            similar to TrackNodes, but with different shapes and attributes. """
 
         if not trackSetNode:
             trackSetNode = TrackSceneUtils.getTrackSetNode()
@@ -600,35 +611,46 @@ class TrackSceneUtils(object):
             return node
 
         height = 10.0
-        node = cmds.polyCylinder(
-            radius=0.5,
-            height=height,
-            subdivisionsX=20,
-            subdivisionsY=1,
-            subdivisionsZ=1,
-            subdivisionsCaps=0,
-            axis=(0, 1, 0),
-            createUVs=3,
-            constructionHistory=1,
-            name='Proxy0')[0]
+        # remove '_proxy' if present (as in S6_LP3_proxy)
+        track  = uid.split('_')[0]
+        isLeft = track[0] == 'L'
+        isPes  = track[1] == 'P'
+
+        # make a cylinder for a pes token and a cone for a manus token
+        if isPes:
+            node = cmds.polyCylinder(
+                radius=0.5,
+                height=height,
+                subdivisionsX=20,
+                subdivisionsY=1,
+                subdivisionsZ=1,
+                subdivisionsCaps=0,
+                axis=(0, 1, 0),
+                createUVs=3,
+                constructionHistory=1,
+                name='Token0')[0]
+        else:
+            node = cmds.polyCone(
+                radius=0.5,
+                height=height,
+                subdivisionsX=20,
+                subdivisionsY=1,
+                subdivisionsZ=1,
+                axis=(0, 1, 0),
+                createUVs=3,
+                constructionHistory=1,
+                name='Token0')[0]
 
         # Set up the basic cadence attributes
-        cmds.addAttr(
-             longName='cadence_width',
-             shortName=TrackPropEnum.WIDTH.maya,
-             niceName='Width')
-        cmds.addAttr(
-             longName='cadence_length',
-             shortName=TrackPropEnum.LENGTH.maya,
-             niceName='Length')
+        cmds.addAttr(longName='cadence_dx', shortName='dx', niceName='DX')
+        cmds.addAttr(longName='cadence_dy', shortName='dy', niceName='DY')
         cmds.addAttr(
              longName='cadence_uniqueId',
-             shortName=TrackPropEnum.UID.maya,
+             shortName='track_uid',
              dataType='string',
-             niceName='Unique ID')
+             niceName='UID')
 
-
-        # raise the bottom of the cylinder to ground level
+        # raise the bottom of the cylinder or cone up to ground level
         cmds.move(0, 0.5*height, 0)
 
         # Disable some transform attributes
@@ -637,36 +659,87 @@ class TrackSceneUtils(object):
         cmds.setAttr(node + '.scaleY',     lock=True)
         cmds.setAttr(node + '.translateY', lock=True)
 
-        # Scale the cylinder in x and z to represent 'dy' and 'dx' uncertainties
-        # in centimeters. There is a change of coordinates between Maya (X, Z)
-        # and the simulator (X, Y) space. For example, for the right manus:
+        # Scale the cylinder/cone in x and z to represent 'dy' and 'dx' in
+        # centimeters. There is a change of coordinates between Maya (X, Z) and
+        # the simulator (X, Y) space. For example, for the right manus:
         #    x = int(100*float(entry['rm_y']))
         #    z = int(100*float(entry['rm_x']))
         # and likewise for dx and dy.
 
-        # the LENGTH attribute represents dx (and affects scaleZ in the node).
-        cmds.connectAttr(
-            node + '.' + TrackPropEnum.LENGTH.maya, node + '.scaleZ')
+        # the DX attribute affects scaleZ in the node
+        cmds.connectAttr(node + '.dx', node + '.scaleZ')
 
-        # use the WIDTH attribute for dy (affecting scaleX)
-        cmds.connectAttr(
-            node + '.' + TrackPropEnum.WIDTH.maya, node + '.scaleX')
+        # use the DY affecting scaleX in the node
+        cmds.connectAttr(node + '.dy', node + '.scaleX')
 
         # color the node blue (saving and restoring state of selected nodes)
-
-
         priorSelection = MayaUtils.getSelectedTransforms()
-        ShadingUtils.applyShader(TrackwayShaderConfig.BLUE_COLOR, node)
+        if uid.endswith('_proxy'):
+            ShadingUtils.applyShader(TrackwayShaderConfig.BLUE_COLOR, node)
+        else:
+            if isLeft:
+                ShadingUtils.applyShader(TrackwayShaderConfig.RED_COLOR, node)
+            else:
+                ShadingUtils.applyShader(TrackwayShaderConfig.GREEN_COLOR, node)
         MayaUtils.setSelection(priorSelection)
 
-        # Initialize all the properties from the dictionary
+        # add the new node to the Cadence track set
+        cmds.sets(node, add=trackSetNode)
+
+        # finally, initialize all the properties from the dictionary props
         if props:
-            cls.setTrackProps(node, props)
+            cls.setTokenProps(node, props)
         else:
-            print('in createProxyNode:  properties not provided')
+            print('in createToken:  properties not provided')
             return node
 
-        # add the new node to the Cadence track scene set
-        cmds.sets(node, add=trackSetNode)
-        # and we're done
         return node
+
+#_______________________________________________________________________________
+    @classmethod
+    def getTokenProps(cls, node):
+        """ This returns the attriburtes uid, x, dx, y, dy.  Values in Maya are
+            in centimeters, hence the conversion to meters. """
+
+        out = dict()
+        out['uid'] = cmds.getAttr(node + '.track_uid')
+        out['x']   = cmds.getAttr(node + '.translateZ')/100.0
+        out['dx']  = cmds.getAttr(node + '.dx')/100.0
+        out['y']   = cmds.getAttr(node + '.translateX')/100.0
+        out['dy']  = cmds.getAttr(node + '.dy')/100.0
+        return out
+
+#_______________________________________________________________________________
+    @classmethod
+    def setTokenProps(cls, node, props):
+        """ This sets the attributes of a token:  uid, x, dx, y, dy.  It
+            accounts for the change of coordinates right inside Maya."""
+
+        cmds.setAttr(node + '.track_uid',  props['uid'], type='string')
+        cmds.setAttr(node + '.translateZ', 100.0*props['x'])
+        cmds.setAttr(node + '.dx',         100.0*props['dx'])
+        cmds.setAttr(node + '.translateX', 100.0*props['y'])
+        cmds.setAttr(node + '.dy',         100.0*props['dy'])
+
+#_______________________________________________________________________________
+    @classmethod
+    def getTokenNode(cls, uid, trackSetNode =None):
+        """ This returns the name (string) of the node in the trackSet
+            for the object with matching UID attribute to that passed as   """
+
+        if not trackSetNode:
+            trackSetNode = cls.getTrackSetNode()
+        if not trackSetNode:
+            return None
+
+        nodes = cmds.sets(trackSetNode, query=True)
+        if not nodes:
+            return None
+
+        for node in nodes:
+            if not cmds.hasAttr(node + '.' + 'track_uid'):
+                continue
+            if uid == cmds.getAttr(node + '.' + 'track_uid'):
+                return node
+
+        return None

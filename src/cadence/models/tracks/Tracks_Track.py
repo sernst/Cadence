@@ -11,7 +11,7 @@ from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnumOps
 from cadence.enums.AnalysisFlagsEnum import\
     AnalysisFlagsEnum, AnalysisFlagsEnumOps
-from cadence.mayan.trackway import GetTrackNodeData
+from cadence.mayan.trackway import GetTrackNodeProps
 from cadence.mayan.trackway import UpdateTrackNode
 from cadence.mayan.trackway import CreateTrackNode
 from cadence.models.tracks.TracksTrackDefault import TracksTrackDefault
@@ -212,7 +212,7 @@ class Tracks_Track(TracksTrackDefault):
 
         conn   = nimble.getConnection()
         result = conn.runPythonModule(
-            GetTrackNodeData,
+            GetTrackNodeProps,
             uid=self.uid,
             nodeName=self.nodeName,
             runInMaya=True)

@@ -2,7 +2,8 @@
 # (C)2014
 # Scott Ernst
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import\
+    print_function, absolute_import, unicode_literals, division
 
 from nimble import cmds
 from nimble.mayan.NimbleScriptBase import NimbleScriptBase
@@ -19,7 +20,7 @@ class InitializeTrackwayScene(NimbleScriptBase):
     """A class for..."""
 
 #===============================================================================
-#                                                                                     P U B L I C
+#                                                                   P U B L I C
 
 #_______________________________________________________________________________
     def run(self, *args, **kwargs):

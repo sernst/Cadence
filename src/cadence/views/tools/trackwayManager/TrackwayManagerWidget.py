@@ -18,11 +18,7 @@ from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum
 from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnumOps
 from cadence.svg.CadenceDrawing import CadenceDrawing
 from cadence.views.tools.trackwayManager.TrackwayManager import TrackwayManager
-
-from cadence.analysis.shared.CsvWriter import CsvWriter
-
-import csv
-import os
+from cadence.views.tools.trackwayManager.ScenarioManager import ScenarioManager
 
 #_______________________________________________________________________________
 class TrackwayManagerWidget(PyGlassWidget):
@@ -58,18 +54,24 @@ class TrackwayManagerWidget(PyGlassWidget):
     LINK_SELECTED        = 'LINK Selected Tracks'
     UNLINK_SELECTED      = 'UNLINK Selected Tracks'
     SET_TO_MEASURED      = 'Set to MEASURED Dimensions'
-    SET_DATUM            = 'Set Datum'
-    SET_LINKS            = 'Set Links'
-    SET_COMPLETED        = 'Set Selected Tracks Complete'
-    SET_ALL_INCOMPLETE   = 'Set All Tracks Incomplete'
-    SET_COMPLETE         = 'Set Complete & Get Next'
+    SET_COMPLETED        = 'Set Selected Tracks COMPLETE'
+    SET_ALL_INCOMPLETE   = 'Set All Tracks INCOMPLETE'
+    SET_COMPLETE         = 'Set Complete and Get Next'
 
     SET_UNCERTAINTY_LOW      = 'Set Uncertainties LOW'
     SET_UNCERTAINTY_MODERATE = 'Set Uncertainties MODERATE'
     SET_UNCERTAINTY_HIGH     = 'Set Uncertainties HIGH'
     REDUCE_ROT_UNCERTAINTY   = 'Reduce Rotational Uncertainty'
 
-    INITIALIZE_PROXIES = 'Initialize Proxy Tracks'
+    LEFT   = 'Left'
+    RIGHT  = 'Right'
+    MANUS  = 'Manus'
+    PES    = 'Pes'
+    BEFORE = 'Before'
+    AFTER  = 'After'
+
+    CREATE_PROXIES = 'Create Proxies'
+    CREATE_TOKENS  = 'Create Tokens'
 
     DIMENSION_UNCERTAINTY_LOW      = 0.01
     DIMENSION_UNCERTAINTY_MODERATE = 0.02
@@ -92,6 +94,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         # the Maya scene
         self._trackwayManager = TrackwayManager()
 
+        # create an instance of a ScenarioManager to deal with the reading,
+        # modification, and writing of trackway scenario files.
+        self._scenarioManager = ScenarioManager()
+
         # provide conventional arrow icons for the navigation buttons
         self.firstBtn.setIcon(
             QtGui.QIcon(self.getResourcePath('mediaIcons', 'first.png')))
@@ -105,40 +111,30 @@ class TrackwayManagerWidget(PyGlassWidget):
         # in the Track tab:
         self.widthSbx.valueChanged.connect(self.handleWidthSbx)
         self.widthSbx.setAccelerated(True)
-
         self.lengthSbx.valueChanged.connect(self.handleLengthSbx)
         self.lengthSbx.setAccelerated(True)
-
         self.widthUncertaintySbx.valueChanged.connect(
             self.handleWidthUncertaintySbx)
         self.lengthUncertaintySbx.valueChanged.connect(
             self.handleLengthUncertaintySbx)
-
         self.rotationSbx.valueChanged.connect(self.handleRotationSbx)
         self.rotationSbx.setAccelerated(True)
         self.rotationUncertaintySbx.valueChanged.connect(
             self.handleRotationUncertaintySbx)
-
         self.completedCkbx.clicked.connect(self.handleCompletedCkbx)
         self.hiddenCkbx.clicked.connect(self.handleHiddenCkbx)
         self.lockedCkbx.clicked.connect(self.handleLockedCkbx)
         self.markedCkbx.clicked.connect(self.handleMarkedCkbx)
-
         self.ignorePaceCkbx.clicked.connect(self.handleIgnorePaceCkbx)
         self.ignoreStrideCkbx.clicked.connect(self.handleIgnoreStrideCkbx)
-
         self.lengthRatioSbx.valueChanged.connect(self.handleLengthRatioSbx)
         self.noteLE.textChanged.connect(self.handleNoteLE)
-
         self.countsBtn.clicked.connect(self.handleCountsBtn)
-
         self.pullBtn.clicked.connect(self.handlePullBtn)
-
         self.firstBtn.clicked.connect(self.handleFirstBtn)
         self.prevBtn.clicked.connect(self.handlePrevBtn)
         self.nextBtn.clicked.connect(self.handleNextBtn)
         self.lastBtn.clicked.connect(self.handleLastBtn)
-
         self.selectCadenceCamBtn.clicked.connect(
             self.handleSelectCadenceCamBtn)
         self.selectPerspectiveBtn.clicked.connect(
@@ -149,11 +145,9 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.SELECT_TRACK_BY_NAME,
             self.SELECT_TRACK_BY_INDEX,
             self.SELECT_TRACK_BY_UID,
-
             self.FETCH_TRACK_BY_NAME,
             self.FETCH_TRACK_BY_INDEX,
             self.FETCH_NEXT_INCOMPLETE,
-
             self.SELECT_NEXT_INCOMPLETE,
             self.SELECT_SERIES_BEFORE,
             self.SELECT_SERIES_AFTER,
@@ -165,15 +159,12 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.selectBy1Cmbx.addItems(trackSelectionMethods)
         self.selectBy1Cmbx.setCurrentIndex(0)
         self.select1Btn.clicked.connect(self.handleSelect1Btn)
-
         self.selectBy2Cmbx.addItems(trackSelectionMethods)
         self.selectBy2Cmbx.setCurrentIndex(0)
         self.select2Btn.clicked.connect(self.handleSelect2Btn)
 
         trackOperationMethods = (
             self.NO_OP,
-            self.SET_DATUM,
-            self.SET_LINKS,
             self.EXTRAPOLATE_NEXT,
             self.EXTRAPOLATE_PREVIOUS,
             self.INTERPOLATE_TRACK,
@@ -189,20 +180,17 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.SET_COMPLETE )
 
         # set up a bank of three combo boxes of operations for convenience
-        # access for common tasks
         self.operation1Cmbx.addItems(trackOperationMethods)
         self.operation1Cmbx.setCurrentIndex(0)
         self.operation1Btn.clicked.connect(self.handleOperation1Btn)
-
         self.operation2Cmbx.addItems(trackOperationMethods)
         self.operation2Cmbx.setCurrentIndex(0)
         self.operation2Btn.clicked.connect(self.handleOperation2Btn)
-
         self.operation3Cmbx.addItems(trackOperationMethods)
         self.operation3Cmbx.setCurrentIndex(0)
         self.operation3Btn.clicked.connect(self.handleOperation3Btn)
 
-        # in the Trackway tab:
+        # next, in the Trackway tab:
         self.showTrackwayBtn.clicked.connect(self.handleShowTrackwayBtn)
         self.hideTrackwayBtn.clicked.connect(self.handleHideTrackwayBtn)
         self.selectTrackwayBtn.clicked.connect(self.handleSelectTrackwayBtn)
@@ -215,7 +203,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.handleExportAllTrackwaysBtn)
         self.erasePathsBtn.clicked.connect(self.handleErasePathsBtn)
 
-        # in the Tracksite tab:
+        # and next, in the Tracksite tab:
         self.trackSiteIndexSbx.valueChanged.connect(
             self.handleTrackSiteIndexSbx)
         self.svgFileNameLE.textChanged.connect(self.handleSvgNameLE)
@@ -225,12 +213,11 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self.currentDrawing = None
 
-        # populate the track site data based on the initial value of the index
+        # populate the tracksite data based on the initial value of the index
         self.handleTrackSiteIndexSbx()
 
-        # set up the UI and support data structures for the proxy tracks
-
-        # and clone the original navigation in the tracks tab:
+        # set up the UI and support data structures for a trackway scenario
+        # first, clone the original navigation in the tracks tab:
         self.firstBtn2.setIcon(QtGui.QIcon(
             self.getResourcePath('mediaIcons', 'first.png')))
         self.prevBtn2.setIcon( QtGui.QIcon(
@@ -252,16 +239,30 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.dxSbx.valueChanged.connect(self.handleDxSbx)
         self.dySbx.valueChanged.connect(self.handleDySbx)
 
-        self.proxyPullBtn.clicked.connect(self.handleProxyPullBtn)
+        self.pullSelectedTokenBtn.clicked.connect(self.handlePullSelectedTokenBtn)
+        self.deleteTokenBtn.clicked.connect(self.handleDeleteTokenBtn)
+
         self.selectCadenceCamBtn2.clicked.connect(
             self.handleSelectCadenceCamBtn)
         self.selectPerspectiveBtn2.clicked.connect(
             self.handleSelectPerspectiveBtn)
         self.pullBtn2.clicked.connect(self.handlePullBtn)
 
-        self.initializeProxiesBtn.clicked.connect(
-            self.handleInitializeProxiesBtn)
-        self.saveProxiesBtn.clicked.connect(self.handleSaveProxiesBtn)
+        self.loadScenarioBtn.clicked.connect(self.handleLoadScenarioBtn)
+        self.saveScenarioBtn.clicked.connect(self.handleSaveScenarioBtn)
+
+        self.leftRightCmbx.addItems([self.LEFT, self.RIGHT])
+        self.manusPesCmbx.addItems([self.MANUS, self.PES])
+        self.beforeAfterCmbx.addItems([self.BEFORE, self.AFTER])
+        self.insertTokenBtn.clicked.connect(self.handleInsertTokenBtn)
+
+        scenarioOpMethods = (
+            self.NO_OP,
+            self.CREATE_PROXIES,
+            self.CREATE_TOKENS)
+        self.scenarioOpCmbx.addItems(scenarioOpMethods)
+        self.scenarioOpCmbx.setCurrentIndex(1)
+        self.scenarioOpBtn.clicked.connect(self.handleScenarioOpBtn)
 
         self.currentTrackwayDictionary = None
 
@@ -368,9 +369,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #_______________________________________________________________________________
     def refreshTrackUI(self, props):
-        """ The track properties aspect of the UI display is updated based on
-            props, a dictionary compiling the properies for a given track model
-            instance. """
+        """ The track properties aspect of the UI display are updated based on
+            the dictionary props for a given track model instance. """
 
         width               = props[TrackPropEnum.WIDTH.name]
         widthMeasured       = props[TrackPropEnum.WIDTH_MEASURED.name]
@@ -491,8 +491,8 @@ class TrackwayManagerWidget(PyGlassWidget):
             sector = ''
         self.sectorLE.setText(sector)
 
-        # compose the trackway name (such as S18 for type 'S' for sauropod and
-        # the trackway number
+        # compose the trackway name (such as S18 for type 'S' for sauropod plus
+        # the trackway number)
         type   = dict.get(TrackPropEnum.TRACKWAY_TYPE.name)
         number = dict.get(TrackPropEnum.TRACKWAY_NUMBER.name)
         if type and number:
@@ -873,8 +873,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         track = tracks[0]
 
-        # if track length or width (or both) were not measured originally, posit
-        # high uncertainties
+        # if track length or width (or both) were not measured originally,
+        # indicate high uncertainties
         if track.widthMeasured == 0.0 or track.lengthMeasured == 0.0:
             track.widthUncertainty    = self.DIMENSION_UNCERTAINTY_MODERATE
             track.lengthUncertainty   = self.DIMENSION_UNCERTAINTY_MODERATE
@@ -1285,7 +1285,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._unlock()
 
 #_______________________________________________________________________________
-    def handleLink(self):
+    def  handleLink(self):
         """ Two or more tracks are linked by selecting them in Maya (in the
             intended order) then, for each track, assigning the UID of each
             successive track to the 'next' attribute for that track.  By
@@ -1359,20 +1359,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
-
-#_______________________________________________________________________________
-    def handleLongitudeSbx(self):
-        """ This spinbox shows the longitude of the given track proxy.  Note
-            that longitude refers to Z in Maya and X in the simulator. """
-
-        print('in handleLongitudeSbx')
-
-#_______________________________________________________________________________
-    def handleLongitudeUncertaintySbx(self):
-        """ This spinbox shows the longitude of the given track proxy.  Note
-            that longitude refers to Z in Maya and X in the simulator. """
-
-        print('in handleLongitudeUncertaintySbx')
 
 #_______________________________________________________________________________
     def handleMarkedCkbx(self):
@@ -1479,10 +1465,6 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.handleLink()
         elif op == self.UNLINK_SELECTED:
             self.handleUnlink()
-        elif op == self.SET_DATUM:
-            self.handleSetDatum()
-        elif op == self.SET_LINKS:
-            self.handleSetNodeLinks()
         elif op == self.SET_COMPLETED:
             self.handleSetCompleted()
         elif op == self.SET_ALL_INCOMPLETE:
@@ -1598,7 +1580,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not self._lock():
             return
 
-        # make sure this is not an accident
+        # make sure this was not an accident
         result = PyGlassBasicDialogManager.openYesNo(
                 self,
                 u'CONFIRMATION REQUIRED',
@@ -1682,50 +1664,33 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._unlock()
 
 #_______________________________________________________________________________
-    def handleLongitudinalUncertaintySbx(self):
-        """ This spinbox shows the CSV dx track proxy.  Note that longitude
-            refers to Z in Maya and X in the simulator. """
-
-        print('in handleLongitudeUncertaintySbx')
-#_______________________________________________________________________________
     def handleSelect1Btn(self):
         """ The various options for track selection are dispatched from here.
             The UI locking occurs within the specific handlers. """
 
         if self.selectBy1Cmbx.currentText() == self.FETCH_TRACK_BY_NAME:
             self.handleFetchByName()
-        elif self.selectBy1Cmbx.currentText() ==\
-                self.FETCH_TRACK_BY_INDEX:
+        elif self.selectBy1Cmbx.currentText() == self.FETCH_TRACK_BY_INDEX:
             self.handleFetchByIndex()
-        elif self.selectBy1Cmbx.currentText() ==\
-                self.SELECT_TRACK_BY_INDEX:
+        elif self.selectBy1Cmbx.currentText() == self.SELECT_TRACK_BY_INDEX:
             self.handleSelectByIndex()
-        elif self.selectBy1Cmbx.currentText() ==\
-                self.SELECT_TRACK_BY_NAME:
+        elif self.selectBy1Cmbx.currentText() == self.SELECT_TRACK_BY_NAME:
             self.handleSelectByName()
-        elif self.selectBy1Cmbx.currentText() ==\
-                self.SELECT_TRACK_BY_UID:
+        elif self.selectBy1Cmbx.currentText() == self.SELECT_TRACK_BY_UID:
             self.handleSelectByUid()
-        elif self.selectBy1Cmbx.currentText() ==\
-                self.SELECT_SERIES:
+        elif self.selectBy1Cmbx.currentText() == self.SELECT_SERIES:
             self.handleSelectSeries()
-        elif self.selectBy1Cmbx.currentText() ==\
-                self.SELECT_SERIES_AFTER:
+        elif self.selectBy1Cmbx.currentText() == self.SELECT_SERIES_AFTER:
             self.handleSelectSeriesAfter()
-        elif self.selectBy1Cmbx.currentText() ==\
-                self.SELECT_SERIES_BEFORE:
+        elif self.selectBy1Cmbx.currentText() == self.SELECT_SERIES_BEFORE:
             self.handleSelectSeriesBefore()
-        elif self.selectBy1Cmbx.currentText() ==\
-                self.SELECT_ALL_COMPLETED:
+        elif self.selectBy1Cmbx.currentText() == self.SELECT_ALL_COMPLETED:
             self.handleSelectCompleted(True)
-        elif self.selectBy1Cmbx.currentText() ==\
-                self.SELECT_ALL_INCOMPLETE:
+        elif self.selectBy1Cmbx.currentText() == self.SELECT_ALL_INCOMPLETE:
             self.handleSelectCompleted(False)
-        elif self.selectBy1Cmbx.currentText() ==\
-                self.SELECT_NEXT_INCOMPLETE:
+        elif self.selectBy1Cmbx.currentText() == self.SELECT_NEXT_INCOMPLETE:
             self.handleSelectNextIncomplete()
-        elif self.selectBy1Cmbx.currentText() ==\
-                self.SELECT_ALL_MARKED:
+        elif self.selectBy1Cmbx.currentText() == self.SELECT_ALL_MARKED:
             self.handleSelectMarked(True)
 
         self.refreshTrackCountsUI()
@@ -2098,7 +2063,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not self._lock():
             return
 
-        # make sure this is not an accident
+        # make sure this is intentional
         result = PyGlassBasicDialogManager.openYesNo(
                 self,
                 u'CONFIRMATION REQUIRED',
@@ -2118,14 +2083,12 @@ class TrackwayManagerWidget(PyGlassWidget):
             track = self._trackwayManager.getTrackByUid(uid)
             track.completed = False
 
-        # now select the track corresponding to the first UID in the list of
-        # UIDs
+        # now select the track corresponding to the first UID
         self._trackwayManager.selectTrack(
             self._trackwayManager.getTrackByUid(uids[0]))
 
         self._trackwayManager.closeSession(commit=True)
         self._unlock()
-
 
 #_______________________________________________________________________________
     def handleSetTrackCompleted(self):
@@ -2141,8 +2104,7 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._unlock()
             return
 
-        # otherwise update this track from the Maya node and set this track as
-        # completed
+        # otherwise update this track from the Maya node and set it completed
         track = selectedTracks[0]
         track.updateFromNode()
         track.completed = True
@@ -2174,44 +2136,6 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._trackwayManager.setCameraFocus()
 
         self._unlock()
-#_______________________________________________________________________________
-    def handleSetDatum(self):
-        """ Set the datum attribute in all nodes for the entire track series
-            based on the given selection.  The datum value is the disparity
-            etween track width and measured track width. """
-
-        if not self._lock():
-            return
-
-        tracks = self._trackwayManager.getSelectedTracks()
-        if not tracks:
-            self._unlock()
-            return
-
-        # set the datum attribute in the track nodes for these tracks
-        self._trackwayManager.setNodeDatum(tracks)
-
-        self._trackwayManager.closeSession(commit=True)
-        self._unlock()
-
-#_______________________________________________________________________________
-    def handleSetNodeLinks(self):
-        """ Sets the prev and next links in the selected track nodes. """
-
-        if not self._lock():
-            return
-
-        tracks = self._trackwayManager.getSelectedTracks()
-        if not tracks:
-            self._unlock()
-            return
-
-        # set the prev and next attributes in the track nodes for these tracks
-        self._trackwayManager.setNodeLinks(tracks)
-
-        self._trackwayManager.closeSession(commit=True)
-        self._unlock()
-
 
 #_______________________________________________________________________________
     def handleSetToMeasuredDimensions(self):
@@ -2343,10 +2267,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #_______________________________________________________________________________
     def handleShowTrackwayBtn(self, visible=True):
-        """ With the tracks comprising each trackway (e.g., S18) placed in their
-            own layer, with a corresponding layer name (e.g., S18_layer) the
-            visibility of each trackway is controlled by the corresponding layer
-            visiblity. """
+        """ The visibility of each trackway is controlled by placing tracks in
+            a corresponding layer (e.g., S18_layer). """
 
         if not self._lock():
             return
@@ -2575,9 +2497,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
 #_______________________________________________________________________________
     def handleSvgSaveBtn(self):
-        """ The currently open Cadence drawing (SVG file) is written here after
-            pressing "Save". If no Cadence drawing is already open, this
-            complains and returns. """
+        """ The currently open Cadence drawing (SVG file) is written. If no
+            Cadence drawing is already open, this complains and returns. """
 
         if not self._lock():
             return
@@ -2744,76 +2665,12 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._unlock()
 
 
-
-
-
 #===============================================================================
-#                                         P R O X Y  T R A C K  H A N D L E R S
+#                                             S C E N A R I O   H A N D L E R S
 #
 #_______________________________________________________________________________
-    def addEntry(self, e):
-        """ A dictionary is created by parsing out the 6 components of the list
-            e (the ordered list of strings representating of a track entry that
-            is read in from the CSV file). Coming in directly from a csv file,
-            the list e might correspond to an empty entry (i.e., consist of 6
-            empty lists).  That would occur when a trackway has not yet been
-            assigned proxies for the missing tracks.  Once the trackway has been
-            assigned proxies, and saved as a csv simulation file, and re-read,
-            then each track entry will represent either a track or a proxy track
-            created to fill in for missing tracks. A proxy entry is signified by
-            a uid which is the name concantenated with '_proxy'.  An
-            entry consists of a dictionary with keys name, uid, x, dx, y, and
-            dy. If e corresponds to a non-empty entry, that information is
-            converted to a dictionary-based entry which is then added to
-            entries, itself a dictionary with 4 keys corresponding to the 4
-            possible combinations of foot and side (lp, rp, lm, and rm). """
-
-        (name, uid, x, dx, y, dy) = e
-        if not name:
-            return
-
-        # next decompose the name into its parts
-        (site,
-         layer,
-         year,
-         section,
-         trackwayType,
-         trackwawyNumber,
-         side,
-         foot,
-         number) = name.split("-")
-
-        # and now make the entry, which is a dictionary
-        entry = dict(
-            [('name', name),
-             ('uid',  uid),
-             ('x',    float(x)),
-             ('dx',   float(dx)),
-             ('y',    float(y)),
-             ('dy',   float(dy)),
-             ('n',    int(number))])
-
-        side = side.lower()
-        foot = foot.lower()
-        limb_id = side + foot
-        self.entries[limb_id].append(entry)
-        return entry
-
-#_______________________________________________________________________________
-    def getEntry(self, limb_id, trackNumber):
-        """ For the entries for a given limb_id (e.g., 'lm') this either
-            returns the corresponding entry (as a dictionary) for that track
-            number, or None. """
-
-        for entry in self.entries[limb_id]:
-            if entry['n'] == trackNumber:
-                return entry
-        return None
-
-#_______________________________________________________________________________
-    def handleInitializeProxiesBtn(self):
-        """ This creates all the track proxies for tracks missing from the given
-            trackway. """
+    def handleLoadScenarioBtn(self):
+        """ This loads a trackway scenario file via the scenario manager. """
 
         if not self._lock():
             return
@@ -2823,298 +2680,215 @@ class TrackwayManagerWidget(PyGlassWidget):
             self._unlock()
             return
 
-        # set up a trackway fingerprint (same as track fingerprint up to the
-        # track number), e.g., CRO-500-2004-1-S-6.
-        trackwayFingerprint = self.siteLE.text() + '-' +\
-                              self.levelLE.text() + '-' +\
-                              self.yearLE.text() + '-' +\
-                              self.sectorLE.text() + '-' +\
-                              self.trackwayLE.text()[0] + '-' +\
-                              self.trackwayLE.text()[1:]
-        trackwayFingerprint = trackwayFingerprint.upper()
+        # compose the trackway, e.g., CRO-500-2004-1-S-6, from the UI.
+        trackway = (
+            self.siteLE.text() + '-' +
+            self.levelLE.text() + '-' +
+            self.yearLE.text() + '-' +
+            self.sectorLE.text() + '-' +
+            self.trackwayLE.text()[0] + '-' +
+            self.trackwayLE.text()[1:]).upper()
 
-        path   = '~/Dropbox/A16/Simulation/data/' +\
-                 trackwayFingerprint +\
-                 '/source.csv'
-        file   = open(os.path.expanduser(path))
-        reader = csv.reader(file)
+        # now read the scenario file, which converts the CSV-format contents
+        # into scenario instance within the scenarioManager.
 
-        # open the source file and skip over the header row
-        reader.next()
-        # these will accumulate the numbers of the first and last tracks
-        self.nMin = 10000
-        self.nMax = -10000
-
-        # entries is a dictionary with key limb_id ('lp', 'rp', 'lm' or 'rm')
-        # each with a corresponding list of entries.  All keys are lowercase.
-        self.entries = dict(lp=[], rp=[], lm=[], rm=[])
-
-        for row in reader:
-            # each incoming row is a list of 24 strings, with the first 6
-            # corresponding to the left pes, the next 6 to the right pes, and
-            # so forth.  Note that a missing track is represented by six empty
-            # strings.
-
-            # add each non-empty entry (lp, rp, lm, or rm) to entries, and
-            # update nMin and nMax on the fly. These are the existing tracks.
-
-            for e in [row[1:7], row[7:13], row[13:19], row[19:25]]:
-                entry = self.addEntry(e)
-                # if a valid new entry was jsut created, update nMin and nMax
-                if entry:
-                    name = entry['name']
-                    n = int(name.split("-")[-1]) if name else None
-                    self.nMin = min(self.nMin, n)
-                    self.nMax = max(self.nMax, n)
-
-        # check them out
-        for l in ['lp', 'rp', 'lm', 'rm']:
-            print('%s' % l)
-            for entry in self.entries[l]:
-                print(entry)
-            print()
-        print("nMin = %s and nMax = %s" % (self.nMin, self.nMax))
-
-        # now add the proxy entries as needed to fill out each list from nMin to
-        # nMax.
-
-        # in this first version, locate the first left pes track in this
-        # trackway and put the others just to the side of it.
-        x0 = 0.0
-        y0 = 0.0
-        for n in range(self.nMin, self.nMax + 1):
-            entry = self.getEntry('lp', n)
-            if entry:
-                x0 = entry['x']
-                y0 = entry['y']
-            break
-
-        # now place the proxies at (x0, y0) plus an offset based on n
-        limb_id = 'lp'
-        for limb_id in ['lp', 'rp', 'lm', 'rm']:
-            for n in range(self.nMin, self.nMax + 1):
-                entry = self.getEntry(limb_id, n)
-                # see if we need to make a proxy
-                if not entry:
-                    # first compose the name with and ending of '_proxy'
-                    side = limb_id[0].upper()
-                    limb = limb_id[1].upper()
-                    name = format('%s-%s-%s-%s' %
-                                  (trackwayFingerprint, side, limb, n))
-                    uid = name + '_proxy'
-                    x = x0 + n*1.0
-                    y = y0 + n*1.0
-                    dx = 10
-                    dy = 10
-                    e = (name, uid, x, dx, y, dy)
-                    proxy = self.addEntry(e)
-                    print('added proxy = %s' % proxy)
-
-        # now create proxy nodes
-        for limb_id in ['lp', 'rp', 'lm', 'rm']:
-            for n in range(self.nMin, self.nMax + 1):
-                entry = self.getEntry(limb_id, n)
-                if not entry:
-                    continue
-                if entry['uid'].endswith('_proxy'):
-                    print("found a proxy %s" % entry)
-
-                props = dict()
-                TPE = TrackPropEnum
-                props[TPE.UID.maya]    = uid
-                props[TPE.WIDTH.maya]  = 10.0
-                props[TPE.LENGTH.maya] = 10.0
-                # change coordinates from CSV (X, Y) to Maya (X, Z)
-                props[TPE.X.maya] = 0.0
-                props[TPE.Z.maya] = 0.0
-
-                self._trackwayManager.createProxyNode(uid, props)
-
+        path = format('%s/%s/%s' % (
+            '~/Dropbox/A16/Simulation/data/',
+            trackway,
+            'source.csv'))
+        self._scenarioManager.loadScenario(trackway, path)
 
         self._unlock()
 
 #_______________________________________________________________________________
-    def handleProxyPullBtn(self):
+    def handleSaveScenarioBtn(self):
+        """ This writes the cvs file into the same folder, but as
+            'modified.csv' """
+
+        if not self._lock():
+            return
+
+        self._scenarioManager.writeScenarioFile()
+
+        self._unlock()
+
+#_______________________________________________________________________________
+    def handleCreateProxies(self):
+        """ This adds proxy entries for missing pes entries.  Only the proxy
+            entries are created, not their tokens. """
+
+        if not self._lock():
+            return
+
+        self._scenarioManager.createPesProxies()
+        self._scenarioManager.createManusProxies()
+
+        self._unlock()
+
+#_______________________________________________________________________________
+    def handleCreateTokens(self, tracks =True, proxies =True):
+        """ This creates tokens for entries in the trackway scenario, for
+            tracks, or proxies, or both. """
+
+        if not self._lock():
+            return
+
+        for entry in self._scenarioManager.getEntries(tracks, proxies):
+            self._trackwayManager.createToken(entry)
+
+        self._unlock()
+
+#_______________________________________________________________________________
+    def handlePullAllTokensBtn(self):
         """ Pull data from the proxy nodes and update the UI. """
 
         if not self._lock():
             return
 
-        print('in handleProxyPullBtn')
+        print('in handlePullAllTokensBtn')
 
-        # load up a dictionary with everything for proxy including track
-        # number and etc. from fingerprint.
+        # look through some list of all tokens, and for each, pull the
+        # value and update the entry for that token.
 
         self._unlock()
 
 #_______________________________________________________________________________
     def handleXSbx(self):
-        """ This spinbox displays the X coordiante of the given track proxy.
-            Note that the X coordinate for the simulator corresponds to Z in
-            Maya. """
-
-        print('in handleXSbx')
-
-#_______________________________________________________________________________
-    def handleYSbx(self):
-        """ This spinbox displays the Y coordiante of the given track proxy.
-            Note that the X coordinate for the simulator corresponds to X in
-            Maya. """
-
-        print('in handleYbx')
-#_______________________________________________________________________________
-    def handleDxSbx(self):
-        """ This spinbox shows dx, the uncertainty in x, of the given track
-            proxy. """
-
-        print('in handleDxSbx')
-
-#_______________________________________________________________________________
-    def handleDySbx(self):
-        """ This spinbox shows dy, the uncertainty in y, of the given track
-            proxy. """
-
-        print('in handleDySbx')
-
-#_______________________________________________________________________________
-    def handlePullProxyBtn(self):
-        """ The transform data in the selected proxy node(s) is used to populate
-            the trackway UI and the proxy UI. Note that if multiple track nodes
-            are selected, the last such node is used to extract data for the
-            trackway UI(but the fields of the track UI are cleared). """
+        """ This spinbox displays the (scenario) X coordinate of the given token
+            (which corresponds to Z in Maya). """
 
         if not self._lock():
             return
 
-        selectedTracks = self._trackwayManager.getSelectedTracks()
-        if not selectedTracks:
-            self.clearTrackwayUI()
-            self.clearTrackUI()
-            self._unlock()
-            return
+        print('in handleXSbx')
 
-        track = selectedTracks[-1]
-
-        # once a proxy is selected in Maya, get it's properties from the
-        # track set, then fill out a dictionary from the proxy's fingerprint.
-
-        props = track.toDict()
-        self.refreshTrackwayUI(props)
-
-        if len(selectedTracks) == 1:
-            self.refreshTrackUI(props)
-        else:
-            self.clearTrackUI()
-
-        self._trackwayManager.closeSession(commit=True)
         self._unlock()
 
 #_______________________________________________________________________________
-    def ProxyFingerprintFromUI(self):
-        """ Returns a dictionary of trackway properties, extracted from the UI.
-            The trackway type and number are included only if the trackway line
-            edit field is non-empty.  Note that a proxy track's uid is based on
-            the proxy track's fingerprint. """
+    def handleYSbx(self):
+        """ This spinbox displays the (scenario) Y coordinate of the given token
+            (which corresponds to X in Maya). """
 
-        fingerprint = (
-            self.siteLE.text() + '-' +
-            self.yearLE.text() + '-' +
-            self.sectorLE.text() + '-' +
-            self.levelLE.text() + '-' +
-            self.trackwayLE.text()[0] + '-' +
-            self.trackwayLE.text()[1:])
-        return fingerprint
+        if not self._lock():
+            return
+
+        print('in handleYSbx')
+
+        self._unlock()
 
 #_______________________________________________________________________________
-    def refreshProxyUI(self, props):
-        """ The proxy track properties are taken from the dictionary props and
-            used to update the UI. """
+    def handleDxSbx(self):
+        """ This spinbox shows dx, the uncertainty in X, of the given token. """
 
-        self.xSbx.setValue(100.0*props[TrackPropEnum.Z.maya])
-        self.dxSbx.setValue(100.0*props[TrackPropEnum.X.maya])
-        self.ySbx.setValue(100.0*props[TrackPropEnum.LENGTH.maya])
-        self.dySbx.setValue(100.0*props[TrackPropEnum.WIDTH.maya])
+        if not self._lock():
+            return
 
-#_______________________________________________________________________________
-    def handleSaveProxiesBtn(self):
-        """ This writes the cvs file into the same folder, but as
-            'modified.csv' """
+        print('in handleDxSbx')
 
-
-        # path2  = '~/Dropbox/A16/Simulation/data/' + fileName + '/modified.csv'
-        # file2  = open(os.path.expanduser(path2),'w')
-        # writer = csv.writer(file2)
-        #
-        # for row in rows:
-        #     writer.writerow(row)
-        #
-        # file2.close()
-        #
-        # reader2 = csv.reader(file2)
-        # print('now reading back again')
-        # for row in reader2:
-        #     print(row)
-        #
-
-        pass
+        self._unlock()
 
 #_______________________________________________________________________________
-    def writeSimFile(self, entries):
-        """ Saves the CSV-format simulation file for a given trackway, after
-            editing the proxies in that trackway.  It creates an instance of a
-            CsvWriter, matching the format used in reading csv simulation files.
-            Based on SimulationExporterStage. """
+    def handleDySbx(self):
+        """ This spinbox shows dy, the uncertainty in Y, of the given token. """
 
-        ################## note:
+        if not self._lock():
+            return
 
-        csv = CsvWriter(
-            autoIndexFieldName='Index',
-            fields=[
-                'lp_name', 'lp_uid', 'lp_x', 'lp_dx', 'lp_y', 'lp_dy',
-                'rp_name', 'rp_uid', 'rp_x', 'rp_dx', 'rp_y', 'rp_dy',
-                'lm_name', 'lm_uid', 'lm_x', 'lm_dx', 'lm_y', 'lm_dy',
-                'rm_name', 'rm_uid', 'rm_x', 'rm_dx', 'rm_y', 'rm_dy'])
+        print('in handleDySbx')
 
-        length = max(
-            len(self.entries['lp']),
-            len(self.entries['rp']),
-            len(self.entries['lm']),
-            len(self.entries['rm']))
-
-        # this has to compose the limb_id and pre-pend it to
-
-
-        for index in range(length):
-            items = []
-            for limb_id, entries in self.entries.items():
-                if index < len(entries):
-                    items += entries[index].items()
-                else:
-                    items += self._create_entry(limb_id).items()
-            csv.addRow(dict(items))
-
-        path = '~/Dropbox/A16/Simulation/data/' +\
-               self.trackwayFingerprint +\
-               '/modified.csv'
-        if csv.save(path):
-            print('writeSimFile:  Successfully wrote:', path)
-        else:
-            print('writeSimFile:  Unable to save CSV at "{}"'.format(path))
+        self._unlock()
 
 #_______________________________________________________________________________
-    def PropsToFingerprint(self, props):
-        pass
+    def handlePullSelectedTokenBtn(self):
+        """ The transform data in the selected token node is used to populate
+            the token UI.  The corresponding scenario entry is also updated. """
+
+        if not self._lock():
+            return
+
+        uid = self._trackwayManager.getSelectedTokenUid()
+
+        if not uid:
+            return
+
+        # update the UI and the entry based on the token
+        props = self._trackwayManager.getTokenProps(uid)
+        self.refreshTokenUI(props)
+        self._scenarioManager.setProps(uid, props)
+
+        self._unlock()
+
 #_______________________________________________________________________________
-    def createFingerprint(self, trackwayFingerprint, limb_id, trackNumber):
-        """ Given a limb_id (e.g., 'lp'), and a track number (e.g., 2), returns
-            a string based on the trackway fingerprint (e.g.,
-            'CRO-500-2004-1-S-6'), returns a complete fingerprint, e.g.,
-            CRO-500-2004-1-S-6-L-P-2. """
+    def handleInsertTokenBtn(self):
 
-        return trackwayFingerprint + '-' +\
-               limb_id[0] + '-' +\
-               limb_id[1] + '-' + trackNumber
+        if not self._lock():
+            return
 
+        tokenUid = self._trackwayManager.getSelectedTokenUid()
+        print("tokenUID = %s" % tokenUid)
+        print('entered handleInsertTokenBtn for %s %s %s' %
+              (self.leftRightCmbx.currentText(),
+               self.manusPesCmbx.currentText(),
+               self.beforeAfterCmbx.currentText()))
+
+        self._unlock()
+
+#_______________________________________________________________________________
+    def handleScenarioOpBtn(self):
+        """ A number of operations can be performed on trackway scenarios. """
+
+        op = self.scenarioOpCmbx.currentText()
+        if op == self.CREATE_PROXIES:
+            self.handleCreateProxies()
+        elif op == self.CREATE_TOKENS:
+            self.handleCreateTokens()
+
+
+#_______________________________________________________________________________
+    def handleDeleteTokenBtn(self):
+
+        if not self._lock():
+            return
+
+        print('entered handleDeleteTokenBtn')
+
+        self._unlock()
+
+#_______________________________________________________________________________
+    def clearTokenUI(self):
+        """ The token UI is cleared to all zeroes. """
+
+        self.xSbx.setValue(0)
+        self.dxSbx.setValue(0)
+        self.ySbx.setValue(0)
+        self.dySbx.setValue(0)
+
+#_______________________________________________________________________________
+    def refreshTokenUI(self, props):
+        """ The token UI is updated from properties taken from the props.  The
+            units are the same as used in the scenario manager's entries, based
+            on meters, not the centimeters of the Maya scene."""
+
+        self.xSbx.setValue(props['x'])
+        self.dxSbx.setValue(props['dx'])
+        self.ySbx.setValue(props['y'])
+        self.dySbx.setValue(props['dy'])
+
+        self.trackNameLE.setText(self.shortName(props['uid']))
+        self.indexLE.setText('')
+        self.uidLE.setText(props['uid'])
+
+#_______________________________________________________________________________
+    def shortName(self, uid):
+        """ A UID (e.g., CRO-500-2004-1-S-6-R-P-6, or the simpler form R-P-6
+            with no trackway information provided), may also have the suffix
+            '_proxy'.  This function returns the short name RP6. """
+
+        uid = uid.split('_')[0]
+        components = uid.split('-')
+        if len(components) > 2:
+            return (components[-3] + components[-2] + components[-1])
+        return None
 
 
 #===============================================================================
@@ -3144,7 +2918,6 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         # display summary counts of loaded, completed, and selected tracks
         self.refreshTrackCountsUI()
-
 
 #_______________________________________________________________________________
     def _deactivateWidgetDisplayImpl(self, **kwargs):

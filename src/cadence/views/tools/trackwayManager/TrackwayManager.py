@@ -17,10 +17,11 @@ from cadence.models.tracks.Tracks_SiteMap import Tracks_SiteMap
 from cadence.util.maya.MayaUtils import MayaUtils
 from cadence.mayan.trackway import GetSelectedUidList
 from cadence.mayan.trackway import GetUidList
-from cadence.mayan.trackway import GetTrackNodeData
-from cadence.mayan.trackway import SetNodeDatum
-from cadence.mayan.trackway import SetNodeLinks
-from cadence.mayan.trackway import CreateProxyNode
+from cadence.mayan.trackway import GetTrackNodeProps
+from cadence.mayan.trackway import CreateToken
+from cadence.mayan.trackway import UpdateToken
+from cadence.mayan.trackway import GetTokenProps
+
 #_______________________________________________________________________________
 class TrackwayManager(object):
     """ This class provides access to the database and to the Maya scene. Tracks
@@ -41,7 +42,7 @@ class TrackwayManager(object):
 
 #_______________________________________________________________________________
     def __init__(self):
-        self._session = None
+        self._session  = None
 
 #===============================================================================
 #                                                                   P U B L I C
@@ -69,18 +70,14 @@ class TrackwayManager(object):
 
 #_______________________________________________________________________________
     def getAllTracksInMaya(self):
-        """ Returns a list of all tracks that are currently loaded into
-            Maya. """
+        """ Returns a list of all tracks are currently loaded into Maya. """
 
         uidList = self.getUidList()
 
-        # and from this list of UIDs, compile the corresponding list of track
-        # instances
-        tracks  = []
+        # compile the corresponding list of track node instances
+        tracks  = list()
         for uid in uidList:
             tracks.append(self.getTrackByUid(uid))
-
-        print('length of tracks from getAllTracksInMaya = %s' % len(tracks))
 
         self.closeSession()
         return tracks if len(tracks) > 0 else None
@@ -145,7 +142,7 @@ class TrackwayManager(object):
         size    = 200
         iMax    = len(uidList)/size
         i       = 0
-        entries = []
+        entries = list()
 
         session = self._getSession()
         while i < iMax:
@@ -170,7 +167,7 @@ class TrackwayManager(object):
 #_______________________________________________________________________________
     def getLastTrack(self):
         """ Returns the track model corresponding to the last track in a
-            series. """
+            track sequence. """
 
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
@@ -186,8 +183,9 @@ class TrackwayManager(object):
 
 #_______________________________________________________________________________
     def getLastSelectedTrack(self):
-        """ Returns the track model corresponding to the last of a series of
+        """ Returns the track model corresponding to the last of a sequence of
             selected nodes. """
+
         selectedTracks = self.getSelectedTracks()
         if not selectedTracks:
             return None
@@ -245,11 +243,12 @@ class TrackwayManager(object):
         if len(selectedUidList) == 0:
             return None
 
-        tracks = []
+        tracks = list()
         for uid in selectedUidList:
             track = self.getTrackByUid(uid)
-            track.updateFromNode()
-            tracks.append(track)
+            if track:
+                track.updateFromNode()
+                tracks.append(track)
         return tracks
 
 #_______________________________________________________________________________
@@ -305,7 +304,7 @@ class TrackwayManager(object):
 
         conn   = nimble.getConnection()
         result = conn.runPythonModule(
-            GetTrackNodeData,
+            GetTrackNodeProps,
             uid=track.uid,
             nodeName=track.nodeName,
             runInMaya=True)
@@ -331,7 +330,7 @@ class TrackwayManager(object):
 #_______________________________________________________________________________
     def getTracksAfter(self, track):
         """ This returns all tracks that are subsequent to a given specified
-            track. If track is the last track in the series (or an isolated
+            track.  If track is the last track in the sequeunce (or an isolated
             track), it returns None, rather than the empty list. """
 
         track = self.getNextTrack(track)
@@ -339,7 +338,7 @@ class TrackwayManager(object):
         if not track:
             return None
 
-        tracks = []
+        tracks = list()
         while track:
             tracks.append(track)
             track = self.getNextTrack(track)
@@ -349,7 +348,7 @@ class TrackwayManager(object):
 #_______________________________________________________________________________
     def getTracksBefore(self, track):
         """ This returns all tracks that are before a given specified track.  If
-            track is the first track in the series (or an isolated track), it
+            track is the first track in the sequence (or an isolated track), it
             returns None, rather than the empty list. """
 
         track = self.getPreviousTrack(track)
@@ -357,7 +356,7 @@ class TrackwayManager(object):
         if not track:
             return None
 
-        tracks = []
+        tracks = list()
         while track:
             tracks.append(track)
             track = self.getPreviousTrack(track)
@@ -372,7 +371,7 @@ class TrackwayManager(object):
         if not track:
             return None
 
-        series = []
+        series = list()
 
         tracksBefore = self.getTracksBefore(track)
         if tracksBefore:
@@ -396,7 +395,7 @@ class TrackwayManager(object):
         size    = 200
         iMax    = len(uidList)/size
         i       = 0
-        tracks  = []
+        tracks  = list()
         type    = trackwayName[0]
         number  = trackwayName[1:]
 
@@ -440,7 +439,7 @@ class TrackwayManager(object):
 
         # that list of track instances will be used to compile all trackway
         # names (with duplicates)
-        trackwayNames = []
+        trackwayNames = list()
         for track in tracks:
             trackwayName = '%s%s' % (track.trackwayType, track.trackwayNumber)
             trackwayNames.append(trackwayName)
@@ -456,10 +455,11 @@ class TrackwayManager(object):
         """ Returns a dictionary of trackway properties associated with a given
             track. """
 
-        props = { TrackPropEnum.SITE.name:track.site,
-                  TrackPropEnum.LEVEL.name:track.level,
-                  TrackPropEnum.YEAR.name:track.year,
-                  TrackPropEnum.SECTOR.name:track.sector }
+        props = {
+            TrackPropEnum.SITE.name:track.site,
+            TrackPropEnum.LEVEL.name:track.level,
+            TrackPropEnum.YEAR.name:track.year,
+            TrackPropEnum.SECTOR.name:track.sector }
         return props
 
 #_______________________________________________________________________________
@@ -468,7 +468,7 @@ class TrackwayManager(object):
             in the trackway layers. """
 
         layers = cmds.ls( type='displayLayer')
-        nodes  = []
+        nodes  = list()
         for layer in layers:
             if layer.endswith(self.LAYER_SUFFIX):
                nodes.extend(cmds.editDisplayLayerMembers(
@@ -492,7 +492,7 @@ class TrackwayManager(object):
         """ Given a list of tracks, first compiles a list of track nodes then
             has Maya select them. """
 
-        nodes= []
+        nodes = list()
         for t in tracks:
             nodes.append(self.getTrackNode(t))
 
@@ -503,8 +503,8 @@ class TrackwayManager(object):
 #_______________________________________________________________________________
     def selectSeriesAfter(self, track):
         """ Selects all tracks in a sequence after a given specific track. """
-        tracks = self.getTracksAfter(track)
 
+        tracks = self.getTracksAfter(track)
 
         if tracks:
             self.selectTracks(tracks)
@@ -528,104 +528,76 @@ class TrackwayManager(object):
         if tracks:
             self.selectTracks(tracks)
 
-
 #===============================================================================
-#                                                 N O D E   O P E R A T I O N S
+#                                       M A Y A  T O K E N  O P E R A T I O N S
 #
 #_______________________________________________________________________________
-    def setNodeDatum(self, tracks):
-        """ For each track, compute some value that will be associated with the
-            'datum' attribute of its corresponding node. A list of (node, value)
-             pairs will be passed, where the node is the actual Maya node name
-             (string). """
+    def createToken(self, entry):
+        """ Create a token in Maya, using the uid and properties specified in
+            the entry. """
 
-        nodeValuePairs = list()
-
-        if not tracks:
-            return
-
-        for track in tracks:
-            node  = self.getTrackNode(track)
-            value = track.width - track.widthMeasured
-            nodeValuePairs.append((node, value))
-
-        # now send them off to be linked up by the remote module
         conn   = nimble.getConnection()
         result = conn.runPythonModule(
-            SetNodeDatum,
-            nodeValuePairs=nodeValuePairs,
+            CreateToken,
+            uid=entry['uid'],
+            props=entry,
             runInMaya=True)
-
-        # Check to see if the remote command execution was successful
-        if not result.success:
-            PyGlassBasicDialogManager.openOk(
-                self,
-                'Failed in setNodeDatum',
-                'Unable to add datum values to specified track nodes',
-                'Error')
-            return None
-
-#_______________________________________________________________________________
-    def setNodeLinks(self, tracks):
-        """ For each track in the specified list of tracks, its previous and
-            next tracks are determined, then the track nodes for these three
-            tracks are bundled in a tuple (thisNode, prevNode, nextNode) and
-            appended to a list of such tuples. That list is then sent to Maya to
-            be remotely executed by the SetNodeLinks module. """
-
-        # start a list of tuples, each specifying a node and its prev and next
-        # nodes
-        nodeLinks = list()
-
-        if not tracks:
-            return
-
-        for track in tracks:
-            thisNode = self.getTrackNode(track)
-
-            prevTrack = self.getPreviousTrack(track)
-            prevNode  = self.getTrackNode(prevTrack) if prevTrack else None
-
-            nextTrack = self.getNextTrack(track)
-            nextNode  = self.getTrackNode(nextTrack) if nextTrack else None
-
-            nodeLinks.append((thisNode, prevNode, nextNode))
-
-        # now send them off to be linked up by the remote module
-        conn   = nimble.getConnection()
-        result = conn.runPythonModule(
-            SetNodeLinks,
-            nodeLinks=nodeLinks,
-            runInMaya=True)
-
-        # Check to see if the remote command execution was successful
-        if not result.success:
-            PyGlassBasicDialogManager.openOk(
-                self,
-                'Failed in setNodeLinks',
-                'Unable to add prev and next links to specified track nodes',
-                'Error')
-            return None
-
-
-#===============================================================================
-#                                                P R O X Y  O P E R A T I O N S
-#
-#_______________________________________________________________________________
-    def createProxyNode(self, uid, props =None):
-        conn = nimble.getConnection()
-        print("in createProxyNode, props = %s" % props)
-        result = conn.runPythonModule(
-            CreateProxyNode,
-            uid=uid,
-            props=props,
-            runInMaya=False)
 
         if result.payload.get('error'):
-            print('Error in createProxyNode:', result.payload.get('message'))
+            print('Error in createToken:', result.payload.get('message'))
             return False
 
-        return result.payload.get('nodeName')
+# ______________________________________________________________________________
+    def getSelectedTokenUid(self):
+        """ This returns the URL of the currently selected token, or None. """
+
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(GetSelectedUidList, runInMaya=True)
+
+        # Check to see if the remote command execution was successful
+        if not result.success:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                'Failed UID Query',
+                'Unable to get selected UID list from Maya',
+                'Error')
+            return None
+
+        # from this UID list, create the corresponding track list
+        selectedUidList = result.payload['selectedUidList']
+        if len(selectedUidList) == 0:
+            return None
+        return selectedUidList[0]
+
+#_______________________________________________________________________________
+    def getTokenProps(self, uid):
+        """ This returns a dictionary of properties from the Maya token
+            specified by the uid, or an error if it does not exist.  This
+            function treats a token and a track node as equivalent. """
+
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(GetTokenProps, uid=uid, runInMaya=True)
+
+        if result.payload.get('error'):
+            print('Error in getTokenProps:', result.payload.get('message'))
+            return False
+
+        return result.payload.get('props')
+
+#_______________________________________________________________________________
+    def setTokenProps(self, uid, props):
+        """ This sets the attributes in the Maya token based on the properties
+            of the props dictionary that is passed. """
+
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(
+            UpdateToken,
+            uid=uid,
+            props=props,
+            runInMaya=True)
+
+        return result.success
+
 
 #===============================================================================
 #                                               C U R V E S   A N D   P A T H S
@@ -637,13 +609,12 @@ class TrackwayManager(object):
             tracks that are still at the origin. The path is specified as a list
             of 3D points, with the y coordinate zeroed out."""
 
-        path = []
+        path = list()
         for track in tracks:
             if not track.hidden and track.x != 0.0 and track.z != 0.0:
                 path.append((track.x, 0.0, track.z))
 
         curve = cmds.curve(point=path, degree=degree)
-
         layer = self.PATH_LAYER
 
         self.createLayer(layer)
@@ -654,8 +625,10 @@ class TrackwayManager(object):
         """ Deletes all curves that have been placed in the PATH_LAYER. """
         curves = cmds.editDisplayLayerMembers(
             self.PATH_LAYER, query=True, noRecurse=True)
+
         for curve in curves:
             cmds.delete(curve)
+
         cmds.delete(self.PATH_LAYER)
 
 
@@ -718,6 +691,7 @@ class TrackwayManager(object):
 
         cmds.viewFit(fitFactor=self.FIT_FACTOR, animate=True)
 
+
 #===============================================================================
 #                                 D I S P L A Y   L A Y E R   U T I L I T I E S
 #
@@ -771,7 +745,7 @@ class TrackwayManager(object):
         """ Populates the specified display layer with the track nodes
             corresponding to the specified tracks. """
 
-        nodes = []
+        nodes = list()
         for track in tracks:
             trackNode = self.getTrackNode(track)
             if trackNode:
@@ -790,14 +764,9 @@ class TrackwayManager(object):
         if useExisting and cmds.objExists(layer):
             return
 
-        # Since nothing should be selected when creating a new display layer,
-        # save selection
         priorSelection = MayaUtils.getSelectedTransforms()
-
         cmds.select(clear=True)
         cmds.createDisplayLayer(name=layer)
-
-        #  Restore the prior state of selection
         MayaUtils.setSelection(priorSelection)
 
 #_______________________________________________________________________________
@@ -807,10 +776,6 @@ class TrackwayManager(object):
         nodes = cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True)
         cmds.select(nodes)
 
-#_______________________________________________________________________________
-
-        nodes = cmds.editDisplayLayerMembers(layer, query=True, noRecurse=True)
-        cmds.select(nodes)
 #_______________________________________________________________________________
     def deleteLayer(self, layer):
         """ Deletes a display layer. """
@@ -830,21 +795,18 @@ class TrackwayManager(object):
 
 #_______________________________________________________________________________
     def showTrackway(self, trackwayName, visible =True):
-        """ Presuming that the track nodes for a specified trackway are already
-            in a corresponding layer, this turns on visibility of that
-            layer. """
+        """ Presuming the track nodes for a specified trackway are already in a
+            corresponding layer, this turns on visibility of that layer. """
 
         layer = trackwayName + self.LAYER_SUFFIX
 
         # then set that layer either visible or invisible according to the kwarg
         cmds.setAttr('%s.visibility' % layer, visible)
 
-
 #_______________________________________________________________________________
     def closeSession(self, commit =True):
-        """ Closes a session and indicates such by nulling out model and
-            session.  This is public because the TrackwayManagerWidget needs to
-            call it."""
+        """ Closes a session (and indicates this by nulling out session).  This
+            is public because the TrackwayManagerWidget needs to call it."""
 
         session = self._session
         self._session = None

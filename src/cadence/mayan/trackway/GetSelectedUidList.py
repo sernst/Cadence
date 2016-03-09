@@ -10,7 +10,6 @@ from nimble import NimbleScriptBase
 
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 
-
 #_______________________________________________________________________________
 class GetSelectedUidList(NimbleScriptBase):
     """ A remote script class for returning a list of the UIDs for the track
@@ -23,7 +22,7 @@ class GetSelectedUidList(NimbleScriptBase):
 
 #===============================================================================
 #                                                                   P U B L I C
-
+#
 #_______________________________________________________________________________
     def run(self, *args, **kwargs):
         selectedNodes = cmds.ls(selection=True, exactType='transform')

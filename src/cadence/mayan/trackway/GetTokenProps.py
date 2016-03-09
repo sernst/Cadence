@@ -1,6 +1,6 @@
-# GetTrackNodeData.py
-# (C)2014
-# Scott Ernst
+# GetTokenProps.py
+# (C)2016
+# Kent A. Stevens
 
 from __future__ import\
     print_function, absolute_import, unicode_literals, division
@@ -10,13 +10,11 @@ from nimble import NimbleScriptBase
 from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 
 #_______________________________________________________________________________
-class GetTrackNodeData(NimbleScriptBase):
-    """ A remote script class for locating a track based on its uid property
+class GetTokenProps(NimbleScriptBase):
+    """ A remote script class for locating a token based on its uid property
         and returning its property data.
 
         uid:            UID to find within the Maya scene nodes.
-        [nodeName]:     Name of the nodeName for the specified uid if one has
-                        been cached.
 
         <- success      | Boolean specifying if the find operation was able to
                         locate a nodeName with the specified uid argument.
@@ -28,27 +26,18 @@ class GetTrackNodeData(NimbleScriptBase):
 #
 #_______________________________________________________________________________
     def run(self, *args, **kwargs):
-        uid  = self.fetch('uid', None)
-        node = self.fetch('nodeName', None)
 
+        uid = self.fetch('uid', None)
         if not uid:
-            self.puts(
-                success=False, error=True, message='Invalid or missing UID')
+            self.puts(success=False, error=True, message='Invalid/missing UID')
             return
 
-        if node and TrackSceneUtils.checkNodeUidMatch(uid, node):
-            self.puts(
-                success=True,
-                nodeName=node,
-                props=TrackSceneUtils.getTrackProps(node))
-            return
-
-        node = TrackSceneUtils.getTrackNode(uid)
+        node = TrackSceneUtils.getTokenNode(uid)
         if node:
             self.puts(
                 success=True,
                 nodeName=node,
-                props=TrackSceneUtils.getTrackProps(node))
+                props=TrackSceneUtils.getTokenProps(node))
             return
 
         self.response.puts(success=False)

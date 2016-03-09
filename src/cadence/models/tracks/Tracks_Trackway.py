@@ -20,7 +20,7 @@ from cadence.models.tracks.TracksDefault import TracksDefault
 class Tracks_Trackway(TracksDefault):
 
 #===============================================================================
-#                                                                                       C L A S S
+#                                                                     C L A S S
 
     __tablename__ = 'trackways'
 
@@ -28,17 +28,17 @@ class Tracks_Trackway(TracksDefault):
     _index               = sqla.Column(sqla.Integer, default=0)
 
     # Custom-defined name for the trackway for display purposes
-    _name                = sqla.Column(sqla.Unicode,     default='')
+    _name                = sqla.Column(sqla.Unicode, default='')
 
     # Index of the sitemap in which this trackway resides
-    _siteMapIndex        = sqla.Column(sqla.Integer,     default=0)
+    _siteMapIndex        = sqla.Column(sqla.Integer, default=0)
 
     # UID of the first track in the specified series, or an empty string if no
     # such series exists
-    _firstLeftPes        = sqla.Column(sqla.Unicode,     default='')
-    _firstRightPes       = sqla.Column(sqla.Unicode,     default='')
-    _firstLeftManus      = sqla.Column(sqla.Unicode,     default='')
-    _firstRightManus     = sqla.Column(sqla.Unicode,     default='')
+    _firstLeftPes        = sqla.Column(sqla.Unicode, default='')
+    _firstRightPes       = sqla.Column(sqla.Unicode, default='')
+    _firstLeftManus      = sqla.Column(sqla.Unicode, default='')
+    _firstRightManus     = sqla.Column(sqla.Unicode, default='')
 
 #_______________________________________________________________________________
     def __init__(self, **kwargs):
@@ -244,7 +244,7 @@ class Tracks_Trackway(TracksDefault):
         return result
 
 #===============================================================================
-#                                                              I N T R I N S I C
+#                                                             I N T R I N S I C
 
 #_______________________________________________________________________________
     def __str__(self):
