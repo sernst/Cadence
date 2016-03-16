@@ -227,7 +227,7 @@ class TrackwayManager(object):
             returned. """
 
         conn   = nimble.getConnection()
-        result = conn.runPythonModule(GetSelectedUidList, runInMaya=True)
+        result = conn.runPythonModule(GetSelectedUidList, runInMaya=True )
 
         # Check to see if the remote command execution was successful
         if not result.success:

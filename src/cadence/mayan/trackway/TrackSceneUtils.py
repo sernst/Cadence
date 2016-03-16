@@ -594,7 +594,7 @@ class TrackSceneUtils(object):
 #
 #_______________________________________________________________________________
     @classmethod
-    def createToken(cls, uid, trackSetNode =None, props =None):
+    def createToken(cls, uid, props, trackSetNode =None):
         """ A token scene graph node is created, provided with some additional
             Maya attributes, and placed in the scene. Tokens are functtionally
             similar to TrackNodes, but with different shapes and attributes. """
@@ -610,17 +610,24 @@ class TrackSceneUtils(object):
         if node:
             return node
 
-        height = 10.0
-        # remove '_proxy' if present (as in S6_LP3_proxy)
-        track  = uid.split('_')[0]
-        isLeft = track[0] == 'L'
-        isPes  = track[1] == 'P'
+        cylinderHeight = 4.0
+        coneHeight     = 8.0
+
+        # determine whether left or right, and manus or pes, from name
+        name = props['name'] if props else None
+        if not name:
+            print('createToken:  No properties specified')
+            return
+        # remove '_proxy' or '_token' if present (as in S6_LP3_proxy)
+        nameFields = cls.decomposeName(name.split('_')[0])
+        isLeft     = nameFields['left']
+        isPes      = nameFields['pes']
 
         # make a cylinder for a pes token and a cone for a manus token
         if isPes:
             node = cmds.polyCylinder(
                 radius=0.5,
-                height=height,
+                height=cylinderHeight,
                 subdivisionsX=20,
                 subdivisionsY=1,
                 subdivisionsZ=1,
@@ -629,10 +636,11 @@ class TrackSceneUtils(object):
                 createUVs=3,
                 constructionHistory=1,
                 name='Token0')[0]
+            cmds.move(0, 0.5*cylinderHeight, 0)
         else:
             node = cmds.polyCone(
                 radius=0.5,
-                height=height,
+                height=coneHeight,
                 subdivisionsX=20,
                 subdivisionsY=1,
                 subdivisionsZ=1,
@@ -640,6 +648,7 @@ class TrackSceneUtils(object):
                 createUVs=3,
                 constructionHistory=1,
                 name='Token0')[0]
+            cmds.move(0, 0.5*coneHeight, 0)
 
         # Set up the basic cadence attributes
         cmds.addAttr(longName='cadence_dx', shortName='dx', niceName='DX')
@@ -649,9 +658,6 @@ class TrackSceneUtils(object):
              shortName='track_uid',
              dataType='string',
              niceName='UID')
-
-        # raise the bottom of the cylinder or cone up to ground level
-        cmds.move(0, 0.5*height, 0)
 
         # Disable some transform attributes
         cmds.setAttr(node + '.rotateX',    lock=True)
@@ -666,13 +672,31 @@ class TrackSceneUtils(object):
         #    z = int(100*float(entry['rm_x']))
         # and likewise for dx and dy.
 
-        # the DX attribute affects scaleZ in the node
+        # the DX and DY attributes affect scaleZ and scaleX in the node
         cmds.connectAttr(node + '.dx', node + '.scaleZ')
-
-        # use the DY affecting scaleX in the node
         cmds.connectAttr(node + '.dy', node + '.scaleX')
 
-        # color the node blue (saving and restoring state of selected nodes)
+        # add a short annotation based on the name
+        annotation = cmds.annotate(node, text=cls.shortName(props['name']))
+        cmds.select(annotation)
+        aTransform = cmds.pickWalk(direction='up')[0]
+
+        # control it's position by that of the node stays 15 cm above the pes
+        # and 10 cm above the manus
+        if isPes:
+            cmds.move(0.0, 15.0, 0.0, aTransform)
+        else:
+            cmds.move(0.0, 10.0, 0.0, aTransform)
+
+        cmds.connectAttr(node + '.translateX', aTransform + '.translateX')
+        cmds.connectAttr(node + '.translateZ', aTransform + '.translateZ')
+
+        # and make it non-selectable
+        cmds.setAttr(aTransform + '.overrideEnabled', 1)
+        cmds.setAttr(aTransform + '.overrideDisplayType', 2)
+
+        # if a proxy, color it blue; if a token, color it red or green.  Save
+        # and restore the state of selected nodes.
         priorSelection = MayaUtils.getSelectedTransforms()
         if uid.endswith('_proxy'):
             ShadingUtils.applyShader(TrackwayShaderConfig.BLUE_COLOR, node)
@@ -687,18 +711,14 @@ class TrackSceneUtils(object):
         cmds.sets(node, add=trackSetNode)
 
         # finally, initialize all the properties from the dictionary props
-        if props:
-            cls.setTokenProps(node, props)
-        else:
-            print('in createToken:  properties not provided')
-            return node
+        cls.setTokenProps(node, props)
 
         return node
 
 #_______________________________________________________________________________
     @classmethod
     def getTokenProps(cls, node):
-        """ This returns the attriburtes uid, x, dx, y, dy.  Values in Maya are
+        """ This returns the attributes uid, x, dx, y, dy.  Values in Maya are
             in centimeters, hence the conversion to meters. """
 
         out = dict()
@@ -743,3 +763,46 @@ class TrackSceneUtils(object):
                 return node
 
         return None
+
+#_______________________________________________________________________________
+    @classmethod
+    def shortName(cls, name):
+        """ Given, e.g., 'CRO-500-2004-1-S-6-L-P-2', returns the string LP2. """
+
+        parts = name.split('-')
+        if len(parts) == 9:
+            side   = parts[6]
+            limb   = parts[7]
+            number = parts[8]
+            return side + limb + number
+        elif len(parts) == 3:
+            side    = parts[0]
+            limb    = parts[1]
+            number  = parts[2]
+            return side + limb + number
+        else:
+            print('shortName:  unrecognized format for name string')
+            return None
+
+#_______________________________________________________________________________
+    @classmethod
+    def decomposeName(cls, name):
+        """ Given, for example, 'CRO-500-2004-1-S-6-L-P-2', this returns a
+            dictionary with keys pes, left, number, and trackway. """
+
+        out = { 'number':None, 'pes':None, 'left':None, 'trackway':None }
+        parts = name.split('-')
+        if len(parts) == 9:
+            out['trackway'] = format('%s-%s-%s-%s-%s-%s' % tuple(parts[0:6]))
+            out['left']     = True if parts[6] == 'L' else False
+            out['pes']      = True if parts[7] == 'P' else False
+            out['number']   = parts[8].split('_')[0]
+            return out
+        elif len(parts) == 3:
+            out['left']     = True if parts[0] == 'L' else False
+            out['pes']      = True if parts[1] == 'P' else False
+            out['number']   = parts[2].split('_')[0]
+            return out
+        else:
+            print('decomposeName:  unrecognized format for name string')
+            return None

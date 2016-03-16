@@ -2689,6 +2689,25 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.trackwayLE.text()[0] + '-' +
             self.trackwayLE.text()[1:]).upper()
 
+        if trackway == self._scenarioManager.trackway:
+            reload = PyGlassBasicDialogManager.openYesNo(
+                self,
+                format('Scenario %s already loaded.' % trackway),
+                "Did you wish to reload it (or just forget to 'pull data')?")
+            if not reload:
+                return
+
+        if self._scenarioManager.trackway:
+            current = self._scenarioManager.trackway
+            load = PyGlassBasicDialogManager.openYesNo(
+                self,
+                format('Scenario %s currently loaded.' % current),
+                'Do you wish to discard it and load %s instead?' % trackway)
+            if not not load:
+                return
+            else:
+                self._scenarioManager.closeScenario()
+
         # now read the scenario file, which converts the CSV-format contents
         # into scenario instance within the scenarioManager.
 

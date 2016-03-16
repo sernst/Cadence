@@ -113,12 +113,18 @@ class ScenarioManager(object):
                 if x and dx and y and dy:
                     props = dict(
                         [('name', name),
-                         ('uid',  uid),
+                         ('uid',  uid + '_token'),
                          ('x',    float(x)),
                          ('dx',   float(dx)),
                          ('y',    float(y)),
                          ('dy',   float(dy))])
                     self.scenario[limb].append(props)
+
+#_______________________________________________________________________________
+    def closeScenario(self):
+        """ Nulls out self.trackway to indicate that the scenario is closed. """
+
+        self.trackway = None
 
 #_______________________________________________________________________________
     def extractNumber(self, name):
@@ -163,14 +169,10 @@ class ScenarioManager(object):
                         inSequence = True
                         break
                     if number > n:
-                        (pNode, nNode) = (node.prev, node.next)
-                        if pNode and nNode:
-                            x = 0.5*(pNode.value['x'] + nNode.value['x'])
-                            y = 0.5*(pNode.value['y'] + nNode.value['y'])
-                        elif pNode:
-                            (x, y) = (pNode.value['x'], pNode.value['y'])
-                        elif nNode:
-                            (x, y) = (nNode.value['x'], nNode.value['y'])
+                        prev= node.prev
+                        if prev:
+                            x = 0.5*(prev.value['x'] + node.value['x'])
+                            y = 0.5*(prev.value['y'] + node.value['y'])
                         else:
                             (x, y) = (x0, y0 + n*0.1)
                         name = self.composeName(n, left=left, pes=True)
@@ -184,7 +186,7 @@ class ScenarioManager(object):
                         sequence.insert(props, node)
                         inSequence = True
                         break
-                if not inSequence: # then add to the end of the sequence
+                if not inSequence: # then append to the end of the sequence
                     name = self.composeName(n, left=left, pes=True)
                     props = {
                         'name':name,
@@ -322,7 +324,9 @@ class ScenarioManager(object):
             return lm0.value['x'], lm0.value['y']
 
         rm0 = self.scenario['rm'].first
-        return rm0.value['x'], rm0.value['y']
+        if rm0:
+            return rm0.value['x'], rm0.value['y']
+        return 0.0, 0.0
 
 #_______________________________________________________________________________
     def getEntries(self, tracks =True, proxies =True):
@@ -375,28 +379,6 @@ class ScenarioManager(object):
         return name.upper()
 
 #_______________________________________________________________________________
-    def decomposeName(self, name):
-        """ Given, for example, 'CRO-500-2004-1-S-6-L-P-2', this returns a
-            dictionary with keys pes, left, number, and trackway. """
-
-        out = { 'number':None, 'pes':None, 'left':None, 'trackway':None }
-        parts = name.split('-')
-        if len(parts) == 9:
-            out['trackway'] = format('%s-%s-%s-%s-%s-%s' % tuple(parts[0:6]))
-            out['left']     = True if parts[6] == 'L' else False
-            out['pes']      = True if parts[7] == 'P' else False
-            out['number']   = parts[8].split['_'][0]
-            return out
-        elif len(parts) == 3:
-            out['left']     = True if parts[0] == 'L' else False
-            out['pes']      = True if parts[1] == 'P' else False
-            out['number']   = parts[2].split['_'][0]
-            return out
-        else:
-            print('decomposeName:  unrecognized format for name string')
-            return None
-
-#_______________________________________________________________________________
     def writeScenarioFile(self, path =None):
         """ Writes the trackway scenario to csv format using CsvWriter.  Modeled
             after SimulationExporterStage. """
@@ -444,7 +426,7 @@ class ScenarioManager(object):
 
 
 #_______________________________________________________________________________
-    def createEntry(cls, limb_id, props =None):
+    def createEntry(self, limb_id, props =None):
         """ Converts a scenario entry (a dictionary with keys 'name', 'url', x
             dx, y, and dy) into a simulation entry (a similar dictionary with
             the same keys but for particular 'limb_id' suffix, such as 'lm_name'

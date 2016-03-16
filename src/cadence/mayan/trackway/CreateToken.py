@@ -11,9 +11,8 @@ from cadence.mayan.trackway.TrackSceneUtils import TrackSceneUtils
 
 #_______________________________________________________________________________
 class CreateToken(NimbleScriptBase):
-    """ A remotely run script to creates a Maya scene node to represent a
-        specific token. The procedure to create the transforms and geometry is
-        createToken in TrackSceneUtils. """
+    """ A remotely run script to create a Maya scene node to represent a
+        specific token, calling createToken in TrackSceneUtils. """
 
 #===============================================================================
 #                                                                   P U B L I C
@@ -31,5 +30,5 @@ class CreateToken(NimbleScriptBase):
                 u'Invalid or missing UID. Unable to create token.')
             return
 
-        node = TrackSceneUtils.createToken(uid, props=props)
+        node = TrackSceneUtils.createToken(uid, props)
         self.puts(nodeName=node, props=props)
