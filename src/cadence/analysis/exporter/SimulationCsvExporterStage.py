@@ -9,6 +9,8 @@ from __future__ import unicode_literals
 
 import os
 
+from pyaid.file.FileUtils import FileUtils
+
 from cadence.analysis.CurveOrderedAnalysisStage import CurveOrderedAnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
 
@@ -20,7 +22,8 @@ class SimulationCsvExporterStage(CurveOrderedAnalysisStage):
         super(SimulationCsvExporterStage, self).__init__(
             key, owner,
             label='Simulation Exporter',
-            **kwargs)
+            **kwargs
+        )
 
         self.entries = None
 
@@ -36,7 +39,8 @@ class SimulationCsvExporterStage(CurveOrderedAnalysisStage):
 
         super(SimulationCsvExporterStage, self)._analyzeTrackway(
             trackway=trackway,
-            sitemap=sitemap)
+            sitemap=sitemap
+        )
 
         csv = CsvWriter(
             autoIndexFieldName='Index',
@@ -64,9 +68,10 @@ class SimulationCsvExporterStage(CurveOrderedAnalysisStage):
                     items += self._create_entry(limb_id).items()
             csv.addRow(dict(items))
 
-        path = self.owner.getLocalPath(
-            'Simulation', 'data', trackway.name, 'source.csv',
-            isFile=True)
+        path = self.owner.settings.fetch('EXPORT_DATA_PATH')
+        if path is None:
+            path = self.owner.getLocalPath('Simulation', 'data', isFile=True)
+        path = FileUtils.makeFilePath(path, trackway.name, 'source.csv')
 
         directory = os.path.dirname(path)
         if not os.path.exists(directory):
@@ -89,7 +94,8 @@ class SimulationCsvExporterStage(CurveOrderedAnalysisStage):
 
         limb_id = '{}{}'.format(
             'l' if track.left else 'r',
-            'p' if track.pes else 'm')
+            'p' if track.pes else 'm'
+        )
 
         self.entries[limb_id].append(self._create_entry(limb_id, track))
 
@@ -102,7 +108,7 @@ class SimulationCsvExporterStage(CurveOrderedAnalysisStage):
         @return:
         """
 
-        pos = track.positionValue if track else None
+        pos = track.positionValueRaw if track else None
         return dict([
             (limb_id + '_x', pos.x if pos else ''),
             (limb_id + '_dx', pos.xUnc if pos else ''),

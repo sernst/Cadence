@@ -7,6 +7,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
+
+import sqlalchemy as sqla
 from pyaid.config.ConfigsDict import ConfigsDict
 from pyaid.debug.Logger import Logger
 from pyaid.file.FileUtils import FileUtils
@@ -16,8 +19,6 @@ from pyaid.time.TimeUtils import TimeUtils
 from pyglass.alembic.AlembicUtils import AlembicUtils
 from pyglass.app.PyGlassEnvironment import PyGlassEnvironment
 
-import os
-import sqlalchemy as sqla
 from cadence.analysis.shared import DataLoadUtils
 
 PyGlassEnvironment.initializeFromInternalPath(__file__)
@@ -43,31 +44,31 @@ except Exception as err:
     print(err)
     print('WARNING: Matplotlib failed to import.')
 
-#*************************************************************************************************** AnalyzerBase
+
 class AnalyzerBase(object):
-    """ The abstract base class for all Cadence Analyzers. Each Analyzer acts as a container
-        around one or more AnalysisStage instances and provide these stage objects with the
-        common functionality for that particular Analyzer."""
+    """
+    The abstract base class for all Cadence Analyzers. Each Analyzer acts as a
+    container around one or more AnalysisStage instances and provide these stage
+    objects with the common functionality for that particular Analyzer.
+    """
 
-#===============================================================================
-#                                                                                       C L A S S
-
-#_______________________________________________________________________________
     def __init__(self, **kwargs):
-        """ Creates a new instance of AnalyzerBase.
+        """
+        Creates a new instance of AnalyzerBase.
 
-            [cacheData] ~ Object | CacheData
-                A caching object on which to store data during analysis at the analyzer level,
-                instead of the stage level.
+        [cacheData] ~ Object | CacheData
+            A caching object on which to store data during analysis at the
+            analyzer level, instead of the stage level.
 
-            [logger] ~ Logger
-                A logger object to use for logging within this analyzer. If no such logger exists,
-                a new logger is created.
+        [logger] ~ Logger
+            A logger object to use for logging within this analyzer. If no such
+            logger exists, a new logger is created.
 
-            [logFolderPath] ~ String
-                If no logger was specified for the analyzer, this is the absolute path to the
-                folder where the log file should be written. This value is ignored if you specify
-                a logger. """
+        [logFolderPath] ~ String
+            If no logger was specified for the analyzer, this is the absolute
+            path to the folder where the log file should be written. This
+            value is ignored if you specify a logger.
+        """
 
         self._tracksSession     = None
         self._analysisSession   = None
@@ -97,10 +98,10 @@ class AnalyzerBase(object):
             'analysis', isDir=True)
         self._settings = DataLoadUtils.getAnalysisSettings()
 
-#===============================================================================
-#                                                                                   G E T / S E T
+    @property
+    def settings(self):
+        return self._settings
 
-#_______________________________________________________________________________
     @property
     def elapsedTime(self):
         if not self._startTime:

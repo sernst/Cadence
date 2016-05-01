@@ -2,7 +2,10 @@
 # (C)2014-2015
 # Scott Ernst
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from pyaid.list.ListUtils import ListUtils
 from pyaid.number.NumericUtils import NumericUtils
@@ -13,17 +16,12 @@ from cadence.analysis.shared.LineSegment2D import LineSegment2D
 from cadence.analysis.shared.plotting.ScatterPlot import ScatterPlot
 
 
-#*************************************************************************************************** CurveProjectionLinkStage
 class CurveProjectionLinkStage(AnalysisStage):
     """A class for..."""
-
-#===============================================================================
-#                                                                                       C L A S S
 
     EXTENSION_LENGTH      = 10.0
     CURVE_MAP_FOLDER_NAME = 'Projection-Linkage-Maps'
 
-#_______________________________________________________________________________
     def __init__(self, key, owner, **kwargs):
         """Creates a new instance of CurveProjectionLinkStage."""
         super(CurveProjectionLinkStage, self).__init__(
@@ -33,14 +31,9 @@ class CurveProjectionLinkStage(AnalysisStage):
 
         self._paths = []
 
-#===============================================================================
-#                                                                               P R O T E C T E D
-
-#_______________________________________________________________________________
     def _preAnalyze(self):
         self._paths = []
 
-#_______________________________________________________________________________
     def _analyzeSitemap(self, sitemap):
         """_analyzeSitemap doc..."""
 
@@ -48,7 +41,6 @@ class CurveProjectionLinkStage(AnalysisStage):
         super(CurveProjectionLinkStage, self)._analyzeSitemap(sitemap)
         self._saveDrawing(sitemap)
 
-#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
 
         seriesBundle = self.owner.getSeriesBundle(trackway)
@@ -56,7 +48,9 @@ class CurveProjectionLinkStage(AnalysisStage):
         analysisTrackway = trackway.getAnalysisPair(self.analysisSession)
         if not analysisTrackway or not analysisTrackway.curveSeries:
             # Ignore trackways that are too short to have a curve series
-            self.logger.write('SKIPPED[%s]: %s' % (trackway.name, seriesBundle.echoStatus()))
+            self.logger.write(
+                'SKIPPED[%s]: %s' % (trackway.name, seriesBundle.echoStatus())
+            )
             return
 
         curveSeries = None
@@ -79,8 +73,8 @@ class CurveProjectionLinkStage(AnalysisStage):
         # Draw the curve series
         self._drawCurveSeries(drawing, curveSeries)
 
-        # Draw a path connecting each track in the trackway in the order they appear in the curve
-        # series projection
+        # Draw a path connecting each track in the trackway in the order they
+        # appear in the curve series projection
         track = self._getNextTrack(None, trackway)
         line = None
 
@@ -90,13 +84,20 @@ class CurveProjectionLinkStage(AnalysisStage):
             tracks.append(track)
             nextTrack = self._getNextTrack(track, trackway)
             at = track.analysisPair
+            at.curveIndex = curveIndex
+
             if not nextTrack:
                 at.nextCurveTrack = ''
-                self._drawLine(drawing, line, opacity=0.25, startCap=False, connect=False)
+                self._drawLine(
+                    drawing,
+                    line,
+                    opacity=0.25,
+                    startCap=False,
+                    connect=False
+                )
                 break
 
             at.nextCurveTrack = nextTrack.uid
-            at.curveIndex = curveIndex
             curveIndex += 1
 
             line = LineSegment2D(track.positionValue, nextTrack.positionValue)
@@ -109,21 +110,22 @@ class CurveProjectionLinkStage(AnalysisStage):
 
         self._plotTracks(tracks, trackway)
 
-#_______________________________________________________________________________
     def _getNextTrack(self, track, trackway):
-        """ Iterates through all the tracks in the trackway and finds the track closest to the
-            specified track. If the track argument is None the first track in the trackway will
-            be returned. """
+        """
+        Iterates through all the tracks in the trackway and finds the track
+        closest to the specified track. If the track argument is None the first
+        track in the trackway will be returned.
+        """
 
         bundle = self.owner.getSeriesBundle(trackway)
         trackPosition = -1.0e8
         targetPosition = 1.0e8
         nextTrack = None
-        analysisTrack = None
+        anaTrack = None
 
         if track:
-            analysisTrack = track.getAnalysisPair(self.analysisSession)
-            trackPosition = analysisTrack.curvePosition
+            anaTrack = track.getAnalysisPair(self.analysisSession)
+            trackPosition = anaTrack.curvePosition
 
         for value in bundle.asList():
             for t in value.tracks:
@@ -134,30 +136,43 @@ class CurveProjectionLinkStage(AnalysisStage):
                 if  at.curvePosition < trackPosition:
                     continue
 
+                sigFigsRound = NumericUtils.roundToSigFigs
                 if NumericUtils.equivalent(at.curvePosition, targetPosition):
                     log = [
-                        '[ERROR]: Found multiple tracks at the same curve location',
-                        'TARGET: %s' % NumericUtils.roundToSigFigs(targetPosition, 5),
+                        '[ERROR]: Multiple tracks at the same curve location',
+                        'TARGET: %s' % sigFigsRound(targetPosition, 5),
                         'TEST: %s [%s]' % (t.fingerprint, t.uid),
                         'LOCATION[TEST]: %s (%s)' % (
-                            NumericUtils.roundToSigFigs(at.curvePosition, 5),
-                            NumericUtils.roundToSigFigs(at.segmentPosition, 5) )]
+                            sigFigsRound(at.curvePosition, 5),
+                            sigFigsRound(at.segmentPosition, 5)
+                        )
+                    ]
 
                     if nextTrack:
                         nat = nextTrack.getAnalysisPair(self.analysisSession)
-                        log.append('COMPARE: %s [%s]' % (nextTrack.fingerprint, nextTrack.uid) )
+                        log.append('COMPARE: %s [%s]' % (
+                            nextTrack.fingerprint,
+                            nextTrack.uid
+                        ))
                         log.append('LOCATION[COMP]: %s (%s)' % (
-                            NumericUtils.roundToSigFigs(nat.curvePosition, 5),
-                            NumericUtils.roundToSigFigs(nat.segmentPosition, 5) ))
+                            sigFigsRound(nat.curvePosition, 5),
+                            sigFigsRound(nat.segmentPosition, 5)
+                        ))
 
                     if track:
-                        log.append('TRACK: %s [%s]' % (track.fingerprint, track.uid))
+                        log.append('TRACK: %s [%s]' % (
+                            track.fingerprint,
+                            track.uid
+                        ))
                         log.append('LOCATION[TRACK]: %s (%s)' % (
-                            NumericUtils.roundToSigFigs(analysisTrack.curvePosition, 5),
-                            NumericUtils.roundToSigFigs(analysisTrack.segmentPosition, 5) ))
+                            sigFigsRound(anaTrack.curvePosition, 5),
+                            sigFigsRound(anaTrack.segmentPosition, 5)
+                        ))
 
                     self.logger.write(log)
-                    raise ValueError('Found multiple tracks at the same curve location')
+                    raise ValueError(
+                        'Found multiple tracks at the same curve location'
+                    )
 
                 if at.curvePosition < targetPosition:
                     nextTrack = t
@@ -167,7 +182,6 @@ class CurveProjectionLinkStage(AnalysisStage):
 
         return nextTrack
 
-#_______________________________________________________________________________
     def _plotTracks(self, tracks, trackway):
         """_plotTracks doc..."""
 
@@ -192,7 +206,6 @@ class CurveProjectionLinkStage(AnalysisStage):
             yTickFunc=self._plotLabelChannelsFunc)
         self._paths.append(plot.save(self.getTempFilePath(extension='pdf')))
 
-#_______________________________________________________________________________
     @classmethod
     def _plotLabelChannelsFunc(cls, value, position):
         if value == 1:
@@ -206,7 +219,6 @@ class CurveProjectionLinkStage(AnalysisStage):
         else:
             return ''
 
-#_______________________________________________________________________________
     @classmethod
     def _drawCurveSeries(cls, drawing, series):
         """_drawCurveSeries doc..."""
@@ -225,12 +237,23 @@ class CurveProjectionLinkStage(AnalysisStage):
                 return
 
             line = LineSegment2D(track.positionValue, nextTrack.positionValue)
-            cls._drawLine(drawing=drawing, line=line, color='#009900', opacity=0.1, endCap=False)
+            cls._drawLine(
+                drawing=drawing,
+                line=line,
+                color='#009900',
+                opacity=0.1,
+                endCap=False
+            )
 
-#_______________________________________________________________________________
     @classmethod
     def _drawLine(
-            cls, drawing, line, color ='black', opacity=1.0, endCap =True, startCap=True,
+            cls,
+            drawing,
+            line,
+            color ='black',
+            opacity=1.0,
+            endCap =True,
+            startCap=True,
             connect =True
     ):
         """_drawPaceLine doc..."""
@@ -245,12 +268,15 @@ class CurveProjectionLinkStage(AnalysisStage):
 
         if endCap:
             drawing.circle(
-                line.end.toMayaTuple(), 5, stroke='none', fill=color, fill_opacity=opacity)
+                line.end.toMayaTuple(), 5,
+                stroke='none', fill=color, fill_opacity=opacity
+            )
 
         if startCap:
             drawing.circle(
-                line.start.toMayaTuple(), 5, stroke='none', fill=color, fill_opacity=opacity)
+                line.start.toMayaTuple(), 5,
+                stroke='none', fill=color, fill_opacity=opacity
+            )
 
-#_______________________________________________________________________________
     def _postAnalyze(self):
         self.mergePdfs(self._paths, 'Trackway-Ordering.pdf')

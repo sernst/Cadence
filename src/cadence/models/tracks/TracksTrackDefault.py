@@ -2,23 +2,25 @@
 # (C)2013-2015
 # Scott Ernst
 
-from __future__ import\
-    print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
-import re
 import math
+import re
 
+import sqlalchemy as sqla
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.json.JSON import JSON
 from pyaid.number.Angle import Angle
 from pyaid.number.NumericUtils import NumericUtils
-import sqlalchemy as sqla
+from pyaid.number.PositionValue2D import PositionValue2D
 from pyaid.radix.Base64 import Base64
 from pyaid.reflection.Reflection import Reflection
 from pyaid.string.StringUtils import StringUtils
 
 from cadence.CadenceEnvironment import CadenceEnvironment
-from pyaid.number.PositionValue2D import PositionValue2D
 from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum
 from cadence.enums.ImportFlagsEnum import ImportFlagsEnum
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
@@ -26,7 +28,7 @@ from cadence.enums.SourceFlagsEnum import SourceFlagsEnumOps
 from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.models.tracks.TracksDefault import TracksDefault
 
-#*******************************************************************************
+
 # noinspection PyAttributeOutsideInit
 class TracksTrackDefault(TracksDefault):
 
@@ -86,21 +88,20 @@ class TracksTrackDefault(TracksDefault):
     # Entry is dead for deletion during cleanup/export
     _dead                = sqla.Column(sqla.Boolean,     default=False)
 
-    #___________________________________________________________________________
     def __init__(self, **kwargs):
+        """
+
+        :param kwargs:
+        """
+
         super(TracksTrackDefault, self).__init__(**kwargs)
         self.uid = CadenceEnvironment.createUniqueId('track')
 
-    #===========================================================================
-    #                                                             G E T / S E T
-
-    #___________________________________________________________________________
     @property
     def widthValue(self):
         return NumericUtils.toValueUncertainty(
             self.width, self.widthUncertainty)
 
-    #___________________________________________________________________________
     @property
     def lengthValue(self):
         return NumericUtils.toValueUncertainty(
@@ -117,15 +118,36 @@ class TracksTrackDefault(TracksDefault):
     def trackSeries(self, value):
         self.putTransient('trackSeries', value)
 
-    #___________________________________________________________________________
     @property
     def positionValue(self):
-        """ Returns a PositionValue2D instance for the position of this track
-            using the 2D RHS adjustment of z -> x and x -> y """
+        """
+        Returns a PositionValue2D instance for the position of this track using
+        the 2D RHS adjustment of z -> x and x -> y
+
+        :return:
+        """
+
         p2d = PositionValue2D()
         p2d.xFromUncertaintyValue(self.zValue)
         p2d.yFromUncertaintyValue(self.xValue)
         return p2d
+
+    @property
+    def positionValueRaw(self):
+        """
+        Returns a PositionValue2D instance for the position of this track using
+        the raw values of the position and uncertainty with the 2D RHS
+        adjustment of z -> x and x -> y
+
+        :return:
+        """
+
+        return PositionValue2D(
+            x=self.zValue.raw,
+            xUnc=self.zValue.rawUncertainty,
+            y=self.xValue.raw,
+            yUnc=self.xValue.rawUncertainty
+        )
 
     #___________________________________________________________________________
     @property
@@ -331,7 +353,6 @@ class TracksTrackDefault(TracksDefault):
         except Exception:
             return None
 
-    #___________________________________________________________________________
     def getNextTrack(self, session =None):
         """ Returns the next track in the series if such a track exists.
             Unlike getPreviousTrack, the next track's uid is explicitly stored
@@ -345,7 +366,6 @@ class TracksTrackDefault(TracksDefault):
             return None
         return self.getByUid(self.next, session=session)
 
-    #___________________________________________________________________________
     def fromDict(self, data):
         """ Populates the track with the values specified by data dictionary
             argument. The keys of the data object should be valid names of the
@@ -359,7 +379,6 @@ class TracksTrackDefault(TracksDefault):
             if enum.name in data:
                 setattr(self, enum.name, data[enum.name])
 
-    #___________________________________________________________________________
     def toDict(self, uniqueOnly =False):
         """ Returns a dictionary containing the keys and current values of the
             track object with no dependency on a database session object.
@@ -371,7 +390,6 @@ class TracksTrackDefault(TracksDefault):
             out[enum.name] = getattr(self, enum.name)
         return self._createDict(**out)
 
-    #___________________________________________________________________________
     def toMayaNodeDict(self):
         """ Creates a dictionary representation of those properties required
             for a Maya node.
@@ -402,7 +420,6 @@ class TracksTrackDefault(TracksDefault):
             out[TPE.LENGTH.maya] = 0.1 if w == 0.0 else w
         return out
 
-    #___________________________________________________________________________
     def findExistingTracks(self, session =None):
         """ Searches the database for an existing track that matches the
             current values of the UID in this track instance and returns a
@@ -418,7 +435,6 @@ class TracksTrackDefault(TracksDefault):
                     getattr(model, enum.name) == getattr(self, enum.name))
         return query.all()
 
-    #___________________________________________________________________________
     def equivalentProps(self, **kwargs):
         """ Iterates through the kwargs and checks whether or not the values
             for each kwarg property to see if it matches the value for this
@@ -429,7 +445,6 @@ class TracksTrackDefault(TracksDefault):
                 return False
         return True
 
-    #___________________________________________________________________________
     @classmethod
     def getByUid(cls, uid, session):
         """ Returns the Tracks_Track model instance for the given UID
@@ -440,7 +455,6 @@ class TracksTrackDefault(TracksDefault):
         except Exception:
             return None
 
-    #___________________________________________________________________________
     @classmethod
     def getByProperties(cls, session, **kwargs):
         """ Loads based on the current values set for the track. This form of
@@ -452,7 +466,6 @@ class TracksTrackDefault(TracksDefault):
             query = query.filter(getattr(cls, key) == value)
         return query.all()
 
-    #___________________________________________________________________________
     @classmethod
     def getByName(cls, name, session, **kwargs):
         """ Returns the Tracks_Track model instance for the specified name
@@ -479,18 +492,10 @@ class TracksTrackDefault(TracksDefault):
         results = cls.getByProperties(session, **kwargs)
         return results
 
-    #===========================================================================
-    #                                                         P R O T E C T E D
-
-    #___________________________________________________________________________
     def _createDict(self, **kwargs):
         kwargs['id'] = self.id
         return kwargs
 
-    #===========================================================================
-    #                                                         I N T R I N S I C
-
-    #___________________________________________________________________________
     def __str__(self):
         return StringUtils.toStr2('<%s[%s] uid[%s] %s>' % (
             self.__class__.__name__,

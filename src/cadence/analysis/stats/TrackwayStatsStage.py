@@ -2,13 +2,14 @@
 # (C)2015
 # Scott Ernst
 
-from __future__ import \
-    print_function, absolute_import, \
-    unicode_literals, division
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
+import measurement_stats as mstats
 from pyaid.dict.DictUtils import DictUtils
 from pyaid.number.NumericUtils import NumericUtils
-from refined_stats.density import DensityDistribution
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 from cadence.analysis.shared.CsvWriter import CsvWriter
@@ -115,9 +116,9 @@ class TrackwayStatsStage(AnalysisStage):
             self._quartileStats[label] = csv
 
         csv = self._quartileStats[label]
-        dd = DensityDistribution(values=data)
-        unweighted = dd.getUnweightedTukeyBoxBoundaries()
-        weighted = dd.getTukeyBoxBoundaries()
+        dd = mstats.density.Distribution(data)
+        unweighted = mstats.density.boundaries.unweighted_two(dd)
+        weighted = mstats.density.boundaries.weighted_two(dd)
 
         #-----------------------------------------------------------------------
         # PLOT DENSITY
@@ -127,26 +128,30 @@ class TrackwayStatsStage(AnalysisStage):
             xLabel=label,
             yLabel='Probability (AU)')
 
+        x_values = mstats.density.ops.adaptive_range(dd, 10.0)
+        y_values = dd.probabilities_at(x_values=x_values)
+
         p.addPlotSeries(
             line=True,
             markers=False,
             label='Weighted',
             color='blue',
-            data=dd.createDistribution(
-                xValues=dd.getAdaptiveRange(10.0),
-                scaled=True,
-                asPoints=True) )
+            data=zip(x_values, y_values)
+        )
 
-        temp = DensityDistribution.fromValuesOnly(dd.getNumericValues(raw=True))
+        temp = mstats.density.create_distribution(
+            dd.naked_measurement_values(raw=True)
+        )
+        x_values = mstats.density.ops.adaptive_range(dd, 10.0)
+        y_values = dd.probabilities_at(x_values=x_values)
+
         p.addPlotSeries(
             line=True,
             markers=False,
             label='Unweighted',
             color='red',
-            data=temp.createDistribution(
-                xValues=temp.getAdaptiveRange(10.0),
-                scaled=True,
-                asPoints=True) )
+            data=zip(x_values, y_values)
+        )
 
         if label not in self._densityPlots:
             self._densityPlots[label] = []
@@ -171,13 +176,25 @@ class TrackwayStatsStage(AnalysisStage):
             result = NumericUtils.getMeanAndDeviation(data)
             mean = result.raw
             std = result.rawUncertainty
-            normality = dd.compareAgainstGaussian(mean, std)
+            normality = mstats.density.ops.overlap(
+                dd,
+                mstats.density.create_distribution([mean], [std])
+            )
 
             rawValues = []
             for value in data:
                 rawValues.append(value.value)
-            ddRaw = DensityDistribution.fromValuesOnly(values=rawValues)
-            unweightedNormality = ddRaw.compareAgainstGaussian(mean, std)
+            ddRaw = mstats.density.create_distribution(rawValues)
+            unweightedNormality = mstats.density.ops.overlap(
+                ddRaw,
+                mstats.density.create_distribution([mean], [std])
+            )
+
+        # Prevent divide by zero
+        unweighted = [
+            0.00001 if NumericUtils.equivalent(x, 0) else x
+            for x in unweighted
+        ]
 
         csv.addRow({
             'index':trackway.index,
@@ -202,7 +219,8 @@ class TrackwayStatsStage(AnalysisStage):
             'diffLowerQuart':abs(unweighted[1] - weighted[1])/unweighted[1],
             'diffMedian'    :abs(unweighted[2] - weighted[2])/unweighted[2],
             'diffUpperQuart':abs(unweighted[3] - weighted[3])/unweighted[3],
-            'diffUpperBound':abs(unweighted[4] - weighted[4])/unweighted[4] })
+            'diffUpperBound':abs(unweighted[4] - weighted[4])/unweighted[4]
+        })
 
     #___________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):

@@ -6,22 +6,17 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from cadence.analysis.AnalysisStage import AnalysisStage
 
-#*************************************************************************************************** CurveOrderedAnalysisStage
+
 class CurveOrderedAnalysisStage(AnalysisStage):
     """A class for..."""
 
-#===============================================================================
-#                                                                                       C L A S S
-
-#_______________________________________________________________________________
     def __init__(self, key, owner, label =None, **kwargs):
-        """Creates a new instance of CurveOrderedAnalysisStage."""
+        """
+        Creates a new instance of CurveOrderedAnalysisStage.
+        """
+
         super(CurveOrderedAnalysisStage, self).__init__(key, owner, label, **kwargs)
 
-#===============================================================================
-#                                                                               P R O T E C T E D
-
-#_______________________________________________________________________________
     def _analyzeTrackway(self, trackway, sitemap):
         """_analyzeTrackway doc..."""
 
@@ -34,12 +29,10 @@ class CurveOrderedAnalysisStage(AnalysisStage):
 
         super(CurveOrderedAnalysisStage, self)._analyzeTrackway(trackway, sitemap)
 
-#_______________________________________________________________________________
     def _analyzeTrackSeries(self, series, trackway, sitemap):
         """ _analyzeTrackSeries """
         pass
 
-#_______________________________________________________________________________
     def _getNextTrack(self, bundle, lastTrack =None):
         """_getNextTrack doc..."""
 
