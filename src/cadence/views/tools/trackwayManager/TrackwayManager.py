@@ -9,7 +9,6 @@ import nimble
 from nimble import cmds
 from pyglass.dialogs.PyGlassBasicDialogManager import PyGlassBasicDialogManager
 
-from cadence.config import CadenceConfigs
 from cadence.enums.TrackPropEnum import TrackPropEnum
 from cadence.enums.SourceFlagsEnum import SourceFlagsEnum
 from cadence.models.tracks.Tracks_Track import Tracks_Track
@@ -19,8 +18,10 @@ from cadence.mayan.trackway import GetSelectedUidList
 from cadence.mayan.trackway import GetUidList
 from cadence.mayan.trackway import GetTrackNodeProps
 from cadence.mayan.trackway import CreateToken
+from cadence.mayan.trackway import CreateTokens
 from cadence.mayan.trackway import UpdateToken
 from cadence.mayan.trackway import GetTokenProps
+from cadence.mayan.trackway import DeleteTokens
 
 #_______________________________________________________________________________
 class TrackwayManager(object):
@@ -37,7 +38,7 @@ class TrackwayManager(object):
 
     LAYER_SUFFIX = '_Trackway_Layer'
     PATH_LAYER   = 'Track_Path_Layer'
-    FIT_FACTOR   = 0.4
+    FIT_FACTOR   = 0.1
     CADENCE_CAM  = 'CadenceCam'
 
 #_______________________________________________________________________________
@@ -53,15 +54,15 @@ class TrackwayManager(object):
             Maya. """
 
         conn   = nimble.getConnection()
+
         result = conn.runPythonModule(GetUidList, runInMaya=True)
 
         # and check to see if the remote command execution was successful
         if not result.success:
             PyGlassBasicDialogManager.openOk(
-                self,
-                'Failed UID Query',
-                'Unable to get UID list from Maya',
-                'Error')
+                parent=self,
+                header='ERROR',
+                message='Unable to get UID list from Maya')
             self.closeSession()
             return None
 
@@ -316,18 +317,6 @@ class TrackwayManager(object):
         return result.payload.get('nodeName')
 
 #_______________________________________________________________________________
-    def getTrackSetNode(cls):
-        """ This is redundant with the version in TrackSceneUtils, but running
-            locally. Note that if no TrackSetNode is found, it does not create
-            one. """
-
-        for node in cmds.ls(exactType='objectSet'):
-            if node == CadenceConfigs.TRACKWAY_SET_NODE_NAME:
-                return node
-
-        return None
-
-#_______________________________________________________________________________
     def getTracksAfter(self, track):
         """ This returns all tracks that are subsequent to a given specified
             track.  If track is the last track in the sequeunce (or an isolated
@@ -481,7 +470,8 @@ class TrackwayManager(object):
             focus the camera upon this node. """
 
         if track:
-            cmds.select(self.getTrackNode(track))
+            node = self.getTrackNode(track)
+            cmds.select(node)
             if setFocus:
                 self.setCameraFocus()
         else:
@@ -529,23 +519,68 @@ class TrackwayManager(object):
             self.selectTracks(tracks)
 
 #===============================================================================
+#===============================================================================
 #                                       M A Y A  T O K E N  O P E R A T I O N S
 #
 #_______________________________________________________________________________
-    def createToken(self, entry):
+    def createToken(self, props):
         """ Create a token in Maya, using the uid and properties specified in
-            the entry. """
+            the dictionary props. """
 
         conn   = nimble.getConnection()
         result = conn.runPythonModule(
             CreateToken,
-            uid=entry['uid'],
-            props=entry,
+            uid=props['uid'],
+            props=props,
             runInMaya=True)
 
         if result.payload.get('error'):
             print('Error in createToken:', result.payload.get('message'))
             return False
+
+#_______________________________________________________________________________
+    def createTokens(self, propsList):
+        """ Create tokens in Maya, each based on the properties specified by a
+            corresponding dictionary props within the list propsList. """
+
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(
+            CreateTokens,
+            propsList=propsList,
+            runInMaya=True)
+
+        if result.payload.get('error'):
+            print('Error in createTokens:', result.payload.get('message'))
+            return False
+
+# ______________________________________________________________________________
+    def getSelectedTokenUids(self):
+        """ This returns a list of URL of the currently selected tokens, or
+            None. """
+
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(GetSelectedUidList, runInMaya=True)
+
+        # Check to see if the remote command execution was successful
+        if not result.success:
+            PyGlassBasicDialogManager.openOk(
+                self,
+                'Failed UID Query',
+                'Unable to get selected UID list from Maya',
+                'Error')
+            return None
+
+        selectedUidList = result.payload['selectedUidList']
+        if len(selectedUidList) == 0:
+            return None
+
+        # return those UIDs corresponding to proxies or tokens
+        tokenUidList = list()
+        for uid in selectedUidList:
+            if uid.endswith('_proxy') or uid.endswith('_token'):
+                tokenUidList.append(uid)
+
+        return tokenUidList
 
 # ______________________________________________________________________________
     def getSelectedTokenUid(self):
@@ -563,11 +598,35 @@ class TrackwayManager(object):
                 'Error')
             return None
 
-        # from this UID list, create the corresponding track list
         selectedUidList = result.payload['selectedUidList']
         if len(selectedUidList) == 0:
             return None
-        return selectedUidList[0]
+
+        # check to see if it really is a proxy or token that was selected
+        uid = selectedUidList[0]
+        if uid.endswith('_proxy') or uid.endswith('_token'):
+            return uid
+        else:
+            return None
+
+#_______________________________________________________________________________
+    def getTokenNodeName(self, uid):
+        """ This gets the name of the token (i.e., the string name of the
+            transform node for a specified UID string). It returns None if that
+            token is not found. """
+
+        # if asking for nothing, then get nothing in return
+        if uid is None:
+            return None
+
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(GetTokenProps, uid=uid, runInMaya=True)
+
+        if result.payload.get('error'):
+            print('Error in getTokenNodeName:', result.payload.get('message'))
+            return False
+
+        return result.payload.get('nodeName')
 
 #_______________________________________________________________________________
     def getTokenProps(self, uid):
@@ -598,6 +657,73 @@ class TrackwayManager(object):
 
         return result.success
 
+#_______________________________________________________________________________
+    def refreshTokens(self, uidList, scenario):
+        """ The tokens associated with a list of UIDs are updated. """
+
+        for uid in uidList:
+            props = scenario.getProps(uid=uid)
+            self.setTokenProps(uid, props)
+
+#_______________________________________________________________________________
+    def refreshAllTokens(self, scenario):
+        """ This updates the token for every UID in the scenario. """
+
+        entries = scenario.getEntries()
+        for entry in entries:
+            uid = entry['uid']
+            self.setTokenProps(uid, entry)
+
+#_______________________________________________________________________________
+    def deleteToken(self, uid):
+        """ This looks up the token or proxy corresponding to the uid, then
+        deletes it.  """
+
+        node = self.getTokenNodeName(uid)
+        if node:
+            cmds.delete(node)
+            number = node.split('_')[1]
+            if number:
+                annotation = 'TokenAnnotation_' + number
+                cmds.delete(annotation)
+
+#_______________________________________________________________________________
+    def deleteTokens(self):
+        """ This sets the attributes in the Maya token based on the properties
+            of the props dictionary that is passed. """
+
+        conn   = nimble.getConnection()
+        result = conn.runPythonModule(DeleteTokens, runInMaya=True)
+
+        return result.success
+
+#_______________________________________________________________________________
+    def updateScenario(self, scenario):
+        """ The properties of each scenario entry are set to the values pulled
+            from the corresponding Maya token. """
+
+        if not scenario:
+            return
+
+        for limb in ['lp', 'rp', 'lm', 'rm']:
+            for entry in scenario.entries[limb]:
+                if entry:
+                    uid = entry['uid']
+                    scenario.setProps(uid, self.getTokenProps(uid))
+
+#_______________________________________________________________________________
+    def selectToken(self, uid, setFocus =True, closeup =True):
+        """ Select the node corresponding to this UID, then focusses the camera
+            upon that node. """
+
+        node = self.getTokenNodeName(uid)
+
+        if not node:
+            return
+
+        cmds.select(node)
+        if setFocus:
+            self.setCameraFocus(closeup)
 
 #===============================================================================
 #                                               C U R V E S   A N D   P A T H S
@@ -651,7 +777,7 @@ class TrackwayManager(object):
             orthographic=True,
             nearClipPlane=1,
             farClipPlane=100000,
-            orthographicWidth=500)
+            orthographicWidth=400)
         cmds.setAttr(c[0] + '.visibility', False)
         cmds.rename(c[0], self.CADENCE_CAM)
         cmds.rotate(-90, 180, 0)
@@ -684,12 +810,28 @@ class TrackwayManager(object):
 
         return (x, z)
 #_______________________________________________________________________________
-    def setCameraFocus(self):
+    def setCameraFocus(self, closeup =True):
         """ Center the current camera (CadenceCam or persp) on the currently
             selected node. If using the CadenceCam, the view is fitted to
             FIT_FACTOR; with the persp camera, it is not so contrained. """
 
-        cmds.viewFit(fitFactor=self.FIT_FACTOR, animate=True)
+        if closeup:
+
+            # compute size (in cm)
+            dimensions = cmds.exactWorldBoundingBox()
+            if not dimensions:
+                return
+            dx = dimensions[3] - dimensions[0]
+            dy = dimensions[4] - dimensions[1]
+            dz = dimensions[5] - dimensions[2]
+            size = max(dx, dy, dz)
+
+            # make FitFactor such that a 100 CM object would fill 25% of screen
+            fitFactor = 0.25*size/100.0
+            cmds.viewFit(fitFactor=fitFactor, animate=True)
+
+        else:
+            cmds.viewLookAt(())
 
 
 #===============================================================================

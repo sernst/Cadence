@@ -63,5 +63,33 @@ class TrackwayShaderConfig(object):
         'uid':          'CadenceTransparent',
         'type':         'lambert',
         'color':        [0.0, 0.0, 0.0],
-        'transparency': [0.9, 0.9, 0.9]
+        'transparency': [0.5, 0.5, 0.5]
+    }
+
+    LEFT_PES_TOKEN_COLOR = {
+        'uid': 'CadenceTransparentDodgerBlue',
+        'type': 'lambert',
+        'color': [0.12, 0.56, 1.00],
+        'transparency': [0.5, 0.5, 0.5]
+    }
+
+    LEFT_MANUS_TOKEN_COLOR = {
+        'uid': 'CadenceTransparentDarkOliveGreen',
+        'type': 'lambert',
+        'color': [0.33, 0.42, 0.18 ],
+        'transparency': [0.5, 0.5, 0.5]
+    }
+
+    RIGHT_PES_TOKEN_COLOR = {
+        'uid': 'CadenceTransparentDarkOrange',
+        'type': 'lambert',
+        'color': [1.00, 0.55, 0.00],
+        'transparency': [0.5, 0.5, 0.5]
+    }
+
+    RIGHT_MANUS_TOKEN_COLOR = {
+        'uid': 'CadenceTransparentDarkOrchid',
+        'type': 'lambert',
+        'color': [0.6, 0.2, 0.8],
+        'transparency': [0.5, 0.5, 0.5]
     }

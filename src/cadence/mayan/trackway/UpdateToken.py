@@ -36,9 +36,9 @@ class UpdateToken(NimbleScriptBase):
             return
 
         for node in cmds.sets(trackSetNode, query=True):
-            if not cmds.hasAttr(node + '.token_uid'):
+            if not cmds.hasAttr(node + '.track_uid'):
                 continue
-            if uid == cmds.getAttr(node + '.token_uid'):
+            if uid == cmds.getAttr(node + '.track_uid'):
                 TrackSceneUtils.setTokenProps(node, props)
                 self.puts(success=True, nodeName=node)
                 return

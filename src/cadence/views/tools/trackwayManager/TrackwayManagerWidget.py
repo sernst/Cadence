@@ -18,7 +18,7 @@ from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnum
 from cadence.enums.AnalysisFlagsEnum import AnalysisFlagsEnumOps
 from cadence.svg.CadenceDrawing import CadenceDrawing
 from cadence.views.tools.trackwayManager.TrackwayManager import TrackwayManager
-from cadence.views.tools.trackwayManager.ScenarioManager import ScenarioManager
+from cadence.views.tools.trackwayManager.Scenario import Scenario
 
 #_______________________________________________________________________________
 class TrackwayManagerWidget(PyGlassWidget):
@@ -63,15 +63,14 @@ class TrackwayManagerWidget(PyGlassWidget):
     SET_UNCERTAINTY_HIGH     = 'Set Uncertainties HIGH'
     REDUCE_ROT_UNCERTAINTY   = 'Reduce Rotational Uncertainty'
 
-    LEFT   = 'Left'
-    RIGHT  = 'Right'
-    MANUS  = 'Manus'
-    PES    = 'Pes'
-    BEFORE = 'Before'
-    AFTER  = 'After'
+    LOW      = 'Low'
+    MODERATE = 'Moderate'
+    HIGH     = 'High'
 
-    CREATE_PROXIES = 'Create Proxies'
-    CREATE_TOKENS  = 'Create Tokens'
+    BEFORE   = 'Before'
+    AFTER    = 'After'
+    SELECTED = 'Selected'
+    ALL      = 'All'
 
     DIMENSION_UNCERTAINTY_LOW      = 0.01
     DIMENSION_UNCERTAINTY_MODERATE = 0.02
@@ -94,9 +93,9 @@ class TrackwayManagerWidget(PyGlassWidget):
         # the Maya scene
         self._trackwayManager = TrackwayManager()
 
-        # create an instance of a ScenarioManager to deal with the reading,
+        # create an instance of a Scenario to deal with the reading,
         # modification, and writing of trackway scenario files.
-        self._scenarioManager = ScenarioManager()
+        self._scenario = None
 
         # provide conventional arrow icons for the navigation buttons
         self.firstBtn.setIcon(
@@ -227,10 +226,10 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.lastBtn2.setIcon( QtGui.QIcon(
             self.getResourcePath('mediaIcons', 'last.png')))
 
-        self.firstBtn2.clicked.connect(self.handleFirstBtn)
-        self.prevBtn2.clicked.connect(self.handlePrevBtn)
-        self.nextBtn2.clicked.connect(self.handleNextBtn)
-        self.lastBtn2.clicked.connect(self.handleLastBtn)
+        self.firstBtn2.clicked.connect(self.handleFirstTokenBtn)
+        self.prevBtn2.clicked.connect(self.handlePrevTokenBtn)
+        self.nextBtn2.clicked.connect(self.handleNextTokenBtn)
+        self.lastBtn2.clicked.connect(self.handleLastTokenBtn)
 
         self.xSbx.valueChanged.connect(self.handleXSbx)
         self.xSbx.setAccelerated(True)
@@ -239,7 +238,19 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.dxSbx.valueChanged.connect(self.handleDxSbx)
         self.dySbx.valueChanged.connect(self.handleDySbx)
 
-        self.pullSelectedTokenBtn.clicked.connect(self.handlePullSelectedTokenBtn)
+        self.pullTokenBtn.clicked.connect(self.handlePullSelectedTokenBtn)
+        self.pullAllTokensBtn.clicked.connect(self.handlePullAllTokensBtn)
+
+        self.proxyUncertaintyCmbx.addItems((
+            self.LOW, self.MODERATE, self.HIGH))
+        self.proxyUncertaintyCmbx.setCurrentIndex(2)
+        self.selectedVersusAllCmbx.addItems((self.SELECTED, self.ALL))
+        self.selectedVersusAllCmbx.setCurrentIndex(0)
+        self.setProxyUncertaintyBtn.clicked.connect(
+            self.handleSetProxyUncertaintyBtn)
+
+        self.changeTokenUidBtn.clicked.connect(self.handleChangeTokenUidBtn)
+
         self.deleteTokenBtn.clicked.connect(self.handleDeleteTokenBtn)
 
         self.selectCadenceCamBtn2.clicked.connect(
@@ -248,23 +259,14 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.handleSelectPerspectiveBtn)
         self.pullBtn2.clicked.connect(self.handlePullBtn)
 
+        self.initScenarioBtn.clicked.connect(self.handleInitScenarioBtn)
         self.loadScenarioBtn.clicked.connect(self.handleLoadScenarioBtn)
         self.saveScenarioBtn.clicked.connect(self.handleSaveScenarioBtn)
 
-        self.leftRightCmbx.addItems([self.LEFT, self.RIGHT])
-        self.manusPesCmbx.addItems([self.MANUS, self.PES])
         self.beforeAfterCmbx.addItems([self.BEFORE, self.AFTER])
         self.insertTokenBtn.clicked.connect(self.handleInsertTokenBtn)
 
-        scenarioOpMethods = (
-            self.NO_OP,
-            self.CREATE_PROXIES,
-            self.CREATE_TOKENS)
-        self.scenarioOpCmbx.addItems(scenarioOpMethods)
-        self.scenarioOpCmbx.setCurrentIndex(1)
-        self.scenarioOpBtn.clicked.connect(self.handleScenarioOpBtn)
-
-        self.currentTrackwayDictionary = None
+        self.consoleTE.setText('')
 
 #===============================================================================
 #                                                                   P U B L I C
@@ -491,8 +493,8 @@ class TrackwayManagerWidget(PyGlassWidget):
             sector = ''
         self.sectorLE.setText(sector)
 
-        # compose the trackway name (such as S18 for type 'S' for sauropod plus
-        # the trackway number)
+        # compose the trackway name (such as S18 for type 'S' for sauropod, plus
+        # the trackway number 18)
         type   = dict.get(TrackPropEnum.TRACKWAY_TYPE.name)
         number = dict.get(TrackPropEnum.TRACKWAY_NUMBER.name)
         if type and number:
@@ -1093,6 +1095,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             self._unlock()
             return
+
         if len(selectedTracks) != 1:
             self._unlock()
             return
@@ -1117,6 +1120,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             self._unlock()
             return
+
         if len(selectedTracks) != 1:
             self._unlock()
             return
@@ -1372,6 +1376,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             self._unlock()
             return
+
         if len(selectedTracks) != 1:
             self._unlock()
             return
@@ -1650,6 +1655,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not selectedTracks:
             self._unlock()
             return
+
         if len(selectedTracks) != 1:
             self._unlock()
             return
@@ -1859,7 +1865,7 @@ class TrackwayManagerWidget(PyGlassWidget):
         # turn off all current selections
         self._trackwayManager.selectTrack(None)
 
-        # first get a list of tracks that are either completed or incomplete
+        # first get the list of tracks (either completed or incomplete)
         tracks = self._trackwayManager.getCompletedTracks(completed=completed)
 
         if not tracks:
@@ -2405,8 +2411,8 @@ class TrackwayManagerWidget(PyGlassWidget):
 
         # and likewise for widthMeasured
         if track.widthMeasured != 0:
-            if abs(track.width - track.widthMeasured)/track.widthMeasured\
-                    > tolerance:
+            difference = track.width - track.widthMeasured
+            if abs(difference)/track.widthMeasured > tolerance:
                 strokeWidth = 8
                 opacity     = 0.5
                 color       = 'red'
@@ -2669,18 +2675,25 @@ class TrackwayManagerWidget(PyGlassWidget):
 #                                             S C E N A R I O   H A N D L E R S
 #
 #_______________________________________________________________________________
-    def handleLoadScenarioBtn(self):
-        """ This loads a trackway scenario file via the scenario manager. """
+    def handleInitScenarioBtn(self):
+        """ This makes a new trackway scenario file, initializing the proxies
+            as necessary, and creating and displaying the tokens. """
 
         if not self._lock():
             return
 
-        trackway = self.trackwayLE.text()
-        if not trackway:
+        # if trackwayLE field in the UI is blank, apparently no trackway has
+        # been selected, so abort
+        if not self.trackwayLE.text():
+            PyGlassBasicDialogManager.openOk(
+                self,
+                header=u'Error',
+                message=u'No trackway specified in UI.',
+                windowTitle=u'Error')
             self._unlock()
             return
 
-        # compose the trackway, e.g., CRO-500-2004-1-S-6, from the UI.
+        # compose the trackway (e.g., CRO-500-2004-1-S-6) from the UI.
         trackway = (
             self.siteLE.text() + '-' +
             self.levelLE.text() + '-' +
@@ -2689,45 +2702,150 @@ class TrackwayManagerWidget(PyGlassWidget):
             self.trackwayLE.text()[0] + '-' +
             self.trackwayLE.text()[1:]).upper()
 
-        if trackway == self._scenarioManager.trackway:
-            reload = PyGlassBasicDialogManager.openYesNo(
+        text = 'loading scenario:  %s' % trackway
+        self.consoleTE.append(text)
+        print(text)
+
+        if self._scenario:
+            agree = PyGlassBasicDialogManager.openYesNo(
                 self,
-                format('Scenario %s already loaded.' % trackway),
-                "Did you wish to reload it (or just forget to 'pull data')?")
-            if not reload:
+                format('Replace current scenario with %s?' % trackway))
+            if not agree:
+                self._unlock()
                 return
 
-        if self._scenarioManager.trackway:
-            current = self._scenarioManager.trackway
-            load = PyGlassBasicDialogManager.openYesNo(
-                self,
-                format('Scenario %s currently loaded.' % current),
-                'Do you wish to discard it and load %s instead?' % trackway)
-            if not not load:
-                return
-            else:
-                self._scenarioManager.closeScenario()
+        # delete any pre-existing tokens in the scene
+        self._trackwayManager.deleteTokens()
 
         # now read the scenario file, which converts the CSV-format contents
-        # into scenario instance within the scenarioManager.
-
+        # into an instance of a scenario.
         path = format('%s/%s/%s' % (
-            '~/Dropbox/A16/Simulation/data/',
+            '~/Dropbox/A16/Simulation/data', trackway, 'source.csv'))
+
+        try:
+            self._scenario = Scenario(trackway, path)
+        except Exception as err:
+            print(err)
+            self.consoleTE.append(str(err))
+            self._unlock()
+            return False
+
+        text = "scenario %s successfully loaded" % trackway
+        self.consoleTE.append(text)
+        print(text)
+
+        self._scenario.createPesProxies()
+        text = "pes proxies successfully created"
+        self.consoleTE.append(text)
+        print(text)
+
+        self._scenario.createManusProxies()
+        text = "manus proxies successfully created"
+        self.consoleTE.append(text)
+        print(text)
+
+        self._scenario.completeSequences()
+        text = "sequences successfully completed"
+        self.consoleTE.append(text)
+        print(text)
+
+        self._trackwayManager.createTokens(
+            self._scenario.getEntries(tracks=True, proxies=True))
+
+        text = "tokens successfully created"
+        self.consoleTE.append(text)
+        print(text)
+
+        self._unlock()
+
+#_______________________________________________________________________________
+    def handleLoadScenarioBtn(self):
+        """ This loads a trackway scenario file via the scenario manager. """
+
+        if not self._lock():
+            return
+
+        # if the UI is blank, apparently no trackway has been selected
+        if not self.trackwayLE.text():
+            PyGlassBasicDialogManager.openOk(
+                self,
+                header=u'Error',
+                message=u'No trackway specified in UI.',
+                windowTitle=u'Error')
+            self._unlock()
+            return
+
+        # compose the requested trackway, e.g., CRO-500-2004-1-S-6, from the UI.
+        trackway = (
+            self.siteLE.text() + '-' +
+            self.levelLE.text() + '-' +
+            self.yearLE.text() + '-' +
+            self.sectorLE.text() + '-' +
+            self.trackwayLE.text()[0] + '-' +
+            self.trackwayLE.text()[1:]).upper()
+
+        self.consoleTE.append('loading scenario:  %s' % trackway)
+
+        # delete any previously-generated tokens in the scene as necessary
+        self._trackwayManager.deleteTokens()
+
+        if self._scenario:
+            current = self._scenario.trackway
+            agree = PyGlassBasicDialogManager.openYesNo(
+                self,
+                format('Replace current scenario with %s?' % trackway))
+            if not agree:
+                self._unlock()
+                return
+
+        # now read the scenario file, which converts the CSV-format contents
+        # into an instance of a scenario.
+        path = format('%s/%s/%s' % (
+            '~/Dropbox/A16/Simulation/scenarios',
             trackway,
-            'source.csv'))
-        self._scenarioManager.loadScenario(trackway, path)
+            'scenario.csv'))
+
+        try:
+            self._scenario = Scenario(trackway, path)
+        except Exception as err:
+            print(err)
+            self.consoleTE.append(str(err))
+            self._unlock()
+            return False
+
+        text = "scenario %s successfully loaded" % trackway
+        self.consoleTE.append(text)
+        print(text)
+
+        self._trackwayManager.createTokens(
+            self._scenario.getEntries(tracks=True, proxies=True))
+
+        text = "tokens successfully created"
+        self.consoleTE.append(text)
+        print(text)
 
         self._unlock()
 
 #_______________________________________________________________________________
     def handleSaveScenarioBtn(self):
-        """ This writes the cvs file into the same folder, but as
-            'modified.csv' """
+        """ This updates the scenario based on the current state of the Maya
+            tokens then writes the scenario file. """
 
         if not self._lock():
             return
 
-        self._scenarioManager.writeScenarioFile()
+        # first pull all token props to make sure all is current then write it.
+        self._trackwayManager.updateScenario(self._scenario)
+
+        path = (
+                '~/Dropbox/A16/Simulation/scenarios/' +
+                self._scenario.trackway +
+                '/scenario.csv' )
+        self._scenario.write(path)
+
+        text = format('tokens successfully written to %s' % path)
+        self.consoleTE.append(text)
+        print(text)
 
         self._unlock()
 
@@ -2739,8 +2857,15 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not self._lock():
             return
 
-        self._scenarioManager.createPesProxies()
-        self._scenarioManager.createManusProxies()
+        self._scenario.createPesProxies()
+        text = 'pes proxies successfully created'
+        self.consoleTE.append(text)
+        print(text)
+
+        self._scenario.createManusProxies()
+        text = 'Manus proxies successfully created'
+        self.consoleTE.append(text)
+        print(text)
 
         self._unlock()
 
@@ -2752,22 +2877,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not self._lock():
             return
 
-        for entry in self._scenarioManager.getEntries(tracks, proxies):
+        for entry in self._scenario.getEntries(tracks, proxies):
             self._trackwayManager.createToken(entry)
-
-        self._unlock()
-
-#_______________________________________________________________________________
-    def handlePullAllTokensBtn(self):
-        """ Pull data from the proxy nodes and update the UI. """
-
-        if not self._lock():
-            return
-
-        print('in handlePullAllTokensBtn')
-
-        # look through some list of all tokens, and for each, pull the
-        # value and update the entry for that token.
 
         self._unlock()
 
@@ -2780,6 +2891,118 @@ class TrackwayManagerWidget(PyGlassWidget):
             return
 
         print('in handleXSbx')
+
+        self._unlock()
+
+#_______________________________________________________________________________
+    def handleFirstTokenBtn(self):
+        """ Get the last token, select the corresponding node, focus the camera
+            on it, and update the UIs"""
+
+        if not self._lock():
+            return
+
+        uid = self._trackwayManager.getSelectedTokenUid()
+
+        if not uid:
+            self._unlock()
+            return
+
+        if not self._scenario:
+            self._unlock()
+            return
+
+        first    = self._scenario.getFirst(uid)
+        firstUid = first.value['uid']
+        self._trackwayManager.selectToken(firstUid)
+        props = self._trackwayManager.getTokenProps(firstUid)
+        self.refreshTokenUI(props)
+
+        self._unlock()
+
+#_______________________________________________________________________________
+    def handleLastTokenBtn(self):
+        """ Get the last token, select the corresponding node, focus the camera
+            on it, and update the UIs"""
+
+        if not self._lock():
+            return
+
+        uid = self._trackwayManager.getSelectedTokenUid()
+
+        if not uid:
+            self._unlock()
+            return
+
+        if not self._scenario:
+            self._unlock()
+            return
+
+        last    = self._scenario.getLast(uid)
+        lastUid = last.value['uid']
+        self._trackwayManager.selectToken(lastUid)
+        props = self._trackwayManager.getTokenProps(lastUid)
+        self.refreshTokenUI(props)
+
+        self._unlock()
+
+#_______________________________________________________________________________#_______________________________________________________________________________
+    def handleNextTokenBtn(self):
+        """ Get the previous token and focus the camera on it. If there is no
+            previous token, just leave the current node selected. """
+
+        if not self._lock():
+            return
+
+        uid = self._trackwayManager.getSelectedTokenUid()
+
+        if not uid:
+            self._unlock()
+            return
+
+        if not self._scenario:
+            self._unlock()
+            return
+
+        next = self._scenario.getNextNode(uid)
+        if not next:
+            self._unlock()
+            return
+
+        nextUid = next.value['uid']
+        self._trackwayManager.selectToken(nextUid)
+        props = self._trackwayManager.getTokenProps(nextUid)
+        self.refreshTokenUI(props)
+
+        self._unlock()
+
+#_______________________________________________________________________________
+    def handlePrevTokenBtn(self):
+        """ Get the previous token and focus the camera on it. If there is no
+            previous token, just leave the current node selected. """
+
+        if not self._lock():
+            return
+
+        uid = self._trackwayManager.getSelectedTokenUid()
+
+        if not uid:
+            self._unlock()
+            return
+
+        if not self._scenario:
+            self._unlock()
+            return
+
+        prev = self._scenario.getPrevNode(uid)
+        if not prev:
+            self._unlock()
+            return
+
+        prevUid = prev.value['uid']
+        self._trackwayManager.selectToken(prevUid)
+        props = self._trackwayManager.getTokenProps(prevUid)
+        self.refreshTokenUI(props)
 
         self._unlock()
 
@@ -2818,6 +3041,17 @@ class TrackwayManagerWidget(PyGlassWidget):
         self._unlock()
 
 #_______________________________________________________________________________
+    def handlePullAllTokensBtn(self):
+        """ This updates the scenario based on the props of all tokens in the
+            scene. """
+
+        if not self._lock():
+            return
+
+        self._trackwayManager.updateScenario(self._scenario)
+
+        self._unlock()
+#_______________________________________________________________________________
     def handlePullSelectedTokenBtn(self):
         """ The transform data in the selected token node is used to populate
             the token UI.  The corresponding scenario entry is also updated. """
@@ -2828,40 +3062,164 @@ class TrackwayManagerWidget(PyGlassWidget):
         uid = self._trackwayManager.getSelectedTokenUid()
 
         if not uid:
+            self._unlock()
             return
 
         # update the UI and the entry based on the token
         props = self._trackwayManager.getTokenProps(uid)
         self.refreshTokenUI(props)
-        self._scenarioManager.setProps(uid, props)
+        self._scenario.setProps(uid, props)
 
         self._unlock()
 
 #_______________________________________________________________________________
+    def handleChangeTokenUidBtn(self):
+        """ Allows the token's UID to be changed from the UI. """
+
+        uid = self._trackwayManager.getSelectedTokenUid()
+        props = self._scenario.getProps(uid=uid)
+        props['uid'] = self.uidLE.text()
+        self._scenario.setProps(uid, props)
+        self._trackwayManager.setTokenProps(uid, props)
+
+#_______________________________________________________________________________
     def handleInsertTokenBtn(self):
+        """ For the selected token, a new proxy is inserted either before or
+            after that token. """
 
         if not self._lock():
             return
 
-        tokenUid = self._trackwayManager.getSelectedTokenUid()
-        print("tokenUID = %s" % tokenUid)
-        print('entered handleInsertTokenBtn for %s %s %s' %
-              (self.leftRightCmbx.currentText(),
-               self.manusPesCmbx.currentText(),
-               self.beforeAfterCmbx.currentText()))
+        uid = self._trackwayManager.getSelectedTokenUid()
+        if not uid:
+            self._unlock()
+            return
 
+        props = self._trackwayManager.getTokenProps(uid)
+
+        # update the entry for the selected token
+        self._scenario.setProps(uid, props)
+
+        # determine where to place the new proxy
+        before = self.beforeAfterCmbx.currentText() == self.BEFORE
+
+        # the new proxy will have a number interpolated (float with 2 decimal
+        # places) between the selected number and that of the previous token
+        # or one less than the selected, if it is the first token in the
+        # sequence.  So an interpolated new proxy between LM1 and LM2 would be
+        # LM1.5, and have a fingerprint name CRO-500-2004-3-S-2-L-M-1.5_proxy.
+        # Another interpolated between that new proxy and LM2 would be LM1.75,
+        # and so forth.
+        name     = props['name']
+        parts    = self._scenario.decomposeName(name)
+        number   = parts['number']
+        left     = parts['left']
+        pes      = parts['pes']
+        trackway = parts['trackway']
+
+        if before:
+            prev = self._scenario.getPrevNode(uid)
+            if prev:
+                prevName   = prev.value['name']
+                prevNumber = self._scenario.decomposeName(prevName)['number']
+                # use integral numbering in gap if possible
+                if number - prevNumber > 1.0:
+                    newNumber = number - 1
+                else:
+                    newNumber = (prevNumber + number)/2.0
+            else:
+                newNumber = number - 1
+        # if not before, the new proxy will be after the selected token
+        else:
+            next = self._scenario.getNextNode(uid)
+            if next:
+                # make the number an interpolate
+                nextName   = next.value['name']
+                nextNumber = self._scenario.decomposeName(nextName)['number']
+                if nextNumber - number > 1.0:
+                    newNumber = number + 1
+                else:
+                    newNumber  = (number + nextNumber)/2.0
+            else:
+                # it's at the end of the sequence
+                newNumber = number + 1
+        newName = self._scenario.composeName(
+            newNumber,
+            left=left,
+            pes=pes,
+            trackway=trackway)
+        newUid = newName + '_proxy'
+
+        # now decide on the position for the new proxy
+        if before:
+            prev = self._scenario.getPrevNode(uid)
+            if prev:
+                x = 0.5*(prev.value['x'] + props['x'])
+                y = 0.5*(prev.value['y'] + props['y'])
+            else:
+                # put it only 10 cm away from the selected token
+                x = props.value['x'] + 0.1
+                y = props.value['y'] + 0.1
+        # alternatively, the new proxy is supposd to be after the selected token
+        else:
+            next = self._scenario.getNextNode(uid)
+            if next:
+                x = 0.5*(props['x'] + next.value['x'])
+                y = 0.5*(props['y'] + next.value['y'])
+            else:
+                x = props['x'] + 0.1
+                y = props['y'] + 0.1
+
+        # now compose the properties for the new proxy
+        newProps = {'name':newName,
+                    'uid':newUid,
+                    'x':x,
+                    'dx':self._scenario.PROXY_UNCERTAINTY_MODERATE,
+                    'y':y,
+                    'dy':self._scenario.PROXY_UNCERTAINTY_MODERATE,
+                    'assumed':True }
+
+        # and now insert the proxy into the sequence
+        if before:
+            self._scenario.insertEntryBefore(uid, newProps)
+        else:
+            self._scenario.insertEntryAfter(uid, newProps)
+
+        # and make its token in the scene
+        self._trackwayManager.createToken(newProps)
         self._unlock()
 
 #_______________________________________________________________________________
-    def handleScenarioOpBtn(self):
-        """ A number of operations can be performed on trackway scenarios. """
+    def handleSetProxyUncertaintyBtn(self):
+        """ Sets the uncertainty level (for either a selection of proxy tokens,
+            or for all proxies) to the specified amount. """
 
-        op = self.scenarioOpCmbx.currentText()
-        if op == self.CREATE_PROXIES:
-            self.handleCreateProxies()
-        elif op == self.CREATE_TOKENS:
-            self.handleCreateTokens()
+        if not self._lock():
+            return
 
+        value = None
+        if self.proxyUncertaintyCmbx.currentText() == self.LOW:
+            value = self._scenario.PROXY_UNCERTAINTY_LOW
+        elif self.proxyUncertaintyCmbx.currentText() == self.MODERATE:
+            value = self._scenario.PROXY_UNCERTAINTY_MODERATE
+        elif self.proxyUncertaintyCmbx.currentText() == self.HIGH:
+            value = self._scenario.PROXY_UNCERTAINTY_HIGH
+
+        # use this opportunity to refresh the entries in the scenario based on
+        # the values of the tokens prior to making any othe changes to the proxy
+        # uncertainties in the scenario
+ #       self._trackwayManager.updateScenario(self._scenario)
+
+        if self.selectedVersusAllCmbx.currentText() == self.ALL:
+            self._scenario.setUncertainties(value)
+            self._trackwayManager.refreshAllTokens(self._scenario)
+        else:
+            uidList = self._trackwayManager.getSelectedTokenUids()
+            self._scenario.setUncertainties(value, uidList)
+            self._trackwayManager.refreshTokens(uidList, self._scenario)
+
+        self._unlock()
+        return
 
 #_______________________________________________________________________________
     def handleDeleteTokenBtn(self):
@@ -2869,9 +3227,27 @@ class TrackwayManagerWidget(PyGlassWidget):
         if not self._lock():
             return
 
-        print('entered handleDeleteTokenBtn')
+        uid = self._trackwayManager.getSelectedTokenUid()
+        if not uid:
+            self._unlock()
+            return
+
+        prev = self._scenario.getPrevNode(uid)
+        prevUid = prev.value['uid'] if prev else None
+
+        if prevUid:
+            self._trackwayManager.selectToken(prevUid)
+        else:
+            next = self._scenario.getNextNode(uid)
+            nextUid = next.value['uid'] if next else None
+            if nextUid:
+                self._trackwayManager.selectToken(nextUid)
+
+        self._scenario.deleteEntry(uid)
+        self._trackwayManager.deleteToken(uid)
 
         self._unlock()
+        return
 
 #_______________________________________________________________________________
     def clearTokenUI(self):
@@ -2893,7 +3269,8 @@ class TrackwayManagerWidget(PyGlassWidget):
         self.ySbx.setValue(props['y'])
         self.dySbx.setValue(props['dy'])
 
-        self.trackNameLE.setText(self.shortName(props['uid']))
+        self.trackNameLE.setText('')
+        self.uidLE.setText(self.shortName(props['uid']))
         self.indexLE.setText('')
         self.uidLE.setText(props['uid'])
 

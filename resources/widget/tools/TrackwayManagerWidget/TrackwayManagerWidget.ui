@@ -2433,14 +2433,38 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pullSelectedTokenBtn">
+           <widget class="QPushButton" name="pullTokenBtn">
             <property name="font">
              <font>
               <family>Abadi MT Condensed Extra Bold</family>
              </font>
             </property>
             <property name="text">
-             <string>Pull Data for Selected Token</string>
+             <string>Pull Selected Token Data</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pullAllTokensBtn">
+            <property name="font">
+             <font>
+              <family>Abadi MT Condensed Extra Bold</family>
+             </font>
+            </property>
+            <property name="text">
+             <string>Pull All Token Data</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="changeTokenUidBtn">
+            <property name="font">
+             <font>
+              <family>Abadi MT Condensed Extra Bold</family>
+             </font>
+            </property>
+            <property name="text">
+             <string>Change UID</string>
             </property>
            </widget>
           </item>
@@ -2472,18 +2496,12 @@
                 </font>
                </property>
                <property name="text">
-                <string>insert</string>
+                <string>insert proxy token  </string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
               </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="leftRightCmbx"/>
-             </item>
-             <item>
-              <widget class="QComboBox" name="manusPesCmbx"/>
              </item>
              <item>
               <widget class="QComboBox" name="beforeAfterCmbx"/>
@@ -2510,6 +2528,60 @@
                  <family>Abadi MT Condensed Extra Bold</family>
                  <weight>75</weight>
                  <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>OK</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget_48" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_36" stretch="0,1,0,1,1">
+             <item>
+              <widget class="QLabel" name="label_3">
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Light</family>
+                </font>
+               </property>
+               <property name="text">
+                <string>Set uncertainty of  </string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="selectedVersusAllCmbx"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_4">
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Light</family>
+                </font>
+               </property>
+               <property name="text">
+                <string>proxies</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="proxyUncertaintyCmbx"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="setProxyUncertaintyBtn">
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
                 </font>
                </property>
                <property name="text">
@@ -2702,7 +2774,7 @@
                    <enum>Qt::DefaultContextMenu</enum>
                   </property>
                   <property name="text">
-                   <string>First Track</string>
+                   <string>First Token</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
@@ -2795,7 +2867,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Prev Track</string>
+                   <string>Prev Token</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
@@ -2891,7 +2963,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Next Track</string>
+                   <string>Next Token</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
@@ -2990,7 +3062,7 @@
                    <enum>Qt::LeftToRight</enum>
                   </property>
                   <property name="text">
-                   <string>Last Track</string>
+                   <string>Last Token</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
@@ -3118,7 +3190,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="loadScenarioBtn">
+           <widget class="QPushButton" name="initScenarioBtn">
             <property name="font">
              <font>
               <family>Abadi MT Condensed Extra Bold</family>
@@ -3128,7 +3200,19 @@
              </font>
             </property>
             <property name="text">
-             <string>Load Scenario</string>
+             <string>Initialize Scenario (add proxies and create tokens)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="loadScenarioBtn">
+            <property name="font">
+             <font>
+              <family>Abadi MT Condensed Extra Bold</family>
+             </font>
+            </property>
+            <property name="text">
+             <string>Load Scenario (create tokens)</string>
             </property>
            </widget>
           </item>
@@ -3155,6 +3239,39 @@
            </widget>
           </item>
           <item>
+           <widget class="QWidget" name="widget_47" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_32">
+             <item>
+              <widget class="QPushButton" name="CreateProxiesBtn">
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                </font>
+               </property>
+               <property name="text">
+                <string>Create Proxies</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_4">
+               <property name="font">
+                <font>
+                 <family>Abadi MT Condensed Extra Bold</family>
+                </font>
+               </property>
+               <property name="text">
+                <string>Create Tokens</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTextEdit" name="consoleTE"/>
+          </item>
+          <item>
            <widget class="QWidget" name="widget_10" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -3167,7 +3284,7 @@
               <family>Lucida Grande</family>
              </font>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_35" stretch="5,1">
+            <layout class="QHBoxLayout" name="horizontalLayout_35">
              <property name="spacing">
               <number>-1</number>
              </property>
@@ -3183,51 +3300,6 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
-             <item>
-              <widget class="QComboBox" name="scenarioOpCmbx">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>12</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                 <kerning>true</kerning>
-                </font>
-               </property>
-               <property name="currentIndex">
-                <number>-1</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="scenarioOpBtn">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Abadi MT Condensed Extra Bold</family>
-                 <pointsize>12</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>OK</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </widget>
           </item>

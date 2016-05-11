@@ -176,6 +176,10 @@ class CadenceNimbleStatusElement(PyGlassElement):
         if not result.success:
             header = u'Failed'
             message = u'Unable to initialize your Maya scene'
-            PyGlassBasicDialogManager.openOk(self.mainWindow, header, message, u'Initialize Scene')
+            PyGlassBasicDialogManager.openOk(
+                self.mainWindow,
+                header,
+                message,
+                u'Initialize Scene')
         self._iniBtn.setText(u'Reinitialize')
 
