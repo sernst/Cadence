@@ -16,15 +16,16 @@ from cadence.analysis.shared.CsvWriter import CsvWriter
 
 SITEMAP_NAME = None # 'BEB'
 SITEMAP_LEVEL = None # '500'
-TRACKWAY_NAME = 'CRO-500-2005-2-S-8'
+TRACKWAY_NAME = 'BEB-500-2014-1-S-1'
 # TRACKWAY_NAME = 'CRO-500-2004-1-S-3'
 # TRACKWAY_NAME = 'BEB-500-2014-1-S-4'
 # TRACKWAY_NAME = 'BSY-1040-2008-20-S-19'
-WRITE_TO_FILE = False
+WRITE_TO_FILE = True
 
 smModel = Tracks_SiteMap.MASTER
 twModel = Tracks_Trackway.MASTER
 asmModel = Analysis_Sitemap.MASTER
+
 
 def get_sitemap_query(session):
     """
@@ -58,60 +59,83 @@ def get_trackway_query(site_map, session):
     return query.all()
 
 
-def write_to_file(trackway, tw_data):
+def write_to_file(trackway, tracks_data):
     """
-
     @param trackway:
-    @param tw_data:
+    @param tracks_data:
     @return:
     """
 
     csv = CsvWriter(
         path='{}.csv'.format(trackway.name),
+        autoIndexFieldName='Index',
         fields=[
-            'lpx', 'lpxunc', 'lpy', 'lpyunc',
-            'rpx', 'rpxunc', 'rpy', 'rpyunc',
-            'lmx', 'lmxunc', 'lmy', 'lmyunc',
-            'rmx', 'rmxunc', 'rmy', 'rmyunc'
+            'lp_name', 'lp_uid',
+            'lp_x', 'lp_dx', 'lp_y', 'lp_dy',
+            'lp_w', 'lp_dw', 'lp_l', 'lp_dl',
+            'rp_name', 'rp_uid',
+            'rp_x', 'rp_dx', 'rp_y', 'rp_dy',
+            'rp_w', 'rp_dw', 'rp_l', 'rp_dl',
+            'lm_name', 'lm_uid',
+            'lm_x', 'lm_dx', 'lm_y', 'lm_dy',
+            'lm_w', 'lm_dw', 'lm_l', 'lm_dl',
+            'rm_name', 'rm_uid',
+            'rm_x', 'rm_dx', 'rm_y', 'rm_dy',
+            'rm_w', 'rm_dw', 'rm_l', 'rm_dl',
         ]
     )
 
-    lp = tw_data['lp']
-    rp = tw_data['rp']
-    lm = tw_data['lm']
-    rm = tw_data['rm']
-
-    count = max(len(lp), len(rp), len(lm), len(rm))
+    count = max([len(ts) if ts else 0 for ts in tracks_data.values()])
 
     for i in range(count):
         entry = {}
+
         for key in ['lp', 'rp', 'lm', 'rm']:
-            point = tw_data[key][i] if i < len(tw_data[key]) else None
+            data = tracks_data[key][i] if i < len(tracks_data[key]) else None
+            track = data['track'] if data else None
+
+            entry.update({
+                '{}_name'.format(key): track.fingerprint if track else '',
+                '{}_uid'.format(key): track.uid if track else ''
+            })
+
+            point = track.positionValue if track else None
             entry.update({
                 '{}_x'.format(key): point.x if point else '',
                 '{}_dx'.format(key): point.xUnc if point else '',
                 '{}_y'.format(key): point.y if point else '',
                 '{}_dy'.format(key): point.yUnc if point else '',
             })
+
+            length = track.widthValue if track else None
+            entry.update({
+                '{}_l'.format(key): length.value if length else '',
+                '{}_dl'.format(key): length.uncertainty if length else ''
+            })
+
+            width = track.widthValue if track else None
+            entry.update({
+                '{}_w'.format(key): width.value if width else '',
+                '{}_dw'.format(key): width.uncertainty if width else ''
+            })
+
         csv.createRow(**entry)
 
     csv.save()
 
 
-def print_track(track, tw_data, aSession):
+def print_track(track, aSession):
     """
 
     @param track:
-    @param tw_data:
     @param aSession:
     @return:
     """
 
-    data = tw_data.get('{}{}'.format(
+    limb_id = '{}{}'.format(
         'l' if track.left else 'r',
         'p' if track.pes else 'm'
-    ))
-    data.append(track.positionValue)
+    )
 
     print(track.echoForVerification())
     print('        size: (%s, %s) | field (%s, %s)' % (
@@ -130,6 +154,12 @@ def print_track(track, tw_data, aSession):
         DictUtils.prettyPrint(track.snapshotData))
     )
 
+    return dict(
+        limb_id=limb_id,
+        track=track,
+        aTrack=aTrack
+    )
+
 
 def do_printing(session, aSession):
     """
@@ -141,7 +171,7 @@ def do_printing(session, aSession):
 
     for siteMap in get_sitemap_query(session):
         for trackway in get_trackway_query(siteMap, session):
-            tw_data = dict(lp=[], rp=[], lm=[], rm=[])
+            tracks_data = dict(lp=[], rp=[], lm=[], rm=[])
 
             print('\n\n\n%s\nTRACKWAY[%s]:' % (60*'=', trackway.name))
 
@@ -156,10 +186,11 @@ def do_printing(session, aSession):
                 ))
 
                 for track in series.tracks:
-                    print_track(track, tw_data, aSession)
+                    data = print_track(track, aSession)
+                    tracks_data[data['limb_id']].append(data)
 
-                if WRITE_TO_FILE:
-                    write_to_file(trackway, tw_data)
+            if WRITE_TO_FILE:
+                write_to_file(trackway, tracks_data)
 
 
 def run():
